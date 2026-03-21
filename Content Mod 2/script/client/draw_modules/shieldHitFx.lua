@@ -4,7 +4,7 @@
 client = client or {}
 
 local ShieldConfig = {
-    maxRing = 8,
+    maxRing = 4,
     guaranteeRing = 3,
 
     hexEdgeLength = 0.9,
