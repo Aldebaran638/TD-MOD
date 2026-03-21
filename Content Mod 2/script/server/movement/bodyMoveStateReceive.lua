@@ -3,6 +3,28 @@
 
 server = server or {}
 
+local function _isAnyPlayerOnShip(shipBodyId)
+    if shipBodyId == nil or shipBodyId == 0 then
+        return false
+    end
+
+    local players = GetAllPlayers() or {}
+    for i = 1, #players do
+        local playerId = players[i]
+        if IsPlayerValid == nil or IsPlayerValid(playerId) then
+            local veh = GetPlayerVehicle(playerId)
+            if veh ~= nil and veh ~= 0 then
+                local body = GetVehicleBody(veh)
+                if body ~= nil and body ~= 0 and body == shipBodyId then
+                    return true
+                end
+            end
+        end
+    end
+
+    return false
+end
+
 function server_bodyMoveStateSet(playerId, moveState)
     if playerId == nil or (IsPlayerValid ~= nil and not IsPlayerValid(playerId)) then
         return
@@ -22,28 +44,29 @@ function server_bodyMoveStateSet(playerId, moveState)
         return
     end
 
-    server.registryShipEnsure(body, server.defaultShipType, server.defaultShipType)
-    local driverId = server.registryShipGetDriverPlayerId(body)
-    if driverId ~= playerId then
+    if server.shipBody ~= nil and server.shipBody ~= 0 and body ~= server.shipBody then
         return
     end
 
-    -- 兼容旧 RPC 调用：统一写入请求态，后续由 tick 消费
+    server.registryShipEnsure(body, server.defaultShipType, server.defaultShipType)
     server.registryShipSetMoveRequestState(body, moveState)
 end
 
 function server.bodyMoveStateReceiveTick(dt)
+    local _ = dt
     local body = server.shipBody
     if body == nil or body == 0 then
         return
     end
 
     server.registryShipEnsure(body, server.defaultShipType, server.defaultShipType)
-    local driverId = server.registryShipGetDriverPlayerId(body)
-    if driverId == nil or driverId == 0 then
+
+    if not _isAnyPlayerOnShip(body) then
+        server.registryShipSetMoveRequestState(body, 0)
         server.registryShipSetMoveState(body, 0)
-    else
-        local requestState = server.registryShipGetMoveRequestState(body)
-        server.registryShipSetMoveState(body, requestState)
+        return
     end
+
+    local requestState = server.registryShipGetMoveRequestState(body)
+    server.registryShipSetMoveState(body, requestState)
 end

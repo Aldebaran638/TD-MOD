@@ -1,34 +1,26 @@
--- x 槽发射光束特效模块
--- 职责：读取所有已注册飞船的 xSlots/render/* 渲染事件，
---       在 launch_start 阶段生成从 firePoint 到 hitPoint 的能量束。
--- 外部接口：client.xSlotLaunchFxTick(dt)  —— 每帧调用
-
+-- x-slot launch beam fx module
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
 
 client = client or {}
 
--- 模块内部状态
 client.xSlotLaunchFxState = client.xSlotLaunchFxState or {
-    activeEffects = {},      -- 光束实例数组，支持多船并发；每项都记录 shipBodyId
-    lastRenderSeqByShip = {},-- 按船记录已消费 seq，用于门控新事件
-    lastShotIdByShip = {},   -- 按船记录已消费 shotId，辅助调试与去重追踪
+    activeEffects = {},
+    lastRenderSeqByShip = {},
+    lastShotIdByShip = {},
 }
 
--- {x,y,z} 表格 → Teardown Vec
 local function _tableToVec(t)
     if t == nil then return Vec(0, 0, 0) end
     return Vec(t.x or 0, t.y or 0, t.z or 0)
 end
 
--- 安全归一化：向量长度过小时返回 fallback
 local function _safeNormalize(v, fallback)
     local l = VecLength(v)
     if l < 0.0001 then return fallback end
     return VecScale(v, 1.0 / l)
 end
 
--- 构建与 forward 正交的 right/up 基向量
 local function _buildPerpBasis(forward)
     local upWorld = Vec(0, 1, 0)
     local right = VecCross(upWorld, forward)
@@ -38,8 +30,12 @@ local function _buildPerpBasis(forward)
     return right, up
 end
 
--- 内部：追加一条新光束实例到 activeEffects
--- 说明：launch_start 发生后仅追加，不会清空旧光束，避免短时间连射互相覆盖。
+local function _resolveImpactColor(layer)
+    local _ = layer
+    -- Tachyon lance style: bright cyan-blue core.
+    return 0.00, 0.00, 0.20
+end
+
 local function _xSlotLaunchFxStart(shipBodyId, firePointWorld, hitPointWorld, impactLayer)
     local beamVec = VecSub(hitPointWorld, firePointWorld)
     local beamLen = VecLength(beamVec)
@@ -50,19 +46,16 @@ local function _xSlotLaunchFxStart(shipBodyId, firePointWorld, hitPointWorld, im
         fire = firePointWorld,
         hit = hitPointWorld,
         age = 0,
-        life = 0.18,
-        width = 0.45,
+        life = 0.24,
+        width = 0.72,
         impactLayer = impactLayer or "none",
     })
 end
 
--- x 槽发射特效 tick（公开接口，每帧调用）
 function client.xSlotLaunchFxTick(dt)
     local state = client.xSlotLaunchFxState
+    local frameDt = dt or 0
 
-    -- 步骤1：事件消费——遍历所有注册飞船，检测 launch_start 新事件
-    -- 说明：每条飞船的 seq 独立递增；仅当该船 seq 变化才消费。
-    --       launch_start 事件触发时为该船追加一条光束实例。
     local shipIds = client.registryShipGetRegisteredBodyIds()
     for i = 1, #shipIds do
         local shipBodyId = shipIds[i]
@@ -85,14 +78,12 @@ function client.xSlotLaunchFxTick(dt)
         end
     end
 
-    -- 步骤2：实例更新——推进 age，逐帧渲染光束与伴随粒子，过期后移除
-    -- 说明：反向迭代删除可避免数组下标错位；appearFrac 让光束平滑出现。
     local effects = state.activeEffects
     local now = GetTime()
     local i = #effects
     while i >= 1 do
         local fx = effects[i]
-        fx.age = fx.age + dt
+        fx.age = fx.age + frameDt
 
         if fx.age >= fx.life then
             table.remove(effects, i)
@@ -100,55 +91,91 @@ function client.xSlotLaunchFxTick(dt)
             local fire = fx.fire
             local hit = fx.hit
             local width = fx.width
-            local pulse = 0.5 + 0.5 * math.sin(now * 45.0)
 
             local beamVec = VecSub(hit, fire)
             local beamLen = VecLength(beamVec)
             local beamDir = VecScale(beamVec, 1.0 / math.max(beamLen, 0.001))
-            local appearFrac = math.min(1.0, fx.age / 0.06)
+            local appearFrac = math.min(1.0, fx.age / 0.045)
+            local fadeFrac = 1.0 - math.min(1.0, fx.age / fx.life)
+            local pulse = 0.5 + 0.5 * math.sin(now * 55.0)
             local right, up = _buildPerpBasis(beamDir)
 
-            -- 主光束（核心 + 次级辉光）
-            DrawLine(fire, hit, width * appearFrac, 1.0, 1.0, 1.0)
-            DrawLine(fire, hit, width * 0.55 * appearFrac, 0.75, 1.0, (0.55 + 0.25 * pulse) * appearFrac)
+            local cr, cg, cb = _resolveImpactColor(fx.impactLayer)
+            local glowScale = (0.80 + 0.55 * pulse) * appearFrac * (0.55 + 0.60 * fadeFrac)
 
-            -- 外圈电弧感：四条偏移细线
-            local glowRadius = (0.07 + 0.04 * pulse) * appearFrac
-            local offsets = {
-                VecScale(right, glowRadius),
-                VecScale(right, -glowRadius),
-                VecScale(up, glowRadius),
-                VecScale(up, -glowRadius),
-            }
-            for j = 1, #offsets do
-                local o = offsets[j]
-                DrawLine(VecAdd(fire, o), VecAdd(hit, o), width * 0.18 * appearFrac, 0.85, 1.0, 0.25 * appearFrac)
+            -- Multi-layer beam core: thicker, brighter, and more volumetric.
+            DrawLine(fire, hit, width * 2.25 * appearFrac, cr * 0.40 * glowScale, cg * 0.55 * glowScale, cb * 0.70 * glowScale)
+            DrawLine(fire, hit, width * 1.65 * appearFrac, cr * 0.80 * glowScale, cg * 1.00 * glowScale, cb * 1.00 * glowScale)
+            DrawLine(fire, hit, width * 1.15 * appearFrac, cr * 1.00 * glowScale, cg * 1.00 * glowScale, cb * 1.00 * glowScale)
+            DrawLine(fire, hit, width * 0.72 * appearFrac, cr * 0.20 * glowScale, cg * 1.00 * glowScale, cb * 1.00 * glowScale)
+            DrawLine(fire, hit, width * 0.34 * appearFrac, cr * 0.35 * glowScale, cg * 1.00 * glowScale, cb * 1.00 * glowScale)
+
+            -- Peripheral electric strands around beam body.
+            local strandRadius = (0.20 + 0.10 * pulse) * appearFrac
+            for j = 1, 8 do
+                local a = (j / 8.0) * math.pi * 2.0 + now * 3.2
+                local off = VecAdd(VecScale(right, math.cos(a) * strandRadius), VecScale(up, math.sin(a) * strandRadius))
+                DrawLine(
+                    VecAdd(fire, off),
+                    VecAdd(hit, off),
+                    width * 0.20 * appearFrac,
+                    cr * 0.95 * glowScale,
+                    cg * 1.00 * glowScale,
+                    cb * 1.00 * glowScale
+                )
             end
 
-            -- 光束周边冲击粒子
+            -- High-density forward sparks rushing along the beam.
             ParticleReset()
-            ParticleColor(0.20, 0.95, 1.00, 0.10 * appearFrac, 0.35 * appearFrac, 1.00 * appearFrac)
-            ParticleRadius(0.09 * appearFrac, 0.02 * appearFrac, "easeout")
-            ParticleAlpha(0.9 * appearFrac, 0.0)
+            ParticleColor(cr, cg, cb, cr, cg, cb)
+            ParticleRadius(0.11 * appearFrac, 0.025 * appearFrac, "easeout")
+            ParticleAlpha(0.95 * appearFrac, 0.0)
             ParticleGravity(0.0)
-            ParticleDrag(0.15)
-            ParticleEmissive(16.0 * appearFrac, 0.0)
+            ParticleDrag(0.06)
+            ParticleEmissive(28.0 * glowScale, 0.0)
             ParticleCollide(0.0)
-            for _ = 1, 6 do
+            for _ = 1, 20 do
                 local frac = math.random()
                 local along = VecAdd(fire, VecScale(beamDir, beamLen * frac))
-                local angle = now * 2.0 + math.random() * math.pi * 2
+                local angle = now * 2.6 + math.random() * math.pi * 2
+                local ringR = strandRadius + width * (0.20 + 0.35 * math.random())
                 local offset = VecAdd(
-                    VecScale(right, math.cos(angle) * (glowRadius + width * 0.2 * appearFrac)),
-                    VecScale(up, math.sin(angle) * (glowRadius + width * 0.2 * appearFrac))
+                    VecScale(right, math.cos(angle) * ringR),
+                    VecScale(up, math.sin(angle) * ringR)
                 )
                 local p = VecAdd(along, offset)
-                local vel = VecAdd(VecScale(beamDir, (18.0 + 8.0 * math.random()) * appearFrac), VecScale(offset, 2.0 * math.random() * appearFrac))
-                SpawnParticle(p, vel, (0.12 + 0.08 * math.random()) * appearFrac)
+                local sideDir = _safeNormalize(offset, right)
+                local vel = VecAdd(
+                    VecScale(beamDir, (34.0 + 20.0 * math.random()) * appearFrac),
+                    VecScale(sideDir, (4.0 + 4.0 * math.random()) * appearFrac)
+                )
+                SpawnParticle(p, vel, (0.16 + 0.10 * math.random()) * (0.5 + 0.5 * fadeFrac))
             end
 
-            -- 枪口点光闪烁
-            PointLight(fire, 0.2 * appearFrac, 0.9 * appearFrac, 1.0 * appearFrac, (6.0 + 4.0 * pulse) * appearFrac)
+            -- Soft glow dust hugging the beam for bloom feeling.
+            ParticleReset()
+            ParticleColor(cr, cg, cb, cr, cg, cb)
+            ParticleRadius(0.18 * appearFrac, 0.03 * appearFrac, "easeout")
+            ParticleAlpha(0.6 * appearFrac, 0.0)
+            ParticleGravity(0.0)
+            ParticleDrag(0.18)
+            ParticleEmissive(14.0 * glowScale, 0.0)
+            ParticleCollide(0.0)
+            for _ = 1, 14 do
+                local frac = math.random()
+                local along = VecAdd(fire, VecScale(beamDir, beamLen * frac))
+                local a = math.random() * math.pi * 2
+                local rr = strandRadius * (0.5 + 1.1 * math.random())
+                local offset = VecAdd(VecScale(right, math.cos(a) * rr), VecScale(up, math.sin(a) * rr))
+                local p = VecAdd(along, offset)
+                SpawnParticle(p, VecScale(offset, 0.8 + 1.6 * math.random()), 0.10 + 0.08 * math.random())
+            end
+
+            -- Muzzle / beam body / impact lights to sell beam power.
+            PointLight(fire, cr, cg, cb, (12.0 + 8.0 * pulse) * appearFrac)
+            PointLight(hit, cr, cg, cb, (9.0 + 7.0 * pulse) * appearFrac)
+            local mid = VecAdd(fire, VecScale(beamVec, 0.55))
+            PointLight(mid, cr * 0.75, cg * 0.92, cb, (6.0 + 4.0 * pulse) * appearFrac)
         end
 
         i = i - 1

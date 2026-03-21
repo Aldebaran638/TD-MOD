@@ -11,8 +11,8 @@ server.shipAttitudeControllerState = server.shipAttitudeControllerState or {
 
 -- Control tuning
 server.shipAttitudeControllerConfig = server.shipAttitudeControllerConfig or {
-    yawDeadzone = 1.2,         -- deg
-    pitchDeadzone = 1.2,       -- deg
+    yawDeadzone = 0.5,         -- deg
+    pitchDeadzone = 0.5,       -- deg
     yawSoftZone = 3.0,         -- deg after deadzone, force ramps in smoothly
     pitchSoftZone = 3.0,       -- deg after deadzone, force ramps in smoothly
 

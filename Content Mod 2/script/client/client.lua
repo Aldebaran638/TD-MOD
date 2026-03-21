@@ -4,7 +4,9 @@
 client = client or {}
 
 #include "registry/shipRegistry.lua"
-#include "sound_modules/shipSound.lua"
+#include "input_handling/xSlotInput.lua"
+#include "input_handling/bodyMoveInput.lua"
+#include "sound_modules/soundModule.lua"
 #include "camera_modules/shipCamera.lua"
 #include "camera_modules/shipRollError.lua"
 #include "camera_modules/shipHealthBar.lua"
@@ -15,12 +17,14 @@ client = client or {}
 #include "draw_modules/hitPointFx.lua"
 
 function client.init()
-    client.shipSoundInit()
+    client.soundModuleInit()
     client.shipBody = FindBody("stellarisShip", false)
 end
 
 function client.clientTick(dt)
-    client.shipSoundTick(client.shipBody)
+    client.xSlotInputTick(dt)
+    client.bodyMoveInputTick(dt)
+    client.soundModuleTick(dt)
 
     client.xSlotChargingFxTick(dt)
     client.xSlotLaunchFxTick(dt)

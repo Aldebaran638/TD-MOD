@@ -42,7 +42,7 @@
 			<location name="exit" tags="exit" pos="0.0 0.2 -2.6"/>
 		</vehicle>
 	</script>
-	<script pos="0.0 6.5 -22.1" file="MOD/script/data/weapons/xSlots">
+	<script pos="0.0 6.5 -22.1" file="MOD/script/shipMain.lua">
 		<body tags="stellarisShip" dynamic="true">
 			<vox pos="0.0 0.0 0.0" rot="0 0 0" file="MOD/vox/WUJINHAO.vox"/>
 		</body>

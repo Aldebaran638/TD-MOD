@@ -24,13 +24,13 @@ shipTypeRegistryData.enigmaticCruiser = {
     xSlots = {
         {
             weaponType = "tachyonLance",
-            firePosOffset = { x = 0, y = 0, z = 4 },
-            fireDirRelative = { x = 0, y = 0, z = 1 },
+            firePosOffset = { x = 0, y = 0, z = -4 },
+            fireDirRelative = { x = 0, y = 0, z = -1 },
         },
         {
             weaponType = "tachyonLance",
-            firePosOffset = { x = 0, y = 0, z = 4 },
-            fireDirRelative = { x = 0, y = 0, z = 1 },
+            firePosOffset = { x = 0, y = 0, z = -4 },
+            fireDirRelative = { x = 0, y = 0, z = -1 },
         },
     },
 }
