@@ -1,0 +1,90 @@
+---@diagnostic disable: undefined-global
+---@diagnostic disable: duplicate-set-field
+
+client = client or {}
+
+client.shipCrosshairConfig = client.shipCrosshairConfig or {
+    distance = 200,
+    size = 8,
+    thickness = 1,
+    originForwardOffset = 2,
+    color = {1, 1, 1, 1},
+}
+
+local function _resolveControlledShipBody()
+    if client.shipCameraGetControlledBody ~= nil then
+        local body = client.shipCameraGetControlledBody()
+        if body ~= nil and body ~= 0 then
+            return body
+        end
+    end
+
+    local veh = GetPlayerVehicle()
+    if veh == nil or veh == 0 then
+        local localPlayerId = GetLocalPlayer()
+        if localPlayerId ~= nil and localPlayerId ~= 0 then
+            veh = GetPlayerVehicle(localPlayerId)
+        end
+    end
+
+    if veh == nil or veh == 0 then
+        return 0
+    end
+
+    local body = GetVehicleBody(veh)
+    if body == nil or body == 0 then
+        return 0
+    end
+
+    if client.registryShipExists ~= nil and (not client.registryShipExists(body)) then
+        return 0
+    end
+
+    return body
+end
+
+function client.shipCrosshairDraw()
+    local cfg = client.shipCrosshairConfig
+
+    local body = _resolveControlledShipBody()
+    if body == 0 then
+        return
+    end
+
+    local t = GetBodyTransform(body)
+
+    local forwardLocal = Vec(0, 0, -1)
+    local rayOrigin = TransformToParentPoint(t, VecScale(forwardLocal, cfg.originForwardOffset))
+    local forwardWorldDir = VecNormalize(TransformToParentVec(t, forwardLocal))
+
+    local hit, hitDist = QueryRaycast(rayOrigin, forwardWorldDir, cfg.distance)
+    local aimPoint
+    if hit then
+        aimPoint = VecAdd(rayOrigin, VecScale(forwardWorldDir, hitDist))
+    else
+        aimPoint = TransformToParentPoint(t, VecScale(forwardLocal, cfg.distance))
+    end
+
+    local camT = GetCameraTransform()
+    local camForward = VecNormalize(TransformToParentVec(camT, Vec(0, 0, -1)))
+    local dirToPoint = VecNormalize(VecSub(aimPoint, camT.pos))
+    if VecDot(camForward, dirToPoint) <= 0 then
+        return
+    end
+
+    local sx, sy = UiWorldToPixel(aimPoint)
+    if not sx or not sy then
+        return
+    end
+
+    UiPush()
+        UiAlign("center middle")
+        UiTranslate(sx, sy)
+        UiColor(cfg.color[1], cfg.color[2], cfg.color[3], cfg.color[4])
+
+        local s = cfg.size
+        local th = cfg.thickness
+        UiRect(s * 2, th)
+        UiRect(th, s * 2)
+    UiPop()
+end
