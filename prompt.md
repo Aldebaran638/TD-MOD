@@ -137,4 +137,5 @@ shipTypeRegistryData.enigmaticCruiser = {
 - 添加一个新模块:Content Mod 2\script\data\ships\enigmaticCruiser.lua中目前还没有每帧回血的数值.我希望添加一下(可能这些新数值要在注册时写入registry中)
 
 同时在Content Mod 2\script\server文件夹下创建一个新的文件夹(用来存储恢复相关的模块脚本).这个脚本要做的就是每固定时间(开发者可调整),根据Content Mod 2\script\data\ships\enigmaticCruiser.lua中的数值,给飞船恢复特定的血量.船体,装甲和护盾恢复是并行的,互相独立.
+船体,装甲和护盾恢复必须在这两者一段时间以内没有遭受过攻击后才能触发.如果在恢复期间遭受攻击,那么效果立即失效,需要重新计时
 说说你的方案
