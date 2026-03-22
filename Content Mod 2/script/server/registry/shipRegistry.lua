@@ -22,7 +22,20 @@ end
 local function _xSlotWeaponTypeKeyPrefix(weaponType)
     return registryXSlotWeaponTypeRoot .. tostring(weaponType)
 end
+local function _writeShipInstanceMaxHpFromType(shipBodyId, shipType, defaultShipType)
+    if shipBodyId == nil or shipBodyId == 0 then
+        return
+    end
 
+    local resolvedShipType = shipType or defaultShipType or "enigmaticCruiser"
+    server.registryEnsureShipTypeRegistered(resolvedShipType, defaultShipType)
+
+    local typePrefix = _shipTypeKeyPrefix(resolvedShipType)
+    local prefix = _shipKeyPrefix(shipBodyId)
+    SetFloat(prefix .. "/maxShieldHP", GetFloat(typePrefix .. "/maxShieldHP"), true)
+    SetFloat(prefix .. "/maxArmorHP", GetFloat(typePrefix .. "/maxArmorHP"), true)
+    SetFloat(prefix .. "/maxBodyHP", GetFloat(typePrefix .. "/maxBodyHP"), true)
+end
 local function _ensureShipBodyIndexed(shipBodyId)
     if shipBodyId == nil or shipBodyId == 0 then
         return
@@ -106,7 +119,7 @@ local function _writeVec3ToRegistry(prefix, vec3)
     SetFloat(prefix .. "/z", _getComp(v, "z", 3), true)
 end
 
--- 武器类型是否已注册（xSlots 域）
+-- 婵繐绠戝▍鎺旂尵鐠囪尙鈧兘寮伴姘剨鐎圭寮堕弫鐐哄礃瀹€瀣xSlots 闁糕晝鍣︾槐?
 function server.registryXSlotWeaponTypeRegistered(weaponType)
     if weaponType == nil or weaponType == "" then
         return false
@@ -114,7 +127,7 @@ function server.registryXSlotWeaponTypeRegistered(weaponType)
     return GetBool(_xSlotWeaponTypeKeyPrefix(weaponType) .. "/registered")
 end
 
--- 注册单个 xSlots 武器类型定义（同类型只注册一次）
+-- 婵炲鍔岄崬浠嬪础閺囨岸鍤?xSlots 婵繐绠戝▍鎺旂尵鐠囪尙鈧鈧鐭粻鐔兼晬閸繃鍊辩紒顐ヮ嚙閻庣兘宕ｉ鍛殘闁告劕濂旂粩鏉戔枎閳藉懐绀?
 function server.registryRegisterXSlotWeaponType(weaponType)
     local resolvedWeaponType, definition = _resolveXSlotWeaponTypeDefinition(weaponType)
     local prefix = _xSlotWeaponTypeKeyPrefix(resolvedWeaponType)
@@ -134,7 +147,7 @@ function server.registryRegisterXSlotWeaponType(weaponType)
     SetFloat(prefix .. "/randomTrajectoryAngle", definition.randomTrajectoryAngle or 0, true)
 end
 
--- 确保 xSlots 武器类型定义已注册
+-- 缁绢収鍠曠换?xSlots 婵繐绠戝▍鎺旂尵鐠囪尙鈧鈧鐭粻鐔奉啅閸欏鏆堥柛?
 function server.registryEnsureXSlotWeaponTypeRegistered(weaponType)
     local resolvedWeaponType = weaponType or "tachyonLance"
     if not server.registryXSlotWeaponTypeRegistered(resolvedWeaponType) then
@@ -143,7 +156,7 @@ function server.registryEnsureXSlotWeaponTypeRegistered(weaponType)
     return true
 end
 
--- 飞船类型是否已注册
+-- 濡炲鍋犻崺鐐电尵鐠囪尙鈧兘寮伴姘剨鐎圭寮堕弫鐐哄礃?
 function server.registryShipTypeRegistered(shipType)
     if shipType == nil or shipType == "" then
         return false
@@ -151,7 +164,7 @@ function server.registryShipTypeRegistered(shipType)
     return GetBool(_shipTypeKeyPrefix(shipType) .. "/registered")
 end
 
--- 注册单个飞船类型定义（同类型只注册一次）
+-- 婵炲鍔岄崬浠嬪础閺囨岸鍤嬪瀣仩閸╃偟鐚剧拠鑼偓椋庘偓瑙勭煯缁犵喖鏁嶉崼婵囧€辩紒顐ヮ嚙閻庣兘宕ｉ鍛殘闁告劕濂旂粩鏉戔枎閳藉懐绀?
 function server.registryRegisterShipType(shipType, defaultShipType)
     local resolvedShipType, definition = _resolveShipTypeDefinition(shipType, defaultShipType)
     local prefix = _shipTypeKeyPrefix(resolvedShipType)
@@ -182,7 +195,7 @@ function server.registryRegisterShipType(shipType, defaultShipType)
     end
 end
 
--- 确保飞船类型定义已注册，并联动确保其挂载的武器类型也已注册
+-- 缁绢収鍠曠换姘槹閻愯泛鐓樼紒顐ヮ嚙閻庨鈧鐭粻鐔奉啅閸欏鏆堥柛鎰焿缁辨繈鐛幆棰佺矒闁告柣鍔庨垾妯荤┍濠靛棗寰撻柟绋垮€藉ù鍥儍閸曨剦鍔呴柛锝冨妿鐞氼偊宕圭€ｂ晝鐦嶇€圭寮堕弫鐐哄礃?
 function server.registryEnsureShipTypeRegistered(shipType, defaultShipType)
     local resolvedShipType = select(1, _resolveShipTypeDefinition(shipType, defaultShipType))
     if not server.registryShipTypeRegistered(resolvedShipType) then
@@ -253,6 +266,7 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
     SetBool(prefix .. "/exists", true, true)
     _ensureShipBodyIndexed(shipBodyId)
     SetString(prefix .. "/shipType", GetString(typePrefix .. "/shipType"), true)
+    _writeShipInstanceMaxHpFromType(shipBodyId, resolvedShipType, defaultShipType)
     SetFloat(prefix .. "/shieldHP", GetFloat(typePrefix .. "/maxShieldHP"), true)
     SetFloat(prefix .. "/armorHP", GetFloat(typePrefix .. "/maxArmorHP"), true)
     SetFloat(prefix .. "/bodyHP", GetFloat(typePrefix .. "/maxBodyHP"), true)
@@ -261,7 +275,7 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
     SetInt(prefix .. "/moveState", 0, true)
     SetInt(prefix .. "/move/request", 0, true)
     SetInt(prefix .. "/move/requestState", 0, true)
-    -- 姿态误差（由控制器/客户端写入）
+    -- 濠殿喗瀵ч埀顑挎祰椤曘倕顔忛鍡欑闁汇垼椴哥敮鍫曞礆鐠虹儤鐝?閻庡箍鍨洪崺娑氱博椤栨艾鏅搁柛蹇嬪劵�?
     SetFloat(prefix .. "/pitchError", 0.0, true)
     SetFloat(prefix .. "/yawError", 0.0, true)
     SetFloat(prefix .. "/rollError", 0.0, true)
@@ -275,7 +289,7 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
     SetInt(prefix .. "/xSlots/writeSeq", -1, true)
     SetInt(prefix .. "/xSlots/lastReadSeq", -1, true)
 
-    -- x 槽渲染事件区：用于服务端写入“最新一次状态变化/发射结果”，供客户端拉取渲染
+    -- x 婵¤尪濮ょ憰鍡涘蓟閹捐尙鐨戝ù鐘烘硾鐏忣垶鏁嶅杈ㄦ殢濞存粌瀛╁﹢鍥礉閿涘嫷浼傞柛鎰懃閸欏棝鍨惧鍕粯闁哄倿顣︾粩鏉戔枎閿涘嫬笑闁诡兛绀佽ぐ澶愬�?闁告瑦鍨甸惃鐘电磼閹惧浜柍銉︾箰缁辨繃绗熷☉姗嗗悅闁规挳顥撻顒勫箯婢跺﹤绲挎繛鎾冲级閻?
     SetInt(prefix .. "/xSlots/render/seq", 0, true)
     SetInt(prefix .. "/xSlots/render/shotId", 0, true)
     SetString(prefix .. "/xSlots/render/eventType", "idle", true)
@@ -320,6 +334,19 @@ function server.registryShipEnsure(shipBodyId, shipType, defaultShipType)
 
     if not server.registryShipExists(shipBodyId) then
         server.registryShipRegister(shipBodyId, shipType, defaultShipType)
+    else
+        local prefix = _shipKeyPrefix(shipBodyId)
+        local maxShield = GetFloat(prefix .. "/maxShieldHP")
+        local maxArmor = GetFloat(prefix .. "/maxArmorHP")
+        local maxBody = GetFloat(prefix .. "/maxBodyHP")
+        if maxShield <= 0 or maxArmor <= 0 or maxBody <= 0 then
+            local existingShipType = GetString(prefix .. "/shipType")
+            if existingShipType == nil or existingShipType == "" then
+                existingShipType = shipType or defaultShipType or "enigmaticCruiser"
+                SetString(prefix .. "/shipType", existingShipType, true)
+            end
+            _writeShipInstanceMaxHpFromType(shipBodyId, existingShipType, defaultShipType)
+        end
     end
     return true
 end
@@ -574,11 +601,11 @@ function server.registryShipSetXSlotState(shipBodyId, slotIndex, state)
     SetString(_shipKeyPrefix(shipBodyId) .. "/xSlots/" .. tostring(slot) .. "/state", normalized, true)
 end
 
--- 写入 x 槽渲染事件（统一入口）
--- payload 字段：
+-- 闁告劖鐟ラ崣?x 婵¤尪濮ょ憰鍡涘蓟閹捐尙鐨戝ù鐘侯啇缁辨瑧绱掗悢鍓侇伇闁稿繈鍎辫ぐ娑㈡晬?
+-- payload 閻庢稒顨嗛宀勬晬?
 -- eventType, slotIndex, weaponType, serverTime, firePoint, hitPoint,
 -- didHit, didHitStellarisBody, didHitShield, hitTargetBodyId, normal, impactLayer,
--- incrementShotId(可选，1 表示本次事件需要推进 shotId)
+-- incrementShotId(闁告瑯鍨堕埀顒€顧€�? 閻炴稏鍔庨妵姘跺嫉椤掍緡鍋уù婊冾儎濞嗐垽妫侀埀顒傛啺娴ｇ懓鑵归�?shotId)
 function server.registryShipWriteXSlotsRenderEvent(shipBodyId, payload)
     if not server.registryShipExists(shipBodyId) then
         return false
@@ -620,3 +647,4 @@ function server.registryShipWriteXSlotsRenderEvent(shipBodyId, payload)
 
     return true
 end
+

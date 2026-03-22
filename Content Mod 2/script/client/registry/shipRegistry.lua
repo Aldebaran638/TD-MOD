@@ -5,6 +5,7 @@ client = client or {}
 
 local registryShipRoot = "StellarisShips/server/ships/byId/"
 local registryShipIndexRoot = "StellarisShips/server/ships/index"
+local registryShipTypeRoot = "StellarisShips/server/definitions/ships/byType/"
 
 local function _readVec3FromRegistry(prefix)
     return {
@@ -14,7 +15,18 @@ local function _readVec3FromRegistry(prefix)
     }
 end
 
--- 客户端函数：生成某艘飞船在 Registry 中的根路径
+local function _readShipTypeMaxHp(shipType)
+    local st = tostring(shipType or "")
+    if st == "" then
+        st = "enigmaticCruiser"
+    end
+
+    local typePrefix = registryShipTypeRoot .. st
+    local maxShield = GetFloat(typePrefix .. "/maxShieldHP")
+    local maxArmor = GetFloat(typePrefix .. "/maxArmorHP")
+    local maxBody = GetFloat(typePrefix .. "/maxBodyHP")
+    return maxShield, maxArmor, maxBody
+end
 function client.registryShipKeyPrefix(shipBodyId)
     return registryShipRoot .. tostring(shipBodyId)
 end
@@ -27,7 +39,7 @@ function client.registryShipExists(shipBodyId)
     return GetBool(client.registryShipKeyPrefix(shipBodyId) .. "/exists")
 end
 
--- 客户端函数：读取当前已注册飞船数量
+-- 客户端函数：读取当前已注册飞船数�?
 function client.registryShipGetRegisteredCount()
     local count = GetInt(registryShipIndexRoot .. "/count")
     if count < 0 then
@@ -36,7 +48,7 @@ function client.registryShipGetRegisteredCount()
     return count
 end
 
--- 客户端函数：读取索引表中第 index 条飞船 bodyId（1-based）
+-- 客户端函数：读取索引表中�?index 条飞�?bodyId�?-based�?
 function client.registryShipGetRegisteredBodyIdAt(index)
     local i = math.floor(index or 0)
     if i <= 0 then
@@ -101,6 +113,28 @@ function client.registryShipGetSnapshot(shipBodyId)
         xSlots = {},
     }
 
+    if snapshot.maxShieldHP <= 0 or snapshot.maxArmorHP <= 0 or snapshot.maxBodyHP <= 0 then
+        local typeMaxShield, typeMaxArmor, typeMaxBody = _readShipTypeMaxHp(snapshot.shipType)
+        if snapshot.maxShieldHP <= 0 then
+            snapshot.maxShieldHP = typeMaxShield
+        end
+        if snapshot.maxArmorHP <= 0 then
+            snapshot.maxArmorHP = typeMaxArmor
+        end
+        if snapshot.maxBodyHP <= 0 then
+            snapshot.maxBodyHP = typeMaxBody
+        end
+    end
+
+    if snapshot.maxShieldHP <= 0 then
+        snapshot.maxShieldHP = snapshot.shieldHP or 0
+    end
+    if snapshot.maxArmorHP <= 0 then
+        snapshot.maxArmorHP = snapshot.armorHP or 0
+    end
+    if snapshot.maxBodyHP <= 0 then
+        snapshot.maxBodyHP = snapshot.bodyHP or 0
+    end
     local xSlotCount = GetInt(prefix .. "/xSlots/count")
     snapshot.xSlotCount = xSlotCount
     for i = 1, xSlotCount do
@@ -131,11 +165,11 @@ function client.registryShipSetXSlotRequest(shipBodyId, slotIndex, request)
     return true
 end
 
--- 客户端函数：明确语义的 xSlots 总请求写入接口
+-- 客户端函数：明确语义�?xSlots 总请求写入接�?
 function client.registryShipSetXSlotsRequest(shipBodyId, request)
     return client.registryShipSetXSlotRequest(shipBodyId, 1, request)
 end
--- 客户端函数：写入移动 request 键
+-- 客户端函数：写入移动 request �?
 function client.registryShipSetMoveRequestState(shipBodyId, moveState)
     if not client.registryShipExists(shipBodyId) then
         return false
@@ -190,3 +224,4 @@ function client.registryShipSetRollError(shipBodyId, rollError)
 
     return true
 end
+
