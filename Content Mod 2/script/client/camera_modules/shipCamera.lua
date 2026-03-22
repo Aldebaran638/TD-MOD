@@ -19,6 +19,16 @@ client.shipCamera = client.shipCamera or {
     mouseSensitivity = 0.05,
     glideStrength = 0.55, -- 0.0=almost no glide, 1.0=very floaty
     zoomSpeed = 0.5,
+    switchDuration = 0.30,
+    frontOffset = { x = 0, y = 0, z = -3 },
+    viewMode = "rear",
+    viewBlend = 0.0,
+    viewBlendTarget = 0.0,
+    frontAimPitchLimit = 85,
+    frontAimYaw1 = -85,
+    frontAimYaw2 = 85,
+    frontAimYaw = 0.0,
+    frontAimPitch = 0.0,
 
     fov = 70,
 }
@@ -78,6 +88,43 @@ local function vectorToWorldYaw(v)
     return math.deg(math.atan2(v[1], v[3]))
 end
 
+local function vectorToWorldYawPitch(v)
+    local yaw = vectorToWorldYaw(v)
+    local horiz = math.sqrt(v[1] * v[1] + v[3] * v[3])
+    local pitch = math.deg(math.atan2(v[2], horiz))
+    return yaw, pitch
+end
+
+local function worldYawPitchToVector(yaw, pitch)
+    local yr = math.rad(yaw)
+    local pr = math.rad(pitch)
+    return Vec(
+        math.cos(pr) * math.sin(yr),
+        math.sin(pr),
+        math.cos(pr) * math.cos(yr)
+    )
+end
+
+local function relativeYawPitchToVector(yaw, pitch)
+    local yr = math.rad(yaw)
+    local pr = math.rad(pitch)
+    return Vec(
+        math.cos(pr) * math.sin(yr),
+        math.sin(pr),
+        -math.cos(pr) * math.cos(yr)
+    )
+end
+
+
+
+local function vecLerp(a, b, t)
+    return Vec(
+        a[1] + (b[1] - a[1]) * t,
+        a[2] + (b[2] - a[2]) * t,
+        a[3] + (b[3] - a[3]) * t
+    )
+end
+
 local function _resolveFrameDt(dt, cam)
     local inDt = tonumber(dt) or 0.0
     if inDt > 0 then
@@ -126,9 +173,11 @@ function client.shipCameraGetControlledBody()
 end
 
 function client.shipCameraTick(dt)
+    local cam = client.shipCamera
     local vehicle = GetPlayerVehicle()
     if vehicle == nil or vehicle == 0 then
         client.camshipBody = 0
+        cam._lastControlledBody = 0
         return
     end
 
@@ -136,23 +185,25 @@ function client.shipCameraTick(dt)
     local scriptBody = client.shipBody or 0
     if scriptBody == 0 or playerBody == nil or playerBody == 0 or playerBody ~= scriptBody then
         client.camshipBody = 0
+        cam._lastControlledBody = 0
         return
     end
 
     local body = scriptBody
     if not HasTag(body, "stellarisShip") then
         client.camshipBody = 0
+        cam._lastControlledBody = 0
         return
     end
 
     if client.registryShipExists ~= nil and (not client.registryShipExists(body)) then
         client.camshipBody = 0
+        cam._lastControlledBody = 0
         return
     end
 
     client.camshipBody = body
 
-    local cam = client.shipCamera
     local shipTransform = GetBodyTransform(body)
     local shipPos = shipTransform.pos
     local shipForwardWorld = TransformToParentVec(shipTransform, Vec(0, 0, -1))
@@ -162,15 +213,40 @@ function client.shipCameraTick(dt)
     if cam._lastControlledBody ~= body then
         cam.c = shipBackYawWorld
         cam.targetC = shipBackYawWorld
+        cam.targetB = cam.b
         cam.cVel = 0
+        cam.viewMode = "rear"
+        cam.viewBlend = 0.0
+        cam.viewBlendTarget = 0.0
+        cam.frontAimYaw = 0.0
+        cam.frontAimPitch = 0.0
         cam._lastControlledBody = body
     end
 
     local frameDt = _resolveFrameDt(dt, cam)
 
+    if InputPressed("rmb") then
+        if cam.viewMode == "rear" then
+            local rearOffsetNow = sphericalToCartesian(cam.r, cam.b, cam.c)
+            local rearForwardNow = VecNormalize(VecScale(rearOffsetNow, -1))
+            local rearYawWorldNow, rearPitchWorldNow = vectorToWorldYawPitch(rearForwardNow)
+            cam.frontAimYaw = wrapAngle180(rearYawWorldNow)
+            cam.frontAimPitch = rearPitchWorldNow
+
+            cam.viewMode = "front"
+            cam.viewBlendTarget = 1.0
+        else
+            cam.viewMode = "rear"
+            cam.viewBlendTarget = 0.0
+        end
+    end
+
     local mouseDX = InputValue("mousedx")
     local mouseDY = InputValue("mousedy")
     local mouseWheel = InputValue("mousewheel")
+
+    cam.r = cam.r - mouseWheel * cam.zoomSpeed
+    cam.r = clamp(cam.r, cam.rMin, cam.rMax)
 
     if cam.targetC == nil then
         cam.targetC = cam.c
@@ -179,18 +255,24 @@ function client.shipCameraTick(dt)
         cam.targetB = cam.b
     end
 
-    cam.targetC = cam.targetC - mouseDX * cam.mouseSensitivity
-    cam.targetB = cam.targetB + mouseDY * cam.mouseSensitivity
-    cam.r = cam.r - mouseWheel * cam.zoomSpeed
+    if cam.viewMode == "rear" then
+        cam.targetC = cam.targetC - mouseDX * cam.mouseSensitivity
+        cam.targetB = cam.targetB + mouseDY * cam.mouseSensitivity
 
-    cam.targetC = unwrapNear(cam.c, cam.targetC)
-    cam.r = clamp(cam.r, cam.rMin, cam.rMax)
-    cam.targetB = clamp(cam.targetB, -cam.angleLimitPitch, cam.angleLimitPitch)
-    local targetRelYaw = wrapAngle180(cam.targetC - shipBackYawWorld)
-    targetRelYaw = clamp(targetRelYaw, cam.angleLimitYaw1, cam.angleLimitYaw2)
-    cam.targetC = shipBackYawWorld + targetRelYaw
+        cam.targetC = unwrapNear(cam.c, cam.targetC)
+        cam.targetB = clamp(cam.targetB, -cam.angleLimitPitch, cam.angleLimitPitch)
+        local targetRelYaw = wrapAngle180(cam.targetC - shipBackYawWorld)
+        targetRelYaw = clamp(targetRelYaw, cam.angleLimitYaw1, cam.angleLimitYaw2)
+        cam.targetC = shipBackYawWorld + targetRelYaw
+    else
+        local frontPitchLimit = cam.frontAimPitchLimit or cam.angleLimitPitch
 
-    -- Convert single glide knob into spring response/damping.
+        cam.frontAimYaw = wrapAngle180((cam.frontAimYaw or shipYawWorld) - mouseDX * cam.mouseSensitivity)
+        cam.frontAimPitch = (cam.frontAimPitch or 0.0) + mouseDY * cam.mouseSensitivity
+
+        cam.frontAimPitch = clamp(cam.frontAimPitch, -frontPitchLimit, frontPitchLimit)
+    end
+
     local glide = clamp(cam.glideStrength or 0.55, 0.0, 1.0)
     local smoothResponse = 32.0 - 22.0 * glide
     local smoothDamping = 0.70 + 0.28 * glide
@@ -204,11 +286,53 @@ function client.shipCameraTick(dt)
     currentRelYaw = clamp(currentRelYaw, cam.angleLimitYaw1, cam.angleLimitYaw2)
     cam.c = shipBackYawWorld + currentRelYaw
 
-    -- World-space orbit offset (camera does not rigidly rotate with ship).
     local offsetWorld = sphericalToCartesian(cam.r, cam.b, cam.c)
-    local cameraPos = VecAdd(shipPos, offsetWorld)
+    local rearCameraPos = VecAdd(shipPos, offsetWorld)
+    local rearForwardWorld = VecNormalize(VecSub(shipPos, rearCameraPos))
 
-    local cameraRot = QuatLookAt(cameraPos, shipPos)
+    local frontLocal = cam.frontOffset or { x = 0, y = 0, z = -3 }
+    local frontCameraPos = TransformToParentPoint(shipTransform, Vec(frontLocal.x or 0, frontLocal.y or 0, frontLocal.z or -3))
+
+    local desiredYaw = cam.frontAimYaw or shipYawWorld
+    local desiredPitch = cam.frontAimPitch or 0.0
+    local desiredWorldDir = worldYawPitchToVector(desiredYaw, desiredPitch)
+    local desiredLocalDir = TransformToLocalVec(shipTransform, desiredWorldDir)
+    local frontRelYaw, frontRelPitch = vectorToRelativeYawPitch(desiredLocalDir)
+
+    local frontYaw1 = cam.frontAimYaw1 or -85
+    local frontYaw2 = cam.frontAimYaw2 or 85
+    local frontPitchLimit = cam.frontAimPitchLimit or 85
+
+    frontRelYaw = clamp(wrapAngle180(frontRelYaw), frontYaw1, frontYaw2)
+    frontRelPitch = clamp(frontRelPitch, -frontPitchLimit, frontPitchLimit)
+
+    local frontForwardLocal = relativeYawPitchToVector(frontRelYaw, frontRelPitch)
+    local frontForwardWorld = VecNormalize(TransformToParentVec(shipTransform, frontForwardLocal))
+
+    local frontErrorYaw = frontRelYaw
+    local frontErrorPitch = frontRelPitch
+
+    local duration = cam.switchDuration or 0.30
+    if duration < 0.01 then
+        duration = 0.01
+    end
+    local step = frameDt / duration
+    if cam.viewBlendTarget > cam.viewBlend then
+        cam.viewBlend = math.min(cam.viewBlendTarget, cam.viewBlend + step)
+    elseif cam.viewBlendTarget < cam.viewBlend then
+        cam.viewBlend = math.max(cam.viewBlendTarget, cam.viewBlend - step)
+    end
+    local blend = clamp(cam.viewBlend, 0.0, 1.0)
+
+    local cameraPos = vecLerp(rearCameraPos, frontCameraPos, blend)
+    local blendedForward = vecLerp(rearForwardWorld, frontForwardWorld, blend)
+    if VecLength(blendedForward) < 0.0001 then
+        blendedForward = rearForwardWorld
+    else
+        blendedForward = VecNormalize(blendedForward)
+    end
+
+    local cameraRot = QuatLookAt(cameraPos, VecAdd(cameraPos, blendedForward))
     local cameraWorldT = Transform(cameraPos, cameraRot)
     local cameraLocalT = TransformToLocalTransform(shipTransform, cameraWorldT)
 
@@ -219,12 +343,19 @@ function client.shipCameraTick(dt)
         return
     end
 
-    local camForwardWorld = VecNormalize(VecSub(shipPos, cameraPos))
-    local camForwardLocal = TransformToLocalVec(shipTransform, camForwardWorld)
-    local camAzimuth, camZenith = vectorToRelativeYawPitch(camForwardLocal)
+    local yawError = 0.0
+    local pitchError = 0.0
 
-    local yawError = wrapAngle180(camAzimuth)
-    local pitchError = camZenith
+    if cam.viewMode == "front" then
+        yawError = frontErrorYaw
+        pitchError = frontErrorPitch
+    else
+        local camForwardWorld = rearForwardWorld
+        local camForwardLocal = TransformToLocalVec(shipTransform, camForwardWorld)
+        local camAzimuth, camZenith = vectorToRelativeYawPitch(camForwardLocal)
+        yawError = wrapAngle180(camAzimuth)
+        pitchError = camZenith
+    end
 
     client.registryShipSetRotationError(body, pitchError, yawError)
 end
