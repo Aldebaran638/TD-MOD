@@ -3,8 +3,10 @@
 
 server = server or {}
 
-local bodyVelocityQuadraticDampingRho = 0.1
-local bodyVelocityQuadraticDampingMinSpeed = 0.01
+server.bodyVelocityQuadraticDampingConfig = server.bodyVelocityQuadraticDampingConfig or {
+    quadraticRho = 5000,  -- 二次阻尼系数：阻尼力 = rho * speed^2
+    minSpeed = 0.01,     -- 低于该速度时不施加阻尼
+}
 
 function server.bodyVelocityQuadraticDampingTick(dt)
     dt = dt or 0
@@ -22,8 +24,12 @@ function server.bodyVelocityQuadraticDampingTick(dt)
         return
     end
 
+    local cfg = server.bodyVelocityQuadraticDampingConfig
+    local dampingRho = tonumber(cfg.quadraticRho) or 0.1
+    local minSpeed = tonumber(cfg.minSpeed) or 0.01
+
     local speed = VecLength(velocity)
-    if speed <= bodyVelocityQuadraticDampingMinSpeed then
+    if speed <= minSpeed then
         return
     end
 
@@ -32,7 +38,7 @@ function server.bodyVelocityQuadraticDampingTick(dt)
     local comWorld = TransformToParentPoint(t, comLocal)
 
     local velocityDir = VecScale(velocity, 1.0 / speed)
-    local dampingForceMagnitude = bodyVelocityQuadraticDampingRho * speed * speed
+    local dampingForceMagnitude = dampingRho * speed * speed
     local dampingForce = VecScale(velocityDir, -dampingForceMagnitude)
     local impulse = VecScale(dampingForce, dt)
 
