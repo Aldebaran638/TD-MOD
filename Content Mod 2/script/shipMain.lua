@@ -54,6 +54,7 @@ end
 -- 移动类模�?根据 registry 中的姿态误差施加扭矩进行自动调�?
 #include "server/movement/shipAttitudeController.lua"
 #include "server/movement/shipRollStabilizer.lua"
+#include "server/movement/shipDeathExplosion.lua"
 
 -- 服务端初始化
 function server.init()
@@ -88,6 +89,7 @@ end
 function server.serverTick(dt)
     -- server.ensureCurrentShipState(defaultShipType)
     server.xSlotControlTick(dt)
+    server.shipDeathExplosionTick(dt)
     server.bodyMoveStateReceiveTick(dt)
     server.bodyMassUpwardMoveTick(dt)
     server.bodyDirectionalMoveTick(dt)
