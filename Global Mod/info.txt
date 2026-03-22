@@ -1,0 +1,13 @@
+name = (Stellaris ships)Enigmatic Battlecruiser
+author = Aldebaran
+description = A space ship From Stellaris.
+tags = 
+version = 2
+
+#如果描述包含[noupload]，那么Steam创意工坊中的描述就不会被覆盖。
+#可用标签（逗号分隔）：
+# Map——一张没有特定玩法的自定义地图
+# Gameplay——模组包含任务、目标或其它玩法
+# Asset——供他人使用的资源包
+# Vehicle——模组包含可驾驶的自定义载具
+# Tool——模组添加自定义武器或其他工具
