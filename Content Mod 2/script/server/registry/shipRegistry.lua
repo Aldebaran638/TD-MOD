@@ -36,6 +36,26 @@ local function _writeShipInstanceMaxHpFromType(shipBodyId, shipType, defaultShip
     SetFloat(prefix .. "/maxArmorHP", GetFloat(typePrefix .. "/maxArmorHP"), true)
     SetFloat(prefix .. "/maxBodyHP", GetFloat(typePrefix .. "/maxBodyHP"), true)
 end
+
+local function _writeShipInstanceRegenFromType(shipBodyId, shipType, defaultShipType)
+    if shipBodyId == nil or shipBodyId == 0 then
+        return
+    end
+
+    local resolvedShipType = shipType or defaultShipType or "enigmaticCruiser"
+    server.registryEnsureShipTypeRegistered(resolvedShipType, defaultShipType)
+
+    local typePrefix = _shipTypeKeyPrefix(resolvedShipType)
+    local prefix = _shipKeyPrefix(shipBodyId)
+    SetFloat(prefix .. "/regen/tickInterval", GetFloat(typePrefix .. "/regen/tickInterval"), true)
+    SetFloat(prefix .. "/regen/shieldPerSecond", GetFloat(typePrefix .. "/regen/shieldPerSecond"), true)
+    SetFloat(prefix .. "/regen/armorPerSecond", GetFloat(typePrefix .. "/regen/armorPerSecond"), true)
+    SetFloat(prefix .. "/regen/bodyPerSecond", GetFloat(typePrefix .. "/regen/bodyPerSecond"), true)
+    SetFloat(prefix .. "/regen/shieldNoDamageDelay", GetFloat(typePrefix .. "/regen/shieldNoDamageDelay"), true)
+    SetFloat(prefix .. "/regen/armorNoDamageDelay", GetFloat(typePrefix .. "/regen/armorNoDamageDelay"), true)
+    SetFloat(prefix .. "/regen/bodyNoDamageDelay", GetFloat(typePrefix .. "/regen/bodyNoDamageDelay"), true)
+end
+
 local function _ensureShipBodyIndexed(shipBodyId)
     if shipBodyId == nil or shipBodyId == 0 then
         return
@@ -183,12 +203,21 @@ function server.registryRegisterShipType(shipType, defaultShipType)
         xSlotCount = 0
     end
 
+    local regenDef = definition.regen or {}
+
     SetBool(prefix .. "/registered", true, true)
     SetString(prefix .. "/shipType", definition.shipType or resolvedShipType, true)
     SetFloat(prefix .. "/maxShieldHP", definition.maxShieldHP or 0, true)
     SetFloat(prefix .. "/maxArmorHP", definition.maxArmorHP or 0, true)
     SetFloat(prefix .. "/maxBodyHP", definition.maxBodyHP or 0, true)
     SetFloat(prefix .. "/shieldRadius", definition.shieldRadius or 0, true)
+    SetFloat(prefix .. "/regen/tickInterval", regenDef.tickInterval or 0.2, true)
+    SetFloat(prefix .. "/regen/shieldPerSecond", regenDef.shieldPerSecond or 0.0, true)
+    SetFloat(prefix .. "/regen/armorPerSecond", regenDef.armorPerSecond or 0.0, true)
+    SetFloat(prefix .. "/regen/bodyPerSecond", regenDef.bodyPerSecond or 0.0, true)
+    SetFloat(prefix .. "/regen/shieldNoDamageDelay", regenDef.shieldNoDamageDelay or 0.0, true)
+    SetFloat(prefix .. "/regen/armorNoDamageDelay", regenDef.armorNoDamageDelay or 0.0, true)
+    SetFloat(prefix .. "/regen/bodyNoDamageDelay", regenDef.bodyNoDamageDelay or 0.0, true)
     SetInt(prefix .. "/xSlots/count", xSlotCount, true)
 
     for i = 1, xSlotCount do
@@ -297,15 +326,20 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
     _ensureShipBodyIndexed(shipBodyId)
     SetString(prefix .. "/shipType", GetString(typePrefix .. "/shipType"), true)
     _writeShipInstanceMaxHpFromType(shipBodyId, resolvedShipType, defaultShipType)
+    _writeShipInstanceRegenFromType(shipBodyId, resolvedShipType, defaultShipType)
     SetFloat(prefix .. "/shieldHP", GetFloat(typePrefix .. "/maxShieldHP"), true)
     SetFloat(prefix .. "/armorHP", GetFloat(typePrefix .. "/maxArmorHP"), true)
     SetFloat(prefix .. "/bodyHP", GetFloat(typePrefix .. "/maxBodyHP"), true)
 
+    local nowTime = (GetTime ~= nil) and GetTime() or 0.0
     SetInt(prefix .. "/driverPlayerId", 0, true)
     SetInt(prefix .. "/moveState", 0, true)
     SetInt(prefix .. "/move/request", 0, true)
     SetInt(prefix .. "/move/requestState", 0, true)
     SetBool(prefix .. "/destroyed", false, true)
+    SetFloat(prefix .. "/regen/state/lastDamageTimeShield", nowTime, true)
+    SetFloat(prefix .. "/regen/state/lastDamageTimeArmor", nowTime, true)
+    SetFloat(prefix .. "/regen/state/lastDamageTimeBody", nowTime, true)
     -- 濠殿喗瀵ч埀顑挎祰椤曘倕顔忛鍡欑闁汇垼椴哥敮鍫曞礆鐠虹儤鐝?閻庡箍鍨洪崺娑氱博椤栨艾鏅搁柛蹇嬪劵�?
     SetFloat(prefix .. "/pitchError", 0.0, true)
     SetFloat(prefix .. "/yawError", 0.0, true)
@@ -379,13 +413,22 @@ function server.registryShipEnsure(shipBodyId, shipType, defaultShipType)
         local maxShield = GetFloat(prefix .. "/maxShieldHP")
         local maxArmor = GetFloat(prefix .. "/maxArmorHP")
         local maxBody = GetFloat(prefix .. "/maxBodyHP")
+        local existingShipType = GetString(prefix .. "/shipType")
+        if existingShipType == nil or existingShipType == "" then
+            existingShipType = shipType or defaultShipType or "enigmaticCruiser"
+            SetString(prefix .. "/shipType", existingShipType, true)
+        end
         if maxShield <= 0 or maxArmor <= 0 or maxBody <= 0 then
-            local existingShipType = GetString(prefix .. "/shipType")
-            if existingShipType == nil or existingShipType == "" then
-                existingShipType = shipType or defaultShipType or "enigmaticCruiser"
-                SetString(prefix .. "/shipType", existingShipType, true)
-            end
             _writeShipInstanceMaxHpFromType(shipBodyId, existingShipType, defaultShipType)
+        end
+
+        local tickInterval = GetFloat(prefix .. "/regen/tickInterval")
+        if tickInterval <= 0 then
+            local nowTime = (GetTime ~= nil) and GetTime() or 0.0
+            _writeShipInstanceRegenFromType(shipBodyId, existingShipType, defaultShipType)
+            SetFloat(prefix .. "/regen/state/lastDamageTimeShield", nowTime, true)
+            SetFloat(prefix .. "/regen/state/lastDamageTimeArmor", nowTime, true)
+            SetFloat(prefix .. "/regen/state/lastDamageTimeBody", nowTime, true)
         end
     end
     return true
@@ -459,15 +502,65 @@ function server.registryShipGetHP(shipBodyId)
     return GetFloat(prefix .. "/shieldHP"), GetFloat(prefix .. "/armorHP"), GetFloat(prefix .. "/bodyHP")
 end
 
+function server.registryShipGetRegenConfig(shipBodyId)
+    if not server.registryShipExists(shipBodyId) then
+        return nil
+    end
+
+    local prefix = _shipKeyPrefix(shipBodyId)
+    return {
+        tickInterval = GetFloat(prefix .. "/regen/tickInterval"),
+        shieldPerSecond = GetFloat(prefix .. "/regen/shieldPerSecond"),
+        armorPerSecond = GetFloat(prefix .. "/regen/armorPerSecond"),
+        bodyPerSecond = GetFloat(prefix .. "/regen/bodyPerSecond"),
+        shieldNoDamageDelay = GetFloat(prefix .. "/regen/shieldNoDamageDelay"),
+        armorNoDamageDelay = GetFloat(prefix .. "/regen/armorNoDamageDelay"),
+        bodyNoDamageDelay = GetFloat(prefix .. "/regen/bodyNoDamageDelay"),
+    }
+end
+
+function server.registryShipGetRegenLastDamageTimes(shipBodyId)
+    if not server.registryShipExists(shipBodyId) then
+        return nil
+    end
+
+    local prefix = _shipKeyPrefix(shipBodyId)
+    return {
+        shield = GetFloat(prefix .. "/regen/state/lastDamageTimeShield"),
+        armor = GetFloat(prefix .. "/regen/state/lastDamageTimeArmor"),
+        body = GetFloat(prefix .. "/regen/state/lastDamageTimeBody"),
+    }
+end
+
 function server.registryShipSetHP(shipBodyId, shieldHP, armorHP, bodyHP)
     if not server.registryShipExists(shipBodyId) then
         return
     end
     local prefix = _shipKeyPrefix(shipBodyId)
-    if shieldHP ~= nil then SetFloat(prefix .. "/shieldHP", shieldHP, true) end
-    if armorHP ~= nil then SetFloat(prefix .. "/armorHP", armorHP, true) end
+    local oldShield = GetFloat(prefix .. "/shieldHP")
+    local oldArmor = GetFloat(prefix .. "/armorHP")
+    local oldBody = GetFloat(prefix .. "/bodyHP")
+    local nowTime = (GetTime ~= nil) and GetTime() or 0.0
+
+    if shieldHP ~= nil then
+        SetFloat(prefix .. "/shieldHP", shieldHP, true)
+        if shieldHP < oldShield then
+            SetFloat(prefix .. "/regen/state/lastDamageTimeShield", nowTime, true)
+        end
+    end
+
+    if armorHP ~= nil then
+        SetFloat(prefix .. "/armorHP", armorHP, true)
+        if armorHP < oldArmor then
+            SetFloat(prefix .. "/regen/state/lastDamageTimeArmor", nowTime, true)
+        end
+    end
+
     if bodyHP ~= nil then
         SetFloat(prefix .. "/bodyHP", bodyHP, true)
+        if bodyHP < oldBody then
+            SetFloat(prefix .. "/regen/state/lastDamageTimeBody", nowTime, true)
+        end
         if bodyHP <= 0 then
             SetBool(prefix .. "/destroyed", true, true)
         end

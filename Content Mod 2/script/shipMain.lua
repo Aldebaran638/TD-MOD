@@ -55,6 +55,7 @@ end
 #include "server/movement/shipAttitudeController.lua"
 #include "server/movement/shipRollStabilizer.lua"
 #include "server/movement/shipDeathExplosion.lua"
+#include "server/recovery/shipHpRecovery.lua"
 
 -- 服务端初始化
 function server.init()
@@ -89,6 +90,7 @@ end
 function server.serverTick(dt)
     -- server.ensureCurrentShipState(defaultShipType)
     server.xSlotControlTick(dt)
+    server.shipHpRecoveryTick(dt)
     server.shipDeathExplosionTick(dt)
     server.bodyMoveStateReceiveTick(dt)
     server.bodyMassUpwardMoveTick(dt)

@@ -11,6 +11,15 @@ shipTypeRegistryData.enigmaticCruiser = {
     maxBodyHP = 2000,
     shieldRadius = 7,
     xSlotCount = 2,
+    regen = {
+        tickInterval = 0.1,        -- 固定恢复步长（秒）
+        shieldPerSecond = 70.0,    -- 护盾每秒恢复
+        armorPerSecond = 50.0,      -- 装甲每秒恢复
+        bodyPerSecond = 10.0,       -- 船体每秒恢复
+        shieldNoDamageDelay = 2.0, -- 护盾脱战恢复等待时间（秒）
+        armorNoDamageDelay = 4.0,  -- 装甲脱战恢复等待时间（秒）
+        bodyNoDamageDelay = 6.0,   -- 船体脱战恢复等待时间（秒）
+    },
     fx = {
         shieldHit = {
             ringParticleRadius = 0.1,
