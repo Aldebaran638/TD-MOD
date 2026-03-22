@@ -219,6 +219,15 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
             return renderResult
         end
 
+        -- 命中已摧毁的群星飞船：按环境命中处理，保证仍有普通爆炸效果
+        if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(hitTarget) then
+            renderResult.impactLayer = "environment"
+            if endPos ~= nil then
+                Explosion(endPos, 4.0)
+            end
+            return renderResult
+        end
+
         local targetShip = server.registryShipGetSnapshot(hitTarget)
         if targetShip == nil then
             return renderResult

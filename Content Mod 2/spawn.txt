@@ -1,1 +1,1 @@
-MOD/enigma_battlecruiser.xml:Enigma Battlecruiser
+MOD/enigma_battlecruiser.xml : Enigma Battlecruiser
