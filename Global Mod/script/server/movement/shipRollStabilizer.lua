@@ -98,11 +98,4 @@ function server.shipRollStabilizerUpdate(dt)
         ApplyBodyImpulse(body, bottomPos, bottomImpulse)
     end
 
-    local forceDir = _safeNormalize(topImpulse, rightWorld)
-    DebugWatch("rollStab.upAngle", rollError)
-    DebugWatch("rollStab.forceMag", signedForce)
-    DebugWatch(
-        "rollStab.forceDir",
-        string.format("%.3f,%.3f,%.3f", forceDir[1] or 0, forceDir[2] or 0, forceDir[3] or 0)
-    )
 end

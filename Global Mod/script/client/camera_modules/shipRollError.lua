@@ -65,9 +65,5 @@ function client.shipRollErrorTick(dt)
         1.0
     )
 
-    DebugWatch("rollErr.cli.body", body)
-    DebugWatch("rollErr.cli.angle", rollError)
-    DebugWatch("rollErr.cli.upDot", upDot)
-
     client.registryShipSetRollError(body, rollError)
 end
