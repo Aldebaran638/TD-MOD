@@ -23,6 +23,10 @@ local function _resolveWeaponSettings(weaponType)
     return settings
 end
 
+local function _xSlotWeaponTypeUsable(weaponType)
+    return weaponType ~= nil and weaponType ~= "" and weaponType ~= "none"
+end
+
 -- 读取目标飞船护盾半径（用于护盾球面入射点修正）
 local function _resolveTargetShieldRadius(targetBody, fallbackShipType)
     local radiusFallback = 20
@@ -424,7 +428,9 @@ function server.xSlotControlTick(dt)
         for i = 1, xSlotCount do
             local slotCd = server.registryShipGetXSlotCD(shipBody, i)
             local slotState = server.registryShipGetXSlotState(shipBody, i)
-            if slotCd == 0 and slotState == "idle" then
+            local slotSnap = (shipSnap and shipSnap.xSlots and shipSnap.xSlots[i]) or {}
+            local slotWeaponType = slotSnap.weaponType
+            if slotCd == 0 and slotState == "idle" and _xSlotWeaponTypeUsable(slotWeaponType) then
                 selectedSlot = i
                 break
             end
@@ -491,11 +497,14 @@ function server.xSlotControlTick(dt)
             -- launching 结束进入 idle 时，按武器配置写入正式冷却
             local refreshedSnap = server.registryShipGetSnapshot(shipBody)
             local slotSnap = (refreshedSnap and refreshedSnap.xSlots and refreshedSnap.xSlots[activeSlot]) or {}
-            local runtimeWeaponType = slotSnap.weaponType or "tachyonLance"
-            local runtimeWeaponSettings = _resolveWeaponSettings(runtimeWeaponType)
-            local cooldown = runtimeWeaponSettings.cooldown or runtimeWeaponSettings.CD or 0
-            if cooldown < 0 then
-                cooldown = 0
+            local runtimeWeaponType = slotSnap.weaponType or "none"
+            local cooldown = 0
+            if _xSlotWeaponTypeUsable(runtimeWeaponType) then
+                local runtimeWeaponSettings = _resolveWeaponSettings(runtimeWeaponType)
+                cooldown = runtimeWeaponSettings.cooldown or runtimeWeaponSettings.CD or 0
+                if cooldown < 0 then
+                    cooldown = 0
+                end
             end
             server.registryShipSetXSlotCD(shipBody, activeSlot, cooldown)
 
@@ -520,7 +529,7 @@ function server.xSlotControlTick(dt)
 
         local mountPos = slotSnap.firePosOffset or { x = 0, y = 0, z = 4 }
         local mountDir = slotSnap.fireDirRelative or { x = 0, y = 0, z = 1 }
-        local runtimeWeaponType = slotSnap.weaponType or "tachyonLance"
+        local runtimeWeaponType = slotSnap.weaponType or "none"
 
         local firePosOffset = _vec3TableToVec(mountPos, 0, 0, 4)
         local fireDir = _vec3TableToVec(mountDir, 0, 0, 1)

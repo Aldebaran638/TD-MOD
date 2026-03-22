@@ -10,6 +10,7 @@ shipTypeRegistryData.enigmaticCruiser = {
     maxArmorHP = 3000,
     maxBodyHP = 2000,
     shieldRadius = 7,
+    xSlotCount = 2,
     fx = {
         shieldHit = {
             ringParticleRadius = 0.1,
@@ -32,5 +33,6 @@ shipTypeRegistryData.enigmaticCruiser = {
             firePosOffset = { x = 0, y = 0, z = -4 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
         },
+        
     },
 }

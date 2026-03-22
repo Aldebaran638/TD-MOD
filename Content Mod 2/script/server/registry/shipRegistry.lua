@@ -121,7 +121,7 @@ end
 
 -- 婵繐绠戝▍鎺旂尵鐠囪尙鈧兘寮伴姘剨鐎圭寮堕弫鐐哄礃瀹€瀣xSlots 闁糕晝鍣︾槐?
 function server.registryXSlotWeaponTypeRegistered(weaponType)
-    if weaponType == nil or weaponType == "" then
+    if weaponType == nil or weaponType == "" or weaponType == "none" then
         return false
     end
     return GetBool(_xSlotWeaponTypeKeyPrefix(weaponType) .. "/registered")
@@ -169,9 +169,18 @@ function server.registryRegisterShipType(shipType, defaultShipType)
     local resolvedShipType, definition = _resolveShipTypeDefinition(shipType, defaultShipType)
     local prefix = _shipTypeKeyPrefix(resolvedShipType)
     local xSlots = definition.xSlots or {}
-    local xSlotCount = #xSlots
-    if xSlotCount <= 0 then
-        xSlotCount = definition.xSlotNum or 1
+    local definedSlotCount = #xSlots
+    local xSlotCount = definition.xSlotCount
+    if xSlotCount == nil then
+        if definedSlotCount > 0 then
+            xSlotCount = definedSlotCount
+        else
+            xSlotCount = definition.xSlotNum or 1
+        end
+    end
+    xSlotCount = math.floor(xSlotCount or 0)
+    if xSlotCount < 0 then
+        xSlotCount = 0
     end
 
     SetBool(prefix .. "/registered", true, true)
@@ -184,14 +193,16 @@ function server.registryRegisterShipType(shipType, defaultShipType)
 
     for i = 1, xSlotCount do
         local slotDef = xSlots[i] or {}
-        local weaponType = slotDef.weaponType or "tachyonLance"
+        local weaponType = slotDef.weaponType or "none"
         local slotPrefix = prefix .. "/xSlots/" .. tostring(i)
 
         SetString(slotPrefix .. "/weaponType", weaponType, true)
         _writeVec3ToRegistry(slotPrefix .. "/mount/firePosOffset", slotDef.firePosOffset)
         _writeVec3ToRegistry(slotPrefix .. "/mount/fireDirRelative", slotDef.fireDirRelative)
 
-        server.registryEnsureXSlotWeaponTypeRegistered(weaponType)
+        if weaponType ~= "none" then
+            server.registryEnsureXSlotWeaponTypeRegistered(weaponType)
+        end
     end
 end
 
@@ -280,8 +291,8 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
     SetFloat(prefix .. "/yawError", 0.0, true)
     SetFloat(prefix .. "/rollError", 0.0, true)
     local xSlotCount = GetInt(typePrefix .. "/xSlots/count")
-    if xSlotCount <= 0 then
-        xSlotCount = 1
+    if xSlotCount < 0 then
+        xSlotCount = 0
     end
 
     SetInt(prefix .. "/xSlots/count", xSlotCount, true)
@@ -309,6 +320,9 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
         local slotPrefix = prefix .. "/xSlots/" .. tostring(i)
         local typeSlotPrefix = typePrefix .. "/xSlots/" .. tostring(i)
         local weaponType = GetString(typeSlotPrefix .. "/weaponType")
+        if weaponType == nil or weaponType == "" then
+            weaponType = "none"
+        end
         local weaponTypePrefix = _xSlotWeaponTypeKeyPrefix(weaponType)
 
         SetString(slotPrefix .. "/weaponType", weaponType, true)
@@ -316,9 +330,15 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
         SetString(slotPrefix .. "/state", "idle", true)
         SetFloat(slotPrefix .. "/chargeRemain", 0, true)
         SetFloat(slotPrefix .. "/launchRemain", 0, true)
-        SetFloat(slotPrefix .. "/chargeDuration", GetFloat(weaponTypePrefix .. "/chargeDuration"), true)
-        SetFloat(slotPrefix .. "/launchDuration", GetFloat(weaponTypePrefix .. "/launchDuration"), true)
-        SetFloat(slotPrefix .. "/randomTrajectoryAngle", GetFloat(weaponTypePrefix .. "/randomTrajectoryAngle"), true)
+        if weaponType == "none" then
+            SetFloat(slotPrefix .. "/chargeDuration", 0, true)
+            SetFloat(slotPrefix .. "/launchDuration", 0, true)
+            SetFloat(slotPrefix .. "/randomTrajectoryAngle", 0, true)
+        else
+            SetFloat(slotPrefix .. "/chargeDuration", GetFloat(weaponTypePrefix .. "/chargeDuration"), true)
+            SetFloat(slotPrefix .. "/launchDuration", GetFloat(weaponTypePrefix .. "/launchDuration"), true)
+            SetFloat(slotPrefix .. "/randomTrajectoryAngle", GetFloat(weaponTypePrefix .. "/randomTrajectoryAngle"), true)
+        end
 
         local firePosOffset = _readVec3FromRegistry(typeSlotPrefix .. "/mount/firePosOffset")
         local fireDirRelative = _readVec3FromRegistry(typeSlotPrefix .. "/mount/fireDirRelative")
