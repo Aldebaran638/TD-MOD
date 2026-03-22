@@ -1,6 +1,6 @@
-name = Mod name here
-author = Your name here
-description = Informative description here
+name = (Stellaris ships)Enigmatic Battlecruiser
+author = Aldebaran
+description = A space ship From Stellaris.
 tags = 
 version = 2
 

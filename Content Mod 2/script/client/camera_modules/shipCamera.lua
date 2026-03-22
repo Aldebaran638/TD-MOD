@@ -30,6 +30,10 @@ client.shipCamera = client.shipCamera or {
     frontAimYaw = 0.0,
     frontAimPitch = 0.0,
 
+    rearFreelookActive = false,
+    rmbLongPressSeconds = 0.22,
+    rmbPressTime = 0.0,
+    rmbLongTriggered = false,
     fov = 70,
 }
 
@@ -174,10 +178,18 @@ end
 
 function client.shipCameraTick(dt)
     local cam = client.shipCamera
+
+    if cam.rearFreelookActive == nil then cam.rearFreelookActive = false end
+    if cam.rmbLongPressSeconds == nil then cam.rmbLongPressSeconds = 0.22 end
+    if cam.rmbPressTime == nil then cam.rmbPressTime = 0.0 end
+    if cam.rmbLongTriggered == nil then cam.rmbLongTriggered = false end
+
     local vehicle = GetPlayerVehicle()
     if vehicle == nil or vehicle == 0 then
         client.camshipBody = 0
         cam._lastControlledBody = 0
+        cam.rearFreelookActive = false
+        cam.rmbLongTriggered = false
         return
     end
 
@@ -186,6 +198,8 @@ function client.shipCameraTick(dt)
     if scriptBody == 0 or playerBody == nil or playerBody == 0 or playerBody ~= scriptBody then
         client.camshipBody = 0
         cam._lastControlledBody = 0
+        cam.rearFreelookActive = false
+        cam.rmbLongTriggered = false
         return
     end
 
@@ -193,12 +207,16 @@ function client.shipCameraTick(dt)
     if not HasTag(body, "stellarisShip") then
         client.camshipBody = 0
         cam._lastControlledBody = 0
+        cam.rearFreelookActive = false
+        cam.rmbLongTriggered = false
         return
     end
 
     if client.registryShipExists ~= nil and (not client.registryShipExists(body)) then
         client.camshipBody = 0
         cam._lastControlledBody = 0
+        cam.rearFreelookActive = false
+        cam.rmbLongTriggered = false
         return
     end
 
@@ -220,25 +238,47 @@ function client.shipCameraTick(dt)
         cam.viewBlendTarget = 0.0
         cam.frontAimYaw = 0.0
         cam.frontAimPitch = 0.0
+        cam.rearFreelookActive = false
+        cam.rmbLongTriggered = false
         cam._lastControlledBody = body
     end
 
     local frameDt = _resolveFrameDt(dt, cam)
 
     if InputPressed("rmb") then
-        if cam.viewMode == "rear" then
-            local rearOffsetNow = sphericalToCartesian(cam.r, cam.b, cam.c)
-            local rearForwardNow = VecNormalize(VecScale(rearOffsetNow, -1))
-            local rearYawWorldNow, rearPitchWorldNow = vectorToWorldYawPitch(rearForwardNow)
-            cam.frontAimYaw = wrapAngle180(rearYawWorldNow)
-            cam.frontAimPitch = rearPitchWorldNow
+        cam.rmbPressTime = (GetTime ~= nil) and GetTime() or 0
+        cam.rmbLongTriggered = false
+    end
 
-            cam.viewMode = "front"
-            cam.viewBlendTarget = 1.0
-        else
-            cam.viewMode = "rear"
-            cam.viewBlendTarget = 0.0
+    if cam.viewMode == "rear" and InputDown("rmb") and (not cam.rmbLongTriggered) then
+        local now = (GetTime ~= nil) and GetTime() or 0
+        local hold = now - (cam.rmbPressTime or now)
+        if hold >= (cam.rmbLongPressSeconds or 0.22) then
+            cam.rmbLongTriggered = true
+            cam.rearFreelookActive = true
         end
+    end
+
+    if InputReleased("rmb") then
+        if cam.rmbLongTriggered then
+            cam.rearFreelookActive = false
+        else
+            if cam.viewMode == "rear" then
+                local rearOffsetNow = sphericalToCartesian(cam.r, cam.b, cam.c)
+                local rearForwardNow = VecNormalize(VecScale(rearOffsetNow, -1))
+                local rearYawWorldNow, rearPitchWorldNow = vectorToWorldYawPitch(rearForwardNow)
+                cam.frontAimYaw = wrapAngle180(rearYawWorldNow)
+                cam.frontAimPitch = rearPitchWorldNow
+
+                cam.viewMode = "front"
+                cam.viewBlendTarget = 1.0
+            else
+                cam.viewMode = "rear"
+                cam.viewBlendTarget = 0.0
+            end
+            cam.rearFreelookActive = false
+        end
+        cam.rmbLongTriggered = false
     end
 
     local mouseDX = InputValue("mousedx")
@@ -267,8 +307,9 @@ function client.shipCameraTick(dt)
     else
         local frontPitchLimit = cam.frontAimPitchLimit or cam.angleLimitPitch
 
+        -- Front mode mouse feel matches rear mode (left drag -> left target).
         cam.frontAimYaw = wrapAngle180((cam.frontAimYaw or shipYawWorld) - mouseDX * cam.mouseSensitivity)
-        cam.frontAimPitch = (cam.frontAimPitch or 0.0) + mouseDY * cam.mouseSensitivity
+        cam.frontAimPitch = (cam.frontAimPitch or 0.0) - mouseDY * cam.mouseSensitivity
 
         cam.frontAimPitch = clamp(cam.frontAimPitch, -frontPitchLimit, frontPitchLimit)
     end
@@ -349,6 +390,9 @@ function client.shipCameraTick(dt)
     if cam.viewMode == "front" then
         yawError = frontErrorYaw
         pitchError = frontErrorPitch
+    elseif cam.rearFreelookActive then
+        yawError = 0.0
+        pitchError = 0.0
     else
         local camForwardWorld = rearForwardWorld
         local camForwardLocal = TransformToLocalVec(shipTransform, camForwardWorld)

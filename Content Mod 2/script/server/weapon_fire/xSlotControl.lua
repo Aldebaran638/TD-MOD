@@ -295,7 +295,7 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
 
     -- Teardown API: Explosion(pos, size) 其中 size 范围 0.5 - 4.0
     -- 为了看清客户端渲染特效.暂时屏蔽爆炸效果
-    -- Explosion(endPos, 4.0)
+    Explosion(endPos, 4.0)
     return renderResult
 end
 
