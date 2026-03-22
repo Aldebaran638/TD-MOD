@@ -15,6 +15,7 @@ client = client or {}
 #include "draw_modules/xSlotLaunchFx.lua"
 #include "draw_modules/shieldHitFx.lua"
 #include "draw_modules/hitPointFx.lua"
+#include "draw_modules/shipDestroyedFx.lua"
 
 function client.init()
     client.soundModuleInit()
@@ -30,6 +31,7 @@ function client.clientTick(dt)
     client.xSlotLaunchFxTick(dt)
     client.shieldHitFxTick(dt)
     client.hitPointFxTick(dt)
+    client.shipDestroyedFxTick(dt)
 
     client.shipHealthBarTick(dt)
 end
