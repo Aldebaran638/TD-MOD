@@ -29,8 +29,8 @@ local function _startDestroyedFx(center)
     state.sphereFx[#state.sphereFx + 1] = {
         center = center,
         age = 0.0,
-        life = 1.15,
-        maxRadius = 4.8,
+        life = 1.4,
+        maxRadius = 7.2,
     }
 
     state.ringFx[#state.ringFx + 1] = {
@@ -55,25 +55,25 @@ local function _tickSphereFx(dt)
             local radius = fx.maxRadius * t
             local alpha = math.pow(1.0 - t, 0.58)
 
-            PointLight(fx.center, 1.0, 0.95, 0.74, 11.0 * alpha)
-            PointLight(fx.center, 1.0, 0.88, 0.52, 8.0 * alpha)
+            PointLight(fx.center, 1.0, 0.95, 0.74, 15.0 * alpha)
+            PointLight(fx.center, 1.0, 0.88, 0.52, 11.0 * alpha)
 
             ParticleReset()
             ParticleColor(1.0, 0.98, 0.78, 1.0, 0.90, 0.55)
-            ParticleRadius(0.50, 0.12, "easeout")
+            ParticleRadius(0.68, 0.16, "easeout")
             ParticleAlpha(0.98 * alpha, 0.0)
             ParticleGravity(0.0)
             ParticleDrag(0.04)
-            ParticleEmissive(34.0 * alpha, 0.0)
+            ParticleEmissive(42.0 * alpha, 0.0)
             ParticleCollide(0.0)
 
-            for _ = 1, 56 do
+            for _ = 1, 84 do
                 local dir = _randomUnitVec()
                 local jitter = 0.25 + 0.35 * math.random()
                 local pos = VecAdd(fx.center, VecScale(dir, radius * jitter))
-                local speed = 7.0 + 10.0 * (1.0 - t) + 7.0 * math.random()
+                local speed = 8.0 + 12.0 * (1.0 - t) + 8.0 * math.random()
                 local vel = VecScale(dir, speed)
-                SpawnParticle(pos, vel, 0.45 + 0.35 * math.random())
+                SpawnParticle(pos, vel, 0.65 + 0.45 * math.random())
             end
         end
         i = i - 1

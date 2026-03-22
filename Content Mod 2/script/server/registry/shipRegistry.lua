@@ -222,6 +222,25 @@ function server.registryShipExists(shipBodyId)
     return GetBool(_shipKeyPrefix(shipBodyId) .. "/exists")
 end
 
+function server.registryShipIsBodyDead(shipBodyId)
+    if not server.registryShipExists(shipBodyId) then
+        return false
+    end
+
+    local prefix = _shipKeyPrefix(shipBodyId)
+    if GetBool(prefix .. "/destroyed") then
+        return true
+    end
+
+    local bodyHP = GetFloat(prefix .. "/bodyHP")
+    if bodyHP <= 0 then
+        SetBool(prefix .. "/destroyed", true, true)
+        return true
+    end
+
+    return false
+end
+
 function server.registryShipGetRotationError(shipBodyId)
     if not server.registryShipExists(shipBodyId) then
         return 0.0, 0.0
@@ -286,6 +305,7 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
     SetInt(prefix .. "/moveState", 0, true)
     SetInt(prefix .. "/move/request", 0, true)
     SetInt(prefix .. "/move/requestState", 0, true)
+    SetBool(prefix .. "/destroyed", false, true)
     -- 濠殿喗瀵ч埀顑挎祰椤曘倕顔忛鍡欑闁汇垼椴哥敮鍫曞礆鐠虹儤鐝?閻庡箍鍨洪崺娑氱博椤栨艾鏅搁柛蹇嬪劵�?
     SetFloat(prefix .. "/pitchError", 0.0, true)
     SetFloat(prefix .. "/yawError", 0.0, true)
@@ -446,7 +466,12 @@ function server.registryShipSetHP(shipBodyId, shieldHP, armorHP, bodyHP)
     local prefix = _shipKeyPrefix(shipBodyId)
     if shieldHP ~= nil then SetFloat(prefix .. "/shieldHP", shieldHP, true) end
     if armorHP ~= nil then SetFloat(prefix .. "/armorHP", armorHP, true) end
-    if bodyHP ~= nil then SetFloat(prefix .. "/bodyHP", bodyHP, true) end
+    if bodyHP ~= nil then
+        SetFloat(prefix .. "/bodyHP", bodyHP, true)
+        if bodyHP <= 0 then
+            SetBool(prefix .. "/destroyed", true, true)
+        end
+    end
 end
 
 function server.registryShipGetMoveState(shipBodyId)

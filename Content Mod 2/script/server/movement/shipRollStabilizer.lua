@@ -4,7 +4,7 @@
 server = server or {}
 
 server.shipRollStabilizerConfig = server.shipRollStabilizerConfig or {
-    rollDeadzone = 0.8,       -- 死区角度（度）
+    rollDeadzone = 0.3,       -- 死区角度（度）
     rollForceGain = 5000.0,     -- 每度误差对应的力增益
     rollForceMax = 50000.0,     -- 力上限
     rollDamping = 200000.0,       -- 按滚转角速度施加的阻尼系数
@@ -41,6 +41,9 @@ function server.shipRollStabilizerUpdate(dt)
         return
     end
     if server.registryShipExists ~= nil and (not server.registryShipExists(body)) then
+        return
+    end
+    if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(body) then
         return
     end
 

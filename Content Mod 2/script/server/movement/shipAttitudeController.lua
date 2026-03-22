@@ -16,16 +16,16 @@ server.shipAttitudeControllerConfig = server.shipAttitudeControllerConfig or {
     yawSoftZone = 3.0,         -- deg after deadzone, force ramps in smoothly
     pitchSoftZone = 3.0,       -- deg after deadzone, force ramps in smoothly
 
-    yawForceGain = 20000,        -- force-like gain per deg
-    pitchForceGain = 20000,      -- force-like gain per deg
+    yawForceGain = 40000,        -- force-like gain per deg
+    pitchForceGain = 90000,      -- force-like gain per deg
 
     yawForceMax = 12000,         -- force-like cap
     pitchForceMax = 12000,       -- force-like cap
 
-    yawDamping = 360000.0,         -- damping against yaw angular speed
-    pitchDamping = 360000.0,       -- damping against pitch angular speed
-    yawRateDeadzone = 0.05,    -- rad/s small-rate jitter cutoff
-    pitchRateDeadzone = 0.05,  -- rad/s small-rate jitter cutoff
+    yawDamping = 900000.0,         -- damping against yaw angular speed
+    pitchDamping = 2500000.0,       -- damping against pitch angular speed
+    yawRateDeadzone = 0.01,    -- rad/s small-rate jitter cutoff
+    pitchRateDeadzone = 0.01,  -- rad/s small-rate jitter cutoff
 
     yawLeverArm = 8.0,         -- local z offset used for yaw pair
     pitchLeverArm = 8.0,       -- local z offset used for pitch pair
@@ -204,6 +204,9 @@ end
 function server.shipAttitudeControllerUpdate(dt)
     local shipBodyId = server.shipBody
     if shipBodyId == nil or shipBodyId == 0 then
+        return
+    end
+    if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBodyId) then
         return
     end
 

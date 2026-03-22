@@ -59,6 +59,9 @@ function server_xSlot_handleFireRequest()
         return
     end
     server.registryShipEnsure(shipBody, server.defaultShipType, server.defaultShipType)
+    if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
+        return
+    end
     server.registryShipSetXSlotRequest(shipBody, 1, 1)
 end
 
@@ -70,6 +73,10 @@ local function _xSlotConsumeRequestAndMaybeStartCharging()
     end
 
     server.registryShipEnsure(shipBody, server.defaultShipType, server.defaultShipType)
+    if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
+        server.registryShipSetXSlotRequest(shipBody, 1, 0)
+        return
+    end
     local request = server.registryShipGetXSlotRequest(shipBody, 1)
     if request == 0 then
         return
@@ -369,6 +376,10 @@ function server.xSlotControlTick(dt)
 
     -- 步骤2：确保飞船已注册到 Registry
     if not server.registryShipEnsure(shipBody, server.defaultShipType, server.defaultShipType) then
+        return
+    end
+    if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
+        server.registryShipSetXSlotsRequest(shipBody, 0)
         return
     end
 

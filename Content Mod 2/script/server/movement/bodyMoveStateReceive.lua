@@ -49,6 +49,11 @@ function server_bodyMoveStateSet(playerId, moveState)
     end
 
     server.registryShipEnsure(body, server.defaultShipType, server.defaultShipType)
+    if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(body) then
+        server.registryShipSetMoveRequestState(body, 0)
+        server.registryShipSetMoveState(body, 0)
+        return
+    end
     server.registryShipSetMoveRequestState(body, moveState)
 end
 
@@ -60,6 +65,11 @@ function server.bodyMoveStateReceiveTick(dt)
     end
 
     server.registryShipEnsure(body, server.defaultShipType, server.defaultShipType)
+    if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(body) then
+        server.registryShipSetMoveRequestState(body, 0)
+        server.registryShipSetMoveState(body, 0)
+        return
+    end
 
     if not _isAnyPlayerOnShip(body) then
         server.registryShipSetMoveRequestState(body, 0)

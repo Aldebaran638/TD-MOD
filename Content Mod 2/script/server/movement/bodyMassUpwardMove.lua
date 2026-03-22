@@ -54,6 +54,9 @@ function server.bodyMassUpwardMoveTick(dt)
     if body == nil or body == 0 then
         return
     end
+    if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(body) then
+        return
+    end
 
     local byBody = server.bodyMassUpwardMoveState.byBody
     local state = byBody[body]
