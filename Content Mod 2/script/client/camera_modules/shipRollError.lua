@@ -59,15 +59,5 @@ function client.shipRollErrorTick(dt)
     local camUpOnPlane = _projectOnPlane(camUp, shipForward)
 
     local rollError = _signedAngleOnAxis(shipUpOnPlane, camUpOnPlane, shipForward)
-    local upDot = _clamp(
-        VecDot(_safeNormalize(shipUpOnPlane, Vec(0, 1, 0)), _safeNormalize(camUpOnPlane, Vec(0, 1, 0))),
-        -1.0,
-        1.0
-    )
-
-    DebugWatch("rollErr.cli.body", body)
-    DebugWatch("rollErr.cli.angle", rollError)
-    DebugWatch("rollErr.cli.upDot", upDot)
-
     client.registryShipSetRollError(body, rollError)
 end

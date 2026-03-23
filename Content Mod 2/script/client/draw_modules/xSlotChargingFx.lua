@@ -47,7 +47,7 @@ local function _spawnChargingEntry(shipBodyId, shipT, targetLocalPos, radiusScal
         targetLocalPos = targetLocalPos,
         age = 0,
         life = 0.52 + 0.22 * math.random(),
-        radius = 0.08 + 0.05 * math.random(),
+        radius = 0.056 + 0.035 * math.random(),
         speed = 7.0 + 4.5 * math.random(),
     })
 end
@@ -130,7 +130,7 @@ function client.xSlotChargingFxTick(dt)
 
             ParticleReset()
             ParticleColor(0.96, 1.0, 1.0, 0.16, 0.45, 1.0)
-            ParticleRadius(entry.radius, 0.02, "easeout")
+            ParticleRadius(entry.radius, 0.014, "easeout")
             ParticleAlpha(0.86, 0.0)
             ParticleGravity(0.0)
             ParticleDrag(0.10)

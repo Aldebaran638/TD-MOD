@@ -5,7 +5,7 @@ client = client or {}
 
 client.shipCamera = client.shipCamera or {
     r = 14,
-    b = 58,
+    b = 0,
     c = 0,
 
     rMin = 10,
