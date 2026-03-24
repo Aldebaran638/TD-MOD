@@ -5,11 +5,12 @@ client = client or {}
 
 client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
     panelWidth = 260,
-    panelHeight = 62,
-    bottomOffset = 122,
+    panelHeight = 78,
+    rightOffset = 270,
+    bottomOffset = 34,
     heatBarWidth = 180,
     heatBarHeight = 12,
-    heatBarOffsetY = 34,
+    heatBarOffsetY = 12,
     iconSize = 26,
     labelSize = 18,
     valueSize = 14,
@@ -143,8 +144,8 @@ function client.mainWeaponHudDraw()
 
     local panelW = cfg.panelWidth
     local panelH = cfg.panelHeight
-    local x = UiCenter() - panelW * 0.5
-    local y = UiHeight() - cfg.bottomOffset
+    local x = UiWidth() - panelW - cfg.rightOffset
+    local y = UiHeight() - panelH - cfg.bottomOffset
     local currentMode = state.currentMainWeapon or "xSlot"
 
     UiPush()
@@ -154,27 +155,6 @@ function client.mainWeaponHudDraw()
         UiRect(panelW, panelH)
         UiColor(cfg.borderColor[1], cfg.borderColor[2], cfg.borderColor[3], cfg.borderColor[4])
         UiRectOutline(panelW, panelH, 2)
-
-        _drawWeaponIcon(12, 10, cfg.iconSize, cfg.xSlotColor, "X", currentMode == "xSlot", cfg.borderColor, cfg.inactiveColor)
-        _drawWeaponIcon(46, 10, cfg.iconSize, cfg.lSlotColor, "L", currentMode == "lSlot", cfg.borderColor, cfg.inactiveColor)
-
-        UiPush()
-            UiTranslate(84, 8)
-            UiColor(cfg.textColor[1], cfg.textColor[2], cfg.textColor[3], cfg.textColor[4])
-            UiFont("regular.ttf", cfg.labelSize)
-            if currentMode == "lSlot" then
-                UiText("Kinetic Artillery")
-            else
-                UiText("Tachyon Lance")
-            end
-        UiPop()
-
-        UiPush()
-            UiTranslate(84, 28)
-            UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
-            UiFont("regular.ttf", cfg.valueSize)
-            UiText((currentMode == "lSlot") and "Main Weapon: L-Slot" or "Main Weapon: X-Slot")
-        UiPop()
 
         UiPush()
             UiTranslate(12, cfg.heatBarOffsetY)
@@ -201,6 +181,27 @@ function client.mainWeaponHudDraw()
             else
                 UiText(string.format("HEAT %d%%", math.floor(state.heatFraction * 100 + 0.5)))
             end
+        UiPop()
+
+        _drawWeaponIcon(12, 34, cfg.iconSize, cfg.xSlotColor, "X", currentMode == "xSlot", cfg.borderColor, cfg.inactiveColor)
+        _drawWeaponIcon(46, 34, cfg.iconSize, cfg.lSlotColor, "L", currentMode == "lSlot", cfg.borderColor, cfg.inactiveColor)
+
+        UiPush()
+            UiTranslate(84, 32)
+            UiColor(cfg.textColor[1], cfg.textColor[2], cfg.textColor[3], cfg.textColor[4])
+            UiFont("regular.ttf", cfg.labelSize)
+            if currentMode == "lSlot" then
+                UiText("Kinetic Artillery")
+            else
+                UiText("Tachyon Lance")
+            end
+        UiPop()
+
+        UiPush()
+            UiTranslate(84, 52)
+            UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
+            UiFont("regular.ttf", cfg.valueSize)
+            UiText((currentMode == "lSlot") and "Main Weapon: L-Slot" or "Main Weapon: X-Slot")
         UiPop()
     UiPop()
 end
