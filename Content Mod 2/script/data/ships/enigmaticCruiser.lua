@@ -44,4 +44,18 @@ shipTypeRegistryData.enigmaticCruiser = {
         },
         
     },
+    lSlots = {
+        {
+            weaponType = "kineticArtillery",
+            firePosOffset = { x = 6, y = 0, z = -4 },
+            fireDirRelative = { x = 0, y = 0, z = -1 },
+            aimMode = "forwardConvergeByRange",
+        },
+        {
+            weaponType = "kineticArtillery",
+            firePosOffset = { x = -6, y = 0, z = -4 },
+            fireDirRelative = { x = 0, y = 0, z = -1 },
+            aimMode = "forwardConvergeByRange",
+        },
+    },
 }

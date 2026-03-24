@@ -149,3 +149,105 @@ shipTypeRegistryData.enigmaticCruiser = {
 4.激光周围向前冲的粒子。粒子颜色只能是蓝白色
 
 先说说你打算绘制哪些内容？修改哪个文件？会给我哪些参数让我自由调整？
+
+现在只看“炮弹相关”，我会把 GM 里的模块先拆成这几块。这样你后面实现时，每块职责会很清楚。
+
+服务端控制层
+放置位置：Global Mod/script/server/weapon_fire/
+
+mainWeaponControl.lua
+层级：服务端武器总控层
+职责：决定当前左键到底触发 xSlot 还是 lSlot，消费“切换主武器请求”和“主开火请求”。
+说明：它不直接维护炮弹，只负责分发。
+
+lSlotControl.lua
+层级：服务端 L 槽武器控制层
+职责：管理火炮本身的开火条件，比如冷却、装填、是否允许发射；一旦允许，就调用炮弹管理器生成炮弹。
+说明：它是“火炮武器逻辑”，不是“炮弹飞行逻辑”。
+
+服务端执行层
+放置位置：Global Mod/script/server/weapon_fire/
+
+projectileManager.lua
+层级：服务端炮弹执行层
+职责：维护本船发射出去的所有炮弹运行时表；负责生成、更新、碰撞、爆炸、销毁。
+说明：这是炮弹系统的核心模块，表就挂在 server 运行时状态下面，只管本船炮弹。
+
+projectileCollision.lua
+层级：服务端炮弹命中判定层
+职责：给 projectileManager 提供碰撞检测与命中结果判断，比如命中环境、命中飞船、命中护盾时返回什么结果。
+说明：可以先并进 projectileManager，以后复杂了再拆出来。
+
+projectileDamage.lua
+层级：服务端炮弹伤害结算层
+职责：根据命中结果去扣护盾、装甲、船体，或者触发环境爆炸。
+说明：它和 xSlot 的伤害结算思路类似，但服务对象变成实体炮弹。
+
+数据定义层
+放置位置：Global Mod/script/data/
+
+weapons/lSlots/*.lua
+层级：武器定义层
+职责：定义某种 L 槽火炮的参数，比如初速度、寿命、炮弹半径、装填时间、爆炸威力。
+说明：这是“火炮类型数据”，不是具体某枚炮弹。
+
+projectiles/*.lua
+层级：炮弹类型定义层
+职责：定义炮弹实体本身的参数，比如使用哪个实体/XML、尾焰类型、碰撞半径、是否受重力影响。
+说明：如果以后一个火炮可能发多种弹，这层会很好用。
+
+Registry / 状态桥接层
+放置位置：Global Mod/script/server/registry/ 和 Global Mod/script/client/registry/
+
+shipRegistry.lua 的扩展字段
+层级：飞船运行时状态层
+职责：记录与炮弹系统有关但属于“飞船状态”的信息，比如 currentMainWeapon、主武器切换请求、主开火请求、L 槽渲染事件。
+说明：这里只放“飞船状态 / 事件”，不放炮弹主表。
+
+shipRegistryRequest.lua 的扩展接口
+层级：服务端请求接入层
+职责：接收客户端发来的 Q 切换请求、左键主开火请求，并做驾驶员校验。
+说明：和你现在 xSlot 的接法保持一致。
+
+客户端表现层
+放置位置：Global Mod/script/client/
+
+input_handling/mainWeaponInput.lua
+层级：客户端输入层
+职责：处理 Q 切换主武器、左键主开火，并把请求发给服务端。
+说明：客户端只发请求，不改最终状态。
+
+draw_modules/projectileTrailFx.lua
+层级：客户端炮弹表现层
+职责：渲染炮弹尾焰、尾迹、曳光感。
+说明：这是你刚才提到的客户端主要工作。
+
+draw_modules/lSlotImpactFx.lua
+层级：客户端命中特效层
+职责：渲染火炮命中时的爆点、冲击火光、碎片感。
+说明：如果以后想让炮弹命中和 x 槽命中有不同视觉语言，这层就很有必要。
+
+sound_modules/lSlotSound.lua
+层级：客户端声音层
+职责：火炮开火声、飞行呼啸、爆炸声。
+说明：可以先并到现有 soundModule，以后再拆。
+
+如果只保留“最小起步集”，那我建议第一阶段实际只需要这 6 个：
+
+server/weapon_fire/mainWeaponControl.lua
+server/weapon_fire/lSlotControl.lua
+server/weapon_fire/projectileManager.lua
+server/registry/shipRegistry.lua 扩展
+server/registry/shipRegistryRequest.lua 扩展
+client/input_handling/mainWeaponInput.lua
+客户端表现第一阶段甚至可以只补一个：
+
+client/draw_modules/projectileTrailFx.lua
+一句话总结这个层次：
+
+registry 负责飞船状态和请求
+mainWeaponControl / lSlotControl 负责武器决策
+projectileManager 负责炮弹生命周期
+客户端只负责输入请求和视觉表现
+
+最麻烦的就是那个护盾

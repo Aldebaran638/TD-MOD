@@ -42,7 +42,10 @@ function server.ensureCurrentShipState(shipType)
 end
 
 -- x 槽控制模块从外部抽取为独立文件：script/server/weapon_fire/xSlotControl.lua
+#include "server/weapon_fire/mainWeaponControl.lua"
 #include "server/weapon_fire/xSlotControl.lua"
+#include "server/weapon_fire/lSlotControl.lua"
+#include "server/weapon_fire/projectileManager.lua"
 -- 移动类模块：根据 body 质量施加竖直向上�?
 #include "server/movement/bodyMassUpwardMove.lua"
 -- 移动类模块：根据 W/S 输入施加前后推进�?
@@ -89,38 +92,16 @@ end
 -- server.launchTime 飞船发射持续时间
 function server.serverTick(dt)
     -- server.ensureCurrentShipState(defaultShipType)
-    local start = GetTime()
-
+    server.mainWeaponControlTick(dt)
     server.xSlotControlTick(dt)
-    local tA = GetTime()
-
+    server.lSlotControlTick(dt)
+    server.projectileManagerTick(dt)
     server.shipHpRecoveryTick(dt)
-    local tB = GetTime()
-
     server.shipDeathExplosionTick(dt)
-    local tC = GetTime()
-
     server.bodyMoveStateReceiveTick(dt)
-    local tD = GetTime()
-
     server.bodyMassUpwardMoveTick(dt)
-    local tE = GetTime()
-
     server.bodyDirectionalMoveTick(dt)
-    local tF = GetTime()
-
     server.bodyVelocityQuadraticDampingTick(dt)
-    local tG = GetTime()
-
-    DebugWatch("prof.srv.dt", dt or 0.0)
-    DebugWatch("prof.srv.xSlotControl", tA - start)
-    DebugWatch("prof.srv.hpRecovery", tB - tA)
-    DebugWatch("prof.srv.deathExplosion", tC - tB)
-    DebugWatch("prof.srv.moveStateRecv", tD - tC)
-    DebugWatch("prof.srv.massUpward", tE - tD)
-    DebugWatch("prof.srv.directionalMove", tF - tE)
-    DebugWatch("prof.srv.velDamping", tG - tF)
-    DebugWatch("prof.srv.total", tG - start)
 end
 
 function server.update(dt)

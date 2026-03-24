@@ -42,7 +42,10 @@ function server.ensureCurrentShipState(shipType)
 end
 
 -- x 槽控制模块从外部抽取为独立文件：script/server/weapon_fire/xSlotControl.lua
+#include "server/weapon_fire/mainWeaponControl.lua"
 #include "server/weapon_fire/xSlotControl.lua"
+#include "server/weapon_fire/lSlotControl.lua"
+#include "server/weapon_fire/projectileManager.lua"
 -- 移动类模块：根据 body 质量施加竖直向上�?
 #include "server/movement/bodyMassUpwardMove.lua"
 -- 移动类模块：根据 W/S 输入施加前后推进�?
@@ -89,7 +92,10 @@ end
 -- server.launchTime 飞船发射持续时间
 function server.serverTick(dt)
     -- server.ensureCurrentShipState(defaultShipType)
+    server.mainWeaponControlTick(dt)
     server.xSlotControlTick(dt)
+    server.lSlotControlTick(dt)
+    server.projectileManagerTick(dt)
     server.shipHpRecoveryTick(dt)
     server.shipDeathExplosionTick(dt)
     server.bodyMoveStateReceiveTick(dt)

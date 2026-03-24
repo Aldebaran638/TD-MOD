@@ -65,13 +65,15 @@ local function _noise2D(x, y, seed)
     return _fract(n)
 end
 
-local function _probabilityByRing(ring)
-    if ring <= ShieldConfig.guaranteeRing then
+local function _probabilityByRing(ring, guaranteeRing, maxRing)
+    local guarantee = guaranteeRing or ShieldConfig.guaranteeRing
+    local maximum = maxRing or ShieldConfig.maxRing
+    if ring <= guarantee then
         return 1.0
     end
 
-    local den = math.max(1, ShieldConfig.maxRing - ShieldConfig.guaranteeRing)
-    local t = (ring - ShieldConfig.guaranteeRing) / den
+    local den = math.max(1, maximum - guarantee)
+    local t = (ring - guarantee) / den
     return 1.0 - t * (1.0 - ShieldConfig.minProbability)
 end
 
@@ -273,7 +275,7 @@ local function _emitHexEdgeParticles(vertices, shieldCenter, intensity, perHexBu
     return used
 end
 
-local function _startShieldBurst(shipBodyId, shipType, hitTargetBodyId, hitPointWorld, shotId)
+local function _startShieldBurst(shipBodyId, shipType, hitTargetBodyId, hitPointWorld, shotId, ringScale)
     local _ = shipBodyId
     local _shipType = shipType
 
@@ -297,10 +299,19 @@ local function _startShieldBurst(shipBodyId, shipType, hitTargetBodyId, hitPoint
 
     local now = GetTime()
     local seed = (tonumber(shotId) or 0) + hitTargetBodyId * 131
+    local scale = tonumber(ringScale) or 1.0
+    if scale <= 0.0 then
+        scale = 1.0
+    end
+    local maxRing = math.max(1, math.floor((ShieldConfig.maxRing or 1) * scale + 0.5))
+    local guaranteeRing = math.max(0, math.floor((ShieldConfig.guaranteeRing or 0) * scale + 0.5))
+    if guaranteeRing > maxRing then
+        guaranteeRing = maxRing
+    end
 
     local hexes = {}
-    for ring = 0, ShieldConfig.maxRing do
-        local pRing = _probabilityByRing(ring)
+    for ring = 0, maxRing do
+        local pRing = _probabilityByRing(ring, guaranteeRing, maxRing)
         local cells = _ringCells(ring)
 
         for i = 1, #cells do
@@ -320,7 +331,7 @@ local function _startShieldBurst(shipBodyId, shipType, hitTargetBodyId, hitPoint
         end
     end
 
-    local shieldEnd = now + ShieldConfig.maxRing * ShieldConfig.spreadInterval + ShieldConfig.hexLifetime
+    local shieldEnd = now + maxRing * ShieldConfig.spreadInterval + ShieldConfig.hexLifetime
     local glowLife = ShieldConfig.hitGlowLifetime or 0.0
     local glowEnd = now + math.max(0.0, glowLife)
 
@@ -334,6 +345,17 @@ local function _startShieldBurst(shipBodyId, shipType, hitTargetBodyId, hitPoint
         endTime = math.max(shieldEnd, glowEnd),
         hexes = hexes,
     })
+end
+
+function client.playProjectileShieldImpactFx(hitTargetBodyId, hitX, hitY, hitZ)
+    _startShieldBurst(
+        0,
+        "",
+        hitTargetBodyId,
+        Vec(hitX or 0, hitY or 0, hitZ or 0),
+        0,
+        0.5
+    )
 end
 
 function client.shieldHitFxTick(dt)

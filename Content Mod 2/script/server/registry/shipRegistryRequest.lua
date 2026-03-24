@@ -54,6 +54,40 @@ function server.registryShipRequestSetXSlotRequest(playerId, shipBodyId, request
     SetInt(prefix .. "/xSlots/request", value, true)
 end
 
+function server.registryShipRequestSetMainWeaponFireRequest(playerId, shipBodyId, request)
+    if shipBodyId == nil or shipBodyId == 0 then
+        return
+    end
+
+    local prefix = _shipKeyPrefix(shipBodyId)
+    if not GetBool(prefix .. "/exists") then
+        return
+    end
+    if not _isPlayerDrivingShip(playerId, shipBodyId) then
+        return
+    end
+
+    local value = (math.floor(request or 0) ~= 0) and 1 or 0
+    SetInt(prefix .. "/mainWeapon/fireRequest", value, true)
+end
+
+function server.registryShipRequestSetMainWeaponToggleRequest(playerId, shipBodyId, request)
+    if shipBodyId == nil or shipBodyId == 0 then
+        return
+    end
+
+    local prefix = _shipKeyPrefix(shipBodyId)
+    if not GetBool(prefix .. "/exists") then
+        return
+    end
+    if not _isPlayerDrivingShip(playerId, shipBodyId) then
+        return
+    end
+
+    local value = (math.floor(request or 0) ~= 0) and 1 or 0
+    SetInt(prefix .. "/mainWeapon/toggleRequest", value, true)
+end
+
 -- 客户端请求 -> 服务端写入 move/requestState 与 move/request
 function server.registryShipRequestSetMoveRequestState(playerId, shipBodyId, moveState)
     if shipBodyId == nil or shipBodyId == 0 then

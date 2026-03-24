@@ -13,6 +13,8 @@ local _snd_tachyon_hit_near = {}
 local _snd_tachyon_hit_dist = {}
 local _snd_tachyon_windup_near = nil
 local _snd_tachyon_windup_dist = nil
+local _snd_kinetic_fire_near = nil
+local _snd_kinetic_hit_near = nil
 
 client.soundModuleState = client.soundModuleState or {
     lastRenderSeqByShip = {},
@@ -74,6 +76,14 @@ local function _playTachyonHit(hitPoint)
     else
         _playAt(_randomPick(_snd_tachyon_hit_near), playPos)
     end
+end
+
+local function _playKineticFire(firePoint)
+    _playAt(_snd_kinetic_fire_near, firePoint)
+end
+
+local function _playKineticHit(hitPoint)
+    _playAt(_snd_kinetic_hit_near, hitPoint)
 end
 
 local function _isShipOccupied(shipBodyId, snapshot)
@@ -152,6 +162,16 @@ function client.soundModuleInit()
 
     _snd_tachyon_windup_near = LoadSound("MOD/sound/tachyon_lance_windup_01.ogg")
     _snd_tachyon_windup_dist = LoadSound("MOD/sound/distance_tachyon_lance_windup_01.ogg")
+    _snd_kinetic_fire_near = LoadSound("MOD/sound/kinectic_artillery_fire_01.ogg")
+    _snd_kinetic_hit_near = LoadSound("MOD/sound/kinectic_artillery_hit_01.ogg")
+end
+
+function client.playKineticArtilleryFireSound(x, y, z)
+    _playKineticFire(Vec(x or 0, y or 0, z or 0))
+end
+
+function client.playKineticArtilleryHitSound(x, y, z)
+    _playKineticHit(Vec(x or 0, y or 0, z or 0))
 end
 
 function client.soundModuleTick(dt)
