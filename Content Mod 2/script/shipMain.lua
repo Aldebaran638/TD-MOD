@@ -42,6 +42,7 @@ function server.ensureCurrentShipState(shipType)
 end
 
 -- x 槽控制模块从外部抽取为独立文件：script/server/weapon_fire/xSlotControl.lua
+#include "server/weapon_fire/lSlotState.lua"
 #include "server/weapon_fire/mainWeaponControl.lua"
 #include "server/weapon_fire/xSlotControl.lua"
 #include "server/weapon_fire/lSlotControl.lua"
@@ -82,6 +83,7 @@ function server.init()
     SetBool("StellarisShips/debug/inputTestEnabled", false)
     -- 注册当前飞船并加载飞船数�?
     server.registerCurrentShip("enigmaticCruiser")
+    server.lSlotStateInit("enigmaticCruiser")
 
 end
 

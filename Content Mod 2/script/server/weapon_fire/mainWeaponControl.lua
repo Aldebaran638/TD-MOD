@@ -16,7 +16,9 @@ function server.mainWeaponControlTick(dt)
         server.registryShipSetMainWeaponFireRequest(shipBody, 0)
         server.registryShipSetMainWeaponToggleRequest(shipBody, 0)
         server.registryShipSetXSlotsRequest(shipBody, 0)
-        server.registryShipSetLSlotsRequest(shipBody, 0)
+        server.lSlotStateSetRequestFire(false)
+        server.lSlotStateResetRuntime()
+        server.lSlotStatePushHudReset(true)
         return
     end
 
@@ -26,6 +28,7 @@ function server.mainWeaponControlTick(dt)
         local current = server.registryShipGetCurrentMainWeapon(shipBody)
         local nextMode = (current == "lSlot") and "xSlot" or "lSlot"
         server.registryShipSetCurrentMainWeapon(shipBody, nextMode)
+        server.lSlotStatePushHud(true)
     end
 
     local fireRequest = server.registryShipGetMainWeaponFireRequest(shipBody)
@@ -36,7 +39,7 @@ function server.mainWeaponControlTick(dt)
     server.registryShipSetMainWeaponFireRequest(shipBody, 0)
     local current = server.registryShipGetCurrentMainWeapon(shipBody)
     if current == "lSlot" then
-        server.registryShipSetLSlotsRequest(shipBody, 1)
+        server.lSlotStateSetRequestFire(true)
     else
         server.registryShipSetXSlotsRequest(shipBody, 1)
     end

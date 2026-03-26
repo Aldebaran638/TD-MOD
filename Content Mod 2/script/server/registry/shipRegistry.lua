@@ -582,10 +582,6 @@ function server.registryShipGetSnapshot(shipBodyId)
         xSlotsRequest = GetInt(prefix .. "/xSlots/request"),
         xSlotsWriteSeq = GetInt(prefix .. "/xSlots/writeSeq"),
         xSlotsLastReadSeq = GetInt(prefix .. "/xSlots/lastReadSeq"),
-        lSlotsRequest = GetInt(prefix .. "/lSlots/request"),
-        lSlotsHeat = GetFloat(prefix .. "/lSlots/heat"),
-        lSlotsOverheated = GetInt(prefix .. "/lSlots/overheated"),
-        lSlotsCooldownRemain = GetFloat(prefix .. "/lSlots/cooldownRemain"),
         xSlotsRender = {
             seq = GetInt(prefix .. "/xSlots/render/seq"),
             shotId = GetInt(prefix .. "/xSlots/render/shotId"),
@@ -603,7 +599,6 @@ function server.registryShipGetSnapshot(shipBodyId)
             impactLayer = GetString(prefix .. "/xSlots/render/impactLayer"),
         },
         xSlots = {},
-        lSlots = {},
     }
 
     local xSlotCount = GetInt(prefix .. "/xSlots/count")
@@ -621,18 +616,6 @@ function server.registryShipGetSnapshot(shipBodyId)
             randomTrajectoryAngle = GetFloat(slotPrefix .. "/randomTrajectoryAngle"),
             firePosOffset = _readVec3FromRegistry(slotPrefix .. "/mount/firePosOffset"),
             fireDirRelative = _readVec3FromRegistry(slotPrefix .. "/mount/fireDirRelative"),
-        }
-    end
-
-    local lSlotCount = GetInt(prefix .. "/lSlots/count")
-    snapshot.lSlotCount = lSlotCount
-    for i = 1, lSlotCount do
-        local slotPrefix = prefix .. "/lSlots/" .. tostring(i)
-        snapshot.lSlots[i] = {
-            weaponType = GetString(slotPrefix .. "/weaponType"),
-            firePosOffset = _readVec3FromRegistry(slotPrefix .. "/mount/firePosOffset"),
-            fireDirRelative = _readVec3FromRegistry(slotPrefix .. "/mount/fireDirRelative"),
-            aimMode = GetString(slotPrefix .. "/mount/aimMode"),
         }
     end
 
