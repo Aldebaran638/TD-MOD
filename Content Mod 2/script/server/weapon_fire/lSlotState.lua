@@ -9,7 +9,6 @@ server.lSlotState = server.lSlotState or {
 }
 
 server.lSlotHudSyncState = server.lSlotHudSyncState or {
-    lastShipBody = 0,
     lastHeat = nil,
     lastOverheated = nil,
     lastThreshold = nil,
@@ -94,7 +93,6 @@ function server.lSlotStateInit(shipType)
 
     server.lSlotState = state
     server.lSlotHudSyncState = {
-        lastShipBody = server.shipBody or 0,
         lastHeat = nil,
         lastOverheated = nil,
         lastThreshold = nil,
@@ -152,7 +150,6 @@ function server.lSlotStatePushHudReset(force)
         sync.lastSendTime = nowTime
     end
 
-    sync.lastShipBody = server.shipBody or 0
     sync.lastHeat = 0.0
     sync.lastOverheated = false
     sync.lastThreshold = nil
@@ -169,30 +166,26 @@ function server.lSlotStatePushHud(force)
     end
 
     local sync = server.lSlotHudSyncState or {}
-    local body = server.shipBody or 0
     local heat = slot1.runtime.heat or 0.0
     local overheated = slot1.runtime.overheated and true or false
     local threshold = math.max(1.0, slot1.config.overheatThreshold or 100.0)
     local nowTime = _lSlotNow()
-    local bodyChanged = sync.lastShipBody ~= body
 
-    if force or bodyChanged or sync.lastThreshold == nil or math.abs((sync.lastThreshold or 0.0) - threshold) > 0.0001 then
-        ClientCall(0, "client.initLSlotHudState", body, threshold)
+    if force or sync.lastThreshold == nil or math.abs((sync.lastThreshold or 0.0) - threshold) > 0.0001 then
+        ClientCall(0, "client.initLSlotHudState", server.shipBody or 0, threshold)
     end
 
     local shouldSendUpdate = force
-        or bodyChanged
         or sync.lastHeat == nil
         or math.abs((sync.lastHeat or 0.0) - heat) > 0.0001
         or sync.lastOverheated ~= overheated
         or ((nowTime - (sync.lastSendTime or -1000.0)) >= 0.5)
 
     if shouldSendUpdate then
-        ClientCall(0, "client.updateLSlotHudState", body, heat, overheated and 1 or 0)
+        ClientCall(0, "client.updateLSlotHudState", server.shipBody or 0, heat, overheated and 1 or 0)
         sync.lastSendTime = nowTime
     end
 
-    sync.lastShipBody = body
     sync.lastHeat = heat
     sync.lastOverheated = overheated
     sync.lastThreshold = threshold

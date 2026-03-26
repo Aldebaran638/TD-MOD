@@ -53,13 +53,6 @@ local function _smoothToward(curr, target, upSpeed, downSpeed, dt)
 end
 
 local function _resolveControlledShipBody()
-    if client.shipCameraGetControlledBody ~= nil then
-        local body = client.shipCameraGetControlledBody()
-        if body ~= nil and body ~= 0 then
-            return body
-        end
-    end
-
     local veh = GetPlayerVehicle()
     if veh == nil or veh == 0 then
         local localPlayerId = GetLocalPlayer()
@@ -74,6 +67,11 @@ local function _resolveControlledShipBody()
 
     local body = GetVehicleBody(veh)
     if body == nil or body == 0 then
+        return 0
+    end
+
+    local scriptBody = client.shipBody or 0
+    if scriptBody == 0 or body ~= scriptBody then
         return 0
     end
 

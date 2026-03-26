@@ -37,12 +37,7 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     overheated = false,
 }
 
-client.lSlotHudState = client.lSlotHudState or {
-    shipBody = 0,
-    heat = 0.0,
-    overheated = false,
-    overheatThreshold = 100.0,
-}
+client.lSlotHudStateByShip = client.lSlotHudStateByShip or {}
 
 local function _mainWeaponHudClamp(v, a, b)
     if v < a then return a end
@@ -87,26 +82,47 @@ local function _resolveControlledShipBody()
     return body
 end
 
+local function _getOrCreateLSlotHudState(shipBodyId)
+    local body = math.floor(shipBodyId or 0)
+    if body <= 0 then
+        return nil
+    end
+
+    local states = client.lSlotHudStateByShip
+    local hud = states[body]
+    if hud == nil then
+        hud = {
+            heat = 0.0,
+            overheated = false,
+            overheatThreshold = 100.0,
+        }
+        states[body] = hud
+    end
+    return hud
+end
+
 function client.initLSlotHudState(shipBodyId, overheatThreshold)
-    local hud = client.lSlotHudState
-    hud.shipBody = math.floor(shipBodyId or 0)
+    local hud = _getOrCreateLSlotHudState(shipBodyId)
+    if hud == nil then
+        return
+    end
     hud.overheatThreshold = math.max(1.0, tonumber(overheatThreshold) or 100.0)
 end
 
 function client.updateLSlotHudState(shipBodyId, heat, overheated)
-    local hud = client.lSlotHudState
-    hud.shipBody = math.floor(shipBodyId or hud.shipBody or 0)
+    local hud = _getOrCreateLSlotHudState(shipBodyId)
+    if hud == nil then
+        return
+    end
     hud.heat = math.max(0.0, tonumber(heat) or 0.0)
     hud.overheated = (math.floor(overheated or 0) ~= 0)
 end
 
 function client.resetLSlotHudState(shipBodyId)
-    local hud = client.lSlotHudState
-    local body = math.floor(shipBodyId or 0)
-    if body ~= 0 and hud.shipBody ~= 0 and hud.shipBody ~= body then
+    local hud = _getOrCreateLSlotHudState(shipBodyId)
+    if hud == nil then
         return
     end
-    hud.shipBody = body
     hud.heat = 0.0
     hud.overheated = false
 end
@@ -137,12 +153,16 @@ function client.mainWeaponHudTick(dt)
     state.shipBody = body
     state.currentMainWeapon = snapshot.currentMainWeapon or "xSlot"
 
-    local hud = client.lSlotHudState
-    local threshold = math.max(1.0, ((hud.shipBody == body) and hud.overheatThreshold) or 100.0)
-    local displayHeat = ((hud.shipBody == body) and hud.heat) or 0.0
+    local hud = client.lSlotHudStateByShip[body] or {
+        heat = 0.0,
+        overheated = false,
+        overheatThreshold = 100.0,
+    }
+    local threshold = math.max(1.0, hud.overheatThreshold or 100.0)
+    local displayHeat = hud.heat or 0.0
     state.targetHeatFraction = _mainWeaponHudClamp(displayHeat / threshold, 0.0, 1.0)
     state.heatFraction = _mainWeaponHudSmooth(state.heatFraction, state.targetHeatFraction, cfg.smoothSpeed, dt)
-    state.overheated = ((hud.shipBody == body) and hud.overheated) or false
+    state.overheated = hud.overheated and true or false
 end
 
 local function _drawWeaponIcon(x, y, size, fillColor, label, selected, borderColor, inactiveColor)

@@ -1,5 +1,7 @@
 -- 统一武器数据表
 -- 将多个武器的参数放在一起，便于维护与扩展
+#include "../data/weapons/lSlots/kineticArtillery.lua"
+
 weaponData = weaponData or {}
 
 -- 快子光矛武器数据

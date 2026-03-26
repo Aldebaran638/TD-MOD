@@ -5,13 +5,11 @@ server = server or {}
 
 #include "../../data/ships/enigmaticCruiser.lua"
 #include "../../data/weapons/xSlots/tachyonLance.lua"
-#include "../../data/weapons/lSlots/kineticArtillery.lua"
 
 local registryShipRoot = "StellarisShips/server/ships/byId/"
 local registryShipIndexRoot = "StellarisShips/server/ships/index"
 local registryShipTypeRoot = "StellarisShips/server/definitions/ships/byType/"
 local registryXSlotWeaponTypeRoot = "StellarisShips/server/definitions/weapons/xSlots/byType/"
-local registryLSlotWeaponTypeRoot = "StellarisShips/server/definitions/weapons/lSlots/byType/"
 
 local function _shipKeyPrefix(shipBodyId)
     return registryShipRoot .. tostring(shipBodyId)
@@ -23,10 +21,6 @@ end
 
 local function _xSlotWeaponTypeKeyPrefix(weaponType)
     return registryXSlotWeaponTypeRoot .. tostring(weaponType)
-end
-
-local function _lSlotWeaponTypeKeyPrefix(weaponType)
-    return registryLSlotWeaponTypeRoot .. tostring(weaponType)
 end
 local function _writeShipInstanceMaxHpFromType(shipBodyId, shipType, defaultShipType)
     if shipBodyId == nil or shipBodyId == 0 then
@@ -95,14 +89,6 @@ local function _resolveXSlotWeaponTypeDefinition(weaponType)
     local requestedWeaponType = weaponType or "tachyonLance"
     local defs = xSlotWeaponRegistryData or {}
     local definition = defs[requestedWeaponType] or defs.tachyonLance or {}
-    local resolvedWeaponType = definition.weaponType or requestedWeaponType
-    return resolvedWeaponType, definition
-end
-
-local function _resolveLSlotWeaponTypeDefinition(weaponType)
-    local requestedWeaponType = weaponType or "kineticArtillery"
-    local defs = lSlotWeaponRegistryData or {}
-    local definition = defs[requestedWeaponType] or defs.kineticArtillery or {}
     local resolvedWeaponType = definition.weaponType or requestedWeaponType
     return resolvedWeaponType, definition
 end
@@ -190,46 +176,6 @@ function server.registryEnsureXSlotWeaponTypeRegistered(weaponType)
     return true
 end
 
-function server.registryLSlotWeaponTypeRegistered(weaponType)
-    if weaponType == nil or weaponType == "" or weaponType == "none" then
-        return false
-    end
-    return GetBool(_lSlotWeaponTypeKeyPrefix(weaponType) .. "/registered")
-end
-
-function server.registryRegisterLSlotWeaponType(weaponType)
-    local resolvedWeaponType, definition = _resolveLSlotWeaponTypeDefinition(weaponType)
-    local prefix = _lSlotWeaponTypeKeyPrefix(resolvedWeaponType)
-
-    SetBool(prefix .. "/registered", true, true)
-    SetString(prefix .. "/weaponType", definition.weaponType or resolvedWeaponType, true)
-    SetString(prefix .. "/domain", "lSlots", true)
-    SetFloat(prefix .. "/cooldown", definition.cooldown or 0, true)
-    SetFloat(prefix .. "/maxRange", definition.maxRange or 0, true)
-    SetFloat(prefix .. "/projectileSpeed", definition.projectileSpeed or 0, true)
-    SetFloat(prefix .. "/projectileLifetime", definition.projectileLifetime or 0, true)
-    SetFloat(prefix .. "/projectileRadius", definition.projectileRadius or 0, true)
-    SetFloat(prefix .. "/projectileGravityScale", definition.projectileGravityScale or 0, true)
-    SetFloat(prefix .. "/damage", definition.damage or 0, true)
-    SetFloat(prefix .. "/shieldFix", definition.shieldFix or 1, true)
-    SetFloat(prefix .. "/armorFix", definition.armorFix or 1, true)
-    SetFloat(prefix .. "/bodyFix", definition.bodyFix or 1, true)
-    SetFloat(prefix .. "/explosionRadius", definition.explosionRadius or 0, true)
-    SetFloat(prefix .. "/explosionStrength", definition.explosionStrength or 0, true)
-    SetFloat(prefix .. "/heatPerShot", definition.heatPerShot or 0, true)
-    SetFloat(prefix .. "/heatDissipationPerSecond", definition.heatDissipationPerSecond or 0, true)
-    SetFloat(prefix .. "/overheatThreshold", definition.overheatThreshold or 0, true)
-    SetFloat(prefix .. "/recoverThreshold", definition.recoverThreshold or 0, true)
-end
-
-function server.registryEnsureLSlotWeaponTypeRegistered(weaponType)
-    local resolvedWeaponType = weaponType or "kineticArtillery"
-    if not server.registryLSlotWeaponTypeRegistered(resolvedWeaponType) then
-        server.registryRegisterLSlotWeaponType(resolvedWeaponType)
-    end
-    return true
-end
-
 -- 濡炲鍋犻崺鐐电尵鐠囪尙鈧兘寮伴姘剨鐎圭寮堕弫鐐哄礃?
 function server.registryShipTypeRegistered(shipType)
     if shipType == nil or shipType == "" then
@@ -243,10 +189,8 @@ function server.registryRegisterShipType(shipType, defaultShipType)
     local resolvedShipType, definition = _resolveShipTypeDefinition(shipType, defaultShipType)
     local prefix = _shipTypeKeyPrefix(resolvedShipType)
     local xSlots = definition.xSlots or {}
-    local lSlots = definition.lSlots or {}
     local definedSlotCount = #xSlots
     local xSlotCount = definition.xSlotCount
-    local lSlotCount = #lSlots
     if xSlotCount == nil then
         if definedSlotCount > 0 then
             xSlotCount = definedSlotCount
@@ -257,10 +201,6 @@ function server.registryRegisterShipType(shipType, defaultShipType)
     xSlotCount = math.floor(xSlotCount or 0)
     if xSlotCount < 0 then
         xSlotCount = 0
-    end
-    lSlotCount = math.floor(lSlotCount or 0)
-    if lSlotCount < 0 then
-        lSlotCount = 0
     end
 
     local regenDef = definition.regen or {}
@@ -279,7 +219,6 @@ function server.registryRegisterShipType(shipType, defaultShipType)
     SetFloat(prefix .. "/regen/armorNoDamageDelay", regenDef.armorNoDamageDelay or 0.0, true)
     SetFloat(prefix .. "/regen/bodyNoDamageDelay", regenDef.bodyNoDamageDelay or 0.0, true)
     SetInt(prefix .. "/xSlots/count", xSlotCount, true)
-    SetInt(prefix .. "/lSlots/count", lSlotCount, true)
 
     for i = 1, xSlotCount do
         local slotDef = xSlots[i] or {}
@@ -292,21 +231,6 @@ function server.registryRegisterShipType(shipType, defaultShipType)
 
         if weaponType ~= "none" then
             server.registryEnsureXSlotWeaponTypeRegistered(weaponType)
-        end
-    end
-
-    for i = 1, lSlotCount do
-        local slotDef = lSlots[i] or {}
-        local weaponType = slotDef.weaponType or "none"
-        local slotPrefix = prefix .. "/lSlots/" .. tostring(i)
-
-        SetString(slotPrefix .. "/weaponType", weaponType, true)
-        _writeVec3ToRegistry(slotPrefix .. "/mount/firePosOffset", slotDef.firePosOffset)
-        _writeVec3ToRegistry(slotPrefix .. "/mount/fireDirRelative", slotDef.fireDirRelative)
-        SetString(slotPrefix .. "/mount/aimMode", tostring(slotDef.aimMode or "fixed"), true)
-
-        if weaponType ~= "none" then
-            server.registryEnsureLSlotWeaponTypeRegistered(weaponType)
         end
     end
 end
@@ -427,20 +351,11 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
     if xSlotCount < 0 then
         xSlotCount = 0
     end
-    local lSlotCount = GetInt(typePrefix .. "/lSlots/count")
-    if lSlotCount < 0 then
-        lSlotCount = 0
-    end
 
     SetInt(prefix .. "/xSlots/count", xSlotCount, true)
     SetInt(prefix .. "/xSlots/request", 0, true)
     SetInt(prefix .. "/xSlots/writeSeq", -1, true)
     SetInt(prefix .. "/xSlots/lastReadSeq", -1, true)
-    SetInt(prefix .. "/lSlots/count", lSlotCount, true)
-    SetInt(prefix .. "/lSlots/request", 0, true)
-    SetFloat(prefix .. "/lSlots/heat", 0.0, true)
-    SetInt(prefix .. "/lSlots/overheated", 0, true)
-    SetFloat(prefix .. "/lSlots/cooldownRemain", 0.0, true)
 
     -- x 婵¤尪濮ょ憰鍡涘蓟閹捐尙鐨戝ù鐘烘硾鐏忣垶鏁嶅杈ㄦ殢濞存粌瀛╁﹢鍥礉閿涘嫷浼傞柛鎰懃閸欏棝鍨惧鍕粯闁哄倿顣︾粩鏉戔枎閿涘嫬笑闁诡兛绀佽ぐ澶愬�?闁告瑦鍨甸惃鐘电磼閹惧浜柍銉︾箰缁辨繃绗熷☉姗嗗悅闁规挳顥撻顒勫箯婢跺﹤绲挎繛鎾冲级閻?
     SetInt(prefix .. "/xSlots/render/seq", 0, true)
@@ -487,20 +402,6 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
         _writeVec3ToRegistry(slotPrefix .. "/mount/firePosOffset", firePosOffset)
         _writeVec3ToRegistry(slotPrefix .. "/mount/fireDirRelative", fireDirRelative)
     end
-
-    for i = 1, lSlotCount do
-        local slotPrefix = prefix .. "/lSlots/" .. tostring(i)
-        local typeSlotPrefix = typePrefix .. "/lSlots/" .. tostring(i)
-        local weaponType = GetString(typeSlotPrefix .. "/weaponType")
-        if weaponType == nil or weaponType == "" then
-            weaponType = "none"
-        end
-
-        SetString(slotPrefix .. "/weaponType", weaponType, true)
-        _writeVec3ToRegistry(slotPrefix .. "/mount/firePosOffset", _readVec3FromRegistry(typeSlotPrefix .. "/mount/firePosOffset"))
-        _writeVec3ToRegistry(slotPrefix .. "/mount/fireDirRelative", _readVec3FromRegistry(typeSlotPrefix .. "/mount/fireDirRelative"))
-        SetString(slotPrefix .. "/mount/aimMode", GetString(typeSlotPrefix .. "/mount/aimMode"), true)
-    end
 end
 
 function server.registryShipEnsure(shipBodyId, shipType, defaultShipType)
@@ -523,9 +424,6 @@ function server.registryShipEnsure(shipBodyId, shipType, defaultShipType)
         if GetString(prefix .. "/mainWeapon/current") == "" then
             SetString(prefix .. "/mainWeapon/current", "xSlot", true)
         end
-        if GetFloat(prefix .. "/lSlots/heat") < 0 then
-            SetFloat(prefix .. "/lSlots/heat", 0.0, true)
-        end
         if maxShield <= 0 or maxArmor <= 0 or maxBody <= 0 then
             _writeShipInstanceMaxHpFromType(shipBodyId, existingShipType, defaultShipType)
         end
@@ -537,23 +435,6 @@ function server.registryShipEnsure(shipBodyId, shipType, defaultShipType)
             SetFloat(prefix .. "/regen/state/lastDamageTimeShield", nowTime, true)
             SetFloat(prefix .. "/regen/state/lastDamageTimeArmor", nowTime, true)
             SetFloat(prefix .. "/regen/state/lastDamageTimeBody", nowTime, true)
-        end
-
-        if GetInt(prefix .. "/lSlots/count") <= 0 then
-            local typeLSlotCount = GetInt(_shipTypeKeyPrefix(existingShipType) .. "/lSlots/count")
-            SetInt(prefix .. "/lSlots/count", typeLSlotCount, true)
-            SetInt(prefix .. "/lSlots/request", 0, true)
-            SetFloat(prefix .. "/lSlots/heat", 0.0, true)
-            SetInt(prefix .. "/lSlots/overheated", 0, true)
-            SetFloat(prefix .. "/lSlots/cooldownRemain", 0.0, true)
-            for i = 1, typeLSlotCount do
-                local slotPrefix = prefix .. "/lSlots/" .. tostring(i)
-                local typeSlotPrefix = _shipTypeKeyPrefix(existingShipType) .. "/lSlots/" .. tostring(i)
-                SetString(slotPrefix .. "/weaponType", GetString(typeSlotPrefix .. "/weaponType"), true)
-                _writeVec3ToRegistry(slotPrefix .. "/mount/firePosOffset", _readVec3FromRegistry(typeSlotPrefix .. "/mount/firePosOffset"))
-                _writeVec3ToRegistry(slotPrefix .. "/mount/fireDirRelative", _readVec3FromRegistry(typeSlotPrefix .. "/mount/fireDirRelative"))
-                SetString(slotPrefix .. "/mount/aimMode", GetString(typeSlotPrefix .. "/mount/aimMode"), true)
-            end
         end
     end
     return true
@@ -815,63 +696,6 @@ end
 
 function server.registryShipSetXSlotsRequest(shipBodyId, request)
     server.registryShipSetXSlotRequest(shipBodyId, 1, request)
-end
-
-function server.registryShipGetLSlotsRequest(shipBodyId)
-    if not server.registryShipExists(shipBodyId) then
-        return 0
-    end
-    return GetInt(_shipKeyPrefix(shipBodyId) .. "/lSlots/request")
-end
-
-function server.registryShipSetLSlotsRequest(shipBodyId, request)
-    if not server.registryShipExists(shipBodyId) then
-        return
-    end
-    local value = (math.floor(request or 0) ~= 0) and 1 or 0
-    SetInt(_shipKeyPrefix(shipBodyId) .. "/lSlots/request", value, true)
-end
-
-function server.registryShipGetLSlotsHeat(shipBodyId)
-    if not server.registryShipExists(shipBodyId) then
-        return 0.0
-    end
-    return GetFloat(_shipKeyPrefix(shipBodyId) .. "/lSlots/heat")
-end
-
-function server.registryShipSetLSlotsHeat(shipBodyId, heat)
-    if not server.registryShipExists(shipBodyId) then
-        return
-    end
-    SetFloat(_shipKeyPrefix(shipBodyId) .. "/lSlots/heat", heat or 0.0, true)
-end
-
-function server.registryShipGetLSlotsOverheated(shipBodyId)
-    if not server.registryShipExists(shipBodyId) then
-        return false
-    end
-    return GetInt(_shipKeyPrefix(shipBodyId) .. "/lSlots/overheated") ~= 0
-end
-
-function server.registryShipSetLSlotsOverheated(shipBodyId, overheated)
-    if not server.registryShipExists(shipBodyId) then
-        return
-    end
-    SetInt(_shipKeyPrefix(shipBodyId) .. "/lSlots/overheated", overheated and 1 or 0, true)
-end
-
-function server.registryShipGetLSlotsCooldownRemain(shipBodyId)
-    if not server.registryShipExists(shipBodyId) then
-        return 0.0
-    end
-    return GetFloat(_shipKeyPrefix(shipBodyId) .. "/lSlots/cooldownRemain")
-end
-
-function server.registryShipSetLSlotsCooldownRemain(shipBodyId, remain)
-    if not server.registryShipExists(shipBodyId) then
-        return
-    end
-    SetFloat(_shipKeyPrefix(shipBodyId) .. "/lSlots/cooldownRemain", remain or 0.0, true)
 end
 
 function server.registryShipGetXSlotsWriteSeq(shipBodyId)
