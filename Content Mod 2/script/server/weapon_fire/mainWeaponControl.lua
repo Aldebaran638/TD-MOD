@@ -75,7 +75,12 @@ function server.mainWeaponControlTick(dt)
 
     if _consumeMainWeaponToggleRequested() then
         local current = server.shipRuntimeGetCurrentMainWeapon(shipBody)
-        local nextMode = (current == "lSlot") and "xSlot" or "lSlot"
+        local nextMode = "xSlot"
+        if current == "xSlot" then
+            nextMode = "lSlot"
+        elseif current == "lSlot" then
+            nextMode = "sSlot"
+        end
         server.shipRuntimeSetCurrentMainWeapon(shipBody, nextMode)
         server.shipRuntimeSyncMainWeapon(shipBody, true)
         server.lSlotStatePushHud(true)
@@ -88,7 +93,7 @@ function server.mainWeaponControlTick(dt)
     local current = server.shipRuntimeGetCurrentMainWeapon(shipBody)
     if current == "lSlot" then
         server.lSlotStateSetRequestFire(true)
-    else
+    elseif current == "xSlot" then
         if server.xSlotStateSetRequestFire ~= nil then
             server.xSlotStateSetRequestFire(true)
         end

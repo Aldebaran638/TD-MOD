@@ -48,6 +48,16 @@ function client.mainWeaponInputTick(dt)
     end
 
     if InputPressed("lmb") then
-        client.shipRequestMainWeaponFire(shipBody, 1)
+        local currentMode = (client.getShipMainWeaponMode ~= nil) and client.getShipMainWeaponMode(shipBody) or "xSlot"
+        if currentMode == "sSlot" then
+            if client.sSlotTargetingCanFire ~= nil and client.sSlotTargetingCanFire(shipBody) then
+                local targetVehicleId = client.sSlotTargetingGetLockedVehicleId ~= nil and client.sSlotTargetingGetLockedVehicleId(shipBody) or 0
+                if targetVehicleId ~= 0 and client.shipRequestSWeaponFire ~= nil then
+                    client.shipRequestSWeaponFire(shipBody, targetVehicleId)
+                end
+            end
+        else
+            client.shipRequestMainWeaponFire(shipBody, 1)
+        end
     end
 end
