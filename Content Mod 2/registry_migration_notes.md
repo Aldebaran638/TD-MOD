@@ -65,6 +65,38 @@ Current request ingress:
 These request bits are now local request flags only.
 The old registry keys still exist in registry definitions for now, but runtime no longer depends on them.
 
+### 3. X-slot runtime state
+
+Migrated off `registry` into local server state:
+
+- `xSlots/request`
+- `xSlots/lastReadSeq`
+- per-slot `cd`
+- per-slot `state`
+- per-slot `chargeRemain`
+- per-slot `launchRemain`
+- per-slot `weaponType`
+- per-slot `mount/firePosOffset`
+- per-slot `mount/fireDirRelative`
+- per-slot `chargeDuration`
+- per-slot `launchDuration`
+- per-slot `randomTrajectoryAngle`
+
+Current server state source:
+
+- `script/server/weapon_fire/xSlotState.lua`
+
+Current runtime consumers:
+
+- `script/server/weapon_fire/xSlotControl.lua`
+- `script/server/weapon_fire/mainWeaponControl.lua`
+- `script/server/registry/shipRegistryRequest.lua`
+
+Current client FX path:
+
+- still uses `xSlotsRender` from registry snapshot
+- runtime state is local, render event bus is not yet migrated
+
 ## Important Lessons / Bug Notes
 
 ### 1. Removing registry code can accidentally remove data loading
@@ -146,16 +178,15 @@ This is the order used for L-slot migration.
 
 ### High-impact
 
-- X-slot runtime state machine
-  - request bit
-  - per-slot cooldown/state/charge/launch runtime
-  - heavy snapshot reads
-  - render event bus
-
 - Full ship snapshot path
   - `server.registryShipGetSnapshot(...)`
   - `client.registryShipGetSnapshot(...)`
   - many modules still read more fields than they really need
+
+- X-slot render event bus
+  - `xSlots/render/*`
+  - still feeds client sound / FX modules
+  - runtime state is already local, but the event bus is still registry-backed
 
 ### Medium-impact
 
@@ -213,6 +244,7 @@ If continuing from here, the best next target is:
 
 Reason:
 
-- it is still one of the largest remaining registry burdens
-- it still drives frequent snapshot reads
-- it still owns multiple runtime keys that do not need to live in registry
+- after L-slot and request-bit migration, the remaining biggest burdens are now:
+  - full snapshot over-read
+  - X-slot render event bus
+  - movement / driver / rotation state

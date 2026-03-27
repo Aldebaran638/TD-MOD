@@ -92,11 +92,6 @@ function client.registryShipGetSnapshot(shipBodyId)
         moveRequest = GetInt(prefix .. "/move/request"),
         moveRequestState = GetInt(prefix .. "/move/requestState"),
         currentMainWeapon = GetString(prefix .. "/mainWeapon/current"),
-        mainWeaponFireRequest = GetInt(prefix .. "/mainWeapon/fireRequest"),
-        mainWeaponToggleRequest = GetInt(prefix .. "/mainWeapon/toggleRequest"),
-        xSlotsRequest = GetInt(prefix .. "/xSlots/request"),
-        xSlotsWriteSeq = GetInt(prefix .. "/xSlots/writeSeq"),
-        xSlotsLastReadSeq = GetInt(prefix .. "/xSlots/lastReadSeq"),
         xSlotsRender = {
             seq = GetInt(prefix .. "/xSlots/render/seq"),
             shotId = GetInt(prefix .. "/xSlots/render/shotId"),
@@ -113,7 +108,6 @@ function client.registryShipGetSnapshot(shipBodyId)
             normal = _readVec3FromRegistry(prefix .. "/xSlots/render/normal"),
             impactLayer = GetString(prefix .. "/xSlots/render/impactLayer"),
         },
-        xSlots = {},
     }
 
     if snapshot.maxShieldHP <= 0 or snapshot.maxArmorHP <= 0 or snapshot.maxBodyHP <= 0 then
@@ -138,41 +132,11 @@ function client.registryShipGetSnapshot(shipBodyId)
     if snapshot.maxBodyHP <= 0 then
         snapshot.maxBodyHP = snapshot.bodyHP or 0
     end
-    local xSlotCount = GetInt(prefix .. "/xSlots/count")
-    snapshot.xSlotCount = xSlotCount
-    for i = 1, xSlotCount do
-        local slotPrefix = prefix .. "/xSlots/" .. tostring(i)
-        snapshot.xSlots[i] = {
-            weaponType = GetString(slotPrefix .. "/weaponType"),
-            cd = GetFloat(slotPrefix .. "/cd"),
-            state = GetString(slotPrefix .. "/state"),
-            chargeRemain = GetFloat(slotPrefix .. "/chargeRemain"),
-            launchRemain = GetFloat(slotPrefix .. "/launchRemain"),
-            chargeDuration = GetFloat(slotPrefix .. "/chargeDuration"),
-            launchDuration = GetFloat(slotPrefix .. "/launchDuration"),
-            randomTrajectoryAngle = GetFloat(slotPrefix .. "/randomTrajectoryAngle"),
-        }
-    end
-
     return snapshot
 end
 
 -- 客户端函数：写入 x 槽统一 request 键（兼容旧签名，slotIndex 参数已忽略）
-function client.registryShipSetXSlotRequest(shipBodyId, slotIndex, request)
-    if not client.registryShipExists(shipBodyId) then
-        return false
-    end
-    local value = (math.floor(request or 0) ~= 0) and 1 or 0
-    local localPlayerId = GetLocalPlayer()
-    ServerCall("server.registryShipRequestSetXSlotRequest", localPlayerId, shipBodyId, value)
-    return true
-end
-
 -- 客户端函数：明确语义�?xSlots 总请求写入接�?
-function client.registryShipSetXSlotsRequest(shipBodyId, request)
-    return client.registryShipSetXSlotRequest(shipBodyId, 1, request)
-end
-
 function client.registryShipSetMainWeaponFireRequest(shipBodyId, request)
     if not client.registryShipExists(shipBodyId) then
         return false

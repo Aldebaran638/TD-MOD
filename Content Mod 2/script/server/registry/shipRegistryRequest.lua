@@ -35,29 +35,13 @@ local function _isPlayerDrivingShip(playerId, shipBodyId)
     return false
 end
 
--- 客户端请求 -> 服务端写入 xSlots/request
-function server.registryShipRequestSetXSlotRequest(playerId, shipBodyId, request)
-    if shipBodyId == nil or shipBodyId == 0 then
-        return
-    end
-
-    local prefix = _shipKeyPrefix(shipBodyId)
-    if not GetBool(prefix .. "/exists") then
-        return
-    end
-
-    if not _isPlayerDrivingShip(playerId, shipBodyId) then
-        return
-    end
-
-    local value = (math.floor(request or 0) ~= 0) and 1 or 0
-    SetInt(prefix .. "/xSlots/request", value, true)
-end
-
 function server.registryShipRequestSetMainWeaponFireRequest(playerId, shipBodyId, request)
     if shipBodyId == nil or shipBodyId == 0 then
         return
     end
+    if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
+        return
+    end
 
     local prefix = _shipKeyPrefix(shipBodyId)
     if not GetBool(prefix .. "/exists") then
@@ -68,13 +52,18 @@ function server.registryShipRequestSetMainWeaponFireRequest(playerId, shipBodyId
     end
 
     local value = (math.floor(request or 0) ~= 0) and 1 or 0
-    SetInt(prefix .. "/mainWeapon/fireRequest", value, true)
+    if server.mainWeaponRequestSetFireRequested ~= nil then
+        server.mainWeaponRequestSetFireRequested(value ~= 0)
+    end
 end
 
 function server.registryShipRequestSetMainWeaponToggleRequest(playerId, shipBodyId, request)
     if shipBodyId == nil or shipBodyId == 0 then
         return
     end
+    if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
+        return
+    end
 
     local prefix = _shipKeyPrefix(shipBodyId)
     if not GetBool(prefix .. "/exists") then
@@ -85,7 +74,9 @@ function server.registryShipRequestSetMainWeaponToggleRequest(playerId, shipBody
     end
 
     local value = (math.floor(request or 0) ~= 0) and 1 or 0
-    SetInt(prefix .. "/mainWeapon/toggleRequest", value, true)
+    if server.mainWeaponRequestSetToggleRequested ~= nil then
+        server.mainWeaponRequestSetToggleRequested(value ~= 0)
+    end
 end
 
 -- 客户端请求 -> 服务端写入 move/requestState 与 move/request
