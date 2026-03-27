@@ -4,12 +4,13 @@
 client = client or {}
 
 client.shipHelpOverlayConfig = client.shipHelpOverlayConfig or {
-    width = 320,
+    width = 380,
     rightOffset = 24,
     topOffset = 170,
-    lineGap = 8,
     titleSize = 20,
     textSize = 16,
+    keyWidth = 86,
+    rowGap = 12,
 
     bgColor = { 0.05, 0.07, 0.09, 0.76 },
     borderColor = { 1.0, 1.0, 1.0, 0.22 },
@@ -21,6 +22,34 @@ client.shipHelpOverlayConfig = client.shipHelpOverlayConfig or {
 
 client.shipHelpOverlayState = client.shipHelpOverlayState or {
     visible = true,
+}
+
+local shipHelpOverlayRows = {
+    {
+        key = "AUTO",
+        title = "Ship hover",
+        subtitle = "The ship hovers automatically",
+    },
+    {
+        key = "W / S",
+        title = "Move",
+        subtitle = "Move forward / backward",
+    },
+    {
+        key = "MOUSE",
+        title = "Aim",
+        subtitle = "Mouse controls ship facing",
+    },
+    {
+        key = "LMB",
+        title = "Fire",
+        subtitle = "Left click to fire",
+    },
+    {
+        key = "RMB / Q\n/ U",
+        title = "Camera / Weapon / Help",
+        subtitle = "Right click changes camera, Q swaps weapons\nU toggles help",
+    },
 }
 
 local function _shipHelpResolveControlledShipBody()
@@ -49,27 +78,68 @@ local function _shipHelpResolveControlledShipBody()
     return scriptBody
 end
 
-local function _shipHelpDrawLine(y, keyText, zhText, enText, cfg)
-    UiPush()
-        UiTranslate(14, y)
-        UiColor(cfg.keyColor[1], cfg.keyColor[2], cfg.keyColor[3], cfg.keyColor[4])
-        UiFont("regular.ttf", cfg.textSize)
-        UiText(keyText)
-    UiPop()
+local function _countLines(text)
+    local count = 1
+    local s = tostring(text or "")
+    for _ in string.gmatch(s, "\n") do
+        count = count + 1
+    end
+    return count
+end
 
-    UiPush()
-        UiTranslate(76, y)
-        UiColor(cfg.textColor[1], cfg.textColor[2], cfg.textColor[3], cfg.textColor[4])
-        UiFont("regular.ttf", cfg.textSize)
-        UiText(zhText)
-    UiPop()
+local function _shipHelpDrawTextBlock(x, y, text, fontSize, color)
+    local lineHeight = fontSize + 4
+    local lineIndex = 0
+    local content = tostring(text or "") .. "\n"
 
-    UiPush()
-        UiTranslate(76, y + 18)
-        UiColor(cfg.subColor[1], cfg.subColor[2], cfg.subColor[3], cfg.subColor[4])
-        UiFont("regular.ttf", cfg.textSize - 2)
-        UiText(enText)
-    UiPop()
+    for line in string.gmatch(content, "(.-)\n") do
+        UiPush()
+            UiTranslate(x, y + lineIndex * lineHeight)
+            UiColor(color[1], color[2], color[3], color[4])
+            UiFont("regular.ttf", fontSize)
+            UiText(line)
+        UiPop()
+
+        lineIndex = lineIndex + 1
+    end
+
+    return lineIndex * lineHeight
+end
+
+local function _shipHelpMeasureTextBlock(fontSize, text)
+    return _countLines(text) * (fontSize + 4)
+end
+
+local function _shipHelpMeasureRow(row, cfg)
+    local keyHeight = _shipHelpMeasureTextBlock(cfg.textSize, row.key)
+    local titleHeight = _shipHelpMeasureTextBlock(cfg.textSize, row.title)
+    local subtitleHeight = _shipHelpMeasureTextBlock(cfg.textSize - 2, row.subtitle)
+
+    local contentHeight = titleHeight + subtitleHeight
+    if keyHeight > contentHeight then
+        return keyHeight
+    end
+    return contentHeight
+end
+
+local function _shipHelpDrawRow(y, row, cfg)
+    local contentX = 14 + cfg.keyWidth + 12
+    local titleHeight = _shipHelpMeasureTextBlock(cfg.textSize, row.title)
+    local subtitleY = y + titleHeight
+
+    _shipHelpDrawTextBlock(14, y, row.key, cfg.textSize, cfg.keyColor)
+    _shipHelpDrawTextBlock(contentX, y, row.title, cfg.textSize, cfg.textColor)
+    _shipHelpDrawTextBlock(contentX, subtitleY, row.subtitle, cfg.textSize - 2, cfg.subColor)
+
+    return _shipHelpMeasureRow(row, cfg)
+end
+
+local function _shipHelpComputePanelHeight(cfg)
+    local height = 48
+    for i = 1, #shipHelpOverlayRows do
+        height = height + _shipHelpMeasureRow(shipHelpOverlayRows[i], cfg) + cfg.rowGap
+    end
+    return height + 14
 end
 
 function client.shipHelpOverlayTick(dt)
@@ -91,7 +161,7 @@ function client.shipHelpOverlayDraw()
 
     local cfg = client.shipHelpOverlayConfig
     local panelW = cfg.width
-    local panelH = 242
+    local panelH = _shipHelpComputePanelHeight(cfg)
     local x = UiWidth() - panelW - cfg.rightOffset
     local y = cfg.topOffset
 
@@ -107,13 +177,12 @@ function client.shipHelpOverlayDraw()
             UiTranslate(14, 12)
             UiColor(cfg.titleColor[1], cfg.titleColor[2], cfg.titleColor[3], cfg.titleColor[4])
             UiFont("regular.ttf", cfg.titleSize)
-            UiText("飞船操作 / Ship Controls")
+            UiText("Ship Controls")
         UiPop()
 
-        _shipHelpDrawLine(48, "AUTO", "飞船自动浮空", "The ship hovers automatically", cfg)
-        _shipHelpDrawLine(92, "W / S", "前后移动", "Move forward / backward", cfg)
-        _shipHelpDrawLine(136, "MOUSE", "鼠标控制朝向", "Mouse controls ship facing", cfg)
-        _shipHelpDrawLine(180, "LMB", "左键开火", "Left click to fire", cfg)
-        _shipHelpDrawLine(224, "RMB / Q / U", "右键切换视角，Q切武器，U开关说明", "Right click changes camera, Q swaps weapons, U toggles help", cfg)
+        local rowY = 48
+        for i = 1, #shipHelpOverlayRows do
+            rowY = rowY + _shipHelpDrawRow(rowY, shipHelpOverlayRows[i], cfg) + cfg.rowGap
+        end
     UiPop()
 end

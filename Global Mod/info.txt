@@ -1,6 +1,6 @@
 name = (Stellaris ships)Enigmatic Battlecruiser
 author = Aldebaran
-description = A space ship From Stellaris.
+description = 来自游戏《群星》的一艘宇宙飞船。 A space ship from Stellaris. W前进，S后退，鼠标控制载具转向，左键开火，右键切换摄像机视角，Q切换武器（激光/火炮）；W to move forward, S to move backward, mouse to steer the vehicle, left click to fire, right click to switch camera view, Q to switch weapons (laser/cannon).
 tags = 
 version = 2
 
