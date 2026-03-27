@@ -65,21 +65,21 @@ local function _resolveControlledShipBody()
             veh = GetPlayerVehicle(localPlayerId)
         end
     end
-
     if veh == nil or veh == 0 then
         return 0
     end
 
-    local body = GetVehicleBody(veh)
-    if body == nil or body == 0 then
+    local playerBody = GetVehicleBody(veh)
+    local scriptBody = client.shipBody or 0
+    if scriptBody == 0 or playerBody == nil or playerBody == 0 or playerBody ~= scriptBody then
         return 0
     end
 
-    if client.registryShipExists ~= nil and (not client.registryShipExists(body)) then
+    if client.registryShipExists ~= nil and (not client.registryShipExists(scriptBody)) then
         return 0
     end
 
-    return body
+    return scriptBody
 end
 
 local function _getOrCreateLSlotHudState(shipBodyId)

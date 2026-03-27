@@ -15,13 +15,13 @@ server.shipAttitudeControllerConfig = server.shipAttitudeControllerConfig or {
     pitchSoftZone = 3.0,       -- deg after deadzone, force ramps in smoothly
 
     yawForceGain = 40000,        -- force-like gain per deg
-    pitchForceGain = 90000,      -- force-like gain per deg
+    pitchForceGain = 180000,      -- force-like gain per deg
 
     yawForceMax = 12000,         -- force-like cap
     pitchForceMax = 12000,       -- force-like cap
 
     yawDamping = 900000.0,         -- damping against yaw angular speed
-    pitchDamping = 2500000.0,       -- damping against pitch angular speed
+    pitchDamping = 5000000.0,       -- damping against pitch angular speed
     yawRateDeadzone = 0.01,    -- rad/s small-rate jitter cutoff
     pitchRateDeadzone = 0.01,  -- rad/s small-rate jitter cutoff
 
