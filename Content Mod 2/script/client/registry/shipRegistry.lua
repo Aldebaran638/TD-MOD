@@ -7,14 +7,6 @@ local registryShipRoot = "StellarisShips/server/ships/byId/"
 local registryShipIndexRoot = "StellarisShips/server/ships/index"
 local registryShipTypeRoot = "StellarisShips/server/definitions/ships/byType/"
 
-local function _readVec3FromRegistry(prefix)
-    return {
-        x = GetFloat(prefix .. "/x"),
-        y = GetFloat(prefix .. "/y"),
-        z = GetFloat(prefix .. "/z"),
-    }
-end
-
 local function _readShipTypeMaxHp(shipType)
     local st = tostring(shipType or "")
     if st == "" then
@@ -92,22 +84,6 @@ function client.registryShipGetSnapshot(shipBodyId)
         moveRequest = GetInt(prefix .. "/move/request"),
         moveRequestState = GetInt(prefix .. "/move/requestState"),
         currentMainWeapon = GetString(prefix .. "/mainWeapon/current"),
-        xSlotsRender = {
-            seq = GetInt(prefix .. "/xSlots/render/seq"),
-            shotId = GetInt(prefix .. "/xSlots/render/shotId"),
-            eventType = GetString(prefix .. "/xSlots/render/eventType"),
-            slotIndex = GetInt(prefix .. "/xSlots/render/slotIndex"),
-            weaponType = GetString(prefix .. "/xSlots/render/weaponType"),
-            serverTime = GetFloat(prefix .. "/xSlots/render/serverTime"),
-            firePoint = _readVec3FromRegistry(prefix .. "/xSlots/render/firePoint"),
-            hitPoint = _readVec3FromRegistry(prefix .. "/xSlots/render/hitPoint"),
-            didHit = GetInt(prefix .. "/xSlots/render/didHit"),
-            didHitStellarisBody = GetInt(prefix .. "/xSlots/render/didHitStellarisBody"),
-            didHitShield = GetInt(prefix .. "/xSlots/render/didHitShield"),
-            hitTargetBodyId = GetInt(prefix .. "/xSlots/render/hitTargetBodyId"),
-            normal = _readVec3FromRegistry(prefix .. "/xSlots/render/normal"),
-            impactLayer = GetString(prefix .. "/xSlots/render/impactLayer"),
-        },
     }
 
     if snapshot.maxShieldHP <= 0 or snapshot.maxArmorHP <= 0 or snapshot.maxBodyHP <= 0 then

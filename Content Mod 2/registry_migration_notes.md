@@ -92,10 +92,34 @@ Current runtime consumers:
 - `script/server/weapon_fire/mainWeaponControl.lua`
 - `script/server/registry/shipRegistryRequest.lua`
 
-Current client FX path:
+### 4. X-slot render event bus
 
-- still uses `xSlotsRender` from registry snapshot
-- runtime state is local, render event bus is not yet migrated
+Migrated off `registry` into direct server-to-client event push:
+
+- removed `xSlots/render/*` registry keys
+- removed `snapshot.xSlotsRender`
+- replaced with `ClientCall` event delivery
+- client now caches render events by `shipBody`
+
+Current server event source:
+
+- `script/server/weapon_fire/xSlotRenderState.lua`
+
+Current server emitter:
+
+- `script/server/weapon_fire/xSlotControl.lua`
+
+Current client event cache:
+
+- `script/client/xSlotRenderState.lua`
+
+Current client consumers:
+
+- `script/client/draw_modules/xSlotChargingFx.lua`
+- `script/client/draw_modules/xSlotLaunchFx.lua`
+- `script/client/draw_modules/hitPointFx.lua`
+- `script/client/draw_modules/shieldHitFx.lua`
+- `script/client/sound_modules/soundModule.lua`
 
 ## Important Lessons / Bug Notes
 
@@ -183,11 +207,6 @@ This is the order used for L-slot migration.
   - `client.registryShipGetSnapshot(...)`
   - many modules still read more fields than they really need
 
-- X-slot render event bus
-  - `xSlots/render/*`
-  - still feeds client sound / FX modules
-  - runtime state is already local, but the event bus is still registry-backed
-
 ### Medium-impact
 
 - Movement request / state path
@@ -215,7 +234,6 @@ This is the order used for L-slot migration.
 
 - Client modules still scanning registry snapshots
   - sound
-  - x-slot FX
   - hit/shield FX
   - destroyed FX
 
@@ -246,5 +264,4 @@ Reason:
 
 - after L-slot and request-bit migration, the remaining biggest burdens are now:
   - full snapshot over-read
-  - X-slot render event bus
   - movement / driver / rotation state

@@ -366,18 +366,18 @@ function client.shieldHitFxTick(dt)
     for i = 1, #shipIds do
         local shipBodyId = shipIds[i]
         if client.registryShipExists(shipBodyId) then
-            local snapshot = client.registryShipGetSnapshot(shipBodyId)
-            if snapshot ~= nil then
-                local render = snapshot.xSlotsRender or {}
+            local render = client.xSlotRenderGetEvent(shipBodyId)
+            if render ~= nil then
                 local seq = render.seq or -1
                 local shotId = render.shotId or -1
                 local lastSeq = state.lastRenderSeqByShip[shipBodyId] or -1
 
                 if seq ~= lastSeq then
                     if render.eventType == "launch_start" and render.didHit == 1 and render.didHitShield == 1 then
+                        local snapshot = client.registryShipGetSnapshot(shipBodyId)
                         _startShieldBurst(
                             shipBodyId,
-                            snapshot.shipType,
+                            (snapshot and snapshot.shipType) or "",
                             render.hitTargetBodyId or 0,
                             _tableToVec(render.hitPoint),
                             shotId

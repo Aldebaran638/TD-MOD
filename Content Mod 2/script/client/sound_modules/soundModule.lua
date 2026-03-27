@@ -115,9 +115,12 @@ local function _engineTick(shipBodyId, snapshot)
     PlayLoop(_snd_engine_loop, t.pos, 1.0)
 end
 
-local function _tachyonEventTick(shipBodyId, snapshot)
+local function _tachyonEventTick(shipBodyId)
     local state = client.soundModuleState
-    local render = snapshot.xSlotsRender or {}
+    local render = client.xSlotRenderGetEvent(shipBodyId)
+    if render == nil then
+        return
+    end
 
     local seq = render.seq or -1
     local lastSeq = state.lastRenderSeqByShip[shipBodyId] or -1
@@ -187,7 +190,7 @@ function client.soundModuleTick(dt)
             local snapshot = client.registryShipGetSnapshot(shipBodyId)
             if snapshot ~= nil then
                 _engineTick(shipBodyId, snapshot)
-                _tachyonEventTick(shipBodyId, snapshot)
+                _tachyonEventTick(shipBodyId)
             end
         end
     end

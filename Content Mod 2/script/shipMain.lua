@@ -45,6 +45,7 @@ end
 #include "server/weapon_fire/lSlotState.lua"
 #include "server/weapon_fire/mainWeaponControl.lua"
 #include "server/weapon_fire/xSlotState.lua"
+#include "server/weapon_fire/xSlotRenderState.lua"
 #include "server/weapon_fire/xSlotControl.lua"
 #include "server/weapon_fire/lSlotControl.lua"
 #include "server/weapon_fire/projectileManager.lua"
@@ -86,6 +87,7 @@ function server.init()
     server.registerCurrentShip("enigmaticCruiser")
     server.mainWeaponRequestInit()
     server.xSlotStateInit("enigmaticCruiser")
+    server.xSlotRenderStateInit()
     server.lSlotStateInit("enigmaticCruiser")
 
 end

@@ -75,52 +75,6 @@ local function _resolveShipTypeDefinition(shipType, defaultShipType)
     return resolvedShipType, definition
 end
 
-local function _readVec3FromRegistry(prefix)
-    return {
-        x = GetFloat(prefix .. "/x"),
-        y = GetFloat(prefix .. "/y"),
-        z = GetFloat(prefix .. "/z"),
-    }
-end
-
-local function _writeVec3ToRegistry(prefix, vec3)
-    local v = vec3
-
-    local function _getComp(obj, namedKey, indexKey)
-        if obj == nil then
-            return 0
-        end
-
-        local namedVal = nil
-        local okNamed, resultNamed = pcall(function()
-            return obj[namedKey]
-        end)
-        if okNamed then
-            namedVal = resultNamed
-        end
-        if namedVal ~= nil then
-            return namedVal
-        end
-
-        local indexedVal = nil
-        local okIndexed, resultIndexed = pcall(function()
-            return obj[indexKey]
-        end)
-        if okIndexed then
-            indexedVal = resultIndexed
-        end
-        if indexedVal ~= nil then
-            return indexedVal
-        end
-
-        return 0
-    end
-
-    SetFloat(prefix .. "/x", _getComp(v, "x", 1), true)
-    SetFloat(prefix .. "/y", _getComp(v, "y", 2), true)
-    SetFloat(prefix .. "/z", _getComp(v, "z", 3), true)
-end
-
 -- 婵繐绠戝▍鎺旂尵鐠囪尙鈧兘寮伴姘剨鐎圭寮堕弫鐐哄礃瀹€瀣xSlots 闁糕晝鍣︾槐?
 -- 婵炲鍔岄崬浠嬪础閺囨岸鍤?xSlots 婵繐绠戝▍鎺旂尵鐠囪尙鈧鈧鐭粻鐔兼晬閸繃鍊辩紒顐ヮ嚙閻庣兘宕ｉ鍛殘闁告劕濂旂粩鏉戔枎閳藉懐绀?
 -- 缁绢収鍠曠换?xSlots 婵繐绠戝▍鎺旂尵鐠囪尙鈧鈧鐭粻鐔奉啅閸欏鏆堥柛?
@@ -267,21 +221,6 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
     SetInt(prefix .. "/mainWeapon/fireRequest", 0, true)
     SetInt(prefix .. "/mainWeapon/toggleRequest", 0, true)
     -- x 婵¤尪濮ょ憰鍡涘蓟閹捐尙鐨戝ù鐘烘硾鐏忣垶鏁嶅杈ㄦ殢濞存粌瀛╁﹢鍥礉閿涘嫷浼傞柛鎰懃閸欏棝鍨惧鍕粯闁哄倿顣︾粩鏉戔枎閿涘嫬笑闁诡兛绀佽ぐ澶愬�?闁告瑦鍨甸惃鐘电磼閹惧浜柍銉︾箰缁辨繃绗熷☉姗嗗悅闁规挳顥撻顒勫箯婢跺﹤绲挎繛鎾冲级閻?
-    SetInt(prefix .. "/xSlots/render/seq", 0, true)
-    SetInt(prefix .. "/xSlots/render/shotId", 0, true)
-    SetString(prefix .. "/xSlots/render/eventType", "idle", true)
-    SetInt(prefix .. "/xSlots/render/slotIndex", 1, true)
-    SetString(prefix .. "/xSlots/render/weaponType", "", true)
-    SetFloat(prefix .. "/xSlots/render/serverTime", 0, true)
-    _writeVec3ToRegistry(prefix .. "/xSlots/render/firePoint", { x = 0, y = 0, z = 0 })
-    _writeVec3ToRegistry(prefix .. "/xSlots/render/hitPoint", { x = 0, y = 0, z = 0 })
-    SetInt(prefix .. "/xSlots/render/didHit", 0, true)
-    SetInt(prefix .. "/xSlots/render/didHitStellarisBody", 0, true)
-    SetInt(prefix .. "/xSlots/render/didHitShield", 0, true)
-    SetInt(prefix .. "/xSlots/render/hitTargetBodyId", 0, true)
-    _writeVec3ToRegistry(prefix .. "/xSlots/render/normal", { x = 0, y = 1, z = 0 })
-    SetString(prefix .. "/xSlots/render/impactLayer", "none", true)
-
 end
 
 function server.registryShipEnsure(shipBodyId, shipType, defaultShipType)
@@ -338,22 +277,6 @@ function server.registryShipGetSnapshot(shipBodyId)
         moveRequest = GetInt(prefix .. "/move/request"),
         moveRequestState = GetInt(prefix .. "/move/requestState"),
         currentMainWeapon = GetString(prefix .. "/mainWeapon/current"),
-        xSlotsRender = {
-            seq = GetInt(prefix .. "/xSlots/render/seq"),
-            shotId = GetInt(prefix .. "/xSlots/render/shotId"),
-            eventType = GetString(prefix .. "/xSlots/render/eventType"),
-            slotIndex = GetInt(prefix .. "/xSlots/render/slotIndex"),
-            weaponType = GetString(prefix .. "/xSlots/render/weaponType"),
-            serverTime = GetFloat(prefix .. "/xSlots/render/serverTime"),
-            firePoint = _readVec3FromRegistry(prefix .. "/xSlots/render/firePoint"),
-            hitPoint = _readVec3FromRegistry(prefix .. "/xSlots/render/hitPoint"),
-            didHit = GetInt(prefix .. "/xSlots/render/didHit"),
-            didHitStellarisBody = GetInt(prefix .. "/xSlots/render/didHitStellarisBody"),
-            didHitShield = GetInt(prefix .. "/xSlots/render/didHitShield"),
-            hitTargetBodyId = GetInt(prefix .. "/xSlots/render/hitTargetBodyId"),
-            normal = _readVec3FromRegistry(prefix .. "/xSlots/render/normal"),
-            impactLayer = GetString(prefix .. "/xSlots/render/impactLayer"),
-        },
     }
 
     return snapshot
@@ -536,45 +459,4 @@ end
 -- eventType, slotIndex, weaponType, serverTime, firePoint, hitPoint,
 -- didHit, didHitStellarisBody, didHitShield, hitTargetBodyId, normal, impactLayer,
 -- incrementShotId(闁告瑯鍨堕埀顒€顧€�? 閻炴稏鍔庨妵姘跺嫉椤掍緡鍋уù婊冾儎濞嗐垽妫侀埀顒傛啺娴ｇ懓鑵归�?shotId)
-function server.registryShipWriteXSlotsRenderEvent(shipBodyId, payload)
-    if not server.registryShipExists(shipBodyId) then
-        return false
-    end
-
-    local p = payload or {}
-    local prefix = _shipKeyPrefix(shipBodyId) .. "/xSlots/render"
-
-    local function _asInt01(v)
-        return (v and 1 or 0)
-    end
-
-    local nextSeq = GetInt(prefix .. "/seq") + 1
-    SetInt(prefix .. "/seq", nextSeq, true)
-
-    if p.incrementShotId ~= nil and math.floor(p.incrementShotId) ~= 0 then
-        SetInt(prefix .. "/shotId", GetInt(prefix .. "/shotId") + 1, true)
-    end
-
-    SetString(prefix .. "/eventType", tostring(p.eventType or "idle"), true)
-    SetInt(prefix .. "/slotIndex", math.floor(p.slotIndex or 1), true)
-    SetString(prefix .. "/weaponType", tostring(p.weaponType or ""), true)
-    SetFloat(prefix .. "/serverTime", p.serverTime or ((GetTime ~= nil) and GetTime() or 0), true)
-
-    _writeVec3ToRegistry(prefix .. "/firePoint", p.firePoint)
-    _writeVec3ToRegistry(prefix .. "/hitPoint", p.hitPoint)
-    _writeVec3ToRegistry(prefix .. "/normal", p.normal)
-
-    SetInt(prefix .. "/didHit", _asInt01(p.didHit), true)
-    SetInt(prefix .. "/didHitStellarisBody", _asInt01(p.didHitStellarisBody), true)
-    SetInt(prefix .. "/didHitShield", _asInt01(p.didHitShield), true)
-    SetInt(prefix .. "/hitTargetBodyId", math.floor(p.hitTargetBodyId or 0), true)
-
-    local impactLayer = p.impactLayer or "none"
-    if impactLayer ~= "none" and impactLayer ~= "shield" and impactLayer ~= "armor" and impactLayer ~= "body" and impactLayer ~= "environment" then
-        impactLayer = "none"
-    end
-    SetString(prefix .. "/impactLayer", impactLayer, true)
-
-    return true
-end
 

@@ -301,7 +301,7 @@ end
 -- 写入渲染事件：开始充能
 -- 说明：不再使用 ClientCall，统一写入 Registry 供客户端拉取
 function server.xSlot_broadcastChargingStart(shipBodyId, slotIndex, weaponType, firePointWorld)
-    server.registryShipWriteXSlotsRenderEvent(shipBodyId, {
+    server.xSlotRenderPushEvent(shipBodyId, {
         eventType = "charging_start",
         slotIndex = slotIndex,
         weaponType = weaponType,
@@ -319,7 +319,7 @@ end
 
 -- 写入渲染事件：开始发射
 function server.xSlot_broadcastLaunchingStart(shipBodyId, slotIndex, weaponType, firePointWorld, hitPointWorld, didHit, didHitStellarisBody, didHitShield, hitTargetBodyId, normal, impactLayer)
-    server.registryShipWriteXSlotsRenderEvent(shipBodyId, {
+    server.xSlotRenderPushEvent(shipBodyId, {
         eventType = "launch_start",
         slotIndex = slotIndex,
         weaponType = weaponType,
@@ -337,7 +337,7 @@ end
 
 -- 写入渲染事件：武器回到 idle
 function server.xSlot_broadcastWeaponIdle(shipBodyId, slotIndex, weaponType, firePointWorld)
-    server.registryShipWriteXSlotsRenderEvent(shipBodyId, {
+    server.xSlotRenderPushEvent(shipBodyId, {
         eventType = "idle",
         slotIndex = slotIndex,
         weaponType = weaponType,
