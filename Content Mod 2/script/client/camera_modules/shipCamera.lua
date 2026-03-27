@@ -380,7 +380,7 @@ function client.shipCameraTick(dt)
     AttachCameraTo(body, false)
     SetCameraOffsetTransform(cameraLocalT)
 
-    if client.registryShipSetRotationError == nil then
+    if client.shipRequestRotationError == nil then
         return
     end
 
@@ -401,5 +401,5 @@ function client.shipCameraTick(dt)
         pitchError = camZenith
     end
 
-    client.registryShipSetRotationError(body, pitchError, yawError)
+    client.shipRequestRotationError(body, pitchError, yawError)
 end

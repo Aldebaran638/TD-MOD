@@ -144,7 +144,11 @@ function client.mainWeaponHudTick(dt)
 
     state.active = true
     state.shipBody = body
-    state.currentMainWeapon = client.registryShipGetCurrentMainWeapon(body)
+    if client.getShipMainWeaponMode ~= nil then
+        state.currentMainWeapon = client.getShipMainWeaponMode(body)
+    else
+        state.currentMainWeapon = "xSlot"
+    end
 
     local hud = client.lSlotHudStateByShip[body] or {
         heat = 0.0,

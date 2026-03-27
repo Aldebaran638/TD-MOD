@@ -44,10 +44,10 @@ function client.mainWeaponInputTick(dt)
     end
 
     if InputPressed("q") then
-        client.registryShipSetMainWeaponToggleRequest(shipBody, 1)
+        client.shipRequestMainWeaponToggle(shipBody, 1)
     end
 
     if InputPressed("lmb") then
-        client.registryShipSetMainWeaponFireRequest(shipBody, 1)
+        client.shipRequestMainWeaponFire(shipBody, 1)
     end
 end

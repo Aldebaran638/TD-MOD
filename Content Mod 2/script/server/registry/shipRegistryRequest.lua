@@ -3,12 +3,6 @@
 
 server = server or {}
 
-local registryShipRoot = "StellarisShips/server/ships/byId/"
-
-local function _shipKeyPrefix(shipBodyId)
-    return registryShipRoot .. tostring(shipBodyId)
-end
-
 local function _isPlayerDrivingShip(playerId, shipBodyId)
     if playerId == nil or shipBodyId == nil or shipBodyId == 0 then
         return false
@@ -35,111 +29,67 @@ local function _isPlayerDrivingShip(playerId, shipBodyId)
     return false
 end
 
-function server.registryShipRequestSetMainWeaponFireRequest(playerId, shipBodyId, request)
+local function _canAcceptShipRequest(playerId, shipBodyId)
     if shipBodyId == nil or shipBodyId == 0 then
-        return
+        return false
     end
+    if server.registryShipExists ~= nil and (not server.registryShipExists(shipBodyId)) then
+        return false
+    end
+    if not _isPlayerDrivingShip(playerId, shipBodyId) then
+        return false
+    end
+    return true
+end
+
+function server.shipRequestMainWeaponFire(playerId, shipBodyId, request)
     if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
         return
     end
-
-    local prefix = _shipKeyPrefix(shipBodyId)
-    if not GetBool(prefix .. "/exists") then
-        return
-    end
-    if not _isPlayerDrivingShip(playerId, shipBodyId) then
+    if not _canAcceptShipRequest(playerId, shipBodyId) then
         return
     end
 
-    local value = (math.floor(request or 0) ~= 0) and 1 or 0
+    local value = (math.floor(request or 0) ~= 0)
     if server.mainWeaponRequestSetFireRequested ~= nil then
-        server.mainWeaponRequestSetFireRequested(value ~= 0)
+        server.mainWeaponRequestSetFireRequested(value)
     end
 end
 
-function server.registryShipRequestSetMainWeaponToggleRequest(playerId, shipBodyId, request)
-    if shipBodyId == nil or shipBodyId == 0 then
-        return
-    end
+function server.shipRequestMainWeaponToggle(playerId, shipBodyId, request)
     if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
         return
     end
-
-    local prefix = _shipKeyPrefix(shipBodyId)
-    if not GetBool(prefix .. "/exists") then
-        return
-    end
-    if not _isPlayerDrivingShip(playerId, shipBodyId) then
+    if not _canAcceptShipRequest(playerId, shipBodyId) then
         return
     end
 
-    local value = (math.floor(request or 0) ~= 0) and 1 or 0
+    local value = (math.floor(request or 0) ~= 0)
     if server.mainWeaponRequestSetToggleRequested ~= nil then
-        server.mainWeaponRequestSetToggleRequested(value ~= 0)
+        server.mainWeaponRequestSetToggleRequested(value)
     end
 end
 
--- 客户端请求 -> 服务端写入 move/requestState 与 move/request
-function server.registryShipRequestSetMoveRequestState(playerId, shipBodyId, moveState)
-    if shipBodyId == nil or shipBodyId == 0 then
-        return
-    end
-
-    local prefix = _shipKeyPrefix(shipBodyId)
-    if not GetBool(prefix .. "/exists") then
-        return
-    end
-
-    if not _isPlayerDrivingShip(playerId, shipBodyId) then
+function server.shipRequestMoveState(playerId, shipBodyId, moveState)
+    if not _canAcceptShipRequest(playerId, shipBodyId) then
         return
     end
 
     local state = math.floor(moveState or 0)
-    if state < 0 then state = 0 end
-    if state > 2 then state = 2 end
-
-    SetInt(prefix .. "/move/requestState", state, true)
-    SetInt(prefix .. "/move/request", (state == 0) and 0 or 1, true)
-end
-
--- 客户端请求 -> 服务端写入 rot/aimActive, rot/aimYaw, rot/aimPitch 等
-function server.registryShipRequestSetRotationAim(playerId, shipBodyId, active, yaw, pitch)
-    if shipBodyId == nil or shipBodyId == 0 then
-        return
+    if state < 0 then
+        state = 0
+    end
+    if state > 2 then
+        state = 2
     end
 
-    local prefix = _shipKeyPrefix(shipBodyId)
-    if not GetBool(prefix .. "/exists") then
-        return
-    end
-
-    if not _isPlayerDrivingShip(playerId, shipBodyId) then
-        return
-    end
-
-    if active then
-        -- 激活状态，写入目标偏航/俯仰角，并更新时间戳(防卡顿失控)
-        SetBool(prefix .. "/rot/aimActive", true, true)
-        SetFloat(prefix .. "/rot/aimYaw", yaw or 0.0, true)
-        SetFloat(prefix .. "/rot/aimPitch", pitch or 0.0, true)
-        SetFloat(prefix .. "/rot/aimTime", serverTime or GetTime(), true)
-    else
-        -- 自由视角等非激活状态，取消同步
-        SetBool(prefix .. "/rot/aimActive", false, true)
+    if server.shipRuntimeSetMoveRequestState ~= nil then
+        server.shipRuntimeSetMoveRequestState(shipBodyId, state)
     end
 end
 
--- client request -> server write rotation error (pitch/yaw)
-function server.registryShipRequestSetRotationError(playerId, shipBodyId, pitchError, yawError)
-    if shipBodyId == nil or shipBodyId == 0 then
-        return false
-    end
-
-    local prefix = _shipKeyPrefix(shipBodyId)
-    if not GetBool(prefix .. "/exists") then
-        return false
-    end
-    if not _isPlayerDrivingShip(playerId, shipBodyId) then
+function server.shipRequestRotationError(playerId, shipBodyId, pitchError, yawError)
+    if not _canAcceptShipRequest(playerId, shipBodyId) then
         return false
     end
 
@@ -151,22 +101,15 @@ function server.registryShipRequestSetRotationError(playerId, shipBodyId, pitchE
     if ye ~= ye or ye == math.huge or ye == -math.huge then
         ye = 0.0
     end
-    SetFloat(prefix .. "/pitchError", pe, true)
-    SetFloat(prefix .. "/yawError", ye, true)
+
+    if server.shipRuntimeSetRotationError ~= nil then
+        server.shipRuntimeSetRotationError(shipBodyId, pe, ye)
+    end
     return true
 end
 
--- client request -> server write roll error
-function server.registryShipRequestSetRollError(playerId, shipBodyId, rollError)
-    if shipBodyId == nil or shipBodyId == 0 then
-        return false
-    end
-
-    local prefix = _shipKeyPrefix(shipBodyId)
-    if not GetBool(prefix .. "/exists") then
-        return false
-    end
-    if not _isPlayerDrivingShip(playerId, shipBodyId) then
+function server.shipRequestRollError(playerId, shipBodyId, rollError)
+    if not _canAcceptShipRequest(playerId, shipBodyId) then
         return false
     end
 
@@ -175,6 +118,8 @@ function server.registryShipRequestSetRollError(playerId, shipBodyId, rollError)
         re = 0.0
     end
 
-    SetFloat(prefix .. "/rollError", re, true)
+    if server.shipRuntimeSetRollError ~= nil then
+        server.shipRuntimeSetRollError(shipBodyId, re)
+    end
     return true
 end

@@ -86,11 +86,7 @@ local function _playKineticHit(hitPoint)
     _playAt(_snd_kinetic_hit_near, hitPoint)
 end
 
-local function _isShipOccupied(shipBodyId, driverPlayerId)
-    if (driverPlayerId or 0) > 0 then
-        return true
-    end
-
+local function _isShipOccupied(shipBodyId)
     local veh = GetBodyVehicle(shipBodyId)
     if veh ~= nil and veh ~= 0 then
         local playerVeh = GetPlayerVehicle()
@@ -107,7 +103,7 @@ local function _engineTick(shipBodyId)
         return
     end
 
-    if not _isShipOccupied(shipBodyId, client.registryShipGetDriverPlayerId(shipBodyId)) then
+    if not _isShipOccupied(shipBodyId) then
         return
     end
 

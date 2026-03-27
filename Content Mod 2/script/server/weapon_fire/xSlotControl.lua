@@ -552,7 +552,4 @@ function server.xSlotControlTick(dt)
     local slot2 = slots[2] or {}
     local slot1Runtime = slot1.runtime or {}
     local slot2Runtime = slot2.runtime or {}
-    DebugWatch("xslot.active", string.format("%d %s", activeSlot, tostring(activeState)))
-    DebugWatch("xslot.cd1", string.format("%.2f %s", slot1Runtime.cd or 0.0, tostring(slot1Runtime.state or "idle")))
-    DebugWatch("xslot.cd2", string.format("%.2f %s", slot2Runtime.cd or 0.0, tostring(slot2Runtime.state or "idle")))
 end

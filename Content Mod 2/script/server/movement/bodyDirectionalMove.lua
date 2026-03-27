@@ -20,7 +20,7 @@ function server.bodyDirectionalMoveTick(dt)
     end
 
     server.registryShipEnsure(body, server.defaultShipType, server.defaultShipType)
-    local moveState = server.registryShipGetMoveState(body)
+    local moveState = server.shipRuntimeGetMoveState(body)
     if moveState ~= 0 then
         local cfg = server.bodyDirectionalMoveConfig
         local forwardAcceleration = tonumber(cfg.forwardAcceleration) or 10.0

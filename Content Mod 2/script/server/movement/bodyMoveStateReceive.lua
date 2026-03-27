@@ -50,11 +50,11 @@ function server_bodyMoveStateSet(playerId, moveState)
 
     server.registryShipEnsure(body, server.defaultShipType, server.defaultShipType)
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(body) then
-        server.registryShipSetMoveRequestState(body, 0)
-        server.registryShipSetMoveState(body, 0)
+        server.shipRuntimeSetMoveRequestState(body, 0)
+        server.shipRuntimeSetMoveState(body, 0)
         return
     end
-    server.registryShipSetMoveRequestState(body, moveState)
+    server.shipRuntimeSetMoveRequestState(body, moveState)
 end
 
 function server.bodyMoveStateReceiveTick(dt)
@@ -66,17 +66,17 @@ function server.bodyMoveStateReceiveTick(dt)
 
     server.registryShipEnsure(body, server.defaultShipType, server.defaultShipType)
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(body) then
-        server.registryShipSetMoveRequestState(body, 0)
-        server.registryShipSetMoveState(body, 0)
+        server.shipRuntimeSetMoveRequestState(body, 0)
+        server.shipRuntimeSetMoveState(body, 0)
         return
     end
 
     if not _isAnyPlayerOnShip(body) then
-        server.registryShipSetMoveRequestState(body, 0)
-        server.registryShipSetMoveState(body, 0)
+        server.shipRuntimeSetMoveRequestState(body, 0)
+        server.shipRuntimeSetMoveState(body, 0)
         return
     end
 
-    local requestState = server.registryShipGetMoveRequestState(body)
-    server.registryShipSetMoveState(body, requestState)
+    local requestState = server.shipRuntimeGetMoveRequestState(body)
+    server.shipRuntimeSetMoveState(body, requestState)
 end

@@ -3,8 +3,6 @@
 
 server = server or {}
 
-local registryShipRoot = "StellarisShips/server/ships/byId/"
-
 server.shipAttitudeControllerState = server.shipAttitudeControllerState or {
     byBody = {},
 }
@@ -30,10 +28,6 @@ server.shipAttitudeControllerConfig = server.shipAttitudeControllerConfig or {
     yawLeverArm = 8.0,         -- local z offset used for yaw pair
     pitchLeverArm = 8.0,       -- local z offset used for pitch pair
 }
-
-local function _shipKeyPrefix(shipBodyId)
-    return registryShipRoot .. tostring(shipBodyId)
-end
 
 local function _safeNumber(v, fallback)
     local n = tonumber(v)
@@ -64,13 +58,13 @@ function server.shipAttitudeControllerReadRotationError(shipBodyId)
         return 0.0, 0.0, false
     end
 
-    local prefix = _shipKeyPrefix(shipBodyId)
-    if not GetBool(prefix .. "/exists") then
+    if server.registryShipExists ~= nil and (not server.registryShipExists(shipBodyId)) then
         return 0.0, 0.0, false
     end
 
-    local pitchError = _safeNumber(GetFloat(prefix .. "/pitchError"), 0.0)
-    local yawError = _safeNumber(GetFloat(prefix .. "/yawError"), 0.0)
+    local pitchError, yawError = server.shipRuntimeGetRotationError(shipBodyId)
+    pitchError = _safeNumber(pitchError, 0.0)
+    yawError = _safeNumber(yawError, 0.0)
     return pitchError, yawError, true
 end
 
