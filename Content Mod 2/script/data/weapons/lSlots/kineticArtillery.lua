@@ -2,12 +2,15 @@
 
 lSlotWeaponRegistryData = lSlotWeaponRegistryData or {}
 
+local kineticArtilleryMaxRange = 750.0
+local kineticArtilleryProjectileSpeed = 240.0
+
 lSlotWeaponRegistryData.kineticArtillery = {
     weaponType = "kineticArtillery",
     cooldown = 0.1,
-    maxRange = 1500.0,
-    projectileSpeed = 600.0,
-    projectileLifetime = 2.5,
+    maxRange = kineticArtilleryMaxRange,
+    projectileSpeed = kineticArtilleryProjectileSpeed,
+    projectileLifetime = kineticArtilleryMaxRange / kineticArtilleryProjectileSpeed,
     projectileRadius = 1.0,
     projectileGravityScale = 0.0,
     damage = 200.0,

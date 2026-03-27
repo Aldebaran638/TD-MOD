@@ -8,10 +8,45 @@ local function _lSlotVec3TableToVec(v, defaultX, defaultY, defaultZ)
     return Vec(t.x or defaultX or 0, t.y or defaultY or 0, t.z or defaultZ or 0)
 end
 
-local function _computeLSlotFireDirLocal(slotConfig)
+local function _resolveLSlotForwardAimPointLocal(shipBody, shipT, maxRange)
+    if shipBody == nil or shipBody == 0 then
+        return nil
+    end
+
+    local rayOriginLocal = Vec(0, 0, -2)
+    local rayDirLocal = Vec(0, 0, -1)
+    local rayOriginWorld = TransformToParentPoint(shipT, rayOriginLocal)
+    local rayDirWorld = TransformToParentVec(shipT, rayDirLocal)
+    local rayDirLen = VecLength(rayDirWorld)
+    if rayDirLen < 0.0001 then
+        return nil
+    end
+    rayDirWorld = VecScale(rayDirWorld, 1.0 / rayDirLen)
+
+    QueryRequire("physical")
+    QueryRejectBody(shipBody)
+    local hit, hitDist = QueryRaycast(rayOriginWorld, rayDirWorld, maxRange)
+    if not hit then
+        return nil
+    end
+
+    local hitPointWorld = VecAdd(rayOriginWorld, VecScale(rayDirWorld, hitDist))
+    return TransformToLocalPoint(shipT, hitPointWorld)
+end
+
+local function _computeLSlotFireDirLocal(slotConfig, forwardAimPointLocal)
     local mountPos = _lSlotVec3TableToVec(slotConfig.firePosOffset, 0, 0, -4)
     local defaultDir = _lSlotVec3TableToVec(slotConfig.fireDirRelative, 0, 0, -1)
     local aimMode = slotConfig.aimMode or "fixed"
+
+    if forwardAimPointLocal ~= nil then
+        local dirToAimPoint = VecSub(forwardAimPointLocal, mountPos)
+        local dirToAimPointLen = VecLength(dirToAimPoint)
+        if dirToAimPointLen >= 0.0001 then
+            return VecScale(dirToAimPoint, 1.0 / dirToAimPointLen)
+        end
+    end
+
     if aimMode ~= "forwardConvergeByRange" then
         return defaultDir
     end
@@ -99,6 +134,12 @@ function server.lSlotControlTick(dt)
     end
 
     local shipT = GetBodyTransform(shipBody)
+    local primaryConfig = (slots[1] and slots[1].config) or {}
+    local forwardAimPointLocal = _resolveLSlotForwardAimPointLocal(
+        shipBody,
+        shipT,
+        math.max(1.0, primaryConfig.maxRange or 1.0)
+    )
     local fired = false
     for i = 1, #slots do
         local slot = slots[i] or {}
@@ -110,7 +151,7 @@ function server.lSlotControlTick(dt)
             and (slotRuntime.cooldownRemain or 0.0) <= 0.0 then
             local firePosOffset = _lSlotVec3TableToVec(slotConfig.firePosOffset, 0, 0, -4)
             local firePointWorld = TransformToParentPoint(shipT, firePosOffset)
-            local fireDirLocal = _computeLSlotFireDirLocal(slotConfig)
+            local fireDirLocal = _computeLSlotFireDirLocal(slotConfig, forwardAimPointLocal)
             local fireDirWorld = TransformToParentVec(shipT, fireDirLocal)
             local dirLen = VecLength(fireDirWorld)
             if dirLen >= 0.0001 then

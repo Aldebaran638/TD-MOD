@@ -4,12 +4,25 @@
 client = client or {}
 
 client.shipCrosshairConfig = client.shipCrosshairConfig or {
-    distance = 200,
     size = 8,
     thickness = 1,
     originForwardOffset = 2,
     color = {1, 1, 1, 1},
+    fallbackRange = 2000,
 }
+
+local function _resolveCrosshairRange()
+    local defs = weaponData or {}
+    local tachyon = defs.tachyonLance or {}
+    local maxRange = tonumber(tachyon.maxRange) or 0
+    if maxRange <= 0 then
+        maxRange = tonumber(tachyon.range) or 0
+    end
+    if maxRange <= 0 then
+        maxRange = client.shipCrosshairConfig.fallbackRange or 2000
+    end
+    return maxRange
+end
 
 local function _resolveControlledShipBody()
     if client.shipCameraGetControlledBody ~= nil then
@@ -52,17 +65,21 @@ function client.shipCrosshairDraw()
     end
 
     local t = GetBodyTransform(body)
+    local maxRange = _resolveCrosshairRange()
 
     local forwardLocal = Vec(0, 0, -1)
     local rayOrigin = TransformToParentPoint(t, VecScale(forwardLocal, cfg.originForwardOffset))
     local forwardWorldDir = VecNormalize(TransformToParentVec(t, forwardLocal))
 
-    local hit, hitDist = QueryRaycast(rayOrigin, forwardWorldDir, cfg.distance)
+    QueryRequire("physical")
+    QueryRejectBody(body)
+
+    local hit, hitDist = QueryRaycast(rayOrigin, forwardWorldDir, maxRange)
     local aimPoint
     if hit then
         aimPoint = VecAdd(rayOrigin, VecScale(forwardWorldDir, hitDist))
     else
-        aimPoint = TransformToParentPoint(t, VecScale(forwardLocal, cfg.distance))
+        aimPoint = VecAdd(rayOrigin, VecScale(forwardWorldDir, maxRange))
     end
 
     local camT = GetCameraTransform()
