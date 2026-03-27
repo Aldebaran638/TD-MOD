@@ -116,6 +116,14 @@ local function _spawnSphericalShockwave(pos, impactLayer, didHitShield)
     end
 end
 
+function client.playMissileImpactFx(hitX, hitY, hitZ, impactLayer)
+    _spawnSphericalShockwave(
+        Vec(hitX or 0, hitY or 0, hitZ or 0),
+        tostring(impactLayer or "body"),
+        false
+    )
+end
+
 function client.hitPointFxTick(dt)
     local state = client.hitPointFxState
 

@@ -70,6 +70,9 @@ function server.mainWeaponControlTick(dt)
         server.lSlotStateSetRequestFire(false)
         server.lSlotStateResetRuntime()
         server.lSlotStatePushHudReset(true)
+        if server.sSlotStateResetRuntime ~= nil then
+            server.sSlotStateResetRuntime()
+        end
         return
     end
 
