@@ -11,6 +11,14 @@ server.xSlotState = server.xSlotState or {
     slots = {},
 }
 
+server.xSlotHudSyncState = server.xSlotHudSyncState or {
+    lastCd1 = nil,
+    lastCd2 = nil,
+    lastMaxCd1 = nil,
+    lastMaxCd2 = nil,
+    lastSendTime = -1000.0,
+}
+
 local function _xSlotStateCloneVec3(v, defaultX, defaultY, defaultZ)
     local t = v or {}
     return {
@@ -61,6 +69,20 @@ local function _xSlotStateBuildRuntime()
     }
 end
 
+local function _xSlotNow()
+    return (GetTime ~= nil) and GetTime() or 0.0
+end
+
+function server.xSlotStateMarkHudDirty()
+    local sync = server.xSlotHudSyncState or {}
+    sync.lastCd1 = nil
+    sync.lastCd2 = nil
+    sync.lastMaxCd1 = nil
+    sync.lastMaxCd2 = nil
+    sync.lastSendTime = -1000.0
+    server.xSlotHudSyncState = sync
+end
+
 function server.xSlotStateInit(shipType)
     local shipDef = _xSlotStateResolveShipDefinition(shipType)
     local state = {
@@ -80,6 +102,14 @@ function server.xSlotStateInit(shipType)
     end
 
     server.xSlotState = state
+    server.xSlotHudSyncState = {
+        lastCd1 = nil,
+        lastCd2 = nil,
+        lastMaxCd1 = nil,
+        lastMaxCd2 = nil,
+        lastSendTime = -1000.0,
+    }
+    server.xSlotStateMarkHudDirty()
     return state
 end
 
@@ -122,4 +152,48 @@ function server.xSlotStateResetRuntime()
             runtime.launchRemain = 0.0
         end
     end
+    server.xSlotStateMarkHudDirty()
+end
+
+function server.xSlotStatePushHud(force)
+    local shipBodyId = server.shipBody or 0
+    if shipBodyId == 0 then
+        return
+    end
+
+    local slots = (server.xSlotState and server.xSlotState.slots) or {}
+    local slot1Entry = slots[1] or {}
+    local slot2Entry = slots[2] or {}
+    local slot1 = slot1Entry.runtime or {}
+    local slot2 = slot2Entry.runtime or {}
+    local slot1Config = slot1Entry.config or {}
+    local slot2Config = slot2Entry.config or {}
+    local cd1 = math.max(0.0, tonumber(slot1.cd) or 0.0)
+    local cd2 = math.max(0.0, tonumber(slot2.cd) or 0.0)
+    local maxCd1 = math.max(0.0, tonumber(slot1Config.cooldown) or 0.0)
+    local maxCd2 = math.max(0.0, tonumber(slot2Config.cooldown) or 0.0)
+
+    local sync = server.xSlotHudSyncState or {}
+    local nowTime = _xSlotNow()
+    local shouldSend = force
+        or sync.lastCd1 == nil
+        or sync.lastCd2 == nil
+        or sync.lastMaxCd1 == nil
+        or sync.lastMaxCd2 == nil
+        or math.abs((sync.lastCd1 or 0.0) - cd1) > 0.0001
+        or math.abs((sync.lastCd2 or 0.0) - cd2) > 0.0001
+        or math.abs((sync.lastMaxCd1 or 0.0) - maxCd1) > 0.0001
+        or math.abs((sync.lastMaxCd2 or 0.0) - maxCd2) > 0.0001
+        or ((nowTime - (sync.lastSendTime or -1000.0)) >= 0.5)
+
+    if shouldSend then
+        ClientCall(0, "client.updateXSlotHudState", shipBodyId, cd1, cd2, maxCd1, maxCd2)
+        sync.lastSendTime = nowTime
+    end
+
+    sync.lastCd1 = cd1
+    sync.lastCd2 = cd2
+    sync.lastMaxCd1 = maxCd1
+    sync.lastMaxCd2 = maxCd2
+    server.xSlotHudSyncState = sync
 end

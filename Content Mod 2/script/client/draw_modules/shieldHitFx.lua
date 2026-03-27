@@ -347,12 +347,13 @@ local function _startShieldBurst(shipBodyId, hitTargetBodyId, hitPointWorld, sho
 end
 
 function client.playProjectileShieldImpactFx(hitTargetBodyId, hitX, hitY, hitZ)
+    local randomScale = 0.65 + math.random() * 0.55
     _startShieldBurst(
         0,
         hitTargetBodyId,
         Vec(hitX or 0, hitY or 0, hitZ or 0),
         0,
-        0.5
+        randomScale
     )
 end
 

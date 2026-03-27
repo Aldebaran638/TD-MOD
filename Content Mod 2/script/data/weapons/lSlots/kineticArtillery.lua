@@ -19,8 +19,8 @@ lSlotWeaponRegistryData.kineticArtillery = {
     bodyFix = 1.0,
     explosionRadius = 2.0,
     explosionStrength = 1.0,
-    heatPerShot = 18.0,
-    heatDissipationPerSecond = 14.0,
+    heatPerShot = 14.0,
+    heatDissipationPerSecond = 10.0,
     overheatThreshold = 100.0,
     recoverThreshold = 60.0,
 }

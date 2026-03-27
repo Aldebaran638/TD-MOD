@@ -8,7 +8,7 @@ client.xSlotLaunchFxConfig = client.xSlotLaunchFxConfig or {
     -- 青色螺旋光粒
     helixRadius = 0.22,
     helixPitch = 26.0,
-    helixParticlesPerTurn = 96,
+    helixParticlesPerTurn = 192,
     helixParticleColorA = { 0.00, 1.00, 1.00 },
     helixParticleColorB = { 0.00, 0.84, 0.96 },
     helixParticleRadiusStart = 0.09,
@@ -20,7 +20,7 @@ client.xSlotLaunchFxConfig = client.xSlotLaunchFxConfig or {
     helixParticleForwardSpeed = 1.6,
 
     -- 白色中心直线光粒
-    coreLineParticlesPerTurn = 96,
+    coreLineParticlesPerTurn = 192,
     coreLineParticleColorA = { 1.00, 1.00, 1.00 },
     coreLineParticleColorB = { 0.94, 0.98, 1.00 },
     coreLineParticleRadiusStart = 0.08,

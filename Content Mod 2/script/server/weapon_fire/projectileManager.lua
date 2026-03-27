@@ -301,30 +301,40 @@ function server.projectileManagerTick(dt)
             local shieldHit = _resolveShieldHit(projectile, projectile.lastPosition, projectile.position, settings)
             if shieldHit ~= nil then
                 _applyProjectileShipDamage(shieldHit.bodyId, projectile.weaponType)
-                _finishProjectileVisual(projectile.id, "shield", shieldHit.hitPos)
+                _finishProjectileVisual(projectile.id, "impact", shieldHit.hitPos)
+                _playProjectileHitSound(shieldHit.hitPos)
                 _playShieldImpactFx(shieldHit.bodyId, shieldHit.hitPos)
                 _removeProjectileAt(i)
                 removed = true
             else
                 local bodyHit = _resolveBodyHit(projectile, projectile.lastPosition, projectile.position)
                 if bodyHit ~= nil then
-                    local didEffect = false
+                    local shouldPlayImpact = false
+                    local shouldExplode = false
                     local hitBody = bodyHit.hitBody or 0
                     if hitBody ~= 0 and server.registryShipExists(hitBody) then
                         if server.registryShipIsBodyDead(hitBody) then
-                            didEffect = true
+                            shouldPlayImpact = true
+                            shouldExplode = true
                         else
                             local damageResult = _applyProjectileShipDamage(hitBody, projectile.weaponType)
+                            if damageResult.didDamage then
+                                shouldPlayImpact = true
+                            end
                             if damageResult.didHitShield then
                                 _playShieldImpactFx(hitBody, bodyHit.hitPos)
                             end
                         end
                     else
-                        didEffect = true
+                        shouldPlayImpact = true
+                        shouldExplode = true
                     end
 
-                    if didEffect then
+                    if shouldExplode then
                         Explosion(bodyHit.hitPos, settings.explosionRadius or 2.0)
+                    end
+
+                    if shouldPlayImpact then
                         _playProjectileHitSound(bodyHit.hitPos)
                         _finishProjectileVisual(projectile.id, "impact", bodyHit.hitPos)
                     else

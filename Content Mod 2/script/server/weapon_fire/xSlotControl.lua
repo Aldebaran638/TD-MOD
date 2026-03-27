@@ -379,6 +379,9 @@ function server.xSlotControlTick(dt)
         if server.xSlotStateResetRuntime ~= nil then
             server.xSlotStateResetRuntime()
         end
+        if server.xSlotStatePushHud ~= nil then
+            server.xSlotStatePushHud(true)
+        end
         return
     end
 
@@ -552,4 +555,8 @@ function server.xSlotControlTick(dt)
     local slot2 = slots[2] or {}
     local slot1Runtime = slot1.runtime or {}
     local slot2Runtime = slot2.runtime or {}
+
+    if server.xSlotStatePushHud ~= nil then
+        server.xSlotStatePushHud(false)
+    end
 end
