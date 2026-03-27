@@ -35,9 +35,9 @@ function server.bodyDriverSyncTick(dt)
     end
 
     for body, driverId in pairs(driverByBody) do
-        server.registryShipSetDriverPlayerId(body, driverId)
+        server.shipRuntimeSetDriverPlayerId(body, driverId)
         if driverId == 0 then
-            server.registryShipSetMoveState(body, 0)
+            server.shipRuntimeSetMoveState(body, 0)
         end
     end
 end

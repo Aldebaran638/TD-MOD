@@ -123,9 +123,8 @@ function client.hitPointFxTick(dt)
     for i = 1, #shipIds do
         local shipBodyId = shipIds[i]
         if client.registryShipExists(shipBodyId) then
-            local snapshot = client.registryShipGetSnapshot(shipBodyId)
-            if snapshot ~= nil then
-                local render = snapshot.xSlotsRender or {}
+            local render = client.xSlotRenderGetEvent(shipBodyId)
+            if render ~= nil then
                 local seq = render.seq or -1
                 local shotId = render.shotId or -1
                 local lastSeq = state.lastRenderSeqByShip[shipBodyId] or -1

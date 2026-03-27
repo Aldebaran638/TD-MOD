@@ -5,12 +5,15 @@ client = client or {}
 
 client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
     panelWidth = 260,
-    panelHeight = 78,
+    panelHeight = 110,
     rightOffset = 270,
     bottomOffset = 34,
     heatBarWidth = 180,
     heatBarHeight = 12,
     heatBarOffsetY = 12,
+    xCooldownBarWidth = 72,
+    xCooldownBarHeight = 8,
+    xCooldownBarGap = 12,
     iconSize = 26,
     labelSize = 18,
     valueSize = 14,
@@ -35,7 +38,12 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     heatFraction = 0.0,
     targetHeatFraction = 0.0,
     overheated = false,
+    xSlotFill1 = 1.0,
+    xSlotFill2 = 1.0,
 }
+
+client.lSlotHudStateByShip = client.lSlotHudStateByShip or {}
+client.xSlotHudStateByShip = client.xSlotHudStateByShip or {}
 
 local function _mainWeaponHudClamp(v, a, b)
     if v < a then return a end
@@ -63,29 +71,97 @@ local function _resolveControlledShipBody()
             veh = GetPlayerVehicle(localPlayerId)
         end
     end
-
     if veh == nil or veh == 0 then
         return 0
     end
 
-    local body = GetVehicleBody(veh)
-    if body == nil or body == 0 then
+    local playerBody = GetVehicleBody(veh)
+    local scriptBody = client.shipBody or 0
+    if scriptBody == 0 or playerBody == nil or playerBody == 0 or playerBody ~= scriptBody then
         return 0
     end
 
-    if client.registryShipExists ~= nil and (not client.registryShipExists(body)) then
+    if client.registryShipExists ~= nil and (not client.registryShipExists(scriptBody)) then
         return 0
     end
 
-    return body
+    return scriptBody
 end
 
-local function _resolveLSlotOverheatThreshold(snapshot)
-    local lSlots = (snapshot and snapshot.lSlots) or {}
-    local weaponType = ((lSlots[1] or {}).weaponType) or "kineticArtillery"
-    local defs = lSlotWeaponRegistryData or {}
-    local weaponDef = defs[weaponType] or defs.kineticArtillery or {}
-    return math.max(1.0, weaponDef.overheatThreshold or 100.0)
+local function _getOrCreateLSlotHudState(shipBodyId)
+    local body = math.floor(shipBodyId or 0)
+    if body <= 0 then
+        return nil
+    end
+
+    local states = client.lSlotHudStateByShip
+    local hud = states[body]
+    if hud == nil then
+        hud = {
+            heat = 0.0,
+            overheated = false,
+            overheatThreshold = 100.0,
+        }
+        states[body] = hud
+    end
+    return hud
+end
+
+local function _getOrCreateXSlotHudState(shipBodyId)
+    local body = math.floor(shipBodyId or 0)
+    if body <= 0 then
+        return nil
+    end
+
+    local states = client.xSlotHudStateByShip
+    local hud = states[body]
+    if hud == nil then
+        hud = {
+            cd1 = 0.0,
+            cd2 = 0.0,
+            maxCd1 = 1.0,
+            maxCd2 = 1.0,
+        }
+        states[body] = hud
+    end
+    return hud
+end
+
+function client.initLSlotHudState(shipBodyId, overheatThreshold)
+    local hud = _getOrCreateLSlotHudState(shipBodyId)
+    if hud == nil then
+        return
+    end
+    hud.overheatThreshold = math.max(1.0, tonumber(overheatThreshold) or 100.0)
+end
+
+function client.updateLSlotHudState(shipBodyId, heat, overheated)
+    local hud = _getOrCreateLSlotHudState(shipBodyId)
+    if hud == nil then
+        return
+    end
+    hud.heat = math.max(0.0, tonumber(heat) or 0.0)
+    hud.overheated = (math.floor(overheated or 0) ~= 0)
+end
+
+function client.resetLSlotHudState(shipBodyId)
+    local hud = _getOrCreateLSlotHudState(shipBodyId)
+    if hud == nil then
+        return
+    end
+    hud.heat = 0.0
+    hud.overheated = false
+end
+
+function client.updateXSlotHudState(shipBodyId, cd1, cd2, maxCd1, maxCd2)
+    local hud = _getOrCreateXSlotHudState(shipBodyId)
+    if hud == nil then
+        return
+    end
+    hud.cd1 = math.max(0.0, tonumber(cd1) or 0.0)
+    hud.cd2 = math.max(0.0, tonumber(cd2) or 0.0)
+    hud.maxCd1 = math.max(0.0, tonumber(maxCd1) or 0.0)
+    hud.maxCd2 = math.max(0.0, tonumber(maxCd2) or 0.0)
 end
 
 function client.mainWeaponHudTick(dt)
@@ -100,24 +176,69 @@ function client.mainWeaponHudTick(dt)
         state.heatFraction = 0.0
         state.currentMainWeapon = "xSlot"
         state.overheated = false
-        return
-    end
-
-    local snapshot = client.registryShipGetSnapshot(body)
-    if snapshot == nil then
-        state.active = false
-        state.shipBody = 0
+        state.xSlotFill1 = 1.0
+        state.xSlotFill2 = 1.0
         return
     end
 
     state.active = true
     state.shipBody = body
-    state.currentMainWeapon = snapshot.currentMainWeapon or "xSlot"
+    if client.getShipMainWeaponMode ~= nil then
+        state.currentMainWeapon = client.getShipMainWeaponMode(body)
+    else
+        state.currentMainWeapon = "xSlot"
+    end
 
-    local threshold = _resolveLSlotOverheatThreshold(snapshot)
-    state.targetHeatFraction = _mainWeaponHudClamp((snapshot.lSlotsHeat or 0.0) / threshold, 0.0, 1.0)
+    local hud = client.lSlotHudStateByShip[body] or {
+        heat = 0.0,
+        overheated = false,
+        overheatThreshold = 100.0,
+    }
+    local threshold = math.max(1.0, hud.overheatThreshold or 100.0)
+    local displayHeat = hud.heat or 0.0
+    state.targetHeatFraction = _mainWeaponHudClamp(displayHeat / threshold, 0.0, 1.0)
     state.heatFraction = _mainWeaponHudSmooth(state.heatFraction, state.targetHeatFraction, cfg.smoothSpeed, dt)
-    state.overheated = (snapshot.lSlotsOverheated or 0) ~= 0
+    state.overheated = hud.overheated and true or false
+
+    local xHud = client.xSlotHudStateByShip[body] or {
+        cd1 = 0.0,
+        cd2 = 0.0,
+        maxCd1 = 1.0,
+        maxCd2 = 1.0,
+    }
+    local cd1 = math.max(0.0, xHud.cd1 or 0.0)
+    local cd2 = math.max(0.0, xHud.cd2 or 0.0)
+    local maxCd1 = math.max(0.0, xHud.maxCd1 or 0.0)
+    local maxCd2 = math.max(0.0, xHud.maxCd2 or 0.0)
+
+    if maxCd1 > 0.0001 then
+        state.xSlotFill1 = _mainWeaponHudClamp(1.0 - (cd1 / maxCd1), 0.0, 1.0)
+    else
+        state.xSlotFill1 = 1.0
+    end
+
+    if maxCd2 > 0.0001 then
+        state.xSlotFill2 = _mainWeaponHudClamp(1.0 - (cd2 / maxCd2), 0.0, 1.0)
+    else
+        state.xSlotFill2 = 1.0
+    end
+end
+
+local function _drawXCooldownBar(x, y, w, h, fill, label, cfg)
+    UiPush()
+        UiTranslate(x, y)
+        UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
+        UiFont("regular.ttf", cfg.valueSize)
+        UiText(label)
+
+        UiTranslate(24, 3)
+        UiColor(cfg.heatBgColor[1], cfg.heatBgColor[2], cfg.heatBgColor[3], cfg.heatBgColor[4])
+        UiRect(w, h)
+        UiColor(cfg.xSlotColor[1], cfg.xSlotColor[2], cfg.xSlotColor[3], cfg.xSlotColor[4])
+        UiRect(w * _mainWeaponHudClamp(fill or 0.0, 0.0, 1.0), h)
+        UiColor(cfg.borderColor[1], cfg.borderColor[2], cfg.borderColor[3], 0.55)
+        UiRectOutline(w, h, 1)
+    UiPop()
 end
 
 local function _drawWeaponIcon(x, y, size, fillColor, label, selected, borderColor, inactiveColor)
@@ -183,11 +304,11 @@ function client.mainWeaponHudDraw()
             end
         UiPop()
 
-        _drawWeaponIcon(12, 34, cfg.iconSize, cfg.xSlotColor, "X", currentMode == "xSlot", cfg.borderColor, cfg.inactiveColor)
-        _drawWeaponIcon(46, 34, cfg.iconSize, cfg.lSlotColor, "L", currentMode == "lSlot", cfg.borderColor, cfg.inactiveColor)
+        _drawWeaponIcon(12, 36, cfg.iconSize, cfg.xSlotColor, "X", currentMode == "xSlot", cfg.borderColor, cfg.inactiveColor)
+        _drawWeaponIcon(46, 36, cfg.iconSize, cfg.lSlotColor, "L", currentMode == "lSlot", cfg.borderColor, cfg.inactiveColor)
 
         UiPush()
-            UiTranslate(84, 32)
+            UiTranslate(84, 34)
             UiColor(cfg.textColor[1], cfg.textColor[2], cfg.textColor[3], cfg.textColor[4])
             UiFont("regular.ttf", cfg.labelSize)
             if currentMode == "lSlot" then
@@ -198,10 +319,13 @@ function client.mainWeaponHudDraw()
         UiPop()
 
         UiPush()
-            UiTranslate(84, 52)
+            UiTranslate(84, 54)
             UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
             UiFont("regular.ttf", cfg.valueSize)
             UiText((currentMode == "lSlot") and "Main Weapon: L-Slot" or "Main Weapon: X-Slot")
         UiPop()
+
+        _drawXCooldownBar(12, 78, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill1, "X1", cfg)
+        _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 78, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill2, "X2", cfg)
     UiPop()
 end

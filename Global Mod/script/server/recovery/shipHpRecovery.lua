@@ -7,8 +7,6 @@ server.shipHpRecoveryState = server.shipHpRecoveryState or {
     accumulatorByBody = {},
 }
 
-local registryShipRoot = "StellarisShips/server/ships/byId/"
-
 local function _clamp(v, minValue, maxValue)
     if v < minValue then
         return minValue
@@ -17,10 +15,6 @@ local function _clamp(v, minValue, maxValue)
         return maxValue
     end
     return v
-end
-
-local function _keyPrefix(shipBodyId)
-    return registryShipRoot .. tostring(shipBodyId)
 end
 
 function server.shipHpRecoveryTick(dt)
@@ -42,8 +36,8 @@ function server.shipHpRecoveryTick(dt)
     end
 
     local cfg = nil
-    if server.registryShipGetRegenConfig ~= nil then
-        cfg = server.registryShipGetRegenConfig(body)
+    if server.shipRuntimeGetRegenConfig ~= nil then
+        cfg = server.shipRuntimeGetRegenConfig(body)
     end
     if cfg == nil then
         return
@@ -62,24 +56,18 @@ function server.shipHpRecoveryTick(dt)
     end
 
     local nowTime = (GetTime ~= nil) and GetTime() or 0.0
-    local regenTimes = nil
-    if server.registryShipGetRegenLastDamageTimes ~= nil then
-        regenTimes = server.registryShipGetRegenLastDamageTimes(body)
+    local maxShield, maxArmor, maxBody = server.shipRuntimeGetMaxHP(body)
+    local shieldHP, armorHP, bodyHP = server.registryShipGetHP(body)
+    if shieldHP == nil or armorHP == nil or bodyHP == nil then
+        state.accumulatorByBody[body] = acc
+        return
     end
-    regenTimes = regenTimes or { shield = nowTime, armor = nowTime, body = nowTime }
 
-    local prefix = _keyPrefix(body)
-    local maxShield = GetFloat(prefix .. "/maxShieldHP")
-    local maxArmor = GetFloat(prefix .. "/maxArmorHP")
-    local maxBody = GetFloat(prefix .. "/maxBodyHP")
+    local regenTimes = server.shipRuntimeObserveHP(body, shieldHP, armorHP, bodyHP, nowTime)
+    regenTimes = regenTimes or { shield = nowTime, armor = nowTime, body = nowTime }
 
     while acc >= tickInterval do
         acc = acc - tickInterval
-
-        local shieldHP, armorHP, bodyHP = server.registryShipGetHP(body)
-        if shieldHP == nil or armorHP == nil or bodyHP == nil then
-            break
-        end
 
         local newShield = shieldHP
         local newArmor = armorHP
@@ -108,8 +96,12 @@ function server.shipHpRecoveryTick(dt)
         if newShield ~= shieldHP or newArmor ~= armorHP or newBody ~= bodyHP then
             server.registryShipSetHP(body, newShield, newArmor, newBody)
         end
+
+        shieldHP = newShield
+        armorHP = newArmor
+        bodyHP = newBody
     end
 
+    server.shipRuntimeSetObservedHP(body, shieldHP, armorHP, bodyHP)
     state.accumulatorByBody[body] = acc
 end
-

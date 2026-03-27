@@ -54,8 +54,8 @@ function server.shipRollStabilizerUpdate(dt)
     end
 
     local rollError = 0.0
-    if server.registryShipGetRollError ~= nil then
-        rollError = _safeNumber(server.registryShipGetRollError(body), 0.0)
+    if server.shipRuntimeGetRollError ~= nil then
+        rollError = _safeNumber(server.shipRuntimeGetRollError(body), 0.0)
     end
 
     local t = GetBodyTransform(body)

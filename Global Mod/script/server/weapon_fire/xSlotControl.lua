@@ -40,12 +40,15 @@ local function _resolveTargetShieldRadius(targetBody, fallbackShipType)
         return radiusFallback
     end
 
-    local targetSnap = server.registryShipGetSnapshot(targetBody)
-    if targetSnap == nil then
-        return radiusFallback
+    local radius = 0.0
+    if server.registryShipGetShieldRadius ~= nil then
+        radius = server.registryShipGetShieldRadius(targetBody, fallbackType) or 0.0
+    end
+    if radius > 0.0 then
+        return radius
     end
 
-    local targetType = targetSnap.shipType or fallbackType
+    local targetType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(targetBody) or fallbackType
     local targetTypeData = (shipData and shipData[targetType]) or (shipData and shipData[fallbackType]) or {}
     return targetTypeData.shieldRadius or radiusFallback
 end
@@ -62,32 +65,15 @@ function server_xSlot_handleFireRequest()
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
         return
     end
-    server.registryShipSetXSlotRequest(shipBody, 1, 1)
+    if server.xSlotStateSetRequestFire ~= nil then
+        server.xSlotStateSetRequestFire(true)
+    end
 end
 
 -- 兼容旧流程的请求消费函数（后续将并入统一 tick 状态机）
 local function _xSlotConsumeRequestAndMaybeStartCharging()
-    local shipBody = server.shipBody
-    if shipBody == nil or shipBody == 0 then
-        return
-    end
-
-    server.registryShipEnsure(shipBody, server.defaultShipType, server.defaultShipType)
-    if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
-        server.registryShipSetXSlotRequest(shipBody, 1, 0)
-        return
-    end
-    local request = server.registryShipGetXSlotRequest(shipBody, 1)
-    if request == 0 then
-        return
-    end
-
-    -- 请求一旦读取即消费，避免重复触发
-    server.registryShipSetXSlotRequest(shipBody, 1, 0)
-
-    if server.weaponState == "idle" then
-        server.weaponState = "charging"
-        server.chargeTime = 0.5
+    if server.xSlotStateConsumeRequestFire ~= nil then
+        server.xSlotStateConsumeRequestFire()
     end
 end
 
@@ -228,12 +214,13 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
             return renderResult
         end
 
-        local targetShip = server.registryShipGetSnapshot(hitTarget)
-        if targetShip == nil then
+        local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitTarget) or resolvedDefaultShipType
+        local targetShieldHP, targetArmorHP, targetBodyHP = server.registryShipGetHP(hitTarget)
+        if targetShieldHP == nil or targetArmorHP == nil or targetBodyHP == nil then
             return renderResult
         end
 
-        local targetShipData = (shipData and shipData[targetShip.shipType]) or (shipData and shipData[resolvedDefaultShipType]) or {}
+        local targetShipData = (shipData and shipData[targetShipType]) or (shipData and shipData[resolvedDefaultShipType]) or {}
         local targetWeaponData = (weaponData and weaponData[weaponType]) or (weaponData and weaponData.tachyonLance) or {}
         local damageMin = targetWeaponData.damageMin or 0
         local damageMax = targetWeaponData.damageMax or damageMin
@@ -287,19 +274,19 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
             return hp
         end
 
-        targetShip.shieldHP = _applyLayerOverflow("shield", targetShip.shieldHP or 0, targetWeaponData.shieldFix)
-        targetShip.armorHP = _applyLayerOverflow("armor", targetShip.armorHP or 0, targetWeaponData.armorFix)
-        targetShip.bodyHP = _applyLayerOverflow("body", targetShip.bodyHP or 0, targetWeaponData.bodyFix)
+        targetShieldHP = _applyLayerOverflow("shield", targetShieldHP or 0, targetWeaponData.shieldFix)
+        targetArmorHP = _applyLayerOverflow("armor", targetArmorHP or 0, targetWeaponData.armorFix)
+        targetBodyHP = _applyLayerOverflow("body", targetBodyHP or 0, targetWeaponData.bodyFix)
 
         -- 上限钳制，避免异常数值超过类型定义的最大值
-        local maxShield = targetShipData.maxShieldHP or targetShip.shieldHP or 0
-        local maxArmor = targetShipData.maxArmorHP or targetShip.armorHP or 0
-        local maxBody = targetShipData.maxBodyHP or targetShip.bodyHP or 0
-        if targetShip.shieldHP > maxShield then targetShip.shieldHP = maxShield end
-        if targetShip.armorHP > maxArmor then targetShip.armorHP = maxArmor end
-        if targetShip.bodyHP > maxBody then targetShip.bodyHP = maxBody end
+        local maxShield = targetShipData.maxShieldHP or targetShieldHP or 0
+        local maxArmor = targetShipData.maxArmorHP or targetArmorHP or 0
+        local maxBody = targetShipData.maxBodyHP or targetBodyHP or 0
+        if targetShieldHP > maxShield then targetShieldHP = maxShield end
+        if targetArmorHP > maxArmor then targetArmorHP = maxArmor end
+        if targetBodyHP > maxBody then targetBodyHP = maxBody end
 
-        server.registryShipSetHP(hitTarget, targetShip.shieldHP, targetShip.armorHP, targetShip.bodyHP)
+        server.registryShipSetHP(hitTarget, targetShieldHP, targetArmorHP, targetBodyHP)
 
         return renderResult
     end
@@ -318,7 +305,7 @@ end
 -- 写入渲染事件：开始充能
 -- 说明：不再使用 ClientCall，统一写入 Registry 供客户端拉取
 function server.xSlot_broadcastChargingStart(shipBodyId, slotIndex, weaponType, firePointWorld)
-    server.registryShipWriteXSlotsRenderEvent(shipBodyId, {
+    server.xSlotRenderPushEvent(shipBodyId, {
         eventType = "charging_start",
         slotIndex = slotIndex,
         weaponType = weaponType,
@@ -336,7 +323,7 @@ end
 
 -- 写入渲染事件：开始发射
 function server.xSlot_broadcastLaunchingStart(shipBodyId, slotIndex, weaponType, firePointWorld, hitPointWorld, didHit, didHitStellarisBody, didHitShield, hitTargetBodyId, normal, impactLayer)
-    server.registryShipWriteXSlotsRenderEvent(shipBodyId, {
+    server.xSlotRenderPushEvent(shipBodyId, {
         eventType = "launch_start",
         slotIndex = slotIndex,
         weaponType = weaponType,
@@ -354,7 +341,7 @@ end
 
 -- 写入渲染事件：武器回到 idle
 function server.xSlot_broadcastWeaponIdle(shipBodyId, slotIndex, weaponType, firePointWorld)
-    server.registryShipWriteXSlotsRenderEvent(shipBodyId, {
+    server.xSlotRenderPushEvent(shipBodyId, {
         eventType = "idle",
         slotIndex = slotIndex,
         weaponType = weaponType,
@@ -372,184 +359,166 @@ end
 
 -- x 槽控制主 Tick
 -- 设计目标：
--- 1) 统一 request 键（xSlots/request）
+-- 1) 统一本地 request 状态
 -- 2) 单系统管理（同一时刻只允许一个武器流程）
 -- 3) 全流程由 Registry 驱动（state/chargeRemain/launchRemain）
 function server.xSlotControlTick(dt)
 
-    -- 步骤1：确认当前飞船有效
     local shipBody = server.shipBody
     if shipBody == nil or shipBody == 0 then
         return
     end
 
-    -- 步骤2：确保飞船已注册到 Registry
     if not server.registryShipEnsure(shipBody, server.defaultShipType, server.defaultShipType) then
         return
     end
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
-        server.registryShipSetXSlotsRequest(shipBody, 0)
+        if server.xSlotStateSetRequestFire ~= nil then
+            server.xSlotStateSetRequestFire(false)
+        end
+        if server.xSlotStateResetRuntime ~= nil then
+            server.xSlotStateResetRuntime()
+        end
+        if server.xSlotStatePushHud ~= nil then
+            server.xSlotStatePushHud(true)
+        end
         return
     end
 
-    -- 步骤3：读取飞船快照（用于获取槽位数量和槽位参数）
-    local shipSnap = server.registryShipGetSnapshot(shipBody)
-    if shipSnap == nil then
+    local xState = server.xSlotState
+    if xState == nil then
         return
     end
 
-    -- 步骤4：没有 x 槽时直接返回
-    local xSlotCount = shipSnap.xSlotCount or 0
+    local slots = xState.slots or {}
+    local xSlotCount = #slots
     if xSlotCount <= 0 then
         return
     end
 
-    -- 步骤5：每帧更新所有 x 槽冷却（cd>0 则递减；cd==-1 表示不可用，保持不变）
     for i = 1, xSlotCount do
-        local cd = server.registryShipGetXSlotCD(shipBody, i)
-        if cd > 0 then
+        local runtime = (slots[i] and slots[i].runtime) or nil
+        local cd = (runtime and runtime.cd) or 0
+        if runtime ~= nil and cd > 0 then
             cd = cd - dt
             if cd < 0 then
                 cd = 0
             end
-            server.registryShipSetXSlotCD(shipBody, i, cd)
+            runtime.cd = cd
         end
     end
 
-    -- 冷却更新后刷新一次快照，确保后续选槽读取到最新 cd
-    shipSnap = server.registryShipGetSnapshot(shipBody) or shipSnap
-
-    -- 步骤6：确定当前活跃槽位（lastReadSeq 表示“当前被系统处理的槽位”）
-    local activeSlot = server.registryShipGetXSlotsLastReadSeq(shipBody)
-    if activeSlot == nil or activeSlot < 1 or activeSlot > xSlotCount then
+    local activeSlot = xState.activeSlot or 1
+    if activeSlot < 1 or activeSlot > xSlotCount then
         activeSlot = 1
-        server.registryShipSetXSlotsLastReadSeq(shipBody, activeSlot)
+        xState.activeSlot = activeSlot
     end
 
-    local activeState = server.registryShipGetXSlotState(shipBody, activeSlot)
+    local activeEntry = slots[activeSlot] or {}
+    local activeRuntime = activeEntry.runtime or nil
+    local activeState = (activeRuntime and activeRuntime.state) or "idle"
 
-    ------------------------------------------------
-    -- 步骤7：统一 request 消费逻辑（单 request 键）
-    -- 规则：只有 activeState 为 idle 才接收新请求；且仅能选中“cd==0 且 state=idle”的首个槽位
-    ------------------------------------------------
-    local request = server.registryShipGetXSlotsRequest(shipBody)
-    if request ~= 0 then
-        -- 请求一旦读取立即消费，避免同一次点击重复触发与排队补发
-        server.registryShipSetXSlotsRequest(shipBody, 0)
-
-        if activeState ~= "idle" then
-            request = 0
-        end
+    local request = server.xSlotStateConsumeRequestFire ~= nil and server.xSlotStateConsumeRequestFire() or false
+    if request and activeState ~= "idle" then
+        request = false
     end
 
-    if request ~= 0 and activeState == "idle" then
-
+    if request and activeState == "idle" then
         local selectedSlot = nil
         for i = 1, xSlotCount do
-            local slotCd = server.registryShipGetXSlotCD(shipBody, i)
-            local slotState = server.registryShipGetXSlotState(shipBody, i)
-            local slotSnap = (shipSnap and shipSnap.xSlots and shipSnap.xSlots[i]) or {}
-            local slotWeaponType = slotSnap.weaponType
-            if slotCd == 0 and slotState == "idle" and _xSlotWeaponTypeUsable(slotWeaponType) then
+            local slotEntry = slots[i] or {}
+            local slotConfig = slotEntry.config or {}
+            local slotRuntime = slotEntry.runtime or {}
+            local slotCd = slotRuntime.cd or 0
+            local slotState = slotRuntime.state or "idle"
+            if slotCd == 0 and slotState == "idle" and _xSlotWeaponTypeUsable(slotConfig.weaponType) then
                 selectedSlot = i
                 break
             end
         end
 
-        -- 只有找到可用槽位才进入 charging；否则本次点击无效
         if selectedSlot ~= nil then
             activeSlot = selectedSlot
-            server.registryShipSetXSlotsLastReadSeq(shipBody, activeSlot)
+            xState.activeSlot = activeSlot
 
-            local selectedSlotSnap = shipSnap.xSlots[activeSlot] or {}
-            local chargeDuration = selectedSlotSnap.chargeDuration or 0
+            activeEntry = slots[activeSlot] or {}
+            local selectedConfig = activeEntry.config or {}
+            activeRuntime = activeEntry.runtime or {}
+            local chargeDuration = selectedConfig.chargeDuration or 0
             if chargeDuration < 0 then
                 chargeDuration = 0
             end
 
-            server.registryShipSetXSlotChargeRemain(shipBody, activeSlot, chargeDuration)
-            server.registryShipSetXSlotState(shipBody, activeSlot, "charging")
-
-            -- charging 开始时将 cd 置为 -1，表示冷却不可用
-            server.registryShipSetXSlotCD(shipBody, activeSlot, -1)
+            activeRuntime.chargeRemain = chargeDuration
+            activeRuntime.state = "charging"
+            activeRuntime.cd = -1
             activeState = "charging"
         end
     end
 
-    -- 步骤8：强制其余槽位回 idle，保证“同一时刻仅一个武器流程”
     for i = 1, xSlotCount do
         if i ~= activeSlot then
-            server.registryShipSetXSlotState(shipBody, i, "idle")
+            local runtime = (slots[i] and slots[i].runtime) or nil
+            if runtime ~= nil then
+                runtime.state = "idle"
+                runtime.chargeRemain = 0
+                runtime.launchRemain = 0
+            end
         end
     end
 
-    ------------------------------------------------
-    -- 步骤9：状态持续逻辑（Registry 驱动）
-    -- charging: 递减 chargeRemain，到 0 后切到 launching
-    -- launching: 递减 launchRemain，到 0 后切到 idle
-    ------------------------------------------------
-    if activeState == "charging" then
-        local chargeRemain = server.registryShipGetXSlotChargeRemain(shipBody, activeSlot) - dt
-        if chargeRemain <= 0 then
-            chargeRemain = 0
-            server.registryShipSetXSlotChargeRemain(shipBody, activeSlot, chargeRemain)
+    if activeRuntime == nil then
+        activeRuntime = {}
+    end
 
-            local refreshedSnap = server.registryShipGetSnapshot(shipBody)
-            local slotSnap = (refreshedSnap and refreshedSnap.xSlots and refreshedSnap.xSlots[activeSlot]) or {}
-            local launchDuration = slotSnap.launchDuration or 0
+    if activeState == "charging" then
+        local chargeRemain = (activeRuntime.chargeRemain or 0) - dt
+        if chargeRemain <= 0 then
+            local activeConfig = (slots[activeSlot] and slots[activeSlot].config) or {}
+            local launchDuration = activeConfig.launchDuration or 0
             if launchDuration < 0 then
                 launchDuration = 0
             end
 
-            server.registryShipSetXSlotLaunchRemain(shipBody, activeSlot, launchDuration)
-            server.registryShipSetXSlotState(shipBody, activeSlot, "launching")
+            activeRuntime.chargeRemain = 0
+            activeRuntime.launchRemain = launchDuration
+            activeRuntime.state = "launching"
             activeState = "launching"
         else
-            server.registryShipSetXSlotChargeRemain(shipBody, activeSlot, chargeRemain)
+            activeRuntime.chargeRemain = chargeRemain
         end
     elseif activeState == "launching" then
-        local launchRemain = server.registryShipGetXSlotLaunchRemain(shipBody, activeSlot) - dt
+        local launchRemain = (activeRuntime.launchRemain or 0) - dt
         if launchRemain <= 0 then
-            launchRemain = 0
-            server.registryShipSetXSlotLaunchRemain(shipBody, activeSlot, launchRemain)
-            server.registryShipSetXSlotState(shipBody, activeSlot, "idle")
-
-            -- launching 结束进入 idle 时，按武器配置写入正式冷却
-            local refreshedSnap = server.registryShipGetSnapshot(shipBody)
-            local slotSnap = (refreshedSnap and refreshedSnap.xSlots and refreshedSnap.xSlots[activeSlot]) or {}
-            local runtimeWeaponType = slotSnap.weaponType or "none"
+            local activeConfig = (slots[activeSlot] and slots[activeSlot].config) or {}
+            local runtimeWeaponType = activeConfig.weaponType or "none"
             local cooldown = 0
             if _xSlotWeaponTypeUsable(runtimeWeaponType) then
-                local runtimeWeaponSettings = _resolveWeaponSettings(runtimeWeaponType)
-                cooldown = runtimeWeaponSettings.cooldown or runtimeWeaponSettings.CD or 0
+                cooldown = activeConfig.cooldown or 0
                 if cooldown < 0 then
                     cooldown = 0
                 end
             end
-            server.registryShipSetXSlotCD(shipBody, activeSlot, cooldown)
 
+            activeRuntime.launchRemain = 0
+            activeRuntime.state = "idle"
+            activeRuntime.cd = cooldown
             activeState = "idle"
         else
-            server.registryShipSetXSlotLaunchRemain(shipBody, activeSlot, launchRemain)
+            activeRuntime.launchRemain = launchRemain
         end
     else
         activeState = "idle"
-        server.registryShipSetXSlotState(shipBody, activeSlot, "idle")
+        activeRuntime.state = "idle"
     end
 
-    ------------------------------------------------
-    -- 步骤10：状态变化检测（统一第一帧处理）
-    -- 说明：这里处理“进入 charging/launching/idle 的第一帧事件”
-    ------------------------------------------------
-    local lastState = server.xSlotStateLastTick or "idle"
-    local lastSlot = server.xSlotActiveSlotLastTick or activeSlot
+    local lastState = xState.lastTickState or "idle"
+    local lastSlot = xState.lastTickActiveSlot or activeSlot
     if activeState ~= lastState or activeSlot ~= lastSlot then
-        local runtimeSnap = server.registryShipGetSnapshot(shipBody)
-        local slotSnap = (runtimeSnap and runtimeSnap.xSlots and runtimeSnap.xSlots[activeSlot]) or {}
-
-        local mountPos = slotSnap.firePosOffset or { x = 0, y = 0, z = 4 }
-        local mountDir = slotSnap.fireDirRelative or { x = 0, y = 0, z = 1 }
-        local runtimeWeaponType = slotSnap.weaponType or "none"
+        local activeConfig = (slots[activeSlot] and slots[activeSlot].config) or {}
+        local mountPos = activeConfig.firePosOffset or { x = 0, y = 0, z = 4 }
+        local mountDir = activeConfig.fireDirRelative or { x = 0, y = 0, z = 1 }
+        local runtimeWeaponType = activeConfig.weaponType or "none"
 
         local firePosOffset = _vec3TableToVec(mountPos, 0, 0, 4)
         local fireDir = _vec3TableToVec(mountDir, 0, 0, 1)
@@ -557,10 +526,8 @@ function server.xSlotControlTick(dt)
         local firePointWorld = TransformToParentPoint(shipT, firePosOffset)
 
         if activeState == "charging" then
-            -- charging 第一帧：写入 charging_start 渲染事件
             server.xSlot_broadcastChargingStart(shipBody, activeSlot, runtimeWeaponType, firePointWorld)
         elseif activeState == "launching" then
-            -- launching 第一帧：计算命中、应用伤害、触发发射回调
             local endPos, hitTarget, isHit, isHitStellarisBody, normal = server.xSlot_computeHitResult(shipBody, firePosOffset, fireDir, runtimeWeaponType)
             local renderHitResult = server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBody, runtimeWeaponType)
             server.xSlot_broadcastLaunchingStart(
@@ -577,12 +544,19 @@ function server.xSlotControlTick(dt)
                 renderHitResult.impactLayer
             )
         elseif activeState == "idle" then
-            -- idle 第一帧：写入 idle 渲染事件
             server.xSlot_broadcastWeaponIdle(shipBody, activeSlot, runtimeWeaponType, firePointWorld)
         end
     end
-    -- 步骤11：记录本帧结果，供下一帧做“状态变化检测”
-    server.xSlotStateLastTick = activeState
-    server.xSlotActiveSlotLastTick = activeSlot
 
+    xState.lastTickState = activeState
+    xState.lastTickActiveSlot = activeSlot
+
+    local slot1 = slots[1] or {}
+    local slot2 = slots[2] or {}
+    local slot1Runtime = slot1.runtime or {}
+    local slot2Runtime = slot2.runtime or {}
+
+    if server.xSlotStatePushHud ~= nil then
+        server.xSlotStatePushHud(false)
+    end
 end

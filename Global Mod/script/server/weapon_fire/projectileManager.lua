@@ -116,8 +116,9 @@ local function _applyProjectileShipDamage(hitBody, weaponType)
         }
     end
 
-    local targetShip = server.registryShipGetSnapshot(hitBody)
-    if targetShip == nil then
+    local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitBody) or (server.defaultShipType or "enigmaticCruiser")
+    local targetShieldHP, targetArmorHP, targetBodyHP = server.registryShipGetHP(hitBody)
+    if targetShieldHP == nil or targetArmorHP == nil or targetBodyHP == nil then
         return {
             didDamage = false,
             didHitShield = false,
@@ -126,7 +127,7 @@ local function _applyProjectileShipDamage(hitBody, weaponType)
     end
 
     local resolvedDefaultShipType = server.defaultShipType or "enigmaticCruiser"
-    local targetShipData = (shipData and shipData[targetShip.shipType]) or (shipData and shipData[resolvedDefaultShipType]) or {}
+    local targetShipData = (shipData and shipData[targetShipType]) or (shipData and shipData[resolvedDefaultShipType]) or {}
     local weaponData = _resolveProjectileWeaponSettings(weaponType)
     local rawRemain = weaponData.damage or 0.0
     local result = {
@@ -171,18 +172,18 @@ local function _applyProjectileShipDamage(hitBody, weaponType)
         return hp
     end
 
-    targetShip.shieldHP = _applyLayer("shield", targetShip.shieldHP or 0.0, weaponData.shieldFix)
-    targetShip.armorHP = _applyLayer("armor", targetShip.armorHP or 0.0, weaponData.armorFix)
-    targetShip.bodyHP = _applyLayer("body", targetShip.bodyHP or 0.0, weaponData.bodyFix)
+    targetShieldHP = _applyLayer("shield", targetShieldHP or 0.0, weaponData.shieldFix)
+    targetArmorHP = _applyLayer("armor", targetArmorHP or 0.0, weaponData.armorFix)
+    targetBodyHP = _applyLayer("body", targetBodyHP or 0.0, weaponData.bodyFix)
 
-    local maxShield = targetShipData.maxShieldHP or targetShip.shieldHP or 0
-    local maxArmor = targetShipData.maxArmorHP or targetShip.armorHP or 0
-    local maxBody = targetShipData.maxBodyHP or targetShip.bodyHP or 0
-    if targetShip.shieldHP > maxShield then targetShip.shieldHP = maxShield end
-    if targetShip.armorHP > maxArmor then targetShip.armorHP = maxArmor end
-    if targetShip.bodyHP > maxBody then targetShip.bodyHP = maxBody end
+    local maxShield = targetShipData.maxShieldHP or targetShieldHP or 0
+    local maxArmor = targetShipData.maxArmorHP or targetArmorHP or 0
+    local maxBody = targetShipData.maxBodyHP or targetBodyHP or 0
+    if targetShieldHP > maxShield then targetShieldHP = maxShield end
+    if targetArmorHP > maxArmor then targetArmorHP = maxArmor end
+    if targetBodyHP > maxBody then targetBodyHP = maxBody end
 
-    server.registryShipSetHP(hitBody, targetShip.shieldHP, targetShip.armorHP, targetShip.bodyHP)
+    server.registryShipSetHP(hitBody, targetShieldHP, targetArmorHP, targetBodyHP)
     return result
 end
 
@@ -192,11 +193,12 @@ local function _resolveShieldHit(projectile, startPos, endPos, settings)
     for i = 1, count do
         local bodyId = GetInt(registryShipIndexRoot .. "/" .. tostring(i) .. "/bodyId")
         if bodyId ~= nil and bodyId ~= 0 and bodyId ~= projectile.ownerShipBody and server.registryShipExists(bodyId) then
-            local snap = server.registryShipGetSnapshot(bodyId)
-            if snap ~= nil and (snap.bodyHP or 0) > 0 and (snap.shieldHP or 0) > 0 then
+            local shieldHP, _, bodyHP = server.registryShipGetHP(bodyId)
+            if shieldHP ~= nil and bodyHP ~= nil and bodyHP > 0 and shieldHP > 0 then
                 local shieldRadius = 0.0
-                local shipDef = (shipData and shipData[snap.shipType]) or (shipData and shipData.enigmaticCruiser) or {}
-                shieldRadius = shipDef.shieldRadius or 0.0
+                if server.registryShipGetShieldRadius ~= nil then
+                    shieldRadius = server.registryShipGetShieldRadius(bodyId, server.defaultShipType or "enigmaticCruiser") or 0.0
+                end
                 if shieldRadius > 0.0 then
                     local bodyT = GetBodyTransform(bodyId)
                     local centerLocal = GetBodyCenterOfMass(bodyId)
@@ -299,30 +301,40 @@ function server.projectileManagerTick(dt)
             local shieldHit = _resolveShieldHit(projectile, projectile.lastPosition, projectile.position, settings)
             if shieldHit ~= nil then
                 _applyProjectileShipDamage(shieldHit.bodyId, projectile.weaponType)
-                _finishProjectileVisual(projectile.id, "shield", shieldHit.hitPos)
+                _finishProjectileVisual(projectile.id, "impact", shieldHit.hitPos)
+                _playProjectileHitSound(shieldHit.hitPos)
                 _playShieldImpactFx(shieldHit.bodyId, shieldHit.hitPos)
                 _removeProjectileAt(i)
                 removed = true
             else
                 local bodyHit = _resolveBodyHit(projectile, projectile.lastPosition, projectile.position)
                 if bodyHit ~= nil then
-                    local didEffect = false
+                    local shouldPlayImpact = false
+                    local shouldExplode = false
                     local hitBody = bodyHit.hitBody or 0
                     if hitBody ~= 0 and server.registryShipExists(hitBody) then
                         if server.registryShipIsBodyDead(hitBody) then
-                            didEffect = true
+                            shouldPlayImpact = true
+                            shouldExplode = false
                         else
                             local damageResult = _applyProjectileShipDamage(hitBody, projectile.weaponType)
+                            if damageResult.didDamage then
+                                shouldPlayImpact = true
+                            end
                             if damageResult.didHitShield then
                                 _playShieldImpactFx(hitBody, bodyHit.hitPos)
                             end
                         end
                     else
-                        didEffect = true
+                        shouldPlayImpact = true
+                        shouldExplode = true
                     end
 
-                    if didEffect then
+                    if shouldExplode then
                         Explosion(bodyHit.hitPos, settings.explosionRadius or 2.0)
+                    end
+
+                    if shouldPlayImpact then
                         _playProjectileHitSound(bodyHit.hitPos)
                         _finishProjectileVisual(projectile.id, "impact", bodyHit.hitPos)
                     else

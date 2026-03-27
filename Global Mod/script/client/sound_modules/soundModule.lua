@@ -86,11 +86,7 @@ local function _playKineticHit(hitPoint)
     _playAt(_snd_kinetic_hit_near, hitPoint)
 end
 
-local function _isShipOccupied(shipBodyId, snapshot)
-    if snapshot ~= nil and (snapshot.driverPlayerId or 0) > 0 then
-        return true
-    end
-
+local function _isShipOccupied(shipBodyId)
     local veh = GetBodyVehicle(shipBodyId)
     if veh ~= nil and veh ~= 0 then
         local playerVeh = GetPlayerVehicle()
@@ -102,12 +98,12 @@ local function _isShipOccupied(shipBodyId, snapshot)
     return false
 end
 
-local function _engineTick(shipBodyId, snapshot)
+local function _engineTick(shipBodyId)
     if _snd_engine_loop == nil or _snd_engine_loop == 0 then
         return
     end
 
-    if not _isShipOccupied(shipBodyId, snapshot) then
+    if not _isShipOccupied(shipBodyId) then
         return
     end
 
@@ -115,9 +111,12 @@ local function _engineTick(shipBodyId, snapshot)
     PlayLoop(_snd_engine_loop, t.pos, 1.0)
 end
 
-local function _tachyonEventTick(shipBodyId, snapshot)
+local function _tachyonEventTick(shipBodyId)
     local state = client.soundModuleState
-    local render = snapshot.xSlotsRender or {}
+    local render = client.xSlotRenderGetEvent(shipBodyId)
+    if render == nil then
+        return
+    end
 
     local seq = render.seq or -1
     local lastSeq = state.lastRenderSeqByShip[shipBodyId] or -1
@@ -184,11 +183,8 @@ function client.soundModuleTick(dt)
     for i = 1, #shipIds do
         local shipBodyId = shipIds[i]
         if client.registryShipExists(shipBodyId) then
-            local snapshot = client.registryShipGetSnapshot(shipBodyId)
-            if snapshot ~= nil then
-                _engineTick(shipBodyId, snapshot)
-                _tachyonEventTick(shipBodyId, snapshot)
-            end
+            _engineTick(shipBodyId)
+            _tachyonEventTick(shipBodyId)
         end
     end
 end

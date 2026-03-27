@@ -6,6 +6,7 @@
 #include "server/ship_data.lua"
 #include "server/weapon_data.lua"
 
+#include "server/shipRuntimeState.lua"
 #include "server/registry/shipRegistry.lua"
 #include "server/registry/shipRegistryRequest.lua"
 
@@ -24,10 +25,10 @@ function server.registerCurrentShip(shipType)
 
     local shipBodyId = server.shipBody
     if shipBodyId == nil or shipBodyId == 0 then
-        return nil
+        return false
     end
     server.registryShipRegister(shipBodyId, shipType, server.defaultShipType)
-    return server.registryShipGetSnapshot(shipBodyId)
+    return true
 end
 
 -- 服务端函数：确保“当前这艘飞船”在 Registry 中存在�?
@@ -35,14 +36,16 @@ end
 function server.ensureCurrentShipState(shipType)
     local shipBodyId = server.shipBody
     if shipBodyId == nil or shipBodyId == 0 then
-        return nil
+        return false
     end
-    server.registryShipEnsure(shipBodyId, shipType or server.defaultShipType, server.defaultShipType)
-    return server.registryShipGetSnapshot(shipBodyId)
+    return server.registryShipEnsure(shipBodyId, shipType or server.defaultShipType, server.defaultShipType)
 end
 
 -- x 槽控制模块从外部抽取为独立文件：script/server/weapon_fire/xSlotControl.lua
+#include "server/weapon_fire/lSlotState.lua"
 #include "server/weapon_fire/mainWeaponControl.lua"
+#include "server/weapon_fire/xSlotState.lua"
+#include "server/weapon_fire/xSlotRenderState.lua"
 #include "server/weapon_fire/xSlotControl.lua"
 #include "server/weapon_fire/lSlotControl.lua"
 #include "server/weapon_fire/projectileManager.lua"
@@ -82,6 +85,12 @@ function server.init()
     SetBool("StellarisShips/debug/inputTestEnabled", false)
     -- 注册当前飞船并加载飞船数�?
     server.registerCurrentShip("enigmaticCruiser")
+    server.shipRuntimeStateInit(server.shipBody, "enigmaticCruiser", server.defaultShipType)
+    server.mainWeaponRequestInit()
+    server.xSlotStateInit("enigmaticCruiser")
+    server.xSlotRenderStateInit()
+    server.lSlotStateInit("enigmaticCruiser")
+    server.shipRuntimeSyncMainWeapon(server.shipBody, true)
 
 end
 
@@ -93,6 +102,7 @@ end
 function server.serverTick(dt)
     -- server.ensureCurrentShipState(defaultShipType)
     server.mainWeaponControlTick(dt)
+    server.shipRuntimeStateSyncTick(dt)
     server.xSlotControlTick(dt)
     server.lSlotControlTick(dt)
     server.projectileManagerTick(dt)

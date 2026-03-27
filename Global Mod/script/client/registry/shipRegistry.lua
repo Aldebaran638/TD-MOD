@@ -5,33 +5,18 @@ client = client or {}
 
 local registryShipRoot = "StellarisShips/server/ships/byId/"
 local registryShipIndexRoot = "StellarisShips/server/ships/index"
-local registryShipTypeRoot = "StellarisShips/server/definitions/ships/byType/"
-
-local function _readVec3FromRegistry(prefix)
-    return {
-        x = GetFloat(prefix .. "/x"),
-        y = GetFloat(prefix .. "/y"),
-        z = GetFloat(prefix .. "/z"),
-    }
-end
 
 local function _readShipTypeMaxHp(shipType)
+    local defs = shipTypeRegistryData or {}
     local st = tostring(shipType or "")
-    if st == "" then
-        st = "enigmaticCruiser"
-    end
-
-    local typePrefix = registryShipTypeRoot .. st
-    local maxShield = GetFloat(typePrefix .. "/maxShieldHP")
-    local maxArmor = GetFloat(typePrefix .. "/maxArmorHP")
-    local maxBody = GetFloat(typePrefix .. "/maxBodyHP")
-    return maxShield, maxArmor, maxBody
+    local definition = defs[st] or defs.enigmaticCruiser or {}
+    return tonumber(definition.maxShieldHP) or 0.0, tonumber(definition.maxArmorHP) or 0.0, tonumber(definition.maxBodyHP) or 0.0
 end
+
 function client.registryShipKeyPrefix(shipBodyId)
     return registryShipRoot .. tostring(shipBodyId)
 end
 
--- 客户端函数：判断某艘飞船是否已注册到 Registry
 function client.registryShipExists(shipBodyId)
     if shipBodyId == nil or shipBodyId == 0 then
         return false
@@ -39,7 +24,6 @@ function client.registryShipExists(shipBodyId)
     return GetBool(client.registryShipKeyPrefix(shipBodyId) .. "/exists")
 end
 
--- 客户端函数：读取当前已注册飞船数�?
 function client.registryShipGetRegisteredCount()
     local count = GetInt(registryShipIndexRoot .. "/count")
     if count < 0 then
@@ -48,7 +32,6 @@ function client.registryShipGetRegisteredCount()
     return count
 end
 
--- 客户端函数：读取索引表中�?index 条飞�?bodyId�?-based�?
 function client.registryShipGetRegisteredBodyIdAt(index)
     local i = math.floor(index or 0)
     if i <= 0 then
@@ -57,7 +40,6 @@ function client.registryShipGetRegisteredBodyIdAt(index)
     return GetInt(registryShipIndexRoot .. "/" .. tostring(i) .. "/bodyId")
 end
 
--- 客户端函数：读取所有已注册飞船 bodyId 列表
 function client.registryShipGetRegisteredBodyIds()
     local ids = {}
     local count = client.registryShipGetRegisteredCount()
@@ -70,181 +52,94 @@ function client.registryShipGetRegisteredBodyIds()
     return ids
 end
 
--- 客户端函数：读取某艘飞船的快照数据，用于调试或只读逻辑
-function client.registryShipGetSnapshot(shipBodyId)
+function client.registryShipGetShipType(shipBodyId)
     if not client.registryShipExists(shipBodyId) then
-        return nil
+        return ""
     end
+    return GetString(client.registryShipKeyPrefix(shipBodyId) .. "/shipType")
+end
 
+function client.registryShipGetHP(shipBodyId)
+    if not client.registryShipExists(shipBodyId) then
+        return nil, nil, nil
+    end
     local prefix = client.registryShipKeyPrefix(shipBodyId)
-    local snapshot = {
-        id = shipBodyId,
-        exists = GetBool(prefix .. "/exists"),
-        shipType = GetString(prefix .. "/shipType"),
-        maxShieldHP = GetFloat(prefix .. "/maxShieldHP"),
-        maxArmorHP = GetFloat(prefix .. "/maxArmorHP"),
-        maxBodyHP = GetFloat(prefix .. "/maxBodyHP"),
-        shieldHP = GetFloat(prefix .. "/shieldHP"),
-        armorHP = GetFloat(prefix .. "/armorHP"),
-        bodyHP = GetFloat(prefix .. "/bodyHP"),
-        driverPlayerId = GetInt(prefix .. "/driverPlayerId"),
-        moveState = GetInt(prefix .. "/moveState"),
-        moveRequest = GetInt(prefix .. "/move/request"),
-        moveRequestState = GetInt(prefix .. "/move/requestState"),
-        currentMainWeapon = GetString(prefix .. "/mainWeapon/current"),
-        mainWeaponFireRequest = GetInt(prefix .. "/mainWeapon/fireRequest"),
-        mainWeaponToggleRequest = GetInt(prefix .. "/mainWeapon/toggleRequest"),
-        xSlotsRequest = GetInt(prefix .. "/xSlots/request"),
-        xSlotsWriteSeq = GetInt(prefix .. "/xSlots/writeSeq"),
-        xSlotsLastReadSeq = GetInt(prefix .. "/xSlots/lastReadSeq"),
-        lSlotsRequest = GetInt(prefix .. "/lSlots/request"),
-        lSlotsHeat = GetFloat(prefix .. "/lSlots/heat"),
-        lSlotsOverheated = GetInt(prefix .. "/lSlots/overheated"),
-        lSlotsCooldownRemain = GetFloat(prefix .. "/lSlots/cooldownRemain"),
-        xSlotsRender = {
-            seq = GetInt(prefix .. "/xSlots/render/seq"),
-            shotId = GetInt(prefix .. "/xSlots/render/shotId"),
-            eventType = GetString(prefix .. "/xSlots/render/eventType"),
-            slotIndex = GetInt(prefix .. "/xSlots/render/slotIndex"),
-            weaponType = GetString(prefix .. "/xSlots/render/weaponType"),
-            serverTime = GetFloat(prefix .. "/xSlots/render/serverTime"),
-            firePoint = _readVec3FromRegistry(prefix .. "/xSlots/render/firePoint"),
-            hitPoint = _readVec3FromRegistry(prefix .. "/xSlots/render/hitPoint"),
-            didHit = GetInt(prefix .. "/xSlots/render/didHit"),
-            didHitStellarisBody = GetInt(prefix .. "/xSlots/render/didHitStellarisBody"),
-            didHitShield = GetInt(prefix .. "/xSlots/render/didHitShield"),
-            hitTargetBodyId = GetInt(prefix .. "/xSlots/render/hitTargetBodyId"),
-            normal = _readVec3FromRegistry(prefix .. "/xSlots/render/normal"),
-            impactLayer = GetString(prefix .. "/xSlots/render/impactLayer"),
-        },
-        xSlots = {},
-        lSlots = {},
-    }
-
-    if snapshot.maxShieldHP <= 0 or snapshot.maxArmorHP <= 0 or snapshot.maxBodyHP <= 0 then
-        local typeMaxShield, typeMaxArmor, typeMaxBody = _readShipTypeMaxHp(snapshot.shipType)
-        if snapshot.maxShieldHP <= 0 then
-            snapshot.maxShieldHP = typeMaxShield
-        end
-        if snapshot.maxArmorHP <= 0 then
-            snapshot.maxArmorHP = typeMaxArmor
-        end
-        if snapshot.maxBodyHP <= 0 then
-            snapshot.maxBodyHP = typeMaxBody
-        end
-    end
-
-    if snapshot.maxShieldHP <= 0 then
-        snapshot.maxShieldHP = snapshot.shieldHP or 0
-    end
-    if snapshot.maxArmorHP <= 0 then
-        snapshot.maxArmorHP = snapshot.armorHP or 0
-    end
-    if snapshot.maxBodyHP <= 0 then
-        snapshot.maxBodyHP = snapshot.bodyHP or 0
-    end
-    local xSlotCount = GetInt(prefix .. "/xSlots/count")
-    snapshot.xSlotCount = xSlotCount
-    for i = 1, xSlotCount do
-        local slotPrefix = prefix .. "/xSlots/" .. tostring(i)
-        snapshot.xSlots[i] = {
-            weaponType = GetString(slotPrefix .. "/weaponType"),
-            cd = GetFloat(slotPrefix .. "/cd"),
-            state = GetString(slotPrefix .. "/state"),
-            chargeRemain = GetFloat(slotPrefix .. "/chargeRemain"),
-            launchRemain = GetFloat(slotPrefix .. "/launchRemain"),
-            chargeDuration = GetFloat(slotPrefix .. "/chargeDuration"),
-            launchDuration = GetFloat(slotPrefix .. "/launchDuration"),
-            randomTrajectoryAngle = GetFloat(slotPrefix .. "/randomTrajectoryAngle"),
-        }
-    end
-
-    local lSlotCount = GetInt(prefix .. "/lSlots/count")
-    snapshot.lSlotCount = lSlotCount
-    for i = 1, lSlotCount do
-        local slotPrefix = prefix .. "/lSlots/" .. tostring(i)
-        snapshot.lSlots[i] = {
-            weaponType = GetString(slotPrefix .. "/weaponType"),
-            firePosOffset = _readVec3FromRegistry(slotPrefix .. "/mount/firePosOffset"),
-            fireDirRelative = _readVec3FromRegistry(slotPrefix .. "/mount/fireDirRelative"),
-            aimMode = GetString(slotPrefix .. "/mount/aimMode"),
-        }
-    end
-
-    return snapshot
+    return GetFloat(prefix .. "/shieldHP"), GetFloat(prefix .. "/armorHP"), GetFloat(prefix .. "/bodyHP")
 end
 
--- 客户端函数：写入 x 槽统一 request 键（兼容旧签名，slotIndex 参数已忽略）
-function client.registryShipSetXSlotRequest(shipBodyId, slotIndex, request)
+function client.registryShipGetMaxHP(shipBodyId)
+    if not client.registryShipExists(shipBodyId) then
+        return nil, nil, nil
+    end
+
+    local shipType = client.registryShipGetShipType(shipBodyId)
+    local maxShield, maxArmor, maxBody = _readShipTypeMaxHp(shipType)
+    local shieldHP, armorHP, bodyHP = client.registryShipGetHP(shipBodyId)
+
+    if maxShield <= 0 then
+        maxShield = shieldHP or 0.0
+    end
+    if maxArmor <= 0 then
+        maxArmor = armorHP or 0.0
+    end
+    if maxBody <= 0 then
+        maxBody = bodyHP or 0.0
+    end
+
+    return maxShield, maxArmor, maxBody
+end
+
+function client.shipRequestMainWeaponFire(shipBodyId, request)
     if not client.registryShipExists(shipBodyId) then
         return false
     end
     local value = (math.floor(request or 0) ~= 0) and 1 or 0
     local localPlayerId = GetLocalPlayer()
-    ServerCall("server.registryShipRequestSetXSlotRequest", localPlayerId, shipBodyId, value)
+    ServerCall("server.shipRequestMainWeaponFire", localPlayerId, shipBodyId, value)
     return true
 end
 
--- 客户端函数：明确语义�?xSlots 总请求写入接�?
-function client.registryShipSetXSlotsRequest(shipBodyId, request)
-    return client.registryShipSetXSlotRequest(shipBodyId, 1, request)
-end
-
-function client.registryShipSetMainWeaponFireRequest(shipBodyId, request)
+function client.shipRequestMainWeaponToggle(shipBodyId, request)
     if not client.registryShipExists(shipBodyId) then
         return false
     end
     local value = (math.floor(request or 0) ~= 0) and 1 or 0
     local localPlayerId = GetLocalPlayer()
-    ServerCall("server.registryShipRequestSetMainWeaponFireRequest", localPlayerId, shipBodyId, value)
+    ServerCall("server.shipRequestMainWeaponToggle", localPlayerId, shipBodyId, value)
     return true
 end
 
-function client.registryShipSetMainWeaponToggleRequest(shipBodyId, request)
+function client.shipRequestMoveState(shipBodyId, moveState)
     if not client.registryShipExists(shipBodyId) then
         return false
     end
-    local value = (math.floor(request or 0) ~= 0) and 1 or 0
-    local localPlayerId = GetLocalPlayer()
-    ServerCall("server.registryShipRequestSetMainWeaponToggleRequest", localPlayerId, shipBodyId, value)
-    return true
-end
--- 客户端函数：写入移动 request �?
-function client.registryShipSetMoveRequestState(shipBodyId, moveState)
-    if not client.registryShipExists(shipBodyId) then
-        return false
-    end
+
     local state = math.floor(moveState or 0)
-    if state < 0 then state = 0 end
-    if state > 2 then state = 2 end
+    if state < 0 then
+        state = 0
+    end
+    if state > 2 then
+        state = 2
+    end
 
     local localPlayerId = GetLocalPlayer()
-    ServerCall("server.registryShipRequestSetMoveRequestState", localPlayerId, shipBodyId, state)
+    ServerCall("server.shipRequestMoveState", localPlayerId, shipBodyId, state)
     return true
 end
 
-
--- client request -> server write rotation error (pitch/yaw)
-function client.registryShipSetRotationError(shipBodyId, pitchError, yawError)
+function client.shipRequestRotationError(shipBodyId, pitchError, yawError)
     if not client.registryShipExists(shipBodyId) then
         return false
     end
+
     local pitchOut = pitchError or 0.0
     local yawOut = yawError or 0.0
     local localPlayerId = GetLocalPlayer()
-    ServerCall(
-        "server.registryShipRequestSetRotationError",
-        localPlayerId,
-        shipBodyId,
-        pitchOut,
-        yawOut
-    )
-
+    ServerCall("server.shipRequestRotationError", localPlayerId, shipBodyId, pitchOut, yawOut)
     return true
 end
 
--- client request -> server write roll error
-function client.registryShipSetRollError(shipBodyId, rollError)
+function client.shipRequestRollError(shipBodyId, rollError)
     if not client.registryShipExists(shipBodyId) then
         return false
     end
@@ -255,13 +150,6 @@ function client.registryShipSetRollError(shipBodyId, rollError)
     end
 
     local localPlayerId = GetLocalPlayer()
-    ServerCall(
-        "server.registryShipRequestSetRollError",
-        localPlayerId,
-        shipBodyId,
-        rollOut
-    )
-
+    ServerCall("server.shipRequestRollError", localPlayerId, shipBodyId, rollOut)
     return true
 end
-

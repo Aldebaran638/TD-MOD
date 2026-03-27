@@ -53,13 +53,6 @@ local function _smoothToward(curr, target, upSpeed, downSpeed, dt)
 end
 
 local function _resolveControlledShipBody()
-    if client.shipCameraGetControlledBody ~= nil then
-        local body = client.shipCameraGetControlledBody()
-        if body ~= nil and body ~= 0 then
-            return body
-        end
-    end
-
     local veh = GetPlayerVehicle()
     if veh == nil or veh == 0 then
         local localPlayerId = GetLocalPlayer()
@@ -74,6 +67,11 @@ local function _resolveControlledShipBody()
 
     local body = GetVehicleBody(veh)
     if body == nil or body == 0 then
+        return 0
+    end
+
+    local scriptBody = client.shipBody or 0
+    if scriptBody == 0 or body ~= scriptBody then
         return 0
     end
 
@@ -95,8 +93,9 @@ function client.shipHealthBarTick(dt)
         return
     end
 
-    local snapshot = client.registryShipGetSnapshot(body)
-    if snapshot == nil then
+    local currShield, currArmor, currBody = client.registryShipGetHP(body)
+    local maxShield, maxArmor, maxBody = client.registryShipGetMaxHP(body)
+    if currShield == nil or currArmor == nil or currBody == nil or maxShield == nil or maxArmor == nil or maxBody == nil then
         state.active = false
         state.shipBody = 0
         return
@@ -104,11 +103,6 @@ function client.shipHealthBarTick(dt)
 
     state.active = true
 
-    local currBody = snapshot.bodyHP or 0
-    local currArmor = snapshot.armorHP or 0
-    local currShield = snapshot.shieldHP or 0
-
-    local maxBody = snapshot.maxBodyHP
     if maxBody == nil or maxBody <= 0 then
         maxBody = currBody
     end
@@ -116,7 +110,6 @@ function client.shipHealthBarTick(dt)
         maxBody = 0
     end
 
-    local maxArmor = snapshot.maxArmorHP
     if maxArmor == nil or maxArmor <= 0 then
         maxArmor = currArmor
     end
@@ -124,7 +117,6 @@ function client.shipHealthBarTick(dt)
         maxArmor = 0
     end
 
-    local maxShield = snapshot.maxShieldHP
     if maxShield == nil or maxShield <= 0 then
         maxShield = currShield
     end

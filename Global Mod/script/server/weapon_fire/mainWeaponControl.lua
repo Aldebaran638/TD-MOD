@@ -3,6 +3,53 @@
 
 server = server or {}
 
+server.mainWeaponRequestState = server.mainWeaponRequestState or {
+    fireRequested = false,
+    toggleRequested = false,
+}
+
+function server.mainWeaponRequestInit()
+    server.mainWeaponRequestState = {
+        fireRequested = false,
+        toggleRequested = false,
+    }
+end
+
+function server.mainWeaponRequestReset()
+    local state = server.mainWeaponRequestState or {}
+    state.fireRequested = false
+    state.toggleRequested = false
+    server.mainWeaponRequestState = state
+end
+
+function server.mainWeaponRequestSetFireRequested(active)
+    local state = server.mainWeaponRequestState or {}
+    state.fireRequested = active and true or false
+    server.mainWeaponRequestState = state
+end
+
+function server.mainWeaponRequestSetToggleRequested(active)
+    local state = server.mainWeaponRequestState or {}
+    state.toggleRequested = active and true or false
+    server.mainWeaponRequestState = state
+end
+
+local function _consumeMainWeaponFireRequested()
+    local state = server.mainWeaponRequestState or {}
+    local requested = state.fireRequested and true or false
+    state.fireRequested = false
+    server.mainWeaponRequestState = state
+    return requested
+end
+
+local function _consumeMainWeaponToggleRequested()
+    local state = server.mainWeaponRequestState or {}
+    local requested = state.toggleRequested and true or false
+    state.toggleRequested = false
+    server.mainWeaponRequestState = state
+    return requested
+end
+
 function server.mainWeaponControlTick(dt)
     local _ = dt
     local shipBody = server.shipBody
@@ -13,31 +60,37 @@ function server.mainWeaponControlTick(dt)
         return
     end
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
-        server.registryShipSetMainWeaponFireRequest(shipBody, 0)
-        server.registryShipSetMainWeaponToggleRequest(shipBody, 0)
-        server.registryShipSetXSlotsRequest(shipBody, 0)
-        server.registryShipSetLSlotsRequest(shipBody, 0)
+        server.mainWeaponRequestReset()
+        if server.xSlotStateSetRequestFire ~= nil then
+            server.xSlotStateSetRequestFire(false)
+        end
+        if server.xSlotStateResetRuntime ~= nil then
+            server.xSlotStateResetRuntime()
+        end
+        server.lSlotStateSetRequestFire(false)
+        server.lSlotStateResetRuntime()
+        server.lSlotStatePushHudReset(true)
         return
     end
 
-    local toggleRequest = server.registryShipGetMainWeaponToggleRequest(shipBody)
-    if toggleRequest ~= 0 then
-        server.registryShipSetMainWeaponToggleRequest(shipBody, 0)
-        local current = server.registryShipGetCurrentMainWeapon(shipBody)
+    if _consumeMainWeaponToggleRequested() then
+        local current = server.shipRuntimeGetCurrentMainWeapon(shipBody)
         local nextMode = (current == "lSlot") and "xSlot" or "lSlot"
-        server.registryShipSetCurrentMainWeapon(shipBody, nextMode)
+        server.shipRuntimeSetCurrentMainWeapon(shipBody, nextMode)
+        server.shipRuntimeSyncMainWeapon(shipBody, true)
+        server.lSlotStatePushHud(true)
     end
 
-    local fireRequest = server.registryShipGetMainWeaponFireRequest(shipBody)
-    if fireRequest == 0 then
+    if not _consumeMainWeaponFireRequested() then
         return
     end
 
-    server.registryShipSetMainWeaponFireRequest(shipBody, 0)
-    local current = server.registryShipGetCurrentMainWeapon(shipBody)
+    local current = server.shipRuntimeGetCurrentMainWeapon(shipBody)
     if current == "lSlot" then
-        server.registryShipSetLSlotsRequest(shipBody, 1)
+        server.lSlotStateSetRequestFire(true)
     else
-        server.registryShipSetXSlotsRequest(shipBody, 1)
+        if server.xSlotStateSetRequestFire ~= nil then
+            server.xSlotStateSetRequestFire(true)
+        end
     end
 end

@@ -34,7 +34,7 @@ end
 
 function client.shipRollErrorTick(dt)
     local _ = dt
-    if client.registryShipSetRollError == nil then
+    if client.shipRequestRollError == nil then
         return
     end
 
@@ -59,5 +59,5 @@ function client.shipRollErrorTick(dt)
     local camUpOnPlane = _projectOnPlane(camUp, shipForward)
 
     local rollError = _signedAngleOnAxis(shipUpOnPlane, camUpOnPlane, shipForward)
-    client.registryShipSetRollError(body, rollError)
+    client.shipRequestRollError(body, rollError)
 end

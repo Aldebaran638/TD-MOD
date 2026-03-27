@@ -315,7 +315,7 @@ function server.projectileManagerTick(dt)
                     if hitBody ~= 0 and server.registryShipExists(hitBody) then
                         if server.registryShipIsBodyDead(hitBody) then
                             shouldPlayImpact = true
-                            shouldExplode = true
+                            shouldExplode = false
                         else
                             local damageResult = _applyProjectileShipDamage(hitBody, projectile.weaponType)
                             if damageResult.didDamage then

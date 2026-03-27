@@ -4,8 +4,9 @@
 client = client or {}
 
 #include "registry/shipRegistry.lua"
+#include "shipRuntimeState.lua"
+#include "xSlotRenderState.lua"
 #include "input_handling/mainWeaponInput.lua"
-#include "input_handling/xSlotInput.lua"
 #include "input_handling/bodyMoveInput.lua"
 #include "sound_modules/soundModule.lua"
 #include "camera_modules/shipCamera.lua"

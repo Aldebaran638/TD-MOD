@@ -83,5 +83,5 @@ function client.bodyMoveInputTick(dt)
     state.lastShipBodyId = shipBody
     state.lastSyncAt = now
 
-    client.registryShipSetMoveRequestState(shipBody, moveState)
+    client.shipRequestMoveState(shipBody, moveState)
 end

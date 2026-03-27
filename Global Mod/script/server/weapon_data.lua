@@ -1,18 +1,10 @@
--- 统一武器数据表
--- 将多个武器的参数放在一起，便于维护与扩展
+-- 缁熶竴姝﹀櫒鏁版嵁琛?
+-- 灏嗗涓鍣ㄧ殑鍙傛暟鏀惧湪涓€璧凤紝渚夸簬缁存姢涓庢墿灞?
+
 weaponData = weaponData or {}
 
--- 快子光矛武器数据
-weaponData.tachyonLance = {
-    weaponType = "tachyonLance", -- 武器类型标识，用于客户端渲染选择特效
-    maxRange = 2000, -- 武器最大射程
-    damageMin = 780, -- 武器最小伤害
-    damageMax = 1950, -- 武器最大伤害
-    shieldFix = 0.5, -- 护盾伤害修正
-    armorFix = 2, -- 装甲伤害修正
-    bodyFix = 1.5, -- 机体伤害修正
-    CD = 8, -- 冷却时间
-}
+#include "../data/weapons/xSlots/tachyonLance.lua"
+#include "../data/weapons/lSlots/kineticArtillery.lua"
 
--- 可以在此处继续添加更多武器配置，例如：
+-- 鍙互鍦ㄦ澶勭户缁坊鍔犳洿澶氭鍣ㄩ厤缃紝渚嬪锛?
 -- weaponData.plasmaCannon = { ... }

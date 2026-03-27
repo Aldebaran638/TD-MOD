@@ -3,8 +3,6 @@
 
 server = server or {}
 
-local registryShipRoot = "StellarisShips/server/ships/byId/"
-
 server.shipAttitudeControllerState = server.shipAttitudeControllerState or {
     byBody = {},
 }
@@ -17,23 +15,19 @@ server.shipAttitudeControllerConfig = server.shipAttitudeControllerConfig or {
     pitchSoftZone = 3.0,       -- deg after deadzone, force ramps in smoothly
 
     yawForceGain = 40000,        -- force-like gain per deg
-    pitchForceGain = 90000,      -- force-like gain per deg
+    pitchForceGain = 180000,      -- force-like gain per deg
 
     yawForceMax = 12000,         -- force-like cap
     pitchForceMax = 12000,       -- force-like cap
 
     yawDamping = 900000.0,         -- damping against yaw angular speed
-    pitchDamping = 2500000.0,       -- damping against pitch angular speed
+    pitchDamping = 5000000.0,       -- damping against pitch angular speed
     yawRateDeadzone = 0.01,    -- rad/s small-rate jitter cutoff
     pitchRateDeadzone = 0.01,  -- rad/s small-rate jitter cutoff
 
     yawLeverArm = 8.0,         -- local z offset used for yaw pair
     pitchLeverArm = 8.0,       -- local z offset used for pitch pair
 }
-
-local function _shipKeyPrefix(shipBodyId)
-    return registryShipRoot .. tostring(shipBodyId)
-end
 
 local function _safeNumber(v, fallback)
     local n = tonumber(v)
@@ -64,13 +58,13 @@ function server.shipAttitudeControllerReadRotationError(shipBodyId)
         return 0.0, 0.0, false
     end
 
-    local prefix = _shipKeyPrefix(shipBodyId)
-    if not GetBool(prefix .. "/exists") then
+    if server.registryShipExists ~= nil and (not server.registryShipExists(shipBodyId)) then
         return 0.0, 0.0, false
     end
 
-    local pitchError = _safeNumber(GetFloat(prefix .. "/pitchError"), 0.0)
-    local yawError = _safeNumber(GetFloat(prefix .. "/yawError"), 0.0)
+    local pitchError, yawError = server.shipRuntimeGetRotationError(shipBodyId)
+    pitchError = _safeNumber(pitchError, 0.0)
+    yawError = _safeNumber(yawError, 0.0)
     return pitchError, yawError, true
 end
 

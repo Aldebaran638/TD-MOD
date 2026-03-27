@@ -275,9 +275,8 @@ local function _emitHexEdgeParticles(vertices, shieldCenter, intensity, perHexBu
     return used
 end
 
-local function _startShieldBurst(shipBodyId, shipType, hitTargetBodyId, hitPointWorld, shotId, ringScale)
+local function _startShieldBurst(shipBodyId, hitTargetBodyId, hitPointWorld, shotId, ringScale)
     local _ = shipBodyId
-    local _shipType = shipType
 
     if hitTargetBodyId == nil or hitTargetBodyId == 0 then
         return
@@ -348,13 +347,13 @@ local function _startShieldBurst(shipBodyId, shipType, hitTargetBodyId, hitPoint
 end
 
 function client.playProjectileShieldImpactFx(hitTargetBodyId, hitX, hitY, hitZ)
+    local randomScale = 0.65 + math.random() * 0.55
     _startShieldBurst(
         0,
-        "",
         hitTargetBodyId,
         Vec(hitX or 0, hitY or 0, hitZ or 0),
         0,
-        0.5
+        randomScale
     )
 end
 
@@ -366,9 +365,8 @@ function client.shieldHitFxTick(dt)
     for i = 1, #shipIds do
         local shipBodyId = shipIds[i]
         if client.registryShipExists(shipBodyId) then
-            local snapshot = client.registryShipGetSnapshot(shipBodyId)
-            if snapshot ~= nil then
-                local render = snapshot.xSlotsRender or {}
+            local render = client.xSlotRenderGetEvent(shipBodyId)
+            if render ~= nil then
                 local seq = render.seq or -1
                 local shotId = render.shotId or -1
                 local lastSeq = state.lastRenderSeqByShip[shipBodyId] or -1
@@ -377,7 +375,6 @@ function client.shieldHitFxTick(dt)
                     if render.eventType == "launch_start" and render.didHit == 1 and render.didHitShield == 1 then
                         _startShieldBurst(
                             shipBodyId,
-                            snapshot.shipType,
                             render.hitTargetBodyId or 0,
                             _tableToVec(render.hitPoint),
                             shotId
