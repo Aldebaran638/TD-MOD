@@ -13,6 +13,7 @@ client = client or {}
 #include "camera_modules/shipRollError.lua"
 #include "camera_modules/shipHealthBar.lua"
 #include "camera_modules/mainWeaponHud.lua"
+#include "camera_modules/shipHelpOverlay.lua"
 #include "camera_modules/shipCrosshair.lua"
 #include "draw_modules/xSlotChargingFx.lua"
 #include "draw_modules/xSlotLaunchFx.lua"
@@ -40,11 +41,13 @@ function client.clientTick(dt)
 
     client.shipHealthBarTick(dt)
     client.mainWeaponHudTick(dt)
+    client.shipHelpOverlayTick(dt)
 end
 
 function client.clientDraw()
     client.shipHealthBarDraw()
     client.mainWeaponHudDraw()
+    client.shipHelpOverlayDraw()
     client.shipCrosshairDraw()
 end
 
