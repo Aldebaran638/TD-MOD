@@ -40,12 +40,15 @@ local function _resolveTargetShieldRadius(targetBody, fallbackShipType)
         return radiusFallback
     end
 
-    local targetSnap = server.registryShipGetSnapshot(targetBody)
-    if targetSnap == nil then
-        return radiusFallback
+    local radius = 0.0
+    if server.registryShipGetShieldRadius ~= nil then
+        radius = server.registryShipGetShieldRadius(targetBody, fallbackType) or 0.0
+    end
+    if radius > 0.0 then
+        return radius
     end
 
-    local targetType = targetSnap.shipType or fallbackType
+    local targetType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(targetBody) or fallbackType
     local targetTypeData = (shipData and shipData[targetType]) or (shipData and shipData[fallbackType]) or {}
     return targetTypeData.shieldRadius or radiusFallback
 end
@@ -211,12 +214,13 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
             return renderResult
         end
 
-        local targetShip = server.registryShipGetSnapshot(hitTarget)
-        if targetShip == nil then
+        local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitTarget) or resolvedDefaultShipType
+        local targetShieldHP, targetArmorHP, targetBodyHP = server.registryShipGetHP(hitTarget)
+        if targetShieldHP == nil or targetArmorHP == nil or targetBodyHP == nil then
             return renderResult
         end
 
-        local targetShipData = (shipData and shipData[targetShip.shipType]) or (shipData and shipData[resolvedDefaultShipType]) or {}
+        local targetShipData = (shipData and shipData[targetShipType]) or (shipData and shipData[resolvedDefaultShipType]) or {}
         local targetWeaponData = (weaponData and weaponData[weaponType]) or (weaponData and weaponData.tachyonLance) or {}
         local damageMin = targetWeaponData.damageMin or 0
         local damageMax = targetWeaponData.damageMax or damageMin
@@ -270,19 +274,19 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
             return hp
         end
 
-        targetShip.shieldHP = _applyLayerOverflow("shield", targetShip.shieldHP or 0, targetWeaponData.shieldFix)
-        targetShip.armorHP = _applyLayerOverflow("armor", targetShip.armorHP or 0, targetWeaponData.armorFix)
-        targetShip.bodyHP = _applyLayerOverflow("body", targetShip.bodyHP or 0, targetWeaponData.bodyFix)
+        targetShieldHP = _applyLayerOverflow("shield", targetShieldHP or 0, targetWeaponData.shieldFix)
+        targetArmorHP = _applyLayerOverflow("armor", targetArmorHP or 0, targetWeaponData.armorFix)
+        targetBodyHP = _applyLayerOverflow("body", targetBodyHP or 0, targetWeaponData.bodyFix)
 
         -- 上限钳制，避免异常数值超过类型定义的最大值
-        local maxShield = targetShipData.maxShieldHP or targetShip.shieldHP or 0
-        local maxArmor = targetShipData.maxArmorHP or targetShip.armorHP or 0
-        local maxBody = targetShipData.maxBodyHP or targetShip.bodyHP or 0
-        if targetShip.shieldHP > maxShield then targetShip.shieldHP = maxShield end
-        if targetShip.armorHP > maxArmor then targetShip.armorHP = maxArmor end
-        if targetShip.bodyHP > maxBody then targetShip.bodyHP = maxBody end
+        local maxShield = targetShipData.maxShieldHP or targetShieldHP or 0
+        local maxArmor = targetShipData.maxArmorHP or targetArmorHP or 0
+        local maxBody = targetShipData.maxBodyHP or targetBodyHP or 0
+        if targetShieldHP > maxShield then targetShieldHP = maxShield end
+        if targetArmorHP > maxArmor then targetArmorHP = maxArmor end
+        if targetBodyHP > maxBody then targetBodyHP = maxBody end
 
-        server.registryShipSetHP(hitTarget, targetShip.shieldHP, targetShip.armorHP, targetShip.bodyHP)
+        server.registryShipSetHP(hitTarget, targetShieldHP, targetArmorHP, targetBodyHP)
 
         return renderResult
     end

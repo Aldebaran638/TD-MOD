@@ -275,9 +275,8 @@ local function _emitHexEdgeParticles(vertices, shieldCenter, intensity, perHexBu
     return used
 end
 
-local function _startShieldBurst(shipBodyId, shipType, hitTargetBodyId, hitPointWorld, shotId, ringScale)
+local function _startShieldBurst(shipBodyId, hitTargetBodyId, hitPointWorld, shotId, ringScale)
     local _ = shipBodyId
-    local _shipType = shipType
 
     if hitTargetBodyId == nil or hitTargetBodyId == 0 then
         return
@@ -350,7 +349,6 @@ end
 function client.playProjectileShieldImpactFx(hitTargetBodyId, hitX, hitY, hitZ)
     _startShieldBurst(
         0,
-        "",
         hitTargetBodyId,
         Vec(hitX or 0, hitY or 0, hitZ or 0),
         0,
@@ -374,10 +372,8 @@ function client.shieldHitFxTick(dt)
 
                 if seq ~= lastSeq then
                     if render.eventType == "launch_start" and render.didHit == 1 and render.didHitShield == 1 then
-                        local snapshot = client.registryShipGetSnapshot(shipBodyId)
                         _startShieldBurst(
                             shipBodyId,
-                            (snapshot and snapshot.shipType) or "",
                             render.hitTargetBodyId or 0,
                             _tableToVec(render.hitPoint),
                             shotId

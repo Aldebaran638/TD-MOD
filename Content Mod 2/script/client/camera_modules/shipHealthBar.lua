@@ -93,8 +93,9 @@ function client.shipHealthBarTick(dt)
         return
     end
 
-    local snapshot = client.registryShipGetSnapshot(body)
-    if snapshot == nil then
+    local currShield, currArmor, currBody = client.registryShipGetHP(body)
+    local maxShield, maxArmor, maxBody = client.registryShipGetMaxHP(body)
+    if currShield == nil or currArmor == nil or currBody == nil or maxShield == nil or maxArmor == nil or maxBody == nil then
         state.active = false
         state.shipBody = 0
         return
@@ -102,11 +103,6 @@ function client.shipHealthBarTick(dt)
 
     state.active = true
 
-    local currBody = snapshot.bodyHP or 0
-    local currArmor = snapshot.armorHP or 0
-    local currShield = snapshot.shieldHP or 0
-
-    local maxBody = snapshot.maxBodyHP
     if maxBody == nil or maxBody <= 0 then
         maxBody = currBody
     end
@@ -114,7 +110,6 @@ function client.shipHealthBarTick(dt)
         maxBody = 0
     end
 
-    local maxArmor = snapshot.maxArmorHP
     if maxArmor == nil or maxArmor <= 0 then
         maxArmor = currArmor
     end
@@ -122,7 +117,6 @@ function client.shipHealthBarTick(dt)
         maxArmor = 0
     end
 
-    local maxShield = snapshot.maxShieldHP
     if maxShield == nil or maxShield <= 0 then
         maxShield = currShield
     end

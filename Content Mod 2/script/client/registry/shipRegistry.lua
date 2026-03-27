@@ -63,52 +63,75 @@ function client.registryShipGetRegisteredBodyIds()
 end
 
 -- 客户端函数：读取某艘飞船的快照数据，用于调试或只读逻辑
-function client.registryShipGetSnapshot(shipBodyId)
+function client.registryShipGetShipType(shipBodyId)
     if not client.registryShipExists(shipBodyId) then
-        return nil
+        return ""
+    end
+    return GetString(client.registryShipKeyPrefix(shipBodyId) .. "/shipType")
+end
+
+function client.registryShipGetHP(shipBodyId)
+    if not client.registryShipExists(shipBodyId) then
+        return nil, nil, nil
+    end
+    local prefix = client.registryShipKeyPrefix(shipBodyId)
+    return GetFloat(prefix .. "/shieldHP"), GetFloat(prefix .. "/armorHP"), GetFloat(prefix .. "/bodyHP")
+end
+
+function client.registryShipGetMaxHP(shipBodyId)
+    if not client.registryShipExists(shipBodyId) then
+        return nil, nil, nil
     end
 
     local prefix = client.registryShipKeyPrefix(shipBodyId)
-    local snapshot = {
-        id = shipBodyId,
-        exists = GetBool(prefix .. "/exists"),
-        shipType = GetString(prefix .. "/shipType"),
-        maxShieldHP = GetFloat(prefix .. "/maxShieldHP"),
-        maxArmorHP = GetFloat(prefix .. "/maxArmorHP"),
-        maxBodyHP = GetFloat(prefix .. "/maxBodyHP"),
-        shieldHP = GetFloat(prefix .. "/shieldHP"),
-        armorHP = GetFloat(prefix .. "/armorHP"),
-        bodyHP = GetFloat(prefix .. "/bodyHP"),
-        driverPlayerId = GetInt(prefix .. "/driverPlayerId"),
-        moveState = GetInt(prefix .. "/moveState"),
-        moveRequest = GetInt(prefix .. "/move/request"),
-        moveRequestState = GetInt(prefix .. "/move/requestState"),
-        currentMainWeapon = GetString(prefix .. "/mainWeapon/current"),
-    }
+    local shipType = GetString(prefix .. "/shipType")
+    local maxShield = GetFloat(prefix .. "/maxShieldHP")
+    local maxArmor = GetFloat(prefix .. "/maxArmorHP")
+    local maxBody = GetFloat(prefix .. "/maxBodyHP")
 
-    if snapshot.maxShieldHP <= 0 or snapshot.maxArmorHP <= 0 or snapshot.maxBodyHP <= 0 then
-        local typeMaxShield, typeMaxArmor, typeMaxBody = _readShipTypeMaxHp(snapshot.shipType)
-        if snapshot.maxShieldHP <= 0 then
-            snapshot.maxShieldHP = typeMaxShield
+    if maxShield <= 0 or maxArmor <= 0 or maxBody <= 0 then
+        local typeMaxShield, typeMaxArmor, typeMaxBody = _readShipTypeMaxHp(shipType)
+        if maxShield <= 0 then
+            maxShield = typeMaxShield
         end
-        if snapshot.maxArmorHP <= 0 then
-            snapshot.maxArmorHP = typeMaxArmor
+        if maxArmor <= 0 then
+            maxArmor = typeMaxArmor
         end
-        if snapshot.maxBodyHP <= 0 then
-            snapshot.maxBodyHP = typeMaxBody
+        if maxBody <= 0 then
+            maxBody = typeMaxBody
         end
     end
 
-    if snapshot.maxShieldHP <= 0 then
-        snapshot.maxShieldHP = snapshot.shieldHP or 0
+    local shieldHP, armorHP, bodyHP = client.registryShipGetHP(shipBodyId)
+    if maxShield <= 0 then
+        maxShield = shieldHP or 0
     end
-    if snapshot.maxArmorHP <= 0 then
-        snapshot.maxArmorHP = snapshot.armorHP or 0
+    if maxArmor <= 0 then
+        maxArmor = armorHP or 0
     end
-    if snapshot.maxBodyHP <= 0 then
-        snapshot.maxBodyHP = snapshot.bodyHP or 0
+    if maxBody <= 0 then
+        maxBody = bodyHP or 0
     end
-    return snapshot
+
+    return maxShield, maxArmor, maxBody
+end
+
+function client.registryShipGetDriverPlayerId(shipBodyId)
+    if not client.registryShipExists(shipBodyId) then
+        return 0
+    end
+    return GetInt(client.registryShipKeyPrefix(shipBodyId) .. "/driverPlayerId")
+end
+
+function client.registryShipGetCurrentMainWeapon(shipBodyId)
+    if not client.registryShipExists(shipBodyId) then
+        return "xSlot"
+    end
+    local mode = GetString(client.registryShipKeyPrefix(shipBodyId) .. "/mainWeapon/current")
+    if mode ~= "lSlot" then
+        mode = "xSlot"
+    end
+    return mode
 end
 
 -- 客户端函数：写入 x 槽统一 request 键（兼容旧签名，slotIndex 参数已忽略）

@@ -142,16 +142,9 @@ function client.mainWeaponHudTick(dt)
         return
     end
 
-    local snapshot = client.registryShipGetSnapshot(body)
-    if snapshot == nil then
-        state.active = false
-        state.shipBody = 0
-        return
-    end
-
     state.active = true
     state.shipBody = body
-    state.currentMainWeapon = snapshot.currentMainWeapon or "xSlot"
+    state.currentMainWeapon = client.registryShipGetCurrentMainWeapon(body)
 
     local hud = client.lSlotHudStateByShip[body] or {
         heat = 0.0,

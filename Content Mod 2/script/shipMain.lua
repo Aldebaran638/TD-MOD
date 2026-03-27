@@ -24,10 +24,10 @@ function server.registerCurrentShip(shipType)
 
     local shipBodyId = server.shipBody
     if shipBodyId == nil or shipBodyId == 0 then
-        return nil
+        return false
     end
     server.registryShipRegister(shipBodyId, shipType, server.defaultShipType)
-    return server.registryShipGetSnapshot(shipBodyId)
+    return true
 end
 
 -- 服务端函数：确保“当前这艘飞船”在 Registry 中存在�?
@@ -35,10 +35,9 @@ end
 function server.ensureCurrentShipState(shipType)
     local shipBodyId = server.shipBody
     if shipBodyId == nil or shipBodyId == 0 then
-        return nil
+        return false
     end
-    server.registryShipEnsure(shipBodyId, shipType or server.defaultShipType, server.defaultShipType)
-    return server.registryShipGetSnapshot(shipBodyId)
+    return server.registryShipEnsure(shipBodyId, shipType or server.defaultShipType, server.defaultShipType)
 end
 
 -- x 槽控制模块从外部抽取为独立文件：script/server/weapon_fire/xSlotControl.lua

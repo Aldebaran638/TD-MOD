@@ -3,7 +3,7 @@
 lSlotWeaponRegistryData = lSlotWeaponRegistryData or {}
 
 local kineticArtilleryMaxRange = 750.0
-local kineticArtilleryProjectileSpeed = 200.0
+local kineticArtilleryProjectileSpeed = 150.0
 
 lSlotWeaponRegistryData.kineticArtillery = {
     weaponType = "kineticArtillery",

@@ -129,9 +129,9 @@ function client.shipDestroyedFxTick(dt)
     local frameDt = dt or 0
 
     if body ~= 0 and client.registryShipExists ~= nil and client.registryShipExists(body) then
-        local snapshot = client.registryShipGetSnapshot(body)
-        if snapshot ~= nil then
-            local currBodyHp = tonumber(snapshot.bodyHP) or 0.0
+        local _, _, bodyHP = client.registryShipGetHP(body)
+        if bodyHP ~= nil then
+            local currBodyHp = tonumber(bodyHP) or 0.0
             local prevBodyHp = state.lastBodyHp
 
             if (not state.exploded) and currBodyHp <= 0.0 and (prevBodyHp == nil or prevBodyHp > 0.0) then

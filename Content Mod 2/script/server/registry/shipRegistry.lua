@@ -29,6 +29,7 @@ local function _writeShipInstanceMaxHpFromType(shipBodyId, shipType, defaultShip
     SetFloat(prefix .. "/maxShieldHP", GetFloat(typePrefix .. "/maxShieldHP"), true)
     SetFloat(prefix .. "/maxArmorHP", GetFloat(typePrefix .. "/maxArmorHP"), true)
     SetFloat(prefix .. "/maxBodyHP", GetFloat(typePrefix .. "/maxBodyHP"), true)
+    SetFloat(prefix .. "/shieldRadius", GetFloat(typePrefix .. "/shieldRadius"), true)
 end
 
 local function _writeShipInstanceRegenFromType(shipBodyId, shipType, defaultShipType)
@@ -259,27 +260,11 @@ function server.registryShipEnsure(shipBodyId, shipType, defaultShipType)
     return true
 end
 
-function server.registryShipGetSnapshot(shipBodyId)
+function server.registryShipGetShipType(shipBodyId)
     if not server.registryShipExists(shipBodyId) then
-        return nil
+        return ""
     end
-
-    local prefix = _shipKeyPrefix(shipBodyId)
-    local snapshot = {
-        id = shipBodyId,
-        exists = GetBool(prefix .. "/exists"),
-        shipType = GetString(prefix .. "/shipType"),
-        shieldHP = GetFloat(prefix .. "/shieldHP"),
-        armorHP = GetFloat(prefix .. "/armorHP"),
-        bodyHP = GetFloat(prefix .. "/bodyHP"),
-        driverPlayerId = GetInt(prefix .. "/driverPlayerId"),
-        moveState = GetInt(prefix .. "/moveState"),
-        moveRequest = GetInt(prefix .. "/move/request"),
-        moveRequestState = GetInt(prefix .. "/move/requestState"),
-        currentMainWeapon = GetString(prefix .. "/mainWeapon/current"),
-    }
-
-    return snapshot
+    return GetString(_shipKeyPrefix(shipBodyId) .. "/shipType")
 end
 
 function server.registryShipGetHP(shipBodyId)
@@ -288,6 +273,25 @@ function server.registryShipGetHP(shipBodyId)
     end
     local prefix = _shipKeyPrefix(shipBodyId)
     return GetFloat(prefix .. "/shieldHP"), GetFloat(prefix .. "/armorHP"), GetFloat(prefix .. "/bodyHP")
+end
+
+function server.registryShipGetShieldRadius(shipBodyId, defaultShipType)
+    if not server.registryShipExists(shipBodyId) then
+        local resolvedType = defaultShipType or server.defaultShipType or "enigmaticCruiser"
+        return GetFloat(_shipTypeKeyPrefix(resolvedType) .. "/shieldRadius")
+    end
+
+    local prefix = _shipKeyPrefix(shipBodyId)
+    local radius = GetFloat(prefix .. "/shieldRadius")
+    if radius > 0 then
+        return radius
+    end
+
+    local shipType = GetString(prefix .. "/shipType")
+    if shipType == nil or shipType == "" then
+        shipType = defaultShipType or server.defaultShipType or "enigmaticCruiser"
+    end
+    return GetFloat(_shipTypeKeyPrefix(shipType) .. "/shieldRadius")
 end
 
 function server.registryShipGetRegenConfig(shipBodyId)
