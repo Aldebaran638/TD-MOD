@@ -419,10 +419,14 @@ function server.sSlotControlTick(dt)
     end
 
     local targetBodyId = math.floor(request.targetBodyId or 0)
-    if targetBodyId == 0 or targetBodyId == shipBody or (not IsHandleValid(targetBodyId)) then
+    local targetVehicleId = math.floor(request.targetVehicleId or 0)
+    if (targetBodyId == 0 or not IsHandleValid(targetBodyId)) and targetVehicleId == 0 then
         return
     end
-    if server.registryShipExists(targetBodyId) and server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(targetBodyId) then
+    if targetBodyId ~= 0 and targetBodyId == shipBody then
+        return
+    end
+    if targetBodyId ~= 0 and server.registryShipExists(targetBodyId) and server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(targetBodyId) then
         return
     end
 
@@ -484,6 +488,7 @@ function server.sSlotControlTick(dt)
         bodyId = missileBody,
         ownerShipBody = shipBody,
         targetBodyId = targetBodyId,
+        targetVehicleId = targetVehicleId,
         damage = launcherConfig.damage or 0.0,
         armorFix = launcherConfig.armorFix or 1.0,
         bodyFix = launcherConfig.bodyFix or 1.0,
@@ -523,15 +528,39 @@ function server.sSlotControlUpdate(dt)
             local desiredDir = currentDir
 
             local targetBodyId = missile.targetBodyId or 0
+            local targetVehicleId = missile.targetVehicleId or 0
+            local targetPos = nil
+            local targetVel = nil
+            
+            -- 优先使用body追踪
             if targetBodyId ~= 0 and IsHandleValid(targetBodyId) and server.registryShipExists(targetBodyId) and (not server.registryShipIsBodyDead(targetBodyId)) then
-                local targetPos = _sSlotGetBodyCenterWorld(targetBodyId)
+                targetPos = _sSlotGetBodyCenterWorld(targetBodyId)
                 if targetPos ~= nil then
-                    local targetVel = GetBodyVelocity(targetBodyId)
-                    local dist = VecLength(VecSub(targetPos, currentPos))
-                    local leadTime = math.min(1.0, dist / math.max(1.0, currentSpeed, missile.cruiseSpeed or 1.0))
-                    local leadPos = VecAdd(targetPos, VecScale(targetVel, leadTime))
-                    desiredDir = _sSlotNormalize(VecSub(leadPos, currentPos), currentDir)
+                    targetVel = GetBodyVelocity(targetBodyId)
                 end
+            -- 如果没有body或body无效，使用vehicle追踪
+            elseif targetVehicleId ~= 0 then
+                local targetBody = GetVehicleBody(targetVehicleId)
+                if targetBody ~= nil and targetBody ~= 0 and IsHandleValid(targetBody) then
+                    targetPos = _sSlotGetBodyCenterWorld(targetBody)
+                    if targetPos ~= nil then
+                        targetVel = GetBodyVelocity(targetBody)
+                    end
+                else
+                    -- 直接使用vehicle的位置
+                    local vehicleT = GetVehicleTransform(targetVehicleId)
+                    if vehicleT ~= nil then
+                        targetPos = vehicleT.pos
+                        targetVel = GetVehicleVelocity(targetVehicleId)
+                    end
+                end
+            end
+            
+            if targetPos ~= nil and targetVel ~= nil then
+                local dist = VecLength(VecSub(targetPos, currentPos))
+                local leadTime = math.min(1.0, dist / math.max(1.0, currentSpeed, missile.cruiseSpeed or 1.0))
+                local leadPos = VecAdd(targetPos, VecScale(targetVel, leadTime))
+                desiredDir = _sSlotNormalize(VecSub(leadPos, currentPos), currentDir)
             end
 
             local steerAlpha = math.min(1.0, math.max(0.0, (missile.turnBlendRate or 0.0) * (dt or 0.0)))

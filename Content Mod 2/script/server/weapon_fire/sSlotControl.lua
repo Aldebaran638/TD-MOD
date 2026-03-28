@@ -392,6 +392,9 @@ function server.sSlotControlTick(dt)
             runtime.cooldownRemain = math.max(0.0, (runtime.cooldownRemain or 0.0) - (dt or 0.0))
         end
     end
+    
+    -- 同步HUD状态到客户端
+    server.sSlotControlSyncHud()
 
     local active = state.activeMissiles or {}
     local i = #active
@@ -625,4 +628,40 @@ function server.sSlotControlPostUpdate()
 
         i = i - 1
     end
+end
+
+function server.sSlotControlSyncHud()
+    local shipBody = server.shipBody
+    if shipBody == nil or shipBody == 0 then
+        return
+    end
+    
+    local state = server.sSlotState or {}
+    local launchers = state.launchers or {}
+    local cd1, cd2, cd3, cd4 = 0.0, 0.0, 0.0, 0.0
+    local maxCd1, maxCd2, maxCd3, maxCd4 = 1.0, 1.0, 1.0, 1.0
+    
+    for i = 1, 4 do
+        local launcher = launchers[i]
+        if launcher then
+            local config = launcher.config or {}
+            local runtime = launcher.runtime or {}
+            if i == 1 then
+                cd1 = runtime.cooldownRemain or 0.0
+                maxCd1 = config.cooldown or 0.0
+            elseif i == 2 then
+                cd2 = runtime.cooldownRemain or 0.0
+                maxCd2 = config.cooldown or 0.0
+            elseif i == 3 then
+                cd3 = runtime.cooldownRemain or 0.0
+                maxCd3 = config.cooldown or 0.0
+            elseif i == 4 then
+                cd4 = runtime.cooldownRemain or 0.0
+                maxCd4 = config.cooldown or 0.0
+            end
+        end
+    end
+    
+    -- 同步到客户端
+    ClientCall(0, "client.updateSSlotHudState", shipBody, cd1, cd2, cd3, cd4, maxCd1, maxCd2, maxCd3, maxCd4)
 end
