@@ -15,6 +15,8 @@ local _snd_tachyon_windup_near = nil
 local _snd_tachyon_windup_dist = nil
 local _snd_kinetic_fire_near = nil
 local _snd_kinetic_hit_near = nil
+local _snd_missile_fire_near = {}
+local _snd_missile_fire_dist = {}
 
 client.soundModuleState = client.soundModuleState or {
     lastRenderSeqByShip = {},
@@ -84,6 +86,15 @@ end
 
 local function _playKineticHit(hitPoint)
     _playAt(_snd_kinetic_hit_near, hitPoint)
+end
+
+local function _playMissileFire(firePoint)
+    local playPos, isDistant = _resolvePlayPos(firePoint)
+    if isDistant then
+        _playAt(_randomPick(_snd_missile_fire_dist), playPos)
+    else
+        _playAt(_randomPick(_snd_missile_fire_near), playPos)
+    end
 end
 
 local function _isShipOccupied(shipBodyId)
@@ -163,6 +174,11 @@ function client.soundModuleInit()
     _snd_tachyon_windup_dist = LoadSound("MOD/sound/distance_tachyon_lance_windup_01.ogg")
     _snd_kinetic_fire_near = LoadSound("MOD/sound/kinectic_artillery_fire_01.ogg")
     _snd_kinetic_hit_near = LoadSound("MOD/sound/kinectic_artillery_hit_01.ogg")
+    _snd_missile_fire_near[1] = LoadSound("MOD/sound/missile_fire_01.ogg")
+    _snd_missile_fire_near[2] = LoadSound("MOD/sound/missile_fire_02.ogg")
+    _snd_missile_fire_dist[1] = LoadSound("MOD/sound/distance_missile_fire_01.ogg")
+    _snd_missile_fire_dist[2] = LoadSound("MOD/sound/distance_missile_fire_02.ogg")
+    _snd_missile_fire_dist[3] = LoadSound("MOD/sound/distance_missile_fire_03.ogg")
 end
 
 function client.playKineticArtilleryFireSound(x, y, z)
@@ -170,6 +186,14 @@ function client.playKineticArtilleryFireSound(x, y, z)
 end
 
 function client.playKineticArtilleryHitSound(x, y, z)
+    _playKineticHit(Vec(x or 0, y or 0, z or 0))
+end
+
+function client.playMissileFireSound(x, y, z)
+    _playMissileFire(Vec(x or 0, y or 0, z or 0))
+end
+
+function client.playMissileImpactSound(x, y, z)
     _playKineticHit(Vec(x or 0, y or 0, z or 0))
 end
 

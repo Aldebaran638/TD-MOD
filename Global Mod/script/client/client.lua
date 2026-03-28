@@ -6,6 +6,7 @@ client = client or {}
 #include "registry/shipRegistry.lua"
 #include "shipRuntimeState.lua"
 #include "xSlotRenderState.lua"
+#include "targeting/sSlotTargeting.lua"
 #include "input_handling/mainWeaponInput.lua"
 #include "input_handling/bodyMoveInput.lua"
 #include "sound_modules/soundModule.lua"
@@ -15,6 +16,7 @@ client = client or {}
 #include "camera_modules/mainWeaponHud.lua"
 #include "camera_modules/shipHelpOverlay.lua"
 #include "camera_modules/shipCrosshair.lua"
+#include "camera_modules/sSlotHud.lua"
 #include "draw_modules/xSlotChargingFx.lua"
 #include "draw_modules/xSlotLaunchFx.lua"
 #include "draw_modules/shieldHitFx.lua"
@@ -39,6 +41,7 @@ function client.clientTick(dt)
     client.shipDestroyedFxTick(dt)
     client.projectileVisualTick(dt)
 
+    client.sSlotTargetingTick(dt)
     client.shipHealthBarTick(dt)
     client.mainWeaponHudTick(dt)
     client.shipHelpOverlayTick(dt)
@@ -49,6 +52,7 @@ function client.clientDraw()
     client.mainWeaponHudDraw()
     client.shipHelpOverlayDraw()
     client.shipCrosshairDraw()
+    client.sSlotHudDraw()
 end
 
 function client.render()

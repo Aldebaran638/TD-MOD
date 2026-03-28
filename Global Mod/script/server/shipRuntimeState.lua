@@ -45,6 +45,9 @@ local function _runtimeNormalizeMode(mode)
     if mode == "lSlot" then
         return "lSlot"
     end
+    if mode == "sSlot" then
+        return "sSlot"
+    end
     return "xSlot"
 end
 

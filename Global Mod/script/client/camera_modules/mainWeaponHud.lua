@@ -4,13 +4,13 @@
 client = client or {}
 
 client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
-    panelWidth = 260,
-    panelHeight = 110,
+    panelWidth = 290,
+    panelHeight = 118,
     rightOffset = 270,
     bottomOffset = 34,
-    heatBarWidth = 180,
-    heatBarHeight = 12,
-    heatBarOffsetY = 12,
+    topBarWidth = 190,
+    topBarHeight = 12,
+    topBarOffsetY = 12,
     xCooldownBarWidth = 72,
     xCooldownBarHeight = 8,
     xCooldownBarGap = 12,
@@ -26,9 +26,12 @@ client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
     inactiveColor = { 0.22, 0.25, 0.30, 0.95 },
     xSlotColor = { 0.18, 0.82, 1.0, 0.95 },
     lSlotColor = { 1.0, 0.42, 0.12, 0.95 },
+    sSlotColor = { 1.0, 0.84, 0.18, 0.95 },
     heatBgColor = { 0.14, 0.16, 0.18, 0.95 },
     heatFillColor = { 1.0, 0.72, 0.18, 0.96 },
     heatOverColor = { 1.0, 0.22, 0.10, 0.98 },
+    lockFillColor = { 1.0, 0.82, 0.24, 0.96 },
+    lockReadyColor = { 1.0, 0.24, 0.18, 0.98 },
 }
 
 client.mainWeaponHudState = client.mainWeaponHudState or {
@@ -40,6 +43,9 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     overheated = false,
     xSlotFill1 = 1.0,
     xSlotFill2 = 1.0,
+    sSlotProgress = 0.0,
+    targetSSlotProgress = 0.0,
+    sSlotStatus = "NO TARGET",
 }
 
 client.lSlotHudStateByShip = client.lSlotHudStateByShip or {}
@@ -178,6 +184,9 @@ function client.mainWeaponHudTick(dt)
         state.overheated = false
         state.xSlotFill1 = 1.0
         state.xSlotFill2 = 1.0
+        state.targetSSlotProgress = 0.0
+        state.sSlotProgress = 0.0
+        state.sSlotStatus = "NO TARGET"
         return
     end
 
@@ -222,6 +231,50 @@ function client.mainWeaponHudTick(dt)
     else
         state.xSlotFill2 = 1.0
     end
+
+    if client.sSlotTargetingGetSummary ~= nil then
+        local statusText, progress = client.sSlotTargetingGetSummary(body)
+        state.sSlotStatus = statusText or "NO TARGET"
+        state.targetSSlotProgress = _mainWeaponHudClamp(progress or 0.0, 0.0, 1.0)
+    else
+        state.sSlotStatus = "NO TARGET"
+        state.targetSSlotProgress = 0.0
+    end
+    state.sSlotProgress = _mainWeaponHudSmooth(state.sSlotProgress, state.targetSSlotProgress, cfg.smoothSpeed, dt)
+end
+
+local function _drawWeaponIcon(x, y, size, fillColor, label, selected, cfg)
+    UiPush()
+        UiTranslate(x, y)
+        UiColor(fillColor[1], fillColor[2], fillColor[3], selected and fillColor[4] or 0.35)
+        UiRect(size, size)
+        UiColor(cfg.borderColor[1], cfg.borderColor[2], cfg.borderColor[3], selected and 0.75 or 0.22)
+        UiRectOutline(size, size, 2)
+        UiColor(1, 1, 1, selected and 1.0 or 0.72)
+        UiFont("regular.ttf", math.floor(size * 0.48))
+        UiAlign("center middle")
+        UiTranslate(size * 0.5, size * 0.54)
+        UiText(label)
+    UiPop()
+end
+
+local function _drawTopBar(x, y, width, height, fillFraction, fillColor, text, cfg)
+    UiPush()
+        UiTranslate(x, y)
+        UiColor(cfg.heatBgColor[1], cfg.heatBgColor[2], cfg.heatBgColor[3], cfg.heatBgColor[4])
+        UiRect(width, height)
+        UiColor(fillColor[1], fillColor[2], fillColor[3], fillColor[4])
+        UiRect(width * _mainWeaponHudClamp(fillFraction or 0.0, 0.0, 1.0), height)
+        UiColor(cfg.borderColor[1], cfg.borderColor[2], cfg.borderColor[3], 0.55)
+        UiRectOutline(width, height, 1)
+    UiPop()
+
+    UiPush()
+        UiTranslate(x + width + 10, y - 4)
+        UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
+        UiFont("regular.ttf", cfg.valueSize)
+        UiText(text)
+    UiPop()
 end
 
 local function _drawXCooldownBar(x, y, w, h, fill, label, cfg)
@@ -241,21 +294,6 @@ local function _drawXCooldownBar(x, y, w, h, fill, label, cfg)
     UiPop()
 end
 
-local function _drawWeaponIcon(x, y, size, fillColor, label, selected, borderColor, inactiveColor)
-    UiPush()
-        UiTranslate(x, y)
-        UiColor(fillColor[1], fillColor[2], fillColor[3], selected and fillColor[4] or 0.35)
-        UiRect(size, size)
-        UiColor(borderColor[1], borderColor[2], borderColor[3], selected and 0.75 or 0.22)
-        UiRectOutline(size, size, 2)
-        UiColor(1, 1, 1, selected and 1.0 or 0.72)
-        UiFont("regular.ttf", math.floor(size * 0.48))
-        UiAlign("center middle")
-        UiTranslate(size * 0.5, size * 0.54)
-        UiText(label)
-    UiPop()
-end
-
 function client.mainWeaponHudDraw()
     local cfg = client.mainWeaponHudConfig
     local state = client.mainWeaponHudState
@@ -269,6 +307,26 @@ function client.mainWeaponHudDraw()
     local y = UiHeight() - panelH - cfg.bottomOffset
     local currentMode = state.currentMainWeapon or "xSlot"
 
+    local topFill = math.min(state.xSlotFill1, state.xSlotFill2)
+    local topText = string.format("READY %d%%", math.floor(topFill * 100 + 0.5))
+    local topColor = cfg.xSlotColor
+    local titleText = "Tachyon Lance"
+    local modeText = "Main Weapon: X-Slot"
+
+    if currentMode == "lSlot" then
+        topFill = state.heatFraction
+        topText = state.overheated and "OVERHEAT" or string.format("HEAT %d%%", math.floor(state.heatFraction * 100 + 0.5))
+        topColor = state.overheated and cfg.heatOverColor or cfg.heatFillColor
+        titleText = "Kinetic Artillery"
+        modeText = "Main Weapon: L-Slot"
+    elseif currentMode == "sSlot" then
+        topFill = state.sSlotProgress
+        topText = state.sSlotStatus or "NO TARGET"
+        topColor = (state.sSlotStatus == "LOCKED") and cfg.lockReadyColor or cfg.lockFillColor
+        titleText = "Guided Missiles"
+        modeText = "Main Weapon: S-Slot"
+    end
+
     UiPush()
         UiAlign("left top")
         UiTranslate(x, y)
@@ -277,55 +335,40 @@ function client.mainWeaponHudDraw()
         UiColor(cfg.borderColor[1], cfg.borderColor[2], cfg.borderColor[3], cfg.borderColor[4])
         UiRectOutline(panelW, panelH, 2)
 
-        UiPush()
-            UiTranslate(12, cfg.heatBarOffsetY)
-            UiColor(cfg.heatBgColor[1], cfg.heatBgColor[2], cfg.heatBgColor[3], cfg.heatBgColor[4])
-            UiRect(cfg.heatBarWidth, cfg.heatBarHeight)
+        _drawTopBar(12, cfg.topBarOffsetY, cfg.topBarWidth, cfg.topBarHeight, topFill, topColor, topText, cfg)
 
-            local fill = cfg.heatFillColor
-            if state.overheated then
-                fill = cfg.heatOverColor
-            end
-            UiColor(fill[1], fill[2], fill[3], fill[4])
-            UiRect(cfg.heatBarWidth * state.heatFraction, cfg.heatBarHeight)
-
-            UiColor(cfg.borderColor[1], cfg.borderColor[2], cfg.borderColor[3], 0.55)
-            UiRectOutline(cfg.heatBarWidth, cfg.heatBarHeight, 1)
-        UiPop()
+        _drawWeaponIcon(12, 36, cfg.iconSize, cfg.xSlotColor, "X", currentMode == "xSlot", cfg)
+        _drawWeaponIcon(46, 36, cfg.iconSize, cfg.lSlotColor, "L", currentMode == "lSlot", cfg)
+        _drawWeaponIcon(80, 36, cfg.iconSize, cfg.sSlotColor, "S", currentMode == "sSlot", cfg)
 
         UiPush()
-            UiTranslate(198, cfg.heatBarOffsetY - 4)
-            UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
-            UiFont("regular.ttf", cfg.valueSize)
-            if state.overheated then
-                UiText("OVERHEAT")
-            else
-                UiText(string.format("HEAT %d%%", math.floor(state.heatFraction * 100 + 0.5)))
-            end
-        UiPop()
-
-        _drawWeaponIcon(12, 36, cfg.iconSize, cfg.xSlotColor, "X", currentMode == "xSlot", cfg.borderColor, cfg.inactiveColor)
-        _drawWeaponIcon(46, 36, cfg.iconSize, cfg.lSlotColor, "L", currentMode == "lSlot", cfg.borderColor, cfg.inactiveColor)
-
-        UiPush()
-            UiTranslate(84, 34)
+            UiTranslate(118, 34)
             UiColor(cfg.textColor[1], cfg.textColor[2], cfg.textColor[3], cfg.textColor[4])
             UiFont("regular.ttf", cfg.labelSize)
-            if currentMode == "lSlot" then
-                UiText("Kinetic Artillery")
-            else
-                UiText("Tachyon Lance")
-            end
+            UiText(titleText)
         UiPop()
 
         UiPush()
-            UiTranslate(84, 54)
+            UiTranslate(118, 54)
             UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
             UiFont("regular.ttf", cfg.valueSize)
-            UiText((currentMode == "lSlot") and "Main Weapon: L-Slot" or "Main Weapon: X-Slot")
+            UiText(modeText)
         UiPop()
 
-        _drawXCooldownBar(12, 78, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill1, "X1", cfg)
-        _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 78, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill2, "X2", cfg)
+        if currentMode == "xSlot" then
+            _drawXCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill1, "X1", cfg)
+            _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill2, "X2", cfg)
+        else
+            UiPush()
+                UiTranslate(12, 84)
+                UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
+                UiFont("regular.ttf", cfg.valueSize)
+                if currentMode == "sSlot" then
+                    UiText("Lock state shown on target frame")
+                else
+                    UiText("Thermal battery active")
+                end
+            UiPop()
+        end
     UiPop()
 end

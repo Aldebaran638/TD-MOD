@@ -24,6 +24,27 @@ local function _resolveCrosshairRange()
     return maxRange
 end
 
+local function _resolveAimPointForBody(body, maxRange)
+    if body == nil or body == 0 then
+        return nil
+    end
+
+    local cfg = client.shipCrosshairConfig
+    local t = GetBodyTransform(body)
+    local forwardLocal = Vec(0, 0, -1)
+    local rayOrigin = TransformToParentPoint(t, VecScale(forwardLocal, cfg.originForwardOffset))
+    local forwardWorldDir = VecNormalize(TransformToParentVec(t, forwardLocal))
+
+    QueryRequire("physical")
+    QueryRejectBody(body)
+
+    local hit, hitDist = QueryRaycast(rayOrigin, forwardWorldDir, maxRange)
+    if hit then
+        return VecAdd(rayOrigin, VecScale(forwardWorldDir, hitDist))
+    end
+    return VecAdd(rayOrigin, VecScale(forwardWorldDir, maxRange))
+end
+
 local function _resolveControlledShipBody()
     if client.shipCameraGetControlledBody ~= nil then
         local body = client.shipCameraGetControlledBody()
@@ -63,23 +84,14 @@ function client.shipCrosshairDraw()
     if body == 0 then
         return
     end
+    if client.getShipMainWeaponMode ~= nil and client.getShipMainWeaponMode(body) == "sSlot" then
+        return
+    end
 
-    local t = GetBodyTransform(body)
     local maxRange = _resolveCrosshairRange()
-
-    local forwardLocal = Vec(0, 0, -1)
-    local rayOrigin = TransformToParentPoint(t, VecScale(forwardLocal, cfg.originForwardOffset))
-    local forwardWorldDir = VecNormalize(TransformToParentVec(t, forwardLocal))
-
-    QueryRequire("physical")
-    QueryRejectBody(body)
-
-    local hit, hitDist = QueryRaycast(rayOrigin, forwardWorldDir, maxRange)
-    local aimPoint
-    if hit then
-        aimPoint = VecAdd(rayOrigin, VecScale(forwardWorldDir, hitDist))
-    else
-        aimPoint = VecAdd(rayOrigin, VecScale(forwardWorldDir, maxRange))
+    local aimPoint = _resolveAimPointForBody(body, maxRange)
+    if aimPoint == nil then
+        return
     end
 
     local camT = GetCameraTransform()
@@ -104,4 +116,12 @@ function client.shipCrosshairDraw()
         UiRect(s * 2, th)
         UiRect(th, s * 2)
     UiPop()
+end
+
+function client.shipCrosshairGetAimWorldPoint(shipBodyId)
+    local body = math.floor(shipBodyId or 0)
+    if body <= 0 then
+        return nil
+    end
+    return _resolveAimPointForBody(body, _resolveCrosshairRange())
 end

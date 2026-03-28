@@ -48,6 +48,7 @@ end
 #include "server/weapon_fire/xSlotRenderState.lua"
 #include "server/weapon_fire/xSlotControl.lua"
 #include "server/weapon_fire/lSlotControl.lua"
+#include "server/weapon_fire/sSlotControl.lua"
 #include "server/weapon_fire/projectileManager.lua"
 -- 移动类模块：根据 body 质量施加竖直向上�?
 #include "server/movement/bodyMassUpwardMove.lua"
@@ -90,6 +91,7 @@ function server.init()
     server.xSlotStateInit("enigmaticCruiser")
     server.xSlotRenderStateInit()
     server.lSlotStateInit("enigmaticCruiser")
+    server.sSlotStateInit("enigmaticCruiser")
     server.shipRuntimeSyncMainWeapon(server.shipBody, true)
 
 end
@@ -105,6 +107,7 @@ function server.serverTick(dt)
     server.shipRuntimeStateSyncTick(dt)
     server.xSlotControlTick(dt)
     server.lSlotControlTick(dt)
+    server.sSlotControlTick(dt)
     server.projectileManagerTick(dt)
     server.shipHpRecoveryTick(dt)
     server.shipDeathExplosionTick(dt)
@@ -115,8 +118,13 @@ function server.serverTick(dt)
 end
 
 function server.update(dt)
+    server.sSlotControlUpdate(dt)
     server.shipAttitudeControllerUpdate(dt)
     server.shipRollStabilizerUpdate(dt)
+end
+
+function server.postUpdate()
+    server.sSlotControlPostUpdate()
 end
 
 #include "client/client.lua"

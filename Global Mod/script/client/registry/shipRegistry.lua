@@ -99,6 +99,21 @@ function client.shipRequestMainWeaponFire(shipBodyId, request)
     return true
 end
 
+function client.shipRequestSWeaponFire(shipBodyId, targetVehicleId)
+    if not client.registryShipExists(shipBodyId) then
+        return false
+    end
+
+    local vehicleId = math.floor(targetVehicleId or 0)
+    if vehicleId <= 0 then
+        return false
+    end
+
+    local localPlayerId = GetLocalPlayer()
+    ServerCall("server.shipRequestSWeaponFire", localPlayerId, shipBodyId, vehicleId)
+    return true
+end
+
 function client.shipRequestMainWeaponToggle(shipBodyId, request)
     if not client.registryShipExists(shipBodyId) then
         return false
