@@ -87,22 +87,11 @@ local function _updateParticles(dt)
         local elapsed = ((GetTime ~= nil) and GetTime() or 0.0) - p.startTime
         local t = elapsed / math.max(0.0001, p.maxLife)
         
-        if DebugWatch ~= nil and i == 1 then
-            DebugWatch("ChargingFX.Particle.t", t)
-            DebugWatch("ChargingFX.Particle.pos", string.format("(%.2f, %.2f, %.2f)", p.pos[1], p.pos[2], p.pos[3]))
-            DebugWatch("ChargingFX.Particle.vel", string.format("(%.2f, %.2f, %.2f)", p.vel[1], p.vel[2], p.vel[3]))
-        end
-        
         -- 计算到目标点的距离
         local distToTarget = VecLength(VecSub(p.targetPoint, p.pos))
         
-        if DebugWatch ~= nil and i == 1 then
-            DebugWatch("ChargingFX.Particle.distToTarget", distToTarget)
-            DebugWatch("ChargingFX.Particle.arrived", p.arrived and "yes" or "no")
-        end
-        
         -- 检查是否到达目标点
-        if not p.arrived and distToTarget < 1.0 then  -- 增大阈值到1.0
+        if not p.arrived and distToTarget < 1.0 then
             p.arrived = true
             p.arrivedTime = (GetTime ~= nil) and GetTime() or 0.0
         end
@@ -119,7 +108,7 @@ local function _updateParticles(dt)
             else
                 -- 渲染到达后的粒子
                 local alpha = 1.0 - arrivedT
-                local radius = p.baseRadius * 4.0  -- 半径变为4倍
+                local radius = p.baseRadius * 8.0  -- 半径变为8倍（原来4倍+100%）
                 
                 ParticleReset()
                 ParticleColor(1.0, 0.9, 0.5, 1.0, 0.6, 0.2)  -- 更亮的颜色
@@ -158,12 +147,12 @@ local function _updateParticles(dt)
                 
                 -- y方向速度：使用四次方根衰减，确保粒子能到达xz平面
                 -- 设置最小速度阈值，确保粒子始终有足够的速度到达xz平面
-                local minYSpeed = 5.0  -- 最小y速度（提高）
-                local maxYSpeed = 20.4  -- 最大y速度
+                local minYSpeed = 3.33  -- 最小y速度（降低到2/3）
+                local maxYSpeed = 13.6  -- 最大y速度（降低到2/3）
                 local ySpeed = minYSpeed + math.pow(distRatio, 0.25) * (maxYSpeed - minYSpeed)  -- 四次方根衰减
                 
-                -- xz方向速度：随距离减小而增大（下降30%）
-                local xzSpeed = (1.0 - distRatio) * 8.4 + 1.4  -- 最小1.4，最大9.8
+                -- xz方向速度：随距离减小而增大（降低到2/3）
+                local xzSpeed = (1.0 - distRatio) * 5.6 + 0.93  -- 最小0.93，最大6.53
                 
                 -- 计算xz方向（指向目标点）
                 local xzDir = Vec(toTargetDir[1], 0, toTargetDir[3])
@@ -214,13 +203,6 @@ local function _spawnChargingParticles(shipBodyId, chargeState, frameDt)
     local segmentLength = 11.5
     local segmentEnd = VecAdd(fireWorld, VecScale(barrelDir, segmentLength))
     
-    -- DebugWatch调试信息
-    if DebugWatch ~= nil then
-        DebugWatch("ChargingFX.shipBodyId", shipBodyId)
-        DebugWatch("ChargingFX.fireWorld", string.format("(%.2f, %.2f, %.2f)", fireWorld[1], fireWorld[2], fireWorld[3]))
-        DebugWatch("ChargingFX.barrelDir", string.format("(%.2f, %.2f, %.2f)", barrelDir[1], barrelDir[2], barrelDir[3]))
-    end
-    
     -- 将线段分成10份，得到11个点
     local divisions = 10
     local points = {}
@@ -229,15 +211,15 @@ local function _spawnChargingParticles(shipBodyId, chargeState, frameDt)
         points[i] = VecAdd(fireWorld, VecScale(VecSub(segmentEnd, fireWorld), t))
     end
     
-    -- 计算粒子数量（降低为原来的40%）
-    local particleCount = math.max(1, math.floor((1.5) * math.max(0.68, (frameDt or 0.016) * 60.0)))
+    -- 计算粒子数量（降低30%）
+    local particleCount = math.max(1, math.floor((1.05) * math.max(0.68, (frameDt or 0.016) * 60.0)))
     
     -- 获取飞船的右向量和上向量用于计算方向
     local shipRight = TransformToParentVec(shipT, Vec(1, 0, 0))
     local shipUp = TransformToParentVec(shipT, Vec(0, 1, 0))
     
-    -- 为所有11个点生成扇形汇聚粒子
-    for pointIndex = 0, divisions do
+    -- 为前10个点生成扇形汇聚粒子（不包括第11个点）
+    for pointIndex = 0, divisions - 1 do
         local targetPoint = points[pointIndex]
         
         -- 根据点的索引确定角度范围
@@ -249,7 +231,7 @@ local function _spawnChargingParticles(shipBodyId, chargeState, frameDt)
                 {math.rad(-150), math.rad(-30)}  -- 左侧范围
             }
         else
-            -- 后3个点（索引8-10）：0°~150°和0°~-150°
+            -- 后2个点（索引8-9）：0°~150°和0°~-150°
             angleRanges = {
                 {math.rad(0), math.rad(150)},    -- 右侧范围
                 {math.rad(-150), math.rad(0)}    -- 左侧范围
