@@ -1,0 +1,47 @@
+---@diagnostic disable: undefined-global
+
+xSlotWeaponRegistryData = xSlotWeaponRegistryData or {}
+weaponData = weaponData or {}
+
+local infernalRayData = {
+    weaponType = "infernalRay",
+    displayName = "Perdition Beam",
+    triggerMode = "hold_release",
+    maxRange = 2200,
+    damageMin = 960,
+    damageMax = 2400,
+    shieldFix = 0.5,
+    armorFix = 2.0,
+    bodyFix = 1.5,
+    cooldown = 8.5,
+    CD = 8.5,
+    chargeDuration = 1.0,
+    chargeDecayDuration = 1.35,
+    launchDuration = 0.5,
+    randomTrajectoryAngle = 0,
+    aoeRadius = 5.0,
+    aoeMinDamageFactor = 0.22,
+    hitShakeDuration = 0.45,
+    hitShakeAmplitude = 0.18,
+    chargeFxBarrelLength = 7.0,
+    chargeFxInnerLength = 2.1,
+    chargeFxSideOffset = 1.15,
+    chargeFxFrontOffset = 2.4,
+    chargeFxVerticalSpread = 0.18,
+    chargeFxOuterRadius = 1.0,
+    chargeFxParticleScale = 2.6,
+    chargeFxGlowScale = 2.4,
+    launchFxVisualDuration = 0.72,
+    launchFxCoreRadius = 0.42,
+    launchFxCoreRadiusPeak = 0.82,
+    launchFxShellRadius = 0.88,
+    launchFxShellRadiusPeak = 1.65,
+    launchFxMuzzleFlashRadius = 1.4,
+    launchFxCoreStep = 1.2,
+    launchFxShellStep = 1.0,
+    launchFxCoreBurstPerStep = 3,
+    launchFxShellBurstPerStep = 4,
+}
+
+xSlotWeaponRegistryData.infernalRay = infernalRayData
+weaponData.infernalRay = infernalRayData

@@ -161,7 +161,7 @@ local function _tachyonEventTick(shipBodyId)
 
     state.lastRenderSeqByShip[shipBodyId] = seq
 
-    if render.weaponType ~= "tachyonLance" then
+    if render.weaponType ~= "tachyonLance" and render.weaponType ~= "infernalRay" then
         return
     end
 
