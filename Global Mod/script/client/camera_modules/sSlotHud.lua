@@ -137,7 +137,8 @@ function client.sSlotHudDraw()
     local ringRadius = (UiHeight() * 0.5) * math.tan(halfAngle) / math.tan(math.rad(fov * 0.5))
     ringRadius = math.max(12.0, ringRadius)
 
-    _drawLockRing(centerX, centerY, ringRadius, cfg, cfg.acquiringColor)
+    -- 暂时屏蔽锁定圆圈
+    -- _drawLockRing(centerX, centerY, ringRadius, cfg, cfg.acquiringColor)
 
     if state.targetWorldPos == nil then
         return
