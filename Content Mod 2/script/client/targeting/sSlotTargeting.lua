@@ -4,7 +4,7 @@
 client = client or {}
 
 client.sSlotTargetingConfig = client.sSlotTargetingConfig or {
-    lockDistance = 220.0,
+    lockDistance = 660.0,
     lockHalfAngleDeg = 8.0,
     lockAcquireTime = 1.4,
     lockLoseGraceTime = 0.25,

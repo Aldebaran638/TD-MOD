@@ -471,6 +471,13 @@ function server.sSlotControlTick(dt)
         startVelocity[1], startVelocity[2], startVelocity[3]
     )
     
+    -- 通知客户端创建导弹跃迁特效
+    ClientCall(
+        0,
+        "client.spawnMissileWarpFx",
+        firePosWorld[1], firePosWorld[2], firePosWorld[3]
+    )
+    
     local spawnedProbes = _sSlotGetProbePoints(GetBodyTransform(missileBody))
     table.insert(active, {
         id = missileId,

@@ -24,6 +24,7 @@ client = client or {}
 #include "draw_modules/shipDestroyedFx.lua"
 #include "draw_modules/projectileVisual.lua"
 #include "draw_modules/missileVisual.lua"
+#include "draw_modules/missileWarpFx.lua"
 
 function client.init()
     client.soundModuleInit()
@@ -42,6 +43,7 @@ function client.clientTick(dt)
     client.shipDestroyedFxTick(dt)
     client.projectileVisualTick(dt)
     client.missileVisualTick(dt)
+    client.missileWarpFxTick(dt)
 
     client.sSlotTargetingTick(dt)
     client.shipHealthBarTick(dt)
