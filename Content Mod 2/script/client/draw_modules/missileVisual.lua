@@ -25,6 +25,7 @@ function client.spawnMissileVisual(missileId, px, py, pz, vx, vy, vz)
         lastCircleTime = 0,
         lifeRemain = 1.0,
     }
+    client.playMissileLoopSound(px or 0, py or 0, pz or 0)
 end
 
 function client.finishMissileVisual(missileId)
@@ -94,6 +95,8 @@ function client.missileVisualTick(dt)
                 _createCircleParticles(missile.position, velocity, cfg)
             end
         end
+
+        client.playMissileLoopSound(missile.position[1], missile.position[2], missile.position[3])
 
         if missile.lifeRemain <= 0.0 then
             visuals[missileId] = nil

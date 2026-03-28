@@ -7,6 +7,7 @@ local _soundDistanceThreshold = 150.0
 local _soundVirtualNearDist = 40.0
 
 local _snd_engine_loop = nil
+local _snd_missile_loop = nil
 local _snd_tachyon_fire_near = {}
 local _snd_tachyon_fire_dist = {}
 local _snd_tachyon_hit_near = {}
@@ -114,9 +115,9 @@ end
 local function _playMissileHit(hitPoint)
     local playPos, isDistant = _resolvePlayPos(hitPoint)
     if isDistant then
-        _playAt(_randomPick(_snd_missile_hit_dist), playPos)
+        _playAt(_randomPick(_snd_kinetic_hit_dist), playPos)
     else
-        _playAt(_randomPick(_snd_missile_hit_near), playPos)
+        _playAt(_randomPick(_snd_kinetic_hit_near), playPos)
     end
 end
 
@@ -177,6 +178,7 @@ end
 
 function client.soundModuleInit()
     _snd_engine_loop = LoadLoop("MOD/sound/engine.ogg")
+    _snd_missile_loop = LoadLoop("MOD/sound/missile_loop.ogg")
 
     _snd_tachyon_fire_near[1] = LoadSound("MOD/sound/tachyon_lance_fire_01.ogg")
     _snd_tachyon_fire_near[2] = LoadSound("MOD/sound/tachyon_lance_fire_02.ogg")
@@ -228,6 +230,13 @@ end
 
 function client.playMissileImpactSound(x, y, z)
     _playMissileHit(Vec(x or 0, y or 0, z or 0))
+end
+
+function client.playMissileLoopSound(x, y, z)
+    if _snd_missile_loop == nil or _snd_missile_loop == 0 then
+        return
+    end
+    PlayLoop(_snd_missile_loop, Vec(x or 0, y or 0, z or 0), 2.0)
 end
 
 function client.soundModuleTick(dt)

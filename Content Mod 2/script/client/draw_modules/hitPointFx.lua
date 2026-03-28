@@ -56,58 +56,41 @@ local function _spawnSphericalShockwave(pos, impactLayer, didHitShield)
 
     PointLight(pos, r1, g1, b1, 6.0)
 
-    -- Main layer: random positions and random speeds, but biased to a spherical shell.
+    -- 内部核心：创建一个实心的球体效果
     ParticleReset()
     ParticleColor(r1, g1, b1, r2, g2, b2)
-    ParticleRadius(0.22, 0.06, "easeout")
+    ParticleRadius(0.35, 0.0, "easeout")
     ParticleAlpha(0.94, 0.0)
     ParticleGravity(0.0)
-    ParticleDrag(0.03)
-    ParticleEmissive(22.0, 0.0)
+    ParticleDrag(0.02)
+    ParticleEmissive(25.0, 0.0)
     ParticleCollide(0.0)
-    for _ = 1, 62 do
+    for _ = 1, 40 do
         local dir = _randomUnitVec()
-
-        -- 75% particles stay near shell, 25% fill inner space for natural randomness.
-        local shellBias = math.random()
-        local startRadius = 0.0
-        if shellBias < 0.75 then
-            startRadius = 0.80 + 0.55 * math.random()
-        else
-            startRadius = 0.25 + 0.55 * math.random()
-        end
-
+        local startRadius = 0.0 + 0.5 * math.random()
         local spawnPos = VecAdd(pos, VecScale(dir, startRadius))
-
-        local tangent = _randomTangent(dir)
-        local radialSpeed = 18.0 + 18.0 * math.random()
-        local tangentSpeed = (math.random() - 0.5) * 8.0
-        local vel = VecAdd(VecScale(dir, radialSpeed), VecScale(tangent, tangentSpeed))
-
-        local life = 0.72 + 0.26 * math.random()
+        local radialSpeed = 8.0 + 6.0 * math.random()
+        local vel = VecScale(dir, radialSpeed)
+        local life = 0.8 + 0.2 * math.random()
         SpawnParticle(spawnPos, vel, life)
     end
 
-    -- Soft secondary layer to keep spherical boundary readable at mid/long range.
+    -- 外部球体：创建一个明显的球形边界
     ParticleReset()
-    ParticleColor(0.72 * r1 + 0.28, 0.72 * g1 + 0.28, math.min(1.0, 0.86 * b1 + 0.24), r2, g2, b2)
-    ParticleRadius(0.30, 0.10, "easeout")
-    ParticleAlpha(0.58, 0.0)
+    ParticleColor(r1, g1, b1, r2, g2, b2)
+    ParticleRadius(0.5, 0.0, "easeout")
+    ParticleAlpha(0.8, 0.0)
     ParticleGravity(0.0)
-    ParticleDrag(0.05)
-    ParticleEmissive(12.0, 0.0)
+    ParticleDrag(0.01)
+    ParticleEmissive(20.0, 0.0)
     ParticleCollide(0.0)
     for _ = 1, 30 do
         local dir = _randomUnitVec()
-        local startRadius = 0.95 + (math.random() - 0.5) * 0.65
+        local startRadius = 0.8 + 0.3 * math.random()
         local spawnPos = VecAdd(pos, VecScale(dir, startRadius))
-
-        local tangent = _randomTangent(dir)
-        local radialSpeed = 12.0 + 10.0 * math.random()
-        local tangentSpeed = (math.random() - 0.5) * 5.5
-        local vel = VecAdd(VecScale(dir, radialSpeed), VecScale(tangent, tangentSpeed))
-
-        local life = 0.95 + 0.30 * math.random()
+        local radialSpeed = 6.0 + 4.0 * math.random()
+        local vel = VecScale(dir, radialSpeed)
+        local life = 1.0 + 0.3 * math.random()
         SpawnParticle(spawnPos, vel, life)
     end
 
