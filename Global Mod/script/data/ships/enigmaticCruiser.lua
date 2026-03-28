@@ -61,23 +61,23 @@ shipTypeRegistryData.enigmaticCruiser = {
     sSlots = {
         {
             weaponType = "swarmerMissile",
-            firePosOffset = { x = 0.5, y = 7.0, z = 0.2 },
-            fireDirRelative = { x = 0, y = 0, z = -1 },
+            firePosOffset = { x = 3, y = 3, z = 3 },
+            fireDirRelative = { x = 1, y = 1, z = 0 },
         },
         {
             weaponType = "swarmerMissile",
-            firePosOffset = { x = -0.5, y = -7.0, z = 0.2 },
-            fireDirRelative = { x = 0, y = 0, z = -1 },
+            firePosOffset = { x = -3, y = 3, z = 3 },
+            fireDirRelative = { x = -1, y = 1, z = 0 },
         },
         {
             weaponType = "swarmerMissile",
-            firePosOffset = { x = -0.5, y = 7.0, z = 0.2 },
-            fireDirRelative = { x = 0, y = 0, z = -1 },
+            firePosOffset = { x = 3, y = -3, z = 3 },
+            fireDirRelative = { x = 1, y = -1, z = 0 },
         },
         {
             weaponType = "swarmerMissile",
-            firePosOffset = { x = 0.5, y = -7.0, z = 0.2 },
-            fireDirRelative = { x = 0, y = 0, z = -1 },
+            firePosOffset = { x = -3, y = -3, z = 3 },
+            fireDirRelative = { x = -1, y = -1, z = 0 },
         },
     },
 }

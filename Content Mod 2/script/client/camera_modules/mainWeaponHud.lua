@@ -46,6 +46,10 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     sSlotProgress = 0.0,
     targetSSlotProgress = 0.0,
     sSlotStatus = "NO TARGET",
+    sSlotCooldown = 0.0,
+    sSlotMaxCooldown = 10.0,
+    sSlotCooldownFraction = 1.0,
+    targetSSlotCooldownFraction = 1.0,
 }
 
 client.lSlotHudStateByShip = client.lSlotHudStateByShip or {}
@@ -241,6 +245,21 @@ function client.mainWeaponHudTick(dt)
         state.targetSSlotProgress = 0.0
     end
     state.sSlotProgress = _mainWeaponHudSmooth(state.sSlotProgress, state.targetSSlotProgress, cfg.smoothSpeed, dt)
+
+    -- 获取s槽冷却时间
+    if client.sSlotGetCooldown ~= nil then
+        local cooldown, maxCooldown = client.sSlotGetCooldown()
+        state.sSlotCooldown = cooldown or 0.0
+        state.sSlotMaxCooldown = maxCooldown or 10.0
+        if state.sSlotMaxCooldown > 0.0001 then
+            state.targetSSlotCooldownFraction = _mainWeaponHudClamp(1.0 - (state.sSlotCooldown / state.sSlotMaxCooldown), 0.0, 1.0)
+        else
+            state.targetSSlotCooldownFraction = 1.0
+        end
+    else
+        state.targetSSlotCooldownFraction = 1.0
+    end
+    state.sSlotCooldownFraction = _mainWeaponHudSmooth(state.sSlotCooldownFraction, state.targetSSlotCooldownFraction, cfg.smoothSpeed, dt)
 end
 
 local function _drawWeaponIcon(x, y, size, fillColor, label, selected, cfg)
@@ -292,6 +311,11 @@ local function _drawXCooldownBar(x, y, w, h, fill, label, cfg)
         UiColor(cfg.borderColor[1], cfg.borderColor[2], cfg.borderColor[3], 0.55)
         UiRectOutline(w, h, 1)
     UiPop()
+end
+
+function client.sSlotGetCooldown()
+    local cooldown, maxCooldown = ClientCall(0, "server.sSlotGetCooldown")
+    return tonumber(cooldown) or 0.0, tonumber(maxCooldown) or 10.0
 end
 
 function client.mainWeaponHudDraw()
@@ -358,16 +382,21 @@ function client.mainWeaponHudDraw()
         if currentMode == "xSlot" then
             _drawXCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill1, "X1", cfg)
             _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill2, "X2", cfg)
+        elseif currentMode == "sSlot" then
+            -- 显示锁定进度条
+            _drawTopBar(12, 60, cfg.topBarWidth, cfg.xCooldownBarHeight, state.sSlotCooldownFraction, cfg.sSlotColor, string.format("COOLDOWN %d%%", math.floor(state.sSlotCooldownFraction * 100 + 0.5)), cfg)
+            UiPush()
+                UiTranslate(12, 84)
+                UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
+                UiFont("regular.ttf", cfg.valueSize)
+                UiText("Lock state shown on target frame")
+            UiPop()
         else
             UiPush()
                 UiTranslate(12, 84)
                 UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
                 UiFont("regular.ttf", cfg.valueSize)
-                if currentMode == "sSlot" then
-                    UiText("Lock state shown on target frame")
-                else
-                    UiText("Thermal battery active")
-                end
+                UiText("Thermal battery active")
             UiPop()
         end
     UiPop()

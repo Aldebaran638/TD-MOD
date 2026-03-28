@@ -127,13 +127,19 @@ local function _evaluateVehicleTarget(vehicleId, shipBody, shipPos, shipForward,
     end
 
     local targetBody = GetVehicleBody(vehicleId)
-    if targetBody == nil or targetBody == 0 or targetBody == shipBody then
-        return nil
-    end
-
-    local targetPos = _getBodyCenterWorld(targetBody)
-    if targetPos == nil then
-        return nil
+    local targetPos
+    
+    if targetBody ~= nil and targetBody ~= 0 and targetBody ~= shipBody then
+        targetPos = _getBodyCenterWorld(targetBody)
+        if targetPos == nil then
+            return nil
+        end
+    else
+        -- 处理没有body的载具
+        targetPos = GetVehicleTransform(vehicleId).pos
+        if targetPos == nil then
+            return nil
+        end
     end
 
     local toTarget = VecSub(targetPos, shipPos)
@@ -155,7 +161,7 @@ local function _evaluateVehicleTarget(vehicleId, shipBody, shipPos, shipForward,
 
     return {
         vehicleId = vehicleId,
-        bodyId = targetBody,
+        bodyId = targetBody or 0,
         targetPos = targetPos,
         distance = distance,
         score = offsetSq,

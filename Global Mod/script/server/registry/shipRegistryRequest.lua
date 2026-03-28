@@ -91,14 +91,11 @@ function server.shipRequestSWeaponFire(playerId, shipBodyId, targetVehicleId)
     end
 
     local targetBody = GetVehicleBody(vehicleId)
-    if targetBody == nil or targetBody == 0 or targetBody == shipBodyId then
-        return false
-    end
 
     server.sSlotLastFireRequest = {
         shipBodyId = shipBodyId,
         targetVehicleId = vehicleId,
-        targetBodyId = targetBody,
+        targetBodyId = targetBody or 0,
         requestedAt = (GetTime ~= nil) and GetTime() or 0.0,
     }
     return true

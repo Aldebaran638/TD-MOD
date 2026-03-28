@@ -416,75 +416,82 @@ function server.sSlotControlTick(dt)
         return
     end
 
+    local targetVehicleId = math.floor(request.targetVehicleId or 0)
+    if targetVehicleId == 0 or (not IsHandleValid(targetVehicleId)) then
+        return
+    end
     local targetBodyId = math.floor(request.targetBodyId or 0)
-    if targetBodyId == 0 or targetBodyId == shipBody or (not IsHandleValid(targetBodyId)) then
-        return
-    end
-    if server.registryShipExists(targetBodyId) and server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(targetBodyId) then
-        return
-    end
 
-    local launcher = _sSlotChooseLauncher(state)
-    if launcher == nil then
-        return
-    end
-
-    local launcherConfig = launcher.config or {}
-    local launcherRuntime = launcher.runtime or {}
+    local launchers = state.launchers or {}
     local shipT = GetBodyTransform(shipBody)
-    local fireLocal = Vec(
-        launcherConfig.firePosOffset.x or 0.0,
-        launcherConfig.firePosOffset.y or 0.0,
-        launcherConfig.firePosOffset.z or 0.0
-    )
-    local fireDirLocal = Vec(
-        launcherConfig.fireDirRelative.x or 0.0,
-        launcherConfig.fireDirRelative.y or 0.0,
-        launcherConfig.fireDirRelative.z or -1.0
-    )
-    local fireDirWorld = _sSlotNormalize(TransformToParentVec(shipT, fireDirLocal), Vec(0, 0, -1))
-    local firePosWorld = TransformToParentPoint(shipT, fireLocal)
-    firePosWorld = VecAdd(firePosWorld, VecScale(fireDirWorld, launcherConfig.spawnForwardOffset or 0.0))
+    local anyFired = false
 
-    local missileBody = _sSlotSpawnMissileBody(launcherConfig.prefabPath, firePosWorld, fireDirWorld)
-    if missileBody == nil or missileBody == 0 then
-        return
+    -- 遍历所有发射架，同时发射导弹
+    for i = 1, #launchers do
+        local launcher = launchers[i]
+        local launcherRuntime = launcher and launcher.runtime or nil
+        if launcherRuntime ~= nil and (launcherRuntime.cooldownRemain or 0.0) <= 0.0 then
+            local launcherConfig = launcher.config or {}
+            local fireLocal = Vec(
+                launcherConfig.firePosOffset.x or 0.0,
+                launcherConfig.firePosOffset.y or 0.0,
+                launcherConfig.firePosOffset.z or 0.0
+            )
+            local fireDirLocal = Vec(
+                launcherConfig.fireDirRelative.x or 0.0,
+                launcherConfig.fireDirRelative.y or 0.0,
+                launcherConfig.fireDirRelative.z or -1.0
+            )
+            local fireDirWorld = _sSlotNormalize(TransformToParentVec(shipT, fireDirLocal), Vec(0, 0, -1))
+            local firePosWorld = TransformToParentPoint(shipT, fireLocal)
+            firePosWorld = VecAdd(firePosWorld, VecScale(fireDirWorld, launcherConfig.spawnForwardOffset or 0.0))
+
+            local missileBody = _sSlotSpawnMissileBody(launcherConfig.prefabPath, firePosWorld, fireDirWorld)
+            if missileBody ~= nil and missileBody ~= 0 then
+                SetBodyDynamic(missileBody, true)
+                SetBodyActive(missileBody, true)
+                local ownerVelocity = GetBodyVelocity(shipBody)
+                local startVelocity = VecAdd(ownerVelocity, VecScale(fireDirWorld, launcherConfig.muzzleSpeed or 0.0))
+                SetBodyVelocity(missileBody, startVelocity)
+                local spawnedProbes = _sSlotGetProbePoints(GetBodyTransform(missileBody))
+
+                local missileId = state.nextMissileId or 1
+                state.nextMissileId = missileId + 1
+                table.insert(active, {
+                    id = missileId,
+                    bodyId = missileBody,
+                    ownerShipBody = shipBody,
+                    targetVehicleId = targetVehicleId,
+                    targetBodyId = targetBodyId,
+                    damage = launcherConfig.damage or 0.0,
+                    armorFix = launcherConfig.armorFix or 1.0,
+                    bodyFix = launcherConfig.bodyFix or 1.0,
+                    cruiseSpeed = launcherConfig.cruiseSpeed or 0.0,
+                    maxSpeed = launcherConfig.maxSpeed or 0.0,
+                    acceleration = launcherConfig.acceleration or 0.0,
+                    maxRange = launcherConfig.maxRange or 0.0,
+                    turnBlendRate = launcherConfig.turnBlendRate or 0.0,
+                    turnRate = launcherConfig.turnRate or 0.0,
+                    turnImpulse = launcherConfig.turnImpulse or 0.0,
+                    lifeRemain = launcherConfig.lifetime or 0.0,
+                    distanceTravelled = 0.0,
+                    prePhysicsCenterPos = Vec(spawnedProbes.center[1], spawnedProbes.center[2], spawnedProbes.center[3]),
+                    prePhysicsHeadPos = Vec(spawnedProbes.head[1], spawnedProbes.head[2], spawnedProbes.head[3]),
+                    prePhysicsMidPos = Vec(spawnedProbes.mid[1], spawnedProbes.mid[2], spawnedProbes.mid[3]),
+                    desiredRot = QuatLookAt(firePosWorld, VecAdd(firePosWorld, fireDirWorld)),
+                })
+
+                launcherRuntime.cooldownRemain = math.max(0.0, launcherConfig.cooldown or 0.0)
+                _sSlotPlayFireSound(firePosWorld)
+                anyFired = true
+            end
+        end
     end
 
-    SetBodyDynamic(missileBody, true)
-    SetBodyActive(missileBody, true)
-    local ownerVelocity = GetBodyVelocity(shipBody)
-    local startVelocity = VecAdd(ownerVelocity, VecScale(fireDirWorld, launcherConfig.muzzleSpeed or 0.0))
-    SetBodyVelocity(missileBody, startVelocity)
-    local spawnedProbes = _sSlotGetProbePoints(GetBodyTransform(missileBody))
-
-    local missileId = state.nextMissileId or 1
-    state.nextMissileId = missileId + 1
-    table.insert(active, {
-        id = missileId,
-        bodyId = missileBody,
-        ownerShipBody = shipBody,
-        targetBodyId = targetBodyId,
-        damage = launcherConfig.damage or 0.0,
-        armorFix = launcherConfig.armorFix or 1.0,
-        bodyFix = launcherConfig.bodyFix or 1.0,
-        cruiseSpeed = launcherConfig.cruiseSpeed or 0.0,
-        maxSpeed = launcherConfig.maxSpeed or 0.0,
-        acceleration = launcherConfig.acceleration or 0.0,
-        maxRange = launcherConfig.maxRange or 0.0,
-        turnBlendRate = launcherConfig.turnBlendRate or 0.0,
-        turnRate = launcherConfig.turnRate or 0.0,
-        turnImpulse = launcherConfig.turnImpulse or 0.0,
-        lifeRemain = launcherConfig.lifetime or 0.0,
-        distanceTravelled = 0.0,
-        prePhysicsCenterPos = Vec(spawnedProbes.center[1], spawnedProbes.center[2], spawnedProbes.center[3]),
-        prePhysicsHeadPos = Vec(spawnedProbes.head[1], spawnedProbes.head[2], spawnedProbes.head[3]),
-        prePhysicsMidPos = Vec(spawnedProbes.mid[1], spawnedProbes.mid[2], spawnedProbes.mid[3]),
-        desiredRot = QuatLookAt(firePosWorld, VecAdd(firePosWorld, fireDirWorld)),
-    })
-
-    launcherRuntime.cooldownRemain = math.max(0.0, launcherConfig.cooldown or 0.0)
-    _sSlotPlayFireSound(firePosWorld)
+    -- 如果没有发射架可用，不做任何操作
+    if not anyFired then
+        return
+    end
 end
 
 function server.sSlotControlUpdate(dt)
@@ -503,11 +510,12 @@ function server.sSlotControlUpdate(dt)
             local currentDir = _sSlotNormalize(currentVel, fallbackDir)
             local desiredDir = currentDir
 
-            local targetBodyId = missile.targetBodyId or 0
-            if targetBodyId ~= 0 and IsHandleValid(targetBodyId) and server.registryShipExists(targetBodyId) and (not server.registryShipIsBodyDead(targetBodyId)) then
-                local targetPos = _sSlotGetBodyCenterWorld(targetBodyId)
+            local targetVehicleId = missile.targetVehicleId or 0
+            if targetVehicleId ~= 0 and IsHandleValid(targetVehicleId) then
+                local targetPos = GetVehicleTransform(targetVehicleId).pos
                 if targetPos ~= nil then
-                    local targetVel = GetBodyVelocity(targetBodyId)
+                    local targetBodyId = GetVehicleBody(targetVehicleId)
+                    local targetVel = targetBodyId ~= 0 and IsHandleValid(targetBodyId) and GetBodyVelocity(targetBodyId) or Vec(0, 0, 0)
                     local dist = VecLength(VecSub(targetPos, currentPos))
                     local leadTime = math.min(1.0, dist / math.max(1.0, currentSpeed, missile.cruiseSpeed or 1.0))
                     local leadPos = VecAdd(targetPos, VecScale(targetVel, leadTime))
