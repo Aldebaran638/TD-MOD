@@ -8,18 +8,12 @@ client.xSlotChargingFxState = client.xSlotChargingFxState or {
     chargeStateByShip = {},
     lastRenderSeqByShip = {},
     lastShotIdByShip = {},
-    debugByShip = {},
+    activeParticles = {},  -- 存储活跃的粒子
 }
 
 local function _tableToVec(t)
     if t == nil then return Vec(0, 0, 0) end
     return Vec(t.x or 0, t.y or 0, t.z or 0)
-end
-
-local function _clamp(v, a, b)
-    if v < a then return a end
-    if v > b then return b end
-    return v
 end
 
 local function _safeNormalize(v, fallback)
@@ -30,74 +24,12 @@ local function _safeNormalize(v, fallback)
     return VecScale(v, 1.0 / len)
 end
 
-local function _resolveWeaponSettings(weaponType)
-    local defs = weaponData or {}
-    return defs[weaponType or ""] or defs.infernalRay or defs.tachyonLance or {}
-end
-
-local function _vecToDebugString(v)
-    if v == nil then
-        return "nil"
-    end
-    local x = tonumber(v[1] or v.x) or 0.0
-    local y = tonumber(v[2] or v.y) or 0.0
-    local z = tonumber(v[3] or v.z) or 0.0
-    return string.format("(%.2f, %.2f, %.2f)", x, y, z)
-end
-
-local function _debugWatchCharging(shipBodyId, nowTime)
-    if DebugWatch == nil then
-        return
-    end
-
-    local controlledBody = 0
-    if client.shipCameraGetControlledBody ~= nil then
-        controlledBody = client.shipCameraGetControlledBody() or 0
-    end
-    if controlledBody == 0 then
-        controlledBody = client.shipBody or 0
-    end
-    if shipBodyId ~= controlledBody or shipBodyId == 0 then
-        return
-    end
-
-    local render = client.xSlotRenderGetEvent ~= nil and client.xSlotRenderGetEvent(shipBodyId) or nil
-    local chargeState = client.xSlotChargingFxState.chargeStateByShip[shipBodyId]
-    local debugState = client.xSlotChargingFxState.debugByShip[shipBodyId] or {}
-
-    local renderEvent = render ~= nil and tostring(render.eventType or "nil") or "nil"
-    local renderWeapon = render ~= nil and tostring(render.weaponType or "nil") or "nil"
-    local renderSeq = render ~= nil and math.floor(render.seq or -1) or -1
-    local renderFireWorld = render ~= nil and _tableToVec(render.firePoint) or nil
-    local phase = chargeState ~= nil and tostring(chargeState.phase or "nil") or "nil"
-    local intensity = chargeState ~= nil and _resolveChargeIntensity(chargeState, nowTime) or 0.0
-    local fireLocal = chargeState ~= nil and chargeState.fireLocal or nil
-    local muzzleWorld = nil
-    if chargeState ~= nil then
-        local shipT = GetBodyTransform(shipBodyId)
-        muzzleWorld = TransformToParentPoint(shipT, chargeState.fireLocal or Vec(0, 0, 0))
-    end
-
-    debugState.lastRenderEvent = renderEvent
-    debugState.lastRenderWeapon = renderWeapon
-    debugState.lastRenderSeq = renderSeq
-    debugState.phase = phase
-    debugState.intensity = intensity
-    debugState.fireLocal = fireLocal
-    debugState.renderFireWorld = renderFireWorld
-    debugState.muzzleWorld = muzzleWorld
-    client.xSlotChargingFxState.debugByShip[shipBodyId] = debugState
-
-    DebugWatch("TitanCharge.body", tostring(shipBodyId))
-    DebugWatch("TitanCharge.renderSeq", tostring(renderSeq))
-    DebugWatch("TitanCharge.renderEvent", renderEvent)
-    DebugWatch("TitanCharge.renderWeapon", renderWeapon)
-    DebugWatch("TitanCharge.hasState", chargeState ~= nil and "yes" or "no")
-    DebugWatch("TitanCharge.phase", phase)
-    DebugWatch("TitanCharge.intensity", string.format("%.3f", intensity))
-    DebugWatch("TitanCharge.fireLocal", _vecToDebugString(fireLocal))
-    DebugWatch("TitanCharge.renderFireWorld", _vecToDebugString(renderFireWorld))
-    DebugWatch("TitanCharge.muzzleWorld", _vecToDebugString(muzzleWorld))
+local function _vecLerp(a, b, t)
+    return Vec(
+        a[1] + (b[1] - a[1]) * t,
+        a[2] + (b[2] - a[2]) * t,
+        a[3] + (b[3] - a[3]) * t
+    )
 end
 
 local function _clearChargeState(shipBodyId)
@@ -114,222 +46,282 @@ local function _beginInfernalChargeState(shipBodyId, render)
         phase = "charging",
         fireLocal = fireLocal,
         chargeStartedAt = (GetTime ~= nil) and GetTime() or 0.0,
-        phaseStartedAt = (GetTime ~= nil) and GetTime() or 0.0,
-        decayStartedAt = 0.0,
-        decayStartIntensity = 0.0,
     }
 end
 
-local function _resolveChargeIntensity(chargeState, nowTime)
-    local state = chargeState or {}
-    local weaponSettings = _resolveWeaponSettings(state.weaponType)
-    local chargeDuration = math.max(0.0001, tonumber(weaponSettings.chargeDuration) or 1.0)
-    local decayDuration = math.max(0.0001, tonumber(weaponSettings.chargeDecayDuration) or chargeDuration)
-    local phase = tostring(state.phase or "idle")
-
-    if phase == "charging" then
-        return _clamp(((nowTime or 0.0) - (state.chargeStartedAt or nowTime or 0.0)) / chargeDuration, 0.0, 1.0)
-    end
-    if phase == "charged" then
-        return 1.0
-    end
-    if phase == "decaying" then
-        local t = _clamp(((nowTime or 0.0) - (state.decayStartedAt or nowTime or 0.0)) / decayDuration, 0.0, 1.0)
-        return _clamp((state.decayStartIntensity or 0.0) * (1.0 - t), 0.0, 1.0)
-    end
-
-    return 0.0
-end
-
-local function _markInfernalCharged(shipBodyId)
-    local chargeState = client.xSlotChargingFxState.chargeStateByShip[shipBodyId]
-    if chargeState == nil then
+local function _createParticle(spawnPos, targetPoint, initialVel, finalVel, life)
+    -- 限制粒子数量最多为1000个
+    local particles = client.xSlotChargingFxState.activeParticles
+    if #particles >= 1000 then
         return
     end
-    chargeState.phase = "charged"
-    chargeState.phaseStartedAt = (GetTime ~= nil) and GetTime() or 0.0
-    chargeState.decayStartedAt = 0.0
-    chargeState.decayStartIntensity = 1.0
+    
+    local particle = {
+        pos = Vec(spawnPos[1], spawnPos[2], spawnPos[3]),
+        vel = Vec(initialVel[1], initialVel[2], initialVel[3]),
+        targetPoint = Vec(targetPoint[1], targetPoint[2], targetPoint[3]),
+        initialVel = Vec(initialVel[1], initialVel[2], initialVel[3]),
+        finalVel = Vec(finalVel[1], finalVel[2], finalVel[3]),
+        maxLife = life,
+        startTime = (GetTime ~= nil) and GetTime() or 0.0,
+        arrived = false,
+        arrivedTime = 0.0,
+        baseRadius = 0.1,  -- 初始半径很小
+    }
+    table.insert(client.xSlotChargingFxState.activeParticles, particle)
 end
 
-local function _beginInfernalDecay(shipBodyId)
-    local chargeState = client.xSlotChargingFxState.chargeStateByShip[shipBodyId]
-    if chargeState == nil then
-        return
+local function _updateParticles(dt)
+    local particles = client.xSlotChargingFxState.activeParticles
+    local i = #particles
+    
+    -- DebugWatch调试信息
+    if DebugWatch ~= nil then
+        DebugWatch("ChargingFX.ActiveParticles", i)
     end
-    local nowTime = (GetTime ~= nil) and GetTime() or 0.0
-    chargeState.decayStartIntensity = _resolveChargeIntensity(chargeState, nowTime)
-    chargeState.phase = "decaying"
-    chargeState.decayStartedAt = nowTime
-    chargeState.phaseStartedAt = nowTime
-end
-
-local function _spawnInfernalChargeParticle(sourceWorld, targetWorld, intensity, hotBias)
-    local dir = VecSub(targetWorld, sourceWorld)
-    local dist = VecLength(dir)
-    if dist < 0.0001 then
-        return
+    
+    while i >= 1 do
+        local p = particles[i]
+        
+        -- 计算生命周期进度
+        local elapsed = ((GetTime ~= nil) and GetTime() or 0.0) - p.startTime
+        local t = elapsed / math.max(0.0001, p.maxLife)
+        
+        if DebugWatch ~= nil and i == 1 then
+            DebugWatch("ChargingFX.Particle.t", t)
+            DebugWatch("ChargingFX.Particle.pos", string.format("(%.2f, %.2f, %.2f)", p.pos[1], p.pos[2], p.pos[3]))
+            DebugWatch("ChargingFX.Particle.vel", string.format("(%.2f, %.2f, %.2f)", p.vel[1], p.vel[2], p.vel[3]))
+        end
+        
+        -- 计算到目标点的距离
+        local distToTarget = VecLength(VecSub(p.targetPoint, p.pos))
+        
+        if DebugWatch ~= nil and i == 1 then
+            DebugWatch("ChargingFX.Particle.distToTarget", distToTarget)
+            DebugWatch("ChargingFX.Particle.arrived", p.arrived and "yes" or "no")
+        end
+        
+        -- 检查是否到达目标点
+        if not p.arrived and distToTarget < 1.0 then  -- 增大阈值到1.0
+            p.arrived = true
+            p.arrivedTime = (GetTime ~= nil) and GetTime() or 0.0
+        end
+        
+        if p.arrived then
+            -- 到达后的效果：半径翻倍，强烈发光持续0.4秒
+            local arrivedElapsed = ((GetTime ~= nil) and GetTime() or 0.0) - p.arrivedTime
+            local arrivedT = arrivedElapsed / 0.4  -- 0.4秒持续时间
+            
+            if arrivedT >= 1.0 then
+                -- 效果结束，移除粒子
+                particles[i] = particles[#particles]
+                particles[#particles] = nil
+            else
+                -- 渲染到达后的粒子
+                local alpha = 1.0 - arrivedT
+                local radius = p.baseRadius * 4.0  -- 半径变为4倍
+                
+                ParticleReset()
+                ParticleColor(1.0, 0.9, 0.5, 1.0, 0.6, 0.2)  -- 更亮的颜色
+                ParticleRadius(radius, 0.02, "easeout")
+                ParticleAlpha(alpha * 1.0, 0.0)  -- 更强的透明度
+                ParticleGravity(0.0)
+                ParticleDrag(0.0)
+                ParticleEmissive(50.0 + alpha * 30.0, 0.0)  -- 更强的发光
+                ParticleCollide(0.0)
+                
+                local randomVel = Vec(
+                    (math.random() - 0.5) * 0.1,
+                    (math.random() - 0.5) * 0.1,
+                    (math.random() - 0.5) * 0.1
+                )
+                SpawnParticle(p.pos, randomVel, 0.1)
+            end
+        else
+            -- 到达前的效果：根据到xz平面的距离调整速度
+            if t >= 1.0 then
+                -- 生命周期结束，移除粒子
+                particles[i] = particles[#particles]
+                particles[#particles] = nil
+            else
+                -- 计算到xz平面的距离（y值的绝对值）
+                local distToXZPlane = math.abs(p.pos[2] - p.targetPoint[2])
+                
+                -- 计算到目标点的方向
+                local toTargetDir = VecSub(p.targetPoint, p.pos)
+                toTargetDir = _safeNormalize(toTargetDir, Vec(0, 0, 0))
+                
+                -- 根据到xz平面的距离调整速度分量
+                -- 距离越远，y方向速度越大；距离越近，xz方向速度越大
+                local maxDist = 7.0  -- 最大距离
+                local distRatio = math.min(1.0, distToXZPlane / maxDist)  -- 归一化距离
+                
+                -- y方向速度：使用四次方根衰减，确保粒子能到达xz平面
+                -- 设置最小速度阈值，确保粒子始终有足够的速度到达xz平面
+                local minYSpeed = 5.0  -- 最小y速度（提高）
+                local maxYSpeed = 20.4  -- 最大y速度
+                local ySpeed = minYSpeed + math.pow(distRatio, 0.25) * (maxYSpeed - minYSpeed)  -- 四次方根衰减
+                
+                -- xz方向速度：随距离减小而增大（下降30%）
+                local xzSpeed = (1.0 - distRatio) * 8.4 + 1.4  -- 最小1.4，最大9.8
+                
+                -- 计算xz方向（指向目标点）
+                local xzDir = Vec(toTargetDir[1], 0, toTargetDir[3])
+                xzDir = _safeNormalize(xzDir, Vec(0, 0, 0))
+                
+                -- 合成速度
+                p.vel = Vec(
+                    xzDir[1] * xzSpeed,
+                    toTargetDir[2] * ySpeed,  -- y方向指向目标点
+                    xzDir[3] * xzSpeed
+                )
+                
+                -- 更新位置
+                p.pos = VecAdd(p.pos, VecScale(p.vel, dt))
+                
+                -- 计算半径：随时间增大（从0.1到0.3）
+                local radius = p.baseRadius + t * 0.2
+                
+                -- 渲染粒子
+                local alpha = 1.0 - t
+                ParticleReset()
+                ParticleColor(1.0, 0.8, 0.2, 1.0, 0.4, 0.0)
+                ParticleRadius(radius, 0.01, "easeout")
+                ParticleAlpha(alpha * 0.9, 0.0)
+                ParticleGravity(0.0)
+                ParticleDrag(0.0)
+                ParticleEmissive(25.0 + alpha * 15.0, 0.0)
+                ParticleCollide(0.0)
+                
+                local randomVel = Vec(
+                    (math.random() - 0.5) * 0.1,
+                    (math.random() - 0.5) * 0.1,
+                    (math.random() - 0.5) * 0.1
+                )
+                SpawnParticle(p.pos, randomVel, 0.1)
+            end
+        end
+        
+        i = i - 1
     end
-
-    local toTarget = VecScale(dir, 1.0 / dist)
-    local speed = (8.0 + 13.0 * hotBias) * (0.82 + 0.62 * intensity)
-    local life = 0.22 + 0.18 * (1.0 - intensity * 0.35)
-
-    ParticleReset()
-    ParticleColor(
-        1.00, 0.98 - 0.12 * hotBias, 0.92 - 0.20 * hotBias,
-        1.00, 0.44 + 0.18 * hotBias, 0.04
-    )
-    ParticleRadius(0.12 + 0.12 * intensity + 0.05 * hotBias, 0.016, "easeout")
-    ParticleAlpha(0.96, 0.0)
-    ParticleGravity(0.0)
-    ParticleDrag(0.08)
-    ParticleEmissive(28.0 + 44.0 * intensity + 18.0 * hotBias, 0.0)
-    ParticleCollide(0.0)
-    SpawnParticle(sourceWorld, VecScale(toTarget, speed), life)
 end
 
-local function _spawnInfernalBarrelGlow(targetWorld, barrelDir, intensity)
-    ParticleReset()
-    ParticleColor(1.00, 0.94, 0.78, 1.00, 0.56, 0.12)
-    ParticleRadius(0.38 + 0.56 * intensity, 0.0, "easeout")
-    ParticleAlpha(0.18 + 0.34 * intensity, 0.0)
-    ParticleGravity(0.0)
-    ParticleDrag(0.02)
-    ParticleEmissive(22.0 + 44.0 * intensity, 0.0)
-    ParticleCollide(0.0)
-    SpawnParticle(targetWorld, VecScale(barrelDir, 0.3 + 0.7 * intensity), 0.10 + 0.12 * intensity)
-end
-
-local function _spawnInfernalOuterCorona(targetWorld, intensity)
-    ParticleReset()
-    ParticleColor(1.0, 0.92, 0.36, 0.94, 0.12, 0.02)
-    ParticleRadius(0.40 + 0.70 * intensity, 0.0, "easeout")
-    ParticleAlpha(0.16 + 0.24 * intensity, 0.0)
-    ParticleGravity(0.0)
-    ParticleDrag(0.01)
-    ParticleEmissive(18.0 + 34.0 * intensity, 0.0)
-    ParticleCollide(0.0)
-    SpawnParticle(targetWorld, Vec(0, 0, 0), 0.08 + 0.10 * intensity)
-end
-
-local function _spawnInfernalAnchorCore(anchorWorld, barrelDir, intensity)
-    PointLight(anchorWorld, 1.0, 0.92, 0.34, 5.2 + 9.5 * intensity)
-
-    for _ = 1, math.max(4, math.floor(5 + intensity * 6)) do
-        local jitter = Vec(
-            (math.random() - 0.5) * (0.10 + 0.08 * intensity),
-            (math.random() - 0.5) * (0.10 + 0.08 * intensity),
-            (math.random() - 0.5) * (0.16 + 0.10 * intensity)
-        )
-        local pos = VecAdd(anchorWorld, jitter)
-        ParticleReset()
-        ParticleColor(1.0, 0.99, 0.95, 1.0, 0.74, 0.18)
-        ParticleRadius(0.34 + 0.28 * intensity, 0.0, "easeout")
-        ParticleAlpha(0.44 + 0.26 * intensity, 0.0)
-        ParticleGravity(0.0)
-        ParticleDrag(0.01)
-        ParticleEmissive(42.0 + 36.0 * intensity, 0.0)
-        ParticleCollide(0.0)
-        SpawnParticle(pos, VecScale(barrelDir, 0.22 + 0.55 * intensity), 0.08 + 0.08 * intensity)
-    end
-end
-
-local function _sampleInfernalChargeTargetLocal(fireLocal, innerLength, verticalSpread)
-    return VecAdd(
-        fireLocal,
-        Vec(
-            (math.random() - 0.5) * 0.05,
-            (math.random() - 0.5) * (verticalSpread * 0.35),
-            math.random() * innerLength
-        )
-    )
-end
-
-local function _sampleInfernalChargeSourceLocal(fireLocal, sideOffset, frontOffset, outerRadius, verticalSpread)
-    local angle = (math.random() - 0.5) * math.rad(220.0)
-    local lateralRadius = sideOffset + math.random() * outerRadius
-    local forwardDepth = frontOffset + math.random() * (0.40 + outerRadius * 0.40)
-    local x = math.sin(angle) * lateralRadius
-    local z = -math.cos(angle) * forwardDepth
-    local y = (math.random() - 0.5) * (verticalSpread * 0.85 + outerRadius * 0.16)
-    return VecAdd(fireLocal, Vec(x, y, z))
-end
-
-local function _spawnInfernalChargeFx(shipBodyId, chargeState, intensity, frameDt)
-    if intensity <= 0.001 then
-        return
-    end
-
+local function _spawnChargingParticles(shipBodyId, chargeState, frameDt)
     local shipT = GetBodyTransform(shipBodyId)
-    local weaponSettings = _resolveWeaponSettings(chargeState.weaponType)
-    local barrelLength = tonumber(weaponSettings.chargeFxBarrelLength) or 7.0
-    local innerLength = tonumber(weaponSettings.chargeFxInnerLength) or 2.1
-    local sideOffset = tonumber(weaponSettings.chargeFxSideOffset) or 1.15
-    local frontOffset = tonumber(weaponSettings.chargeFxFrontOffset) or 2.4
-    local verticalSpread = tonumber(weaponSettings.chargeFxVerticalSpread) or 0.45
-    local outerRadius = tonumber(weaponSettings.chargeFxOuterRadius) or 2.8
-    local particleScale = tonumber(weaponSettings.chargeFxParticleScale) or 1.65
-    local glowScale = tonumber(weaponSettings.chargeFxGlowScale) or 2.1
-
     local fireLocal = chargeState.fireLocal or Vec(0, 0, 0)
-    local barrelCount = math.max(14, math.floor((18.0 + 42.0 * intensity) * math.max(0.68, (frameDt or 0.016) * 60.0)))
+    local fireWorld = TransformToParentPoint(shipT, fireLocal)
     local barrelDir = _safeNormalize(TransformToParentVec(shipT, Vec(0, 0, -1)), Vec(0, 0, -1))
-    local nowLight = (2.8 + 8.8 * intensity) * glowScale
-    local muzzleWorld = TransformToParentPoint(shipT, fireLocal)
-    local barrelMidWorld = TransformToParentPoint(shipT, VecAdd(fireLocal, Vec(0, 0, barrelLength * 0.35)))
-    local barrelRearWorld = TransformToParentPoint(shipT, VecAdd(fireLocal, Vec(0, 0, barrelLength * 0.75)))
-
-    _spawnInfernalAnchorCore(muzzleWorld, barrelDir, intensity)
-    PointLight(muzzleWorld, 1.0, 0.75, 0.16, nowLight)
-    PointLight(barrelMidWorld, 1.0, 0.36 + 0.20 * intensity, 0.08, nowLight * 0.85)
-    PointLight(barrelRearWorld, 1.0, 0.18 + 0.16 * intensity, 0.05, nowLight * 0.55)
-
-    for _ = 1, barrelCount do
-        local targetLocal = _sampleInfernalChargeTargetLocal(fireLocal, innerLength, verticalSpread)
-        local sourceLocal = _sampleInfernalChargeSourceLocal(fireLocal, sideOffset, frontOffset, outerRadius, verticalSpread)
-
-        local sourceWorld = TransformToParentPoint(shipT, sourceLocal)
-        local targetWorld = TransformToParentPoint(shipT, targetLocal)
-        local hotBias = _clamp(intensity * 0.75 + math.random() * 0.35, 0.0, 1.2)
-        local burstCount = math.max(1, math.floor(particleScale))
-        if math.random() < (particleScale - math.floor(particleScale)) then
-            burstCount = burstCount + 1
-        end
-        for _ = 1, burstCount do
-            _spawnInfernalChargeParticle(sourceWorld, targetWorld, intensity, hotBias)
-        end
-
-        if math.random() < (0.44 + 0.46 * intensity) then
-            _spawnInfernalBarrelGlow(targetWorld, barrelDir, intensity)
-        end
-        if math.random() < (0.26 + 0.38 * intensity) then
-            _spawnInfernalOuterCorona(targetWorld, intensity)
-        end
+    local segmentLength = 11.5
+    local segmentEnd = VecAdd(fireWorld, VecScale(barrelDir, segmentLength))
+    
+    -- DebugWatch调试信息
+    if DebugWatch ~= nil then
+        DebugWatch("ChargingFX.shipBodyId", shipBodyId)
+        DebugWatch("ChargingFX.fireWorld", string.format("(%.2f, %.2f, %.2f)", fireWorld[1], fireWorld[2], fireWorld[3]))
+        DebugWatch("ChargingFX.barrelDir", string.format("(%.2f, %.2f, %.2f)", barrelDir[1], barrelDir[2], barrelDir[3]))
     end
-
-    if intensity > 0.65 then
-        local flareCount = math.max(4, math.floor(5 + intensity * 7))
-        for _ = 1, flareCount do
-            local flareLocal = VecAdd(fireLocal, Vec((math.random() - 0.5) * 0.16, (math.random() - 0.5) * 0.18, math.random() * 0.60))
-            local flareWorld = TransformToParentPoint(shipT, flareLocal)
-            ParticleReset()
-            ParticleColor(1.0, 0.99, 0.95, 1.0, 0.72, 0.20)
-            ParticleRadius(0.34 + math.random() * 0.26 + intensity * 0.18, 0.0, "easeout")
-            ParticleAlpha(0.40 + intensity * 0.18, 0.0)
-            ParticleGravity(0.0)
-            ParticleDrag(0.01)
-            ParticleEmissive(38.0 + 34.0 * intensity, 0.0)
-            ParticleCollide(0.0)
-            SpawnParticle(flareWorld, VecScale(barrelDir, 0.3 + math.random() * 0.8), 0.08 + math.random() * 0.08)
+    
+    -- 将线段分成10份，得到11个点
+    local divisions = 10
+    local points = {}
+    for i = 0, divisions do
+        local t = i / divisions
+        points[i] = VecAdd(fireWorld, VecScale(VecSub(segmentEnd, fireWorld), t))
+    end
+    
+    -- 计算粒子数量（降低为原来的40%）
+    local particleCount = math.max(1, math.floor((1.5) * math.max(0.68, (frameDt or 0.016) * 60.0)))
+    
+    -- 获取飞船的右向量和上向量用于计算方向
+    local shipRight = TransformToParentVec(shipT, Vec(1, 0, 0))
+    local shipUp = TransformToParentVec(shipT, Vec(0, 1, 0))
+    
+    -- 为所有11个点生成扇形汇聚粒子
+    for pointIndex = 0, divisions do
+        local targetPoint = points[pointIndex]
+        
+        -- 根据点的索引确定角度范围
+        local angleRanges
+        if pointIndex <= 7 then
+            -- 前8个点（索引0-7）：30°~150°和-30°~-150°
+            angleRanges = {
+                {math.rad(30), math.rad(150)},   -- 右侧范围
+                {math.rad(-150), math.rad(-30)}  -- 左侧范围
+            }
+        else
+            -- 后3个点（索引8-10）：0°~150°和0°~-150°
+            angleRanges = {
+                {math.rad(0), math.rad(150)},    -- 右侧范围
+                {math.rad(-150), math.rad(0)}    -- 左侧范围
+            }
         end
+        
+        -- 生成扇形汇聚粒子
+        for _ = 1, particleCount do
+            -- 随机选择一个角度范围
+            local rangeIndex = math.random(1, 2)
+            local minAngle = angleRanges[rangeIndex][1]
+            local maxAngle = angleRanges[rangeIndex][2]
+            
+            -- 在角度范围内随机选择角度
+            local angle = minAngle + math.random() * (maxAngle - minAngle)
+            
+            -- 随机半径：3~6
+            local radius = 3.0 + math.random() * 3.0
+            
+            -- 随机y值：-7~-2或2~7（两个区间）
+            local yOffset
+            if math.random() < 0.5 then
+                yOffset = -7.0 + math.random() * 5.0  -- -7~-2
+            else
+                yOffset = 2.0 + math.random() * 5.0   -- 2~7
+            end
+            
+            -- 计算粒子生成位置（在xz平面上）
+            -- 使用barrelDir作为前方向，shipRight作为右方向
+            local cosAngle = math.cos(angle)
+            local sinAngle = math.sin(angle)
+            
+            -- 方向：在barrelDir和shipRight构成的平面上
+            local dir = VecAdd(VecScale(barrelDir, cosAngle), VecScale(shipRight, sinAngle))
+            dir = _safeNormalize(dir, barrelDir)
+            
+            -- 粒子生成位置：目标点 + 方向 * 半径 + y偏移
+            local spawnPos = VecAdd(targetPoint, VecScale(dir, radius))
+            spawnPos[2] = spawnPos[2] + yOffset
+            
+            -- 计算初始速度：快速向xz平面靠近（y方向）
+            local initialSpeed = 6.0 + math.random() * 6.0  -- 调大为原来的3倍
+            
+            -- 初始速度：主要沿y方向（向xz平面靠近）
+            -- 如果粒子在上方，给一个向下的速度；如果在下方，给一个向上的速度
+            local yVel = -yOffset * 0.8  -- 向xz平面靠近的速度
+            local initialVel = Vec(0, yVel, 0)
+            
+            -- 计算最终速度：指向目标点，速度较快
+            local velDir = VecSub(targetPoint, spawnPos)
+            velDir = _safeNormalize(velDir, barrelDir)
+            local finalSpeed = 5.0 + math.random() * 5.0
+            local finalVel = VecScale(velDir, finalSpeed)
+            
+            -- 粒子生命周期（增加以确保能到达目标点）
+            local life = 2.0 + math.random() * 1.0
+            
+            -- 创建自定义粒子
+            _createParticle(spawnPos, targetPoint, initialVel, finalVel, life)
+        end
+        
+        -- 在目标点添加光源
+        PointLight(targetPoint, 1.0, 0.8, 0.2, 4.0)
     end
 end
 
 function client.xSlotChargingFxTick(dt)
     local state = client.xSlotChargingFxState
     local frameDt = dt or 0.0
-    local nowTime = (GetTime ~= nil) and GetTime() or 0.0
+    
+    -- 更新所有活跃的粒子
+    _updateParticles(frameDt)
 
     local shipIds = client.registryShipGetRegisteredBodyIds()
     for i = 1, #shipIds do
@@ -343,12 +335,8 @@ function client.xSlotChargingFxTick(dt)
 
                 if seq ~= lastSeq then
                     if render.weaponType == "infernalRay" then
-                        if render.eventType == "charging_start" then
+                        if render.eventType == "charging_start" or render.eventType == "charged_hold" then
                             _beginInfernalChargeState(shipBodyId, render)
-                        elseif render.eventType == "charged_hold" then
-                            _markInfernalCharged(shipBodyId)
-                        elseif render.eventType == "decaying_start" then
-                            _beginInfernalDecay(shipBodyId)
                         else
                             _clearChargeState(shipBodyId)
                         end
@@ -369,22 +357,7 @@ function client.xSlotChargingFxTick(dt)
         if not client.registryShipExists(shipBodyId) then
             state.chargeStateByShip[shipBodyId] = nil
         else
-            local intensity = _resolveChargeIntensity(chargeState, nowTime)
-            local phase = tostring((chargeState or {}).phase or "idle")
-            if phase == "decaying" and intensity <= 0.001 then
-                state.chargeStateByShip[shipBodyId] = nil
-            else
-                _spawnInfernalChargeFx(shipBodyId, chargeState, intensity, frameDt)
-            end
+            _spawnChargingParticles(shipBodyId, chargeState, frameDt)
         end
     end
-
-    local debugBody = 0
-    if client.shipCameraGetControlledBody ~= nil then
-        debugBody = client.shipCameraGetControlledBody() or 0
-    end
-    if debugBody == 0 then
-        debugBody = client.shipBody or 0
-    end
-    _debugWatchCharging(debugBody, nowTime)
 end

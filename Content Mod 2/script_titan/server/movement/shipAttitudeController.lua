@@ -20,7 +20,7 @@ server.shipAttitudeControllerConfig = server.shipAttitudeControllerConfig or {
     yawForceMax = 2000000,         -- force-like cap
     pitchForceMax = 2000000,       -- force-like cap
 
-    yawDamping = 11000000.0,         -- damping against yaw angular speed
+    yawDamping = 33000000.0,         -- damping against yaw angular speed
     pitchDamping = 100000000.0,       -- damping against pitch angular speed
     yawRateDeadzone = 0.01,    -- rad/s small-rate jitter cutoff
     pitchRateDeadzone = 0.01,  -- rad/s small-rate jitter cutoff

@@ -4,12 +4,12 @@
 client = client or {}
 
 client.shipCamera = client.shipCamera or {
-    r = 30,
+    r = 40,
     b = 0,
     c = 0,
 
-    rMin = 20,
-    rMax = 40,
+    rMin = 30,
+    rMax = 50,
 
     angleLimitPitch = 85,
     angleLimitYaw1 = -90,

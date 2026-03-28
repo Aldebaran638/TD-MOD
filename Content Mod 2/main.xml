@@ -80,8 +80,8 @@
 			<body name="body" tags="stellarisShip" pos="0.0 0.0 0.0" dynamic="true">
 				<vox pos="0.0 0.0 0.0" file="MOD/vox/Titan.vox"/>
 			</body>
-			<location name="Player" tags="player" pos="0.0 1.9 -1.9" rot="0 180 180"/>
-			<location name="exit" tags="exit" pos="0.0 5.2 -2.6"/>
+			<location name="Player" tags="player" pos="0.0 -0.2 9.1" rot="0 180 180"/>
+			<location name="exit" tags="exit" pos="0.0 3.8 8.6"/>
 		</vehicle>
 	</script>
 </scene>

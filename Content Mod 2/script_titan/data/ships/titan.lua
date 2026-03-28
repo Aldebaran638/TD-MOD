@@ -32,12 +32,12 @@ shipTypeRegistryData.titan = {
     tSlots = {
         {
             weaponType = "infernalRay",
-            firePosOffset = { x = 0, y = 0, z = -8 },
+            firePosOffset = { x = 0, y = 0, z = -3.5 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
         },
         {
             weaponType = "infernalRay",
-            firePosOffset = { x = 0, y = 0, z = -8 },
+            firePosOffset = { x = 0, y = 0, z = -3.5 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
         },
     },
@@ -103,22 +103,22 @@ shipTypeRegistryData.titan = {
         {
             weaponType = "swarmerMissile",
             firePosOffset = { x = 0, y = 5, z = 2 },
-            fireDirRelative = { x = 0, y = 600, z = 200 },
+            fireDirRelative = { x = 0, y = 600, z = 600 },
         },
         {
             weaponType = "swarmerMissile",
             firePosOffset = { x = 0, y = -5, z = 2 },
-            fireDirRelative = { x = 0, y = 600, z = 200 },
+            fireDirRelative = { x = 0, y = 600, z = 600 },
         },
         {
             weaponType = "swarmerMissile",
             firePosOffset = { x = 5, y = 0, z = 2 },
-            fireDirRelative = { x = 600, y = 0, z = 200 },
+            fireDirRelative = { x = 600, y = 0, z = 600 },
         },
         {
             weaponType = "swarmerMissile",
             firePosOffset = { x = -5, y = 0, z = 2 },
-            fireDirRelative = { x = -600, y = 0, z = 200 },
+            fireDirRelative = { x = -600, y = 0, z = 600 },
         },
     },
 }
