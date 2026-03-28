@@ -118,6 +118,8 @@ local function _sSlotRemoveMissileAt(index)
     local missile = active[index]
     if missile ~= nil then
         _sSlotDeleteMissileBody(missile.bodyId or 0)
+        -- 通知客户端结束导弹视觉效果
+        ClientCall(0, "client.finishMissileVisual", missile.id or 0)
     end
 
     local last = #active
@@ -456,10 +458,20 @@ function server.sSlotControlTick(dt)
     local ownerVelocity = GetBodyVelocity(shipBody)
     local startVelocity = VecAdd(ownerVelocity, VecScale(fireDirWorld, launcherConfig.muzzleSpeed or 0.0))
     SetBodyVelocity(missileBody, startVelocity)
-    local spawnedProbes = _sSlotGetProbePoints(GetBodyTransform(missileBody))
-
+    
     local missileId = state.nextMissileId or 1
     state.nextMissileId = missileId + 1
+    
+    -- 通知客户端创建导弹视觉效果
+    ClientCall(
+        0,
+        "client.spawnMissileVisual",
+        missileId,
+        firePosWorld[1], firePosWorld[2], firePosWorld[3],
+        startVelocity[1], startVelocity[2], startVelocity[3]
+    )
+    
+    local spawnedProbes = _sSlotGetProbePoints(GetBodyTransform(missileBody))
     table.insert(active, {
         id = missileId,
         bodyId = missileBody,
@@ -554,6 +566,17 @@ function server.sSlotControlPostUpdate()
             local probes = _sSlotGetProbePoints(bodyT)
             local preCenter = missile.prePhysicsCenterPos or probes.center
             missile.distanceTravelled = (missile.distanceTravelled or 0.0) + VecLength(VecSub(probes.center, preCenter))
+
+            -- 向客户端发送导弹位置更新
+            local currentPos = bodyT.pos
+            local currentVel = GetBodyVelocity(bodyId)
+            ClientCall(
+                0,
+                "client.updateMissileVisual",
+                missile.id or 0,
+                currentPos[1], currentPos[2], currentPos[3],
+                currentVel[1], currentVel[2], currentVel[3]
+            )
 
             local hit = _sSlotResolvePostPhysicsHit(missile, probes)
             if hit ~= nil then

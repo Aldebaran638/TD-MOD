@@ -23,6 +23,7 @@ client = client or {}
 #include "draw_modules/hitPointFx.lua"
 #include "draw_modules/shipDestroyedFx.lua"
 #include "draw_modules/projectileVisual.lua"
+#include "draw_modules/missileVisual.lua"
 
 function client.init()
     client.soundModuleInit()
@@ -40,6 +41,7 @@ function client.clientTick(dt)
     client.hitPointFxTick(dt)
     client.shipDestroyedFxTick(dt)
     client.projectileVisualTick(dt)
+    client.missileVisualTick(dt)
 
     client.sSlotTargetingTick(dt)
     client.shipHealthBarTick(dt)
@@ -58,4 +60,6 @@ end
 function client.render()
     client.shipCameraTick(0)
     client.shipRollErrorTick(0)
+    -- 更新导弹视觉效果
+    client.missileVisualTick(0)
 end
