@@ -1,4 +1,4 @@
-<body name="body" tags="stellarisMissile" dynamic="true">
+<body name="body" tags="stellarisMissile" dynamic="false">
   <vox
     name="missile"
     tags="missile"
