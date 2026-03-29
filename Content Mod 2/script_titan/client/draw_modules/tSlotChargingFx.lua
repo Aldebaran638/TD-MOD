@@ -49,18 +49,22 @@ local function _beginPerditionBeamChargeState(shipBodyId, render)
     }
 end
 
-local function _createParticle(spawnPos, targetPoint, initialVel, finalVel, life)
+local function _createParticle(shipBodyId, shipT, spawnPosWorld, targetPointWorld, initialVelLocal, finalVelLocal, life)
     local particles = client.tSlotChargingFxState.activeParticles
     if #particles >= 1000 then
         return
     end
     
+    local spawnPosLocal = TransformToLocalPoint(shipT, spawnPosWorld)
+    local targetPointLocal = TransformToLocalPoint(shipT, targetPointWorld)
+    
     local particle = {
-        pos = Vec(spawnPos[1], spawnPos[2], spawnPos[3]),
-        vel = Vec(initialVel[1], initialVel[2], initialVel[3]),
-        targetPoint = Vec(targetPoint[1], targetPoint[2], targetPoint[3]),
-        initialVel = Vec(initialVel[1], initialVel[2], initialVel[3]),
-        finalVel = Vec(finalVel[1], finalVel[2], finalVel[3]),
+        shipBodyId = shipBodyId,
+        posLocal = Vec(spawnPosLocal[1], spawnPosLocal[2], spawnPosLocal[3]),
+        velLocal = Vec(initialVelLocal[1], initialVelLocal[2], initialVelLocal[3]),
+        targetPointLocal = Vec(targetPointLocal[1], targetPointLocal[2], targetPointLocal[3]),
+        initialVelLocal = Vec(initialVelLocal[1], initialVelLocal[2], initialVelLocal[3]),
+        finalVelLocal = Vec(finalVelLocal[1], finalVelLocal[2], finalVelLocal[3]),
         maxLife = life,
         startTime = (GetTime ~= nil) and GetTime() or 0.0,
         arrived = false,
@@ -76,93 +80,111 @@ local function _updateParticles(dt)
     
     while i >= 1 do
         local p = particles[i]
+        local shouldRemove = false
         
-        local elapsed = ((GetTime ~= nil) and GetTime() or 0.0) - p.startTime
-        local t = elapsed / math.max(0.0001, p.maxLife)
-        
-        local distToTarget = VecLength(VecSub(p.targetPoint, p.pos))
-        
-        if not p.arrived and distToTarget < 1.0 then
-            p.arrived = true
-            p.arrivedTime = (GetTime ~= nil) and GetTime() or 0.0
+        local shipBodyId = p.shipBodyId
+        if shipBodyId == nil or shipBodyId == 0 or (IsHandleValid ~= nil and not IsHandleValid(shipBodyId)) then
+            shouldRemove = true
+        else
+            local shipT = GetBodyTransform(shipBodyId)
+            
+            local posWorld = TransformToParentPoint(shipT, p.posLocal)
+            local targetWorld = TransformToParentPoint(shipT, p.targetPointLocal)
+            
+            local elapsed = ((GetTime ~= nil) and GetTime() or 0.0) - p.startTime
+            local t = elapsed / math.max(0.0001, p.maxLife)
+            
+            local distToTarget = VecLength(VecSub(targetWorld, posWorld))
+            
+            if not p.arrived and distToTarget < 1.0 then
+                p.arrived = true
+                p.arrivedTime = (GetTime ~= nil) and GetTime() or 0.0
+            end
+            
+            if p.arrived then
+                local arrivedElapsed = ((GetTime ~= nil) and GetTime() or 0.0) - p.arrivedTime
+                local arrivedT = arrivedElapsed / 0.4
+                
+                if arrivedT >= 1.0 then
+                    shouldRemove = true
+                else
+                    local alpha = 1.0 - arrivedT
+                    local radius = p.baseRadius * 8.0
+                    
+                    ParticleReset()
+                    ParticleColor(1.0, 0.9, 0.5, 1.0, 0.6, 0.2)
+                    ParticleRadius(radius, 0.02, "easeout")
+                    ParticleAlpha(alpha * 1.0, 0.0)
+                    ParticleGravity(0.0)
+                    ParticleDrag(0.0)
+                    ParticleEmissive(50.0 + alpha * 30.0, 0.0)
+                    ParticleCollide(0.0)
+                    
+                    local randomVel = Vec(
+                        (math.random() - 0.5) * 0.1,
+                        (math.random() - 0.5) * 0.1,
+                        (math.random() - 0.5) * 0.1
+                    )
+                    SpawnParticle(posWorld, randomVel, 0.1)
+                end
+            else
+                if t >= 1.0 then
+                    shouldRemove = true
+                else
+                    local distToXZPlane = math.abs(posWorld[2] - targetWorld[2])
+                    
+                    local toTargetDir = VecSub(targetWorld, posWorld)
+                    toTargetDir = _safeNormalize(toTargetDir, Vec(0, 0, 0))
+                    
+                    local maxDist = 7.0
+                    local distRatio = math.min(1.0, distToXZPlane / maxDist)
+                    
+                    local minYSpeed = 3.33
+                    local maxYSpeed = 13.6
+                    local ySpeed = minYSpeed + math.pow(distRatio, 0.25) * (maxYSpeed - minYSpeed)
+                    
+                    local xzSpeed = (1.0 - distRatio) * 5.6 + 0.93
+                    
+                    local xzDir = Vec(toTargetDir[1], 0, toTargetDir[3])
+                    xzDir = _safeNormalize(xzDir, Vec(0, 0, 0))
+                    
+                    local velWorld = Vec(
+                        xzDir[1] * xzSpeed,
+                        toTargetDir[2] * ySpeed,
+                        xzDir[3] * xzSpeed
+                    )
+                    
+                    local velLocal = TransformToLocalVec(shipT, velWorld)
+                    p.posLocal = VecAdd(p.posLocal, VecScale(velLocal, dt))
+                    p.velLocal = velLocal
+                    
+                    posWorld = TransformToParentPoint(shipT, p.posLocal)
+                    
+                    local radius = p.baseRadius + t * 0.2
+                    
+                    local alpha = 1.0 - t
+                    ParticleReset()
+                    ParticleColor(1.0, 0.8, 0.2, 1.0, 0.4, 0.0)
+                    ParticleRadius(radius, 0.01, "easeout")
+                    ParticleAlpha(alpha * 0.9, 0.0)
+                    ParticleGravity(0.0)
+                    ParticleDrag(0.0)
+                    ParticleEmissive(25.0 + alpha * 15.0, 0.0)
+                    ParticleCollide(0.0)
+                    
+                    local randomVel = Vec(
+                        (math.random() - 0.5) * 0.1,
+                        (math.random() - 0.5) * 0.1,
+                        (math.random() - 0.5) * 0.1
+                    )
+                    SpawnParticle(posWorld, randomVel, 0.1)
+                end
+            end
         end
         
-        if p.arrived then
-            local arrivedElapsed = ((GetTime ~= nil) and GetTime() or 0.0) - p.arrivedTime
-            local arrivedT = arrivedElapsed / 0.4
-            
-            if arrivedT >= 1.0 then
-                particles[i] = particles[#particles]
-                particles[#particles] = nil
-            else
-                local alpha = 1.0 - arrivedT
-                local radius = p.baseRadius * 8.0
-                
-                ParticleReset()
-                ParticleColor(1.0, 0.9, 0.5, 1.0, 0.6, 0.2)
-                ParticleRadius(radius, 0.02, "easeout")
-                ParticleAlpha(alpha * 1.0, 0.0)
-                ParticleGravity(0.0)
-                ParticleDrag(0.0)
-                ParticleEmissive(50.0 + alpha * 30.0, 0.0)
-                ParticleCollide(0.0)
-                
-                local randomVel = Vec(
-                    (math.random() - 0.5) * 0.1,
-                    (math.random() - 0.5) * 0.1,
-                    (math.random() - 0.5) * 0.1
-                )
-                SpawnParticle(p.pos, randomVel, 0.1)
-            end
-        else
-            if t >= 1.0 then
-                particles[i] = particles[#particles]
-                particles[#particles] = nil
-            else
-                local distToXZPlane = math.abs(p.pos[2] - p.targetPoint[2])
-                
-                local toTargetDir = VecSub(p.targetPoint, p.pos)
-                toTargetDir = _safeNormalize(toTargetDir, Vec(0, 0, 0))
-                
-                local maxDist = 7.0
-                local distRatio = math.min(1.0, distToXZPlane / maxDist)
-                
-                local minYSpeed = 3.33
-                local maxYSpeed = 13.6
-                local ySpeed = minYSpeed + math.pow(distRatio, 0.25) * (maxYSpeed - minYSpeed)
-                
-                local xzSpeed = (1.0 - distRatio) * 5.6 + 0.93
-                
-                local xzDir = Vec(toTargetDir[1], 0, toTargetDir[3])
-                xzDir = _safeNormalize(xzDir, Vec(0, 0, 0))
-                
-                p.vel = Vec(
-                    xzDir[1] * xzSpeed,
-                    toTargetDir[2] * ySpeed,
-                    xzDir[3] * xzSpeed
-                )
-                
-                p.pos = VecAdd(p.pos, VecScale(p.vel, dt))
-                
-                local radius = p.baseRadius + t * 0.2
-                
-                local alpha = 1.0 - t
-                ParticleReset()
-                ParticleColor(1.0, 0.8, 0.2, 1.0, 0.4, 0.0)
-                ParticleRadius(radius, 0.01, "easeout")
-                ParticleAlpha(alpha * 0.9, 0.0)
-                ParticleGravity(0.0)
-                ParticleDrag(0.0)
-                ParticleEmissive(25.0 + alpha * 15.0, 0.0)
-                ParticleCollide(0.0)
-                
-                local randomVel = Vec(
-                    (math.random() - 0.5) * 0.1,
-                    (math.random() - 0.5) * 0.1,
-                    (math.random() - 0.5) * 0.1
-                )
-                SpawnParticle(p.pos, randomVel, 0.1)
-            end
+        if shouldRemove then
+            particles[i] = particles[#particles]
+            particles[#particles] = nil
         end
         
         i = i - 1
@@ -230,16 +252,18 @@ local function _spawnChargingParticles(shipBodyId, chargeState, frameDt)
             spawnPos[2] = spawnPos[2] + yOffset
             
             local yVel = -yOffset * 0.8
-            local initialVel = Vec(0, yVel, 0)
+            local initialVelWorld = Vec(0, yVel, 0)
+            local initialVelLocal = TransformToLocalVec(shipT, initialVelWorld)
             
             local velDir = VecSub(targetPoint, spawnPos)
             velDir = _safeNormalize(velDir, barrelDir)
             local finalSpeed = 5.0 + math.random() * 5.0
-            local finalVel = VecScale(velDir, finalSpeed)
+            local finalVelWorld = VecScale(velDir, finalSpeed)
+            local finalVelLocal = TransformToLocalVec(shipT, finalVelWorld)
             
             local life = 2.0 + math.random() * 1.0
             
-            _createParticle(spawnPos, targetPoint, initialVel, finalVel, life)
+            _createParticle(shipBodyId, shipT, spawnPos, targetPoint, initialVelLocal, finalVelLocal, life)
         end
         
         PointLight(targetPoint, 1.0, 0.8, 0.2, 4.0)
@@ -248,7 +272,7 @@ end
 
 function client.tSlotChargingFxTick(dt)
     local state = client.tSlotChargingFxState
-    local frameDt = dt or 0.0
+    local frameDt = dt or 0.016
     
     _updateParticles(frameDt)
 
