@@ -5,46 +5,48 @@
 client = client or {}
 
 client.tSlotLaunchFxConfig = client.tSlotLaunchFxConfig or {
-    helixRadius = 0.22,
-    helixPitch = 26.0,
-    helixParticlesPerTurn = 192,
-    helixParticleColorA = { 0.00, 1.00, 1.00 },
-    helixParticleColorB = { 0.00, 0.84, 0.96 },
-    helixParticleRadiusStart = 0.09,
-    helixParticleRadiusEnd = 0.02,
-    helixParticleEmissive = 24.0,
-    helixParticleLifeMin = 0.22,
-    helixParticleLifeMax = 0.42,
-    helixParticleTangentialSpeed = 2.5,
-    helixParticleForwardSpeed = 1.6,
-
-    coreLineParticlesPerTurn = 192,
-    coreLineParticleColorA = { 1.00, 1.00, 1.00 },
-    coreLineParticleColorB = { 0.94, 0.98, 1.00 },
-    coreLineParticleRadiusStart = 0.08,
-    coreLineParticleRadiusEnd = 0.0150,
-    coreLineParticleEmissive = 26.0,
-    coreLineParticleLifeMin = 0.20,
-    coreLineParticleLifeMax = 0.40,
-    coreLineParticleForwardSpeed = 2.0,
-    coreLineJitterRadius = 0.01,
+    particlesPerUnit = 12,
+    particleColorA = { 0.5, 0.4, 0.3 },
+    particleColorB = { 0.5, 0.4, 0.3 },
+    particleRadiusStart = 0.05,
+    particleRadiusEnd = 0.1,
+    particleEmissive = 26.0,
+    particleLifeMin = 0.7,
+    particleLifeMax = 1.0,
+    particleForwardSpeed = 2.0,
+    jitterRadius = 0.01,
+    lineCount = 1,
+    lineSpacing = 0.08,
+    
+    forwardParticlesPerUnit = 5,
+    forwardParticleRounds = 1,
+    forwardParticleRadius = 0.07,
+    forwardParticleLife = 2,
+    forwardParticleSpeed = 40.0,
+    forwardParticleEmissive = 30.0,
+    forwardParticleColorA = { 0.5, 0.4, 0.3 },
+    forwardParticleColorB = { 0.5, 0.4, 0.3  },
+    cylinderRadius = 0.5,
+    
+    shockwaveLife = 1.15,
+    shockwaveR0 = 1.0,
+    shockwaveR1 = 9.25,
+    shockwaveParticleCount = 48,
+    shockwaveLightIntensity = 3.5,
+    shockwaveParticleSpeedBase = 15.0,
+    shockwaveParticleSpeedDecay = 8.75,
+    shockwaveParticleSpeedRandom = 6.25,
 }
 
 client.tSlotLaunchFxState = client.tSlotLaunchFxState or {
-    activeBeamsByShip = {},
     lastRenderSeqByShip = {},
     lastShotIdByShip = {},
+    shockwaves = {},
 }
 
 local function _tableToVec(t)
     if t == nil then return Vec(0, 0, 0) end
     return Vec(t.x or 0, t.y or 0, t.z or 0)
-end
-
-local function _clamp(v, a, b)
-    if v < a then return a end
-    if v > b then return b end
-    return v
 end
 
 local function _safeNormalize(v, fallback)
@@ -64,181 +66,70 @@ local function _buildPerpBasis(forward)
     return right, up
 end
 
-local function _resolveWeaponSettings(weaponType)
-    local defs = weaponData or {}
-    return defs[weaponType or ""] or defs.perditionBeam or defs.tachyonLance or {}
-end
-
-local function _smoothstep01(t)
-    local x = _clamp(t or 0.0, 0.0, 1.0)
-    return x * x * (3.0 - 2.0 * x)
-end
-
-local function _spawnCoreLineParticlesOnce(fire, hit, cfg)
-    local beamVec = VecSub(hit, fire)
-    local beamLen = VecLength(beamVec)
-    if beamLen < 0.001 then
-        return
-    end
-
-    local beamDir = VecScale(beamVec, 1.0 / beamLen)
-    local right, up = _buildPerpBasis(beamDir)
-    local pitch = math.max(0.1, cfg.helixPitch or 26.0)
-    local turns = beamLen / pitch
-    local densityPerTurn = cfg.coreLineParticlesPerTurn or cfg.helixParticlesPerTurn or 96
-    local count = math.max(10, math.floor(turns * densityPerTurn))
-    local jitter = cfg.coreLineJitterRadius or 0.01
-
-    local ca = cfg.coreLineParticleColorA or { 1.00, 1.00, 1.00 }
-    local cb = cfg.coreLineParticleColorB or { 0.94, 0.98, 1.00 }
-
-    ParticleReset()
-    ParticleColor(ca[1], ca[2], ca[3], cb[1], cb[2], cb[3])
-    ParticleRadius(cfg.coreLineParticleRadiusStart or 0.04, cfg.coreLineParticleRadiusEnd or 0.0075, "easeout")
-    ParticleAlpha(0.95, 0.0)
-    ParticleGravity(0.0)
-    ParticleDrag(0.06)
-    ParticleEmissive(cfg.coreLineParticleEmissive or 26.0, 0.0)
-    ParticleCollide(0.0)
-
-    for i = 0, count - 1 do
-        local t = i / math.max(1, count - 1)
-        local basePos = VecAdd(fire, VecScale(beamVec, t))
-        local a = math.random() * math.pi * 2.0
-        local rr = jitter * math.random()
-        local off = VecAdd(VecScale(right, math.cos(a) * rr), VecScale(up, math.sin(a) * rr))
-        local pos = VecAdd(basePos, off)
-        local vel = VecScale(beamDir, cfg.coreLineParticleForwardSpeed or 2.0)
-        local life = (cfg.coreLineParticleLifeMin or 0.20) + ((cfg.coreLineParticleLifeMax or 0.40) - (cfg.coreLineParticleLifeMin or 0.20)) * math.random()
-        SpawnParticle(pos, vel, life)
-    end
-end
-
-local function _spawnHelixParticlesOnce(fire, hit, seed, cfg)
-    local beamVec = VecSub(hit, fire)
-    local beamLen = VecLength(beamVec)
-    if beamLen < 0.001 then
-        return
-    end
-
-    local beamDir = VecScale(beamVec, 1.0 / beamLen)
-    local right, up = _buildPerpBasis(beamDir)
-    local radius = cfg.helixRadius or 0.22
-    local pitch = math.max(0.1, cfg.helixPitch or 26.0)
-    local turns = beamLen / pitch
-    local count = math.max(10, math.floor(turns * (cfg.helixParticlesPerTurn or 96)))
-
-    local ca = cfg.helixParticleColorA or { 0.00, 1.00, 1.00 }
-    local cb = cfg.helixParticleColorB or { 0.00, 0.84, 0.96 }
-
-    ParticleReset()
-    ParticleColor(ca[1], ca[2], ca[3], cb[1], cb[2], cb[3])
-    ParticleRadius(cfg.helixParticleRadiusStart or 0.045, cfg.helixParticleRadiusEnd or 0.01, "easeout")
-    ParticleAlpha(0.92, 0.0)
-    ParticleGravity(0.0)
-    ParticleDrag(0.08)
-    ParticleEmissive(cfg.helixParticleEmissive or 24.0, 0.0)
-    ParticleCollide(0.0)
-
-    for i = 0, count - 1 do
-        local t = i / math.max(1, count - 1)
-        local ang = t * turns * math.pi * 2.0 + seed
-        local center = VecAdd(fire, VecScale(beamVec, t))
-        local off = VecAdd(VecScale(right, math.cos(ang) * radius), VecScale(up, math.sin(ang) * radius))
-        local pos = VecAdd(center, off)
-
-        local tangent = VecAdd(VecScale(right, -math.sin(ang)), VecScale(up, math.cos(ang)))
-        tangent = _safeNormalize(tangent, right)
-        local vel = VecAdd(
-            VecScale(tangent, cfg.helixParticleTangentialSpeed or 2.5),
-            VecScale(beamDir, cfg.helixParticleForwardSpeed or 1.6)
-        )
-
-        local life = (cfg.helixParticleLifeMin or 0.22) + ((cfg.helixParticleLifeMax or 0.42) - (cfg.helixParticleLifeMin or 0.22)) * math.random()
-        SpawnParticle(pos, vel, life)
-    end
-end
-
-local function _spawnLegacyLaunchFx(firePointWorld, hitPointWorld, cfg)
-    local beamVec = VecSub(hitPointWorld, firePointWorld)
-    if VecLength(beamVec) < 0.001 then
-        return
-    end
-
-    local seed = math.random() * 1000.0
-    _spawnCoreLineParticlesOnce(firePointWorld, hitPointWorld, cfg)
-    _spawnHelixParticlesOnce(firePointWorld, hitPointWorld, seed, cfg)
-end
-
-local function _beginPerditionBeam(shipBodyId, render)
-    local weaponSettings = _resolveWeaponSettings(render.weaponType)
-    local launchDuration = tonumber(weaponSettings.launchFxVisualDuration) or ((tonumber(weaponSettings.launchDuration) or 0.5) + 0.22)
-    client.tSlotLaunchFxState.activeBeamsByShip[shipBodyId] = {
-        shipBodyId = shipBodyId,
-        weaponType = tostring(render.weaponType or ""),
-        slotIndex = math.floor(render.slotIndex or 1),
-        firePoint = _tableToVec(render.firePoint),
-        hitPoint = _tableToVec(render.hitPoint),
-        startTime = (GetTime ~= nil) and GetTime() or 0.0,
-        duration = math.max(0.08, launchDuration),
-        coreRadius = tonumber(weaponSettings.launchFxCoreRadius) or 0.42,
-        coreRadiusPeak = tonumber(weaponSettings.launchFxCoreRadiusPeak) or 0.82,
-        shellRadius = tonumber(weaponSettings.launchFxShellRadius) or 0.88,
-        shellRadiusPeak = tonumber(weaponSettings.launchFxShellRadiusPeak) or 1.65,
-        muzzleFlashRadius = tonumber(weaponSettings.launchFxMuzzleFlashRadius) or 1.4,
+local function _startShockwave(center)
+    local state = client.tSlotLaunchFxState
+    local cfg = client.tSlotLaunchFxConfig
+    
+    state.shockwaves[#state.shockwaves + 1] = {
+        center = center,
+        age = 0.0,
+        life = cfg.shockwaveLife or 1.15,
+        r0 = cfg.shockwaveR0 or 1.0,
+        r1 = cfg.shockwaveR1 or 9.25,
     }
 end
 
-local function _beamIntensity(normalizedTime)
-    local rise = _smoothstep01(_clamp((normalizedTime or 0.0) / 0.24, 0.0, 1.0))
-    local fall = 1.0 - _smoothstep01(_clamp(((normalizedTime or 0.0) - 0.72) / 0.28, 0.0, 1.0))
-    local envelope = _clamp(math.min(rise, fall), 0.0, 1.0)
-    return 0.18 + 0.82 * envelope
-end
-
-local function _spawnPerditionMuzzleFlash(firePoint, beamDir, intensity, flashRadius)
-    PointLight(firePoint, 1.0, 0.82, 0.22, 3.5 + 6.0 * intensity)
-
-    for _ = 1, math.max(3, math.floor(4 + intensity * 5)) do
-        local jitter = Vec((math.random() - 0.5) * flashRadius, (math.random() - 0.5) * flashRadius, (math.random() - 0.5) * flashRadius * 0.4)
-        local pos = VecAdd(firePoint, jitter)
-        ParticleReset()
-        ParticleColor(1.0, 0.98, 0.92, 1.0, 0.56, 0.08)
-        ParticleRadius(0.45 + flashRadius * 0.18, 0.0, "easeout")
-        ParticleAlpha(0.28 + 0.22 * intensity, 0.0)
-        ParticleGravity(0.0)
-        ParticleDrag(0.01)
-        ParticleEmissive(26.0 + 30.0 * intensity, 0.0)
-        ParticleCollide(0.0)
-        SpawnParticle(pos, VecScale(beamDir, 0.6 + 2.4 * intensity), 0.06 + 0.05 * math.random())
+local function _tickShockwaves(dt)
+    local list = client.tSlotLaunchFxState.shockwaves
+    local cfg = client.tSlotLaunchFxConfig
+    local i = #list
+    
+    while i >= 1 do
+        local fx = list[i]
+        fx.age = fx.age + dt
+        if fx.age >= fx.life then
+            table.remove(list, i)
+        else
+            local t = fx.age / fx.life
+            local r = fx.r0 + (fx.r1 - fx.r0) * t
+            local alpha = math.pow(1.0 - t, 0.62)
+            
+            local lightIntensity = cfg.shockwaveLightIntensity or 3.5
+            PointLight(fx.center, 1.0, 1.0, 1.0, lightIntensity * alpha)
+            
+            ParticleReset()
+            ParticleColor(1.0, 1.0, 1.0, 0.86, 0.90, 1.0)
+            ParticleRadius(0.36, 0.12, "easeout")
+            ParticleAlpha(0.9 * alpha, 0.0)
+            ParticleGravity(0.0)
+            ParticleDrag(0.08)
+            ParticleEmissive(30.0 * alpha, 0.0)
+            ParticleCollide(0.0)
+            
+            local count = cfg.shockwaveParticleCount or 48
+            local speedBase = cfg.shockwaveParticleSpeedBase or 6.0
+            local speedDecay = cfg.shockwaveParticleSpeedDecay or 3.5
+            local speedRandom = cfg.shockwaveParticleSpeedRandom or 2.5
+            
+            for k = 1, count do
+                local a = (k / count) * math.pi * 2.0 + math.random() * 0.08
+                local cs = math.cos(a)
+                local sn = math.sin(a)
+                local pos = Vec(
+                    fx.center[1] + cs * r,
+                    fx.center[2] + (math.random() - 0.5) * 0.18,
+                    fx.center[3] + sn * r
+                )
+                local dir = Vec(cs, 0, sn)
+                local vel = VecScale(dir, speedBase + speedDecay * (1.0 - t) + speedRandom * math.random())
+                SpawnParticle(pos, vel, 0.125 + 0.0875 * math.random())
+            end
+        end
+        i = i - 1
     end
 end
 
-local function _spawnPerditionHitFlare(hitPoint, intensity)
-    PointLight(hitPoint, 1.0, 0.32 + 0.18 * intensity, 0.08, 2.8 + 4.2 * intensity)
-
-    for _ = 1, math.max(2, math.floor(3 + intensity * 4)) do
-        local dir = Vec(
-            (math.random() - 0.5) * 2.0,
-            (math.random() - 0.5) * 2.0,
-            (math.random() - 0.5) * 2.0
-        )
-        dir = _safeNormalize(dir, Vec(0, 1, 0))
-        ParticleReset()
-        ParticleColor(1.0, 0.88, 0.30, 0.92, 0.18, 0.03)
-        ParticleRadius(0.22 + 0.18 * intensity, 0.0, "easeout")
-        ParticleAlpha(0.22 + 0.16 * intensity, 0.0)
-        ParticleGravity(0.0)
-        ParticleDrag(0.03)
-        ParticleEmissive(18.0 + 18.0 * intensity, 0.0)
-        ParticleCollide(0.0)
-        SpawnParticle(hitPoint, VecScale(dir, 1.0 + 3.2 * intensity), 0.08 + 0.06 * math.random())
-    end
-end
-
-local function _spawnPerditionBeamParticles(beam, intensity, frameDt)
-    local fire = beam.firePoint
-    local hit = beam.hitPoint
+local function _spawnBeamLine(fire, hit, cfg)
     local beamVec = VecSub(hit, fire)
     local beamLen = VecLength(beamVec)
     if beamLen < 0.001 then
@@ -247,84 +138,95 @@ local function _spawnPerditionBeamParticles(beam, intensity, frameDt)
 
     local beamDir = VecScale(beamVec, 1.0 / beamLen)
     local right, up = _buildPerpBasis(beamDir)
-    local weaponSettings = _resolveWeaponSettings(beam.weaponType)
-    local coreRadius = (beam.coreRadius or 0.42) + ((beam.coreRadiusPeak or 0.82) - (beam.coreRadius or 0.42)) * intensity
-    local shellRadius = (beam.shellRadius or 0.88) + ((beam.shellRadiusPeak or 1.65) - (beam.shellRadius or 0.88)) * intensity
-    local tickScale = math.max(0.45, (frameDt or 0.016) * 60.0)
-    local coreStep = math.max(0.25, tonumber(weaponSettings.launchFxCoreStep) or 2.0)
-    local shellStep = math.max(0.25, tonumber(weaponSettings.launchFxShellStep) or 1.5)
-    local coreBurstPerStep = math.max(1, math.floor(tonumber(weaponSettings.launchFxCoreBurstPerStep) or 2))
-    local shellBurstPerStep = math.max(1, math.floor(tonumber(weaponSettings.launchFxShellBurstPerStep) or 3))
-    local coreSamples = math.max(1, math.floor(beamLen / coreStep + 0.5))
-    local shellSamples = math.max(1, math.floor(beamLen / shellStep + 0.5))
-    local coreEmitters = math.max(1, math.floor(coreSamples * tickScale))
-    local shellEmitters = math.max(1, math.floor(shellSamples * tickScale))
+    local density = cfg.particlesPerUnit or 12
+    local count = math.max(10, math.floor(beamLen * density))
+    local jitter = cfg.jitterRadius or 0.01
+    local lineCount = cfg.lineCount or 4
+    local lineSpacing = cfg.lineSpacing or 0.08
 
-    _spawnPerditionMuzzleFlash(fire, beamDir, intensity, beam.muzzleFlashRadius or 1.4)
-    _spawnPerditionHitFlare(hit, intensity)
+    local ca = cfg.particleColorA or { 0.5, 0.4, 0.3 }
+    local cb = cfg.particleColorB or { 0.5, 0.4, 0.3 }
 
-    ParticleReset()
-    ParticleColor(1.0, 0.98, 0.92, 1.0, 0.86, 0.34)
-    ParticleRadius(0.14 + 0.28 * intensity, 0.02, "easeout")
-    ParticleAlpha(0.78 + 0.18 * intensity, 0.0)
-    ParticleGravity(0.0)
-    ParticleDrag(0.02)
-    ParticleEmissive(28.0 + 34.0 * intensity, 0.0)
-    ParticleCollide(0.0)
-    for _ = 1, coreEmitters do
-        local baseIndex = math.random(0, coreSamples)
-        local baseT = _clamp((baseIndex * coreStep) / math.max(beamLen, 0.0001), 0.0, 1.0)
-        for _ = 1, coreBurstPerStep do
-            local t = _clamp(baseT + ((math.random() - 0.5) * coreStep * 0.45 / math.max(beamLen, 0.0001)), 0.0, 1.0)
-            local base = VecAdd(fire, VecScale(beamVec, t))
-            local a = math.random() * math.pi * 2.0
-            local rr = math.random() * coreRadius * (0.18 + 0.35 * (1.0 - math.abs(0.5 - t) * 1.2))
-            local off = VecAdd(VecScale(right, math.cos(a) * rr), VecScale(up, math.sin(a) * rr))
-            local pos = VecAdd(base, off)
-            local vel = VecScale(beamDir, 2.0 + 4.0 * intensity)
-            SpawnParticle(pos, vel, 0.08 + 0.05 * math.random())
-        end
-    end
+    local lineOffsets = {
+        VecScale(right, -lineSpacing * 0.5),
+        VecScale(right, lineSpacing * 0.5),
+        VecScale(up, -lineSpacing * 0.5),
+        VecScale(up, lineSpacing * 0.5),
+    }
 
     ParticleReset()
-    ParticleColor(1.0, 0.84, 0.18, 0.95, 0.16, 0.03)
-    ParticleRadius(0.18 + 0.36 * intensity, 0.02, "easeout")
-    ParticleAlpha(0.54 + 0.18 * intensity, 0.0)
+    ParticleColor(ca[1], ca[2], ca[3], cb[1], cb[2], cb[3])
+    ParticleRadius(cfg.particleRadiusStart or 0.08, cfg.particleRadiusEnd or 0.015, "easeout")
+    ParticleAlpha(0.95, 0.0)
     ParticleGravity(0.0)
-    ParticleDrag(0.04)
-    ParticleEmissive(18.0 + 28.0 * intensity, 0.0)
+    ParticleDrag(0.06)
+    ParticleEmissive(cfg.particleEmissive or 26.0, 0.0)
     ParticleCollide(0.0)
-    for _ = 1, shellEmitters do
-        local baseIndex = math.random(0, shellSamples)
-        local baseT = _clamp((baseIndex * shellStep) / math.max(beamLen, 0.0001), 0.0, 1.0)
-        for _ = 1, shellBurstPerStep do
-            local t = _clamp(baseT + ((math.random() - 0.5) * shellStep * 0.55 / math.max(beamLen, 0.0001)), 0.0, 1.0)
-            local base = VecAdd(fire, VecScale(beamVec, t))
-            local coneFactor = 0.55 + 0.55 * math.pow(1.0 - t, 0.35)
-            local radius = shellRadius * coneFactor
+
+    for lineIdx = 1, math.min(lineCount, #lineOffsets) do
+        local lineOffset = lineOffsets[lineIdx]
+        
+        for i = 0, count - 1 do
+            local t = i / math.max(1, count - 1)
+            local basePos = VecAdd(fire, VecScale(beamVec, t))
+            basePos = VecAdd(basePos, lineOffset)
             local a = math.random() * math.pi * 2.0
-            local rr = radius * (0.55 + 0.45 * math.random())
+            local rr = jitter * math.random()
             local off = VecAdd(VecScale(right, math.cos(a) * rr), VecScale(up, math.sin(a) * rr))
-            local pos = VecAdd(base, off)
-            local tangent = VecAdd(VecScale(right, -math.sin(a)), VecScale(up, math.cos(a)))
-            tangent = _safeNormalize(tangent, right)
-            local vel = VecAdd(
-                VecScale(beamDir, 1.4 + 2.2 * intensity),
-                VecScale(tangent, 0.5 + 1.0 * intensity)
-            )
-            SpawnParticle(pos, vel, 0.09 + 0.07 * math.random())
+            local pos = VecAdd(basePos, off)
+            local vel = VecScale(beamDir, cfg.particleForwardSpeed or 2.0)
+            local life = (cfg.particleLifeMin or 0.20) + ((cfg.particleLifeMax or 0.40) - (cfg.particleLifeMin or 0.20)) * math.random()
+            SpawnParticle(pos, vel, life)
         end
     end
-
-    local midPoint = VecAdd(fire, VecScale(beamVec, 0.45))
-    PointLight(midPoint, 1.0, 0.62, 0.12, 2.2 + 3.6 * intensity)
+    
+    local fwdDensity = cfg.forwardParticlesPerUnit or 8
+    local fwdRounds = cfg.forwardParticleRounds or 3
+    local fwdRadius = cfg.forwardParticleRadius or 0.06
+    local fwdLife = cfg.forwardParticleLife or 0.15
+    local fwdSpeed = cfg.forwardParticleSpeed or 15.0
+    local fwdEmissive = cfg.forwardParticleEmissive or 30.0
+    local fwdColorA = cfg.forwardParticleColorA or { 1.00, 0.95, 0.85 }
+    local fwdColorB = cfg.forwardParticleColorB or { 1.00, 0.80, 0.50 }
+    local cylinderR = cfg.cylinderRadius or 0.12
+    
+    local fwdCount = math.max(5, math.floor(beamLen * fwdDensity))
+    
+    ParticleReset()
+    ParticleColor(fwdColorA[1], fwdColorA[2], fwdColorA[3], fwdColorB[1], fwdColorB[2], fwdColorB[3])
+    ParticleRadius(fwdRadius, fwdRadius * 0.3, "easeout")
+    ParticleAlpha(0.9, 0.0)
+    ParticleGravity(0.0)
+    ParticleDrag(0.0)
+    ParticleEmissive(fwdEmissive, 0.0)
+    ParticleCollide(0.0)
+    
+    for roundIdx = 1, fwdRounds do
+        for i = 0, fwdCount - 1 do
+            local t = i / math.max(1, fwdCount - 1)
+            local basePos = VecAdd(fire, VecScale(beamVec, t))
+            
+            local angle = math.random() * math.pi * 2.0
+            local r = cylinderR * (0.7 + 0.3 * math.random())
+            local off = VecAdd(VecScale(right, math.cos(angle) * r), VecScale(up, math.sin(angle) * r))
+            local pos = VecAdd(basePos, off)
+            
+            local vel = VecScale(beamDir, fwdSpeed)
+            local life = fwdLife * (0.8 + 0.4 * math.random())
+            SpawnParticle(pos, vel, life)
+        end
+    end
+    
+    PointLight(fire,  0.5, 0.4, 0.3 , 3.0)
+    PointLight(hit,  0.5, 0.4, 0.3 , 2.5)
+    
+    _startShockwave(hit)
 end
 
 function client.tSlotLaunchFxTick(dt)
     local state = client.tSlotLaunchFxState
     local cfg = client.tSlotLaunchFxConfig
-    local frameDt = dt or 0.0
-    local nowTime = (GetTime ~= nil) and GetTime() or 0.0
+    local frameDt = dt or 0.016
 
     local shipIds = client.registryShipGetRegisteredBodyIds()
     for i = 1, #shipIds do
@@ -338,30 +240,14 @@ function client.tSlotLaunchFxTick(dt)
 
                 if seq ~= lastSeq then
                     if render.eventType == "launch_start" then
-                        if render.weaponType == "perditionBeam" then
-                            _beginPerditionBeam(shipBodyId, render)
-                        else
-                            _spawnLegacyLaunchFx(_tableToVec(render.firePoint), _tableToVec(render.hitPoint), cfg)
-                        end
+                        _spawnBeamLine(_tableToVec(render.firePoint), _tableToVec(render.hitPoint), cfg)
                     end
                     state.lastRenderSeqByShip[shipBodyId] = seq
                     state.lastShotIdByShip[shipBodyId] = shotId
                 end
             end
-        else
-            state.activeBeamsByShip[shipBodyId] = nil
         end
     end
-
-    for shipBodyId, beam in pairs(state.activeBeamsByShip) do
-        local elapsed = nowTime - (beam.startTime or nowTime)
-        local duration = math.max(0.08, beam.duration or 0.72)
-        if elapsed >= duration then
-            state.activeBeamsByShip[shipBodyId] = nil
-        else
-            local normalized = _clamp(elapsed / duration, 0.0, 1.0)
-            local intensity = _beamIntensity(normalized)
-            _spawnPerditionBeamParticles(beam, intensity, frameDt)
-        end
-    end
+    
+    _tickShockwaves(frameDt)
 end

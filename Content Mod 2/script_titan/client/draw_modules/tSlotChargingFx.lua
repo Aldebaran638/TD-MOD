@@ -206,7 +206,7 @@ local function _spawnChargingParticles(shipBodyId, chargeState, frameDt)
         points[i] = VecAdd(fireWorld, VecScale(VecSub(segmentEnd, fireWorld), t))
     end
     
-    local particleCount = math.max(1, math.floor((1.05) * math.max(0.68, (frameDt or 0.016) * 60.0)))
+    local particleCount = math.max(1, math.floor((0.735) * math.max(0.68, (frameDt or 0.016) * 60.0)))
     
     local shipRight = TransformToParentVec(shipT, Vec(1, 0, 0))
     
