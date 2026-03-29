@@ -36,7 +36,7 @@ client.soundModuleState = client.soundModuleState or {
     lastRenderSeqByShip = {},
     lastBodyHpByShip = {},
     deathPlayedByShip = {},
-    perditionWindupLoopByShip = {},
+    perditionWindupPlayedByShip = {},
     perditionWindupActiveByShip = {},
 }
 
@@ -131,6 +131,14 @@ local function _playPerditionHit(hitPoint)
     end
 end
 
+local function _playPerditionWindup(firePoint)
+    local playPos, isDistant = _resolvePlayPos(firePoint)
+    local windupSound = _randomPick(_snd_perdition_windup_loops)
+    if windupSound ~= nil then
+        _playAtVolume(windupSound, playPos, _perditionWindupVolume)
+    end
+end
+
 local function _playKineticFire(firePoint)
     local playPos, isDistant = _resolvePlayPos(firePoint)
     if isDistant then
@@ -218,26 +226,24 @@ local function _perditionWindupLoopTick(shipBodyId)
 
     if not isCharging then
         state.perditionWindupActiveByShip[shipBodyId] = false
-        state.perditionWindupLoopByShip[shipBodyId] = nil
+        state.perditionWindupPlayedByShip[shipBodyId] = false
         return
     end
 
-    if not wasCharging or state.perditionWindupLoopByShip[shipBodyId] == nil then
-        state.perditionWindupLoopByShip[shipBodyId] = _randomPick(_snd_perdition_windup_loops)
+    if not wasCharging or not state.perditionWindupPlayedByShip[shipBodyId] then
+        local render = client.tSlotRenderGetEvent ~= nil and client.tSlotRenderGetEvent(shipBodyId) or nil
+        local firePoint = nil
+        if render ~= nil and tostring(render.weaponType or "") == "perditionBeam" then
+            firePoint = _tableToVec(render.firePoint)
+        else
+            local t = GetBodyTransform(shipBodyId)
+            firePoint = t.pos
+        end
+        
+        _playPerditionWindup(firePoint)
+        state.perditionWindupPlayedByShip[shipBodyId] = true
     end
     state.perditionWindupActiveByShip[shipBodyId] = true
-
-    local render = client.tSlotRenderGetEvent ~= nil and client.tSlotRenderGetEvent(shipBodyId) or nil
-    local firePoint = nil
-    if render ~= nil and tostring(render.weaponType or "") == "perditionBeam" then
-        firePoint = _tableToVec(render.firePoint)
-    else
-        local t = GetBodyTransform(shipBodyId)
-        firePoint = t.pos
-    end
-
-    local playPos = _resolvePlayPos(firePoint)
-    PlayLoop(state.perditionWindupLoopByShip[shipBodyId], playPos, _perditionWindupVolume)
 end
 
 local function _tSlotEventTick(shipBodyId)
@@ -330,15 +336,15 @@ function client.soundModuleInit()
     _snd_tachyon_windup_near = LoadSound("MOD/sound/tachyon_lance_windup_01.ogg")
     _snd_tachyon_windup_dist = LoadSound("MOD/sound/distance_tachyon_lance_windup_01.ogg")
     _snd_perdition_fire_near[1] = LoadSound("MOD/sound/perdition_beam_fire_01.ogg")
-    _snd_perdition_fire_near[2] = LoadSound("MOD/sound/perdition_beam_fire_02.ogg")
     _snd_perdition_fire_near[3] = LoadSound("MOD/sound/perdition_beam_fire_03.ogg")
+    _snd_perdition_fire_near[4] = LoadSound("MOD/sound/titan_laser_fire_01.ogg")
     _snd_perdition_fire_dist[1] = LoadSound("MOD/sound/distance_perdition_beam_fire_01.ogg")
     _snd_perdition_fire_dist[2] = LoadSound("MOD/sound/distance_perdition_beam_fire_02.ogg")
     _snd_perdition_fire_dist[3] = LoadSound("MOD/sound/distance_perdition_beam_fire_03.ogg")
     _snd_perdition_hit_near[1] = LoadSound("MOD/sound/perdition_beam_hit_01.ogg")
     _snd_perdition_hit_dist[1] = LoadSound("MOD/sound/distance_perdition_beam_hit_01.ogg")
-    _snd_perdition_windup_loops[1] = LoadLoop("MOD/sound/perdition_beam_windup_01.ogg")
-    _snd_perdition_windup_loops[2] = LoadLoop("MOD/sound/perdition_beam_windup_02.ogg")
+    _snd_perdition_windup_loops[1] = LoadSound("MOD/sound/perdition_beam_windup_02.ogg")
+    _snd_perdition_windup_loops[2] = LoadSound("MOD/sound/titan_laser_windup_02.ogg")
     _snd_titan_death = LoadSound("MOD/sound/fallen_machine_empire_titan_death_01.ogg")
     _snd_kinetic_fire_near = LoadSound("MOD/sound/kinectic_artillery_fire_01.ogg")
     _snd_kinetic_fire_dist = LoadSound("MOD/sound/distance_kinectic_artillery_fire_01.ogg")
