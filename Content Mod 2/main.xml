@@ -15,7 +15,7 @@
 		</vehicle>
 	</script>
 	<script pos="-15.2 7.9 12.8" file="MOD/script/shipMain.lua">
-		<vehicle name="ship" tags="stellarisShip" pos="0.0 0.0 0.0" driven="true" sound=" " spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
+		<vehicle name="ship" tags="stellarisShip" pos="0.0 0.0 0.0" driven="false" sound=" " spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
 			<body name="body" tags="stellarisShip" pos="0.0 0.0 0.0" dynamic="true">
 				<vox tags="missileLauncher" pos="0.5 7.0 1.1" file="MOD/vox/missileLauncher.vox"/>
 				<vox tags="missileLauncher" pos="-0.5 -7.0 1.1" rot="0 0 180" file="MOD/vox/missileLauncher.vox"/>
@@ -42,7 +42,7 @@
 			<location name="exit" tags="exit" pos="0.0 0.2 -2.6"/>
 		</vehicle>
 		<script pos="0.1 0.7 -17.2" rot="0 180 0" file="MOD/script/shipMain.lua">
-			<vehicle name="ship" tags="stellarisShip" pos="0.0 0.0 0.0" driven="true" sound=" " spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
+			<vehicle name="ship" tags="stellarisShip" pos="0.0 0.0 0.0" driven="false" sound=" " spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
 				<body name="body" tags="stellarisShip" pos="0.0 0.0 0.0" dynamic="true">
 					<vox tags="missileLauncher" pos="0.5 7.0 1.1" file="MOD/vox/missileLauncher.vox"/>
 					<vox tags="missileLauncher" pos="-0.5 -7.0 1.1" rot="0 0 180" file="MOD/vox/missileLauncher.vox"/>

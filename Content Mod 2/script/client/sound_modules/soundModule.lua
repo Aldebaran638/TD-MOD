@@ -133,8 +133,21 @@ local function _isShipOccupied(shipBodyId)
     return false
 end
 
+local function _shouldUseGenericShipSounds(shipBodyId)
+    if client.registryShipGetShipType == nil then
+        return true
+    end
+
+    local shipType = tostring(client.registryShipGetShipType(shipBodyId) or "")
+    return shipType ~= "titan"
+end
+
 local function _engineTick(shipBodyId)
     if _snd_engine_loop == nil or _snd_engine_loop == 0 then
+        return
+    end
+
+    if not _shouldUseGenericShipSounds(shipBodyId) then
         return
     end
 
