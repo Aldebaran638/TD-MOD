@@ -7,6 +7,7 @@ local _soundDistanceThreshold = 150.0
 local _soundVirtualNearDist = 40.0
 
 local _snd_engine_loop = nil
+local _snd_missile_loop = nil
 local _snd_tachyon_fire_near = {}
 local _snd_tachyon_fire_dist = {}
 local _snd_tachyon_hit_near = {}
@@ -132,8 +133,21 @@ local function _isShipOccupied(shipBodyId)
     return false
 end
 
+local function _shouldUseGenericShipSounds(shipBodyId)
+    if client.registryShipGetShipType == nil then
+        return true
+    end
+
+    local shipType = tostring(client.registryShipGetShipType(shipBodyId) or "")
+    return shipType ~= "titan"
+end
+
 local function _engineTick(shipBodyId)
     if _snd_engine_loop == nil or _snd_engine_loop == 0 then
+        return
+    end
+
+    if not _shouldUseGenericShipSounds(shipBodyId) then
         return
     end
 
@@ -177,6 +191,7 @@ end
 
 function client.soundModuleInit()
     _snd_engine_loop = LoadLoop("MOD/sound/engine.ogg")
+    _snd_missile_loop = LoadLoop("MOD/sound/missile_loop.ogg")
 
     _snd_tachyon_fire_near[1] = LoadSound("MOD/sound/tachyon_lance_fire_01.ogg")
     _snd_tachyon_fire_near[2] = LoadSound("MOD/sound/tachyon_lance_fire_02.ogg")
@@ -228,6 +243,13 @@ end
 
 function client.playMissileImpactSound(x, y, z)
     _playMissileHit(Vec(x or 0, y or 0, z or 0))
+end
+
+function client.playMissileLoopSound(x, y, z)
+    if _snd_missile_loop == nil or _snd_missile_loop == 0 then
+        return
+    end
+    PlayLoop(_snd_missile_loop, Vec(x or 0, y or 0, z or 0), 1.0)
 end
 
 function client.soundModuleTick(dt)

@@ -96,6 +96,13 @@ local function _resolveCurrentMode()
 end
 
 local function _resolveAimRingCenter(state)
+    if state ~= nil and state.lockCenterWorld ~= nil then
+        local sx, sy = UiWorldToPixel(state.lockCenterWorld)
+        if sx ~= nil and sy ~= nil then
+            return sx, sy
+        end
+    end
+
     if state ~= nil and state.shipBody ~= nil and state.shipBody ~= 0 and client.shipCrosshairGetAimWorldPoint ~= nil then
         local worldPoint = client.shipCrosshairGetAimWorldPoint(state.shipBody)
         if worldPoint ~= nil then
@@ -103,13 +110,6 @@ local function _resolveAimRingCenter(state)
             if sx ~= nil and sy ~= nil then
                 return sx, sy
             end
-        end
-    end
-
-    if state ~= nil and state.lockCenterWorld ~= nil then
-        local sx, sy = UiWorldToPixel(state.lockCenterWorld)
-        if sx ~= nil and sy ~= nil then
-            return sx, sy
         end
     end
 

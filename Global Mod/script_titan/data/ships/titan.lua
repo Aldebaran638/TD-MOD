@@ -47,6 +47,7 @@ shipTypeRegistryData.titan = {
             groupIndex = 1,
             firePosOffset = { x = 6, y = 0, z = -4 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
+            fireDeviationAngle = 2,
             aimMode = "forwardConvergeByRange",
         },
         {
@@ -54,6 +55,7 @@ shipTypeRegistryData.titan = {
             groupIndex = 1,
             firePosOffset = { x = -6, y = 0, z = -4 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
+            fireDeviationAngle = 2,
             aimMode = "forwardConvergeByRange",
         },
         {
@@ -61,6 +63,7 @@ shipTypeRegistryData.titan = {
             groupIndex = 1,
             firePosOffset = { x = 0, y = 6, z = -4 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
+            fireDeviationAngle = 2,
             aimMode = "forwardConvergeByRange",
         },
         {
@@ -68,6 +71,7 @@ shipTypeRegistryData.titan = {
             groupIndex = 1,
             firePosOffset = { x = 0, y = -6, z = -4 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
+            fireDeviationAngle = 2,
             aimMode = "forwardConvergeByRange",
         },
         {
@@ -75,6 +79,7 @@ shipTypeRegistryData.titan = {
             groupIndex = 2,
             firePosOffset = { x = 6, y = 0, z = -1 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
+            fireDeviationAngle = 2,
             aimMode = "forwardConvergeByRange",
         },
         {
@@ -82,6 +87,7 @@ shipTypeRegistryData.titan = {
             groupIndex = 2,
             firePosOffset = { x = -6, y = 0, z = -1 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
+            fireDeviationAngle = 2,
             aimMode = "forwardConvergeByRange",
         },
         {
@@ -89,6 +95,7 @@ shipTypeRegistryData.titan = {
             groupIndex = 2,
             firePosOffset = { x = 0, y = 6, z = -1 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
+            fireDeviationAngle = 2,
             aimMode = "forwardConvergeByRange",
         },
         {
@@ -96,28 +103,29 @@ shipTypeRegistryData.titan = {
             groupIndex = 2,
             firePosOffset = { x = 0, y = -6, z = -1 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
+            fireDeviationAngle = 2,
             aimMode = "forwardConvergeByRange",
         },
     },
     mSlots = {
         {
             weaponType = "swarmerMissile",
-            firePosOffset = { x = 0, y = 5, z = 2 },
+            firePosOffset = { x = 0, y = 5, z = 3 },
             fireDirRelative = { x = 0, y = 600, z = 600 },
         },
         {
             weaponType = "swarmerMissile",
-            firePosOffset = { x = 0, y = -5, z = 2 },
+            firePosOffset = { x = 0, y = -5, z = 3 },
             fireDirRelative = { x = 0, y = 600, z = 600 },
         },
         {
             weaponType = "swarmerMissile",
-            firePosOffset = { x = 5, y = 0, z = 2 },
+            firePosOffset = { x = 5, y = 0, z = 3 },
             fireDirRelative = { x = 600, y = 0, z = 600 },
         },
         {
             weaponType = "swarmerMissile",
-            firePosOffset = { x = -5, y = 0, z = 2 },
+            firePosOffset = { x = -5, y = 0, z = 3 },
             fireDirRelative = { x = -600, y = 0, z = 600 },
         },
     },

@@ -349,6 +349,26 @@ local function _applyPerditionBeamAoe(ownerShipBody, hitPos, weaponType, directH
     return summary
 end
 
+local function _shouldTreatDirectHitAsEnvironment(hitTarget, isHitStellarisBody)
+    if not isHitStellarisBody then
+        return true
+    end
+
+    if hitTarget == nil or hitTarget == 0 then
+        return true
+    end
+
+    if server.registryShipExists == nil or (not server.registryShipExists(hitTarget)) then
+        return true
+    end
+
+    if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(hitTarget) then
+        return true
+    end
+
+    return false
+end
+
 function server.tSlot_applyHitResult(shipBodyId, endPos, hitTarget, isHit, isHitStellarisBody, weaponType)
     local renderResult = {
         didHitShield = false,
@@ -363,11 +383,17 @@ function server.tSlot_applyHitResult(shipBodyId, endPos, hitTarget, isHit, isHit
 
     local weaponSettings = _resolveWeaponSettings(weaponType)
     if tostring(weaponSettings.weaponType or weaponType) == "perditionBeam" then
+        local directHitIsEnvironment = _shouldTreatDirectHitAsEnvironment(hitTarget, isHitStellarisBody)
         local aoeResult = _applyPerditionBeamAoe(shipBodyId, endPos, weaponType, hitTarget)
         renderResult.didHitShield = aoeResult.didHitShield
         renderResult.impactLayer = aoeResult.impactLayer
         renderResult.hitTargetBodyId = aoeResult.hitTargetBodyId
         renderResult.didHitStellarisBody = aoeResult.didHitStellarisBody
+
+        if directHitIsEnvironment and endPos ~= nil then
+            Explosion(endPos, 4.0)
+        end
+
         if renderResult.impactLayer == "none" then
             renderResult.impactLayer = "environment"
         end

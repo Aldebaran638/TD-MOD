@@ -121,12 +121,20 @@ local function _getProjectedOffsetSq(worldPos, centerLocal, camT)
     return dx * dx + dy * dy
 end
 
-local function _evaluateVehicleTarget(vehicleId, shipBody, shipPos, shipForward, centerLocal, camT, cfg)
+local function _evaluateVehicleTarget(vehicleId, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
     if vehicleId == nil or vehicleId == 0 then
         return nil
     end
 
+    local ownVehicleId = GetBodyVehicle(shipBody)
+    if ownVehicleId ~= nil and ownVehicleId ~= 0 and vehicleId == ownVehicleId then
+        return nil
+    end
+
     local targetBody = GetVehicleBody(vehicleId)
+    if targetBody ~= nil and targetBody ~= 0 and targetBody == shipBody then
+        return nil
+    end
     local targetPos
     
     if targetBody ~= nil and targetBody ~= 0 and targetBody ~= shipBody then
@@ -142,7 +150,7 @@ local function _evaluateVehicleTarget(vehicleId, shipBody, shipPos, shipForward,
         end
     end
 
-    local toTarget = VecSub(targetPos, shipPos)
+    local toTarget = VecSub(targetPos, aimOrigin)
     local distance = VecLength(toTarget)
     if distance <= 0.001 or distance > (cfg.lockDistance or 0.0) then
         return nil
@@ -150,7 +158,7 @@ local function _evaluateVehicleTarget(vehicleId, shipBody, shipPos, shipForward,
 
     local dir = VecScale(toTarget, 1.0 / distance)
     local minCos = math.cos(math.rad(cfg.lockHalfAngleDeg or 0.0))
-    if VecDot(shipForward, dir) < minCos then
+    if VecDot(aimForward, dir) < minCos then
         return nil
     end
 
@@ -168,13 +176,13 @@ local function _evaluateVehicleTarget(vehicleId, shipBody, shipPos, shipForward,
     }
 end
 
-local function _findBestVehicleTarget(shipBody, shipPos, shipForward, centerLocal, camT, cfg)
+local function _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
     local vehicles = FindVehicles("", true) or {}
     local best = nil
 
     for i = 1, #vehicles do
         local vehicleId = vehicles[i]
-        local entry = _evaluateVehicleTarget(vehicleId, shipBody, shipPos, shipForward, centerLocal, camT, cfg)
+        local entry = _evaluateVehicleTarget(vehicleId, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
         if entry ~= nil and (best == nil or entry.score < best.score) then
             best = entry
         end
@@ -183,7 +191,7 @@ local function _findBestVehicleTarget(shipBody, shipPos, shipForward, centerLoca
     return best
 end
 
-local function _resolveStickyTarget(state, shipBody, shipPos, shipForward, centerLocal, camT, cfg)
+local function _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
     local stickyVehicleId = 0
     if state.state == "locked" and state.lockedVehicleId ~= 0 then
         stickyVehicleId = state.lockedVehicleId
@@ -192,13 +200,13 @@ local function _resolveStickyTarget(state, shipBody, shipPos, shipForward, cente
     end
 
     if stickyVehicleId ~= 0 then
-        local sticky = _evaluateVehicleTarget(stickyVehicleId, shipBody, shipPos, shipForward, centerLocal, camT, cfg)
+        local sticky = _evaluateVehicleTarget(stickyVehicleId, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
         if sticky ~= nil then
             return sticky
         end
     end
 
-    return _findBestVehicleTarget(shipBody, shipPos, shipForward, centerLocal, camT, cfg)
+    return _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
 end
 
 function client.sSlotTargetingTick(dt)
@@ -219,14 +227,28 @@ function client.sSlotTargetingTick(dt)
     local shipPos = shipT.pos
     local shipForward = VecNormalize(TransformToParentVec(shipT, Vec(0, 0, -1)))
     local camT = GetCameraTransform()
+    local camPos = camT.pos
+    local camForward = VecNormalize(TransformToParentVec(camT, Vec(0, 0, -1)))
+    local useCameraCone = client.shipCamera ~= nil
+        and client.shipCamera.rearFreelookActive
+        and currentMode == "sSlot"
+
+    local aimOrigin = shipPos
+    local aimForward = shipForward
+    if useCameraCone then
+        aimOrigin = camPos
+        aimForward = camForward
+    end
 
     local centerDistance = math.max(12.0, math.min(cfg.lockDistance or 220.0, 100.0))
     local centerWorld = nil
-    if client.shipCrosshairGetAimWorldPoint ~= nil then
+    if useCameraCone then
+        centerWorld = VecAdd(aimOrigin, VecScale(aimForward, centerDistance))
+    elseif client.shipCrosshairGetAimWorldPoint ~= nil then
         centerWorld = client.shipCrosshairGetAimWorldPoint(shipBody)
     end
     if centerWorld == nil then
-        centerWorld = VecAdd(shipPos, VecScale(shipForward, centerDistance))
+        centerWorld = VecAdd(aimOrigin, VecScale(aimForward, centerDistance))
     end
     local centerLocal = TransformToLocalPoint(camT, centerWorld)
     if centerLocal[3] >= -0.01 then
@@ -234,7 +256,7 @@ function client.sSlotTargetingTick(dt)
     end
     state.lockCenterWorld = centerWorld
 
-    local target = _resolveStickyTarget(state, shipBody, shipPos, shipForward, centerLocal, camT, cfg)
+    local target = _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
     if target == nil then
         if state.candidateVehicleId ~= 0 or state.lockedVehicleId ~= 0 then
             state.loseTimer = state.loseTimer + (dt or 0.0)

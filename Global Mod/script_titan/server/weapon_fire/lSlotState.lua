@@ -47,6 +47,7 @@ local function _lSlotBuildConfig(slotDef)
         groupIndex = math.max(1, math.floor(tonumber(slotDef and slotDef.groupIndex) or 1)),
         firePosOffset = _lSlotCloneVec3(slotDef and slotDef.firePosOffset, 0, 0, -4),
         fireDirRelative = _lSlotCloneVec3(slotDef and slotDef.fireDirRelative, 0, 0, -1),
+        fireDeviationAngle = math.max(0.0, tonumber(slotDef and slotDef.fireDeviationAngle) or 0.0),
         aimMode = tostring((slotDef and slotDef.aimMode) or "fixed"),
         cooldown = weaponDef.cooldown or 0.0,
         maxRange = weaponDef.maxRange or 0.0,

@@ -48,6 +48,11 @@ function client.shipRollErrorTick(dt)
         return
     end
 
+    if client.shipCamera ~= nil and client.shipCamera.rearFreelookActive then
+        client.shipRequestRollError(body, 0.0)
+        return
+    end
+
     local shipT = GetBodyTransform(body)
     local shipForward = TransformToParentVec(shipT, Vec(0, 0, -1))
     local shipUp = TransformToParentVec(shipT, Vec(0, 1, 0))

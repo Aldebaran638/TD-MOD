@@ -119,6 +119,80 @@ local function relativeYawPitchToVector(yaw, pitch)
     )
 end
 
+local function _safeNormalize(v, fallback)
+    local len = VecLength(v)
+    if len < 0.0001 then
+        return fallback or Vec(0, 0, -1)
+    end
+    return VecScale(v, 1.0 / len)
+end
+
+local function _copyVec(v, fallback)
+    local source = v or fallback or Vec(0, 0, 0)
+    return Vec(source[1] or 0.0, source[2] or 0.0, source[3] or 0.0)
+end
+
+local function _resetRearFreelookState(cam)
+    cam.rearFreelookActive = false
+    cam.rearFreelookSaved = nil
+    cam.rearFreelookYaw = 0.0
+    cam.rearFreelookPitch = 0.0
+end
+
+local function _beginRearFreelook(cam, shipTransform)
+    local currentCameraWorldT = GetCameraTransform()
+    local currentCameraLocalT = TransformToLocalTransform(shipTransform, currentCameraWorldT)
+    local orbitOffsetWorld = VecSub(currentCameraWorldT.pos, shipTransform.pos)
+    local orbitRadius = VecLength(orbitOffsetWorld)
+    if orbitRadius < 0.0001 then
+        orbitOffsetWorld = TransformToParentVec(shipTransform, Vec(0, 0, 1))
+        orbitRadius = VecLength(orbitOffsetWorld)
+    end
+    local orbitYawWorld, orbitPitchWorld = vectorToWorldYawPitch(
+        _safeNormalize(orbitOffsetWorld, TransformToParentVec(shipTransform, Vec(0, 0, 1)))
+    )
+
+    cam.rearFreelookSaved = {
+        r = cam.r,
+        b = cam.b,
+        c = cam.c,
+        targetB = cam.targetB ~= nil and cam.targetB or cam.b,
+        targetC = cam.targetC ~= nil and cam.targetC or cam.c,
+        localPos = _copyVec(currentCameraLocalT.pos),
+        localRot = currentCameraLocalT.rot,
+        worldPos = _copyVec(currentCameraWorldT.pos),
+        worldRot = currentCameraWorldT.rot,
+        orbitRadius = orbitRadius,
+        orbitYaw = orbitYawWorld,
+        orbitPitch = orbitPitchWorld,
+    }
+
+    cam.rearFreelookYaw = orbitYawWorld
+    cam.rearFreelookPitch = orbitPitchWorld
+    cam.rearFreelookActive = true
+    cam.bVel = 0.0
+    cam.cVel = 0.0
+end
+
+local function _endRearFreelook(cam)
+    local saved = cam.rearFreelookSaved or nil
+    cam.rearFreelookActive = false
+
+    if saved ~= nil then
+        cam.r = saved.r or cam.r
+        cam.b = saved.b or cam.b
+        cam.c = saved.c or cam.c
+        cam.targetB = saved.targetB or cam.b
+        cam.targetC = saved.targetC or cam.c
+    end
+
+    cam.bVel = 0.0
+    cam.cVel = 0.0
+    cam.rearFreelookSaved = nil
+    cam.rearFreelookYaw = 0.0
+    cam.rearFreelookPitch = 0.0
+end
+
 
 
 local function vecLerp(a, b, t)
@@ -188,7 +262,7 @@ function client.shipCameraTick(dt)
     if vehicle == nil or vehicle == 0 then
         client.camshipBody = 0
         cam._lastControlledBody = 0
-        cam.rearFreelookActive = false
+        _resetRearFreelookState(cam)
         cam.rmbLongTriggered = false
         return
     end
@@ -198,7 +272,7 @@ function client.shipCameraTick(dt)
     if scriptBody == 0 or playerBody == nil or playerBody == 0 or playerBody ~= scriptBody then
         client.camshipBody = 0
         cam._lastControlledBody = 0
-        cam.rearFreelookActive = false
+        _resetRearFreelookState(cam)
         cam.rmbLongTriggered = false
         return
     end
@@ -207,7 +281,7 @@ function client.shipCameraTick(dt)
     if not HasTag(body, "stellarisShip") then
         client.camshipBody = 0
         cam._lastControlledBody = 0
-        cam.rearFreelookActive = false
+        _resetRearFreelookState(cam)
         cam.rmbLongTriggered = false
         return
     end
@@ -215,7 +289,7 @@ function client.shipCameraTick(dt)
     if client.registryShipExists ~= nil and (not client.registryShipExists(body)) then
         client.camshipBody = 0
         cam._lastControlledBody = 0
-        cam.rearFreelookActive = false
+        _resetRearFreelookState(cam)
         cam.rmbLongTriggered = false
         return
     end
@@ -238,7 +312,7 @@ function client.shipCameraTick(dt)
         cam.viewBlendTarget = 0.0
         cam.frontAimYaw = 0.0
         cam.frontAimPitch = 0.0
-        cam.rearFreelookActive = false
+        _resetRearFreelookState(cam)
         cam.rmbLongTriggered = false
         cam._lastControlledBody = body
     end
@@ -255,13 +329,13 @@ function client.shipCameraTick(dt)
         local hold = now - (cam.rmbPressTime or now)
         if hold >= (cam.rmbLongPressSeconds or 0.22) then
             cam.rmbLongTriggered = true
-            cam.rearFreelookActive = true
+            _beginRearFreelook(cam, shipTransform)
         end
     end
 
     if InputReleased("rmb") then
         if cam.rmbLongTriggered then
-            cam.rearFreelookActive = false
+            _endRearFreelook(cam)
         else
             if cam.viewMode == "rear" then
                 local rearOffsetNow = sphericalToCartesian(cam.r, cam.b, cam.c)
@@ -276,7 +350,7 @@ function client.shipCameraTick(dt)
                 cam.viewMode = "rear"
                 cam.viewBlendTarget = 0.0
             end
-            cam.rearFreelookActive = false
+            _resetRearFreelookState(cam)
         end
         cam.rmbLongTriggered = false
     end
@@ -285,8 +359,10 @@ function client.shipCameraTick(dt)
     local mouseDY = InputValue("mousedy")
     local mouseWheel = InputValue("mousewheel")
 
-    cam.r = cam.r - mouseWheel * cam.zoomSpeed
-    cam.r = clamp(cam.r, cam.rMin, cam.rMax)
+    if not cam.rearFreelookActive then
+        cam.r = cam.r - mouseWheel * cam.zoomSpeed
+        cam.r = clamp(cam.r, cam.rMin, cam.rMax)
+    end
 
     if cam.targetC == nil then
         cam.targetC = cam.c
@@ -296,14 +372,19 @@ function client.shipCameraTick(dt)
     end
 
     if cam.viewMode == "rear" then
-        cam.targetC = cam.targetC - mouseDX * cam.mouseSensitivity
-        cam.targetB = cam.targetB + mouseDY * cam.mouseSensitivity
+        if cam.rearFreelookActive then
+            cam.rearFreelookYaw = (cam.rearFreelookYaw or shipYawWorld) - mouseDX * cam.mouseSensitivity
+            cam.rearFreelookPitch = (cam.rearFreelookPitch or 0.0) + mouseDY * cam.mouseSensitivity
+        else
+            cam.targetC = cam.targetC - mouseDX * cam.mouseSensitivity
+            cam.targetB = cam.targetB + mouseDY * cam.mouseSensitivity
 
-        cam.targetC = unwrapNear(cam.c, cam.targetC)
-        cam.targetB = clamp(cam.targetB, -cam.angleLimitPitch, cam.angleLimitPitch)
-        local targetRelYaw = wrapAngle180(cam.targetC - shipBackYawWorld)
-        targetRelYaw = clamp(targetRelYaw, cam.angleLimitYaw1, cam.angleLimitYaw2)
-        cam.targetC = shipBackYawWorld + targetRelYaw
+            cam.targetC = unwrapNear(cam.c, cam.targetC)
+            cam.targetB = clamp(cam.targetB, -cam.angleLimitPitch, cam.angleLimitPitch)
+            local targetRelYaw = wrapAngle180(cam.targetC - shipBackYawWorld)
+            targetRelYaw = clamp(targetRelYaw, cam.angleLimitYaw1, cam.angleLimitYaw2)
+            cam.targetC = shipBackYawWorld + targetRelYaw
+        end
     else
         local frontPitchLimit = cam.frontAimPitchLimit or cam.angleLimitPitch
 
@@ -318,14 +399,19 @@ function client.shipCameraTick(dt)
     local smoothResponse = 32.0 - 22.0 * glide
     local smoothDamping = 0.70 + 0.28 * glide
 
-    cam.b, cam.bVel = _stepAngleSpring(cam.b, cam.targetB, cam.bVel, smoothResponse, smoothDamping, frameDt)
-    cam.c, cam.cVel = _stepAngleSpring(cam.c, cam.targetC, cam.cVel, smoothResponse, smoothDamping, frameDt)
+    if not cam.rearFreelookActive then
+        cam.b, cam.bVel = _stepAngleSpring(cam.b, cam.targetB, cam.bVel, smoothResponse, smoothDamping, frameDt)
+        cam.c, cam.cVel = _stepAngleSpring(cam.c, cam.targetC, cam.cVel, smoothResponse, smoothDamping, frameDt)
 
-    cam.c = unwrapNear(cam.targetC, cam.c)
-    cam.b = clamp(cam.b, -cam.angleLimitPitch, cam.angleLimitPitch)
-    local currentRelYaw = wrapAngle180(cam.c - shipBackYawWorld)
-    currentRelYaw = clamp(currentRelYaw, cam.angleLimitYaw1, cam.angleLimitYaw2)
-    cam.c = shipBackYawWorld + currentRelYaw
+        cam.c = unwrapNear(cam.targetC, cam.c)
+        cam.b = clamp(cam.b, -cam.angleLimitPitch, cam.angleLimitPitch)
+        local currentRelYaw = wrapAngle180(cam.c - shipBackYawWorld)
+        currentRelYaw = clamp(currentRelYaw, cam.angleLimitYaw1, cam.angleLimitYaw2)
+        cam.c = shipBackYawWorld + currentRelYaw
+    else
+        cam.bVel = 0.0
+        cam.cVel = 0.0
+    end
 
     local offsetWorld = sphericalToCartesian(cam.r, cam.b, cam.c)
     local rearCameraPos = VecAdd(shipPos, offsetWorld)
@@ -367,7 +453,20 @@ function client.shipCameraTick(dt)
 
     local cameraPos = vecLerp(rearCameraPos, frontCameraPos, blend)
     local blendedForward = vecLerp(rearForwardWorld, frontForwardWorld, blend)
-    if VecLength(blendedForward) < 0.0001 then
+    if cam.rearFreelookActive then
+        local saved = cam.rearFreelookSaved or {}
+        local orbitRadius = saved.orbitRadius or cam.r
+        local orbitYaw = cam.rearFreelookYaw
+        if orbitYaw == nil then
+            orbitYaw = saved.orbitYaw or shipBackYawWorld
+        end
+        local orbitPitch = cam.rearFreelookPitch
+        if orbitPitch == nil then
+            orbitPitch = saved.orbitPitch or 0.0
+        end
+        cameraPos = VecAdd(shipPos, sphericalToCartesian(orbitRadius, orbitPitch, orbitYaw))
+        blendedForward = _safeNormalize(VecSub(shipPos, cameraPos), rearForwardWorld)
+    elseif VecLength(blendedForward) < 0.0001 then
         blendedForward = rearForwardWorld
     else
         blendedForward = VecNormalize(blendedForward)

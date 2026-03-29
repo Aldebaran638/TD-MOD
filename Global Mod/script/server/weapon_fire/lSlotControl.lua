@@ -8,6 +8,39 @@ local function _lSlotVec3TableToVec(v, defaultX, defaultY, defaultZ)
     return Vec(t.x or defaultX or 0, t.y or defaultY or 0, t.z or defaultZ or 0)
 end
 
+local function _lSlotSafeNormalize(v, fallback)
+    local len = VecLength(v)
+    if len < 0.0001 then
+        return fallback or Vec(0, 0, -1)
+    end
+    return VecScale(v, 1.0 / len)
+end
+
+local function _lSlotApplyFireDeviation(dir, deviationAngleDeg)
+    local maxAngleDeg = math.max(0.0, tonumber(deviationAngleDeg) or 0.0)
+    local forward = _lSlotSafeNormalize(dir, Vec(0, 0, -1))
+    if maxAngleDeg <= 0.0001 then
+        return forward
+    end
+
+    local tangent = VecSub(Vec(0, 1, 0), VecScale(forward, VecDot(Vec(0, 1, 0), forward)))
+    if VecLength(tangent) < 0.0001 then
+        tangent = VecSub(Vec(1, 0, 0), VecScale(forward, VecDot(Vec(1, 0, 0), forward)))
+    end
+    tangent = _lSlotSafeNormalize(tangent, Vec(1, 0, 0))
+    local bitangent = _lSlotSafeNormalize(VecCross(forward, tangent), Vec(0, 0, 1))
+
+    local maxAngleRad = math.rad(maxAngleDeg)
+    local cosTheta = 1.0 - math.random() * (1.0 - math.cos(maxAngleRad))
+    local sinTheta = math.sqrt(math.max(0.0, 1.0 - cosTheta * cosTheta))
+    local phi = math.random() * math.pi * 2.0
+    local lateral = VecAdd(VecScale(tangent, math.cos(phi)), VecScale(bitangent, math.sin(phi)))
+    return _lSlotSafeNormalize(
+        VecAdd(VecScale(forward, cosTheta), VecScale(lateral, sinTheta)),
+        forward
+    )
+end
+
 local function _resolveLSlotForwardAimPointLocal(shipBody, shipT, maxRange)
     if shipBody == nil or shipBody == 0 then
         return nil
@@ -153,9 +186,9 @@ function server.lSlotControlTick(dt)
             local firePointWorld = TransformToParentPoint(shipT, firePosOffset)
             local fireDirLocal = _computeLSlotFireDirLocal(slotConfig, forwardAimPointLocal)
             local fireDirWorld = TransformToParentVec(shipT, fireDirLocal)
-            local dirLen = VecLength(fireDirWorld)
-            if dirLen >= 0.0001 then
-                fireDirWorld = VecScale(fireDirWorld, 1.0 / dirLen)
+            fireDirWorld = _lSlotSafeNormalize(fireDirWorld, TransformToParentVec(shipT, Vec(0, 0, -1)))
+            fireDirWorld = _lSlotApplyFireDeviation(fireDirWorld, slotConfig.fireDeviationAngle)
+            if VecLength(fireDirWorld) >= 0.0001 then
                 server.projectileManagerSpawnProjectile(shipBody, slotWeaponType, firePointWorld, fireDirWorld)
                 fired = true
                 slotRuntime.heat = (slotRuntime.heat or 0.0) + (slotConfig.heatPerShot or 0.0)
