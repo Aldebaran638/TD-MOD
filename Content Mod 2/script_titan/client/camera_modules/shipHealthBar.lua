@@ -4,10 +4,11 @@
 client = client or {}
 
 client.shipHealthBarConfig = client.shipHealthBarConfig or {
-    width = 560,
+    width = 1120,
     height = 20,
     bottomOffset = 90,
     segmentGap = 0,
+    leftOffset = 300,
 
     smoothDownSpeed = 7.5,
     smoothUpSpeed = 3.0,
@@ -176,8 +177,9 @@ function client.shipHealthBarDraw()
 
     local barW = cfg.width
     local barH = cfg.height
+    local leftOffset = cfg.leftOffset or 0
 
-    local x = UiCenter() - barW * 0.5
+    local x = UiCenter() - barW * 0.5 - leftOffset
     local y = UiHeight() - cfg.bottomOffset
 
     local bodyW = barW * (maxBody / maxTotal)
