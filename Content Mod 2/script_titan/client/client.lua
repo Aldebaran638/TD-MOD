@@ -7,7 +7,7 @@ local titanBodyTag = "stellarisShip"
 
 #include "registry/shipRegistry.lua"
 #include "shipRuntimeState.lua"
-#include "xSlotRenderState.lua"
+#include "tSlotRenderState.lua"
 #include "targeting/sSlotTargeting.lua"
 #include "input_handling/mainWeaponInput.lua"
 #include "input_handling/bodyMoveInput.lua"
@@ -19,8 +19,8 @@ local titanBodyTag = "stellarisShip"
 #include "camera_modules/shipHelpOverlay.lua"
 #include "camera_modules/shipCrosshair.lua"
 #include "camera_modules/sSlotHud.lua"
-#include "draw_modules/xSlotChargingFx.lua"
-#include "draw_modules/xSlotLaunchFx.lua"
+#include "draw_modules/tSlotChargingFx.lua"
+#include "draw_modules/tSlotLaunchFx.lua"
 #include "draw_modules/shieldHitFx.lua"
 #include "draw_modules/hitPointFx.lua"
 #include "draw_modules/shipDestroyedFx.lua"
@@ -38,8 +38,8 @@ function client.clientTick(dt)
     client.bodyMoveInputTick(dt)
     client.soundModuleTick(dt)
 
-    client.xSlotChargingFxTick(dt)
-    client.xSlotLaunchFxTick(dt)
+    client.tSlotChargingFxTick(dt)
+    client.tSlotLaunchFxTick(dt)
     client.shieldHitFxTick(dt)
     client.hitPointFxTick(dt)
     client.shipDestroyedFxTick(dt)

@@ -1,6 +1,6 @@
 ---@diagnostic disable: undefined-global
 
-xSlotWeaponRegistryData = xSlotWeaponRegistryData or {}
+tSlotWeaponRegistryData = tSlotWeaponRegistryData or {}
 weaponData = weaponData or {}
 
 local tachyonLanceData = {
@@ -18,5 +18,5 @@ local tachyonLanceData = {
     randomTrajectoryAngle = 0,
 }
 
-xSlotWeaponRegistryData.tachyonLance = tachyonLanceData
+tSlotWeaponRegistryData.tachyonLance = tachyonLanceData
 weaponData.tachyonLance = tachyonLanceData

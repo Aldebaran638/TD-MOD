@@ -34,9 +34,9 @@ end
 
 #include "server/weapon_fire/lSlotState.lua"
 #include "server/weapon_fire/mainWeaponControl.lua"
-#include "server/weapon_fire/xSlotState.lua"
-#include "server/weapon_fire/xSlotRenderState.lua"
-#include "server/weapon_fire/xSlotControl.lua"
+#include "server/weapon_fire/tSlotState.lua"
+#include "server/weapon_fire/tSlotRenderState.lua"
+#include "server/weapon_fire/tSlotControl.lua"
 #include "server/weapon_fire/lSlotControl.lua"
 #include "server/weapon_fire/sSlotControl.lua"
 #include "server/weapon_fire/projectileManager.lua"
@@ -57,8 +57,8 @@ function server.init()
     server.registerCurrentShip(titanShipType)
     server.shipRuntimeStateInit(server.shipBody, titanShipType, server.defaultShipType)
     server.mainWeaponRequestInit()
-    server.xSlotStateInit(titanShipType)
-    server.xSlotRenderStateInit()
+    server.tSlotStateInit(titanShipType)
+    server.tSlotRenderStateInit()
     server.lSlotStateInit(titanShipType)
     server.sSlotStateInit(titanShipType)
     local initialMode = "tSlot"
@@ -70,7 +70,7 @@ function server.init()
     if initialMode == "lSlot" then
         server.lSlotStatePushHud(true)
     elseif initialMode == "tSlot" then
-        server.xSlotStatePushHud(true)
+        server.tSlotStatePushHud(true)
     elseif initialMode == "mSlot" and server.sSlotControlSyncHud ~= nil then
         server.sSlotControlSyncHud()
     end
@@ -79,7 +79,7 @@ end
 function server.serverTick(dt)
     server.mainWeaponControlTick(dt)
     server.shipRuntimeStateSyncTick(dt)
-    server.xSlotControlTick(dt)
+    server.tSlotControlTick(dt)
     server.lSlotControlTick(dt)
     server.sSlotControlTick(dt)
     server.projectileManagerTick(dt)

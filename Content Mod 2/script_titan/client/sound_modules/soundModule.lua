@@ -148,7 +148,7 @@ end
 
 local function _tachyonEventTick(shipBodyId)
     local state = client.soundModuleState
-    local render = client.xSlotRenderGetEvent(shipBodyId)
+    local render = client.tSlotRenderGetEvent(shipBodyId)
     if render == nil then
         return
     end
@@ -161,7 +161,7 @@ local function _tachyonEventTick(shipBodyId)
 
     state.lastRenderSeqByShip[shipBodyId] = seq
 
-    if render.weaponType ~= "tachyonLance" and render.weaponType ~= "infernalRay" then
+    if render.weaponType ~= "tachyonLance" and render.weaponType ~= "perditionBeam" then
         return
     end
 

@@ -1,10 +1,10 @@
--- x-slot launch fx module
+-- t-slot launch fx module
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
 
 client = client or {}
 
-client.xSlotLaunchFxConfig = client.xSlotLaunchFxConfig or {
+client.tSlotLaunchFxConfig = client.tSlotLaunchFxConfig or {
     helixRadius = 0.22,
     helixPitch = 26.0,
     helixParticlesPerTurn = 192,
@@ -30,7 +30,7 @@ client.xSlotLaunchFxConfig = client.xSlotLaunchFxConfig or {
     coreLineJitterRadius = 0.01,
 }
 
-client.xSlotLaunchFxState = client.xSlotLaunchFxState or {
+client.tSlotLaunchFxState = client.tSlotLaunchFxState or {
     activeBeamsByShip = {},
     lastRenderSeqByShip = {},
     lastShotIdByShip = {},
@@ -66,7 +66,7 @@ end
 
 local function _resolveWeaponSettings(weaponType)
     local defs = weaponData or {}
-    return defs[weaponType or ""] or defs.infernalRay or defs.tachyonLance or {}
+    return defs[weaponType or ""] or defs.perditionBeam or defs.tachyonLance or {}
 end
 
 local function _smoothstep01(t)
@@ -170,10 +170,10 @@ local function _spawnLegacyLaunchFx(firePointWorld, hitPointWorld, cfg)
     _spawnHelixParticlesOnce(firePointWorld, hitPointWorld, seed, cfg)
 end
 
-local function _beginInfernalBeam(shipBodyId, render)
+local function _beginPerditionBeam(shipBodyId, render)
     local weaponSettings = _resolveWeaponSettings(render.weaponType)
     local launchDuration = tonumber(weaponSettings.launchFxVisualDuration) or ((tonumber(weaponSettings.launchDuration) or 0.5) + 0.22)
-    client.xSlotLaunchFxState.activeBeamsByShip[shipBodyId] = {
+    client.tSlotLaunchFxState.activeBeamsByShip[shipBodyId] = {
         shipBodyId = shipBodyId,
         weaponType = tostring(render.weaponType or ""),
         slotIndex = math.floor(render.slotIndex or 1),
@@ -196,7 +196,7 @@ local function _beamIntensity(normalizedTime)
     return 0.18 + 0.82 * envelope
 end
 
-local function _spawnInfernalMuzzleFlash(firePoint, beamDir, intensity, flashRadius)
+local function _spawnPerditionMuzzleFlash(firePoint, beamDir, intensity, flashRadius)
     PointLight(firePoint, 1.0, 0.82, 0.22, 3.5 + 6.0 * intensity)
 
     for _ = 1, math.max(3, math.floor(4 + intensity * 5)) do
@@ -214,7 +214,7 @@ local function _spawnInfernalMuzzleFlash(firePoint, beamDir, intensity, flashRad
     end
 end
 
-local function _spawnInfernalHitFlare(hitPoint, intensity)
+local function _spawnPerditionHitFlare(hitPoint, intensity)
     PointLight(hitPoint, 1.0, 0.32 + 0.18 * intensity, 0.08, 2.8 + 4.2 * intensity)
 
     for _ = 1, math.max(2, math.floor(3 + intensity * 4)) do
@@ -236,7 +236,7 @@ local function _spawnInfernalHitFlare(hitPoint, intensity)
     end
 end
 
-local function _spawnInfernalBeamParticles(beam, intensity, frameDt)
+local function _spawnPerditionBeamParticles(beam, intensity, frameDt)
     local fire = beam.firePoint
     local hit = beam.hitPoint
     local beamVec = VecSub(hit, fire)
@@ -260,8 +260,8 @@ local function _spawnInfernalBeamParticles(beam, intensity, frameDt)
     local coreEmitters = math.max(1, math.floor(coreSamples * tickScale))
     local shellEmitters = math.max(1, math.floor(shellSamples * tickScale))
 
-    _spawnInfernalMuzzleFlash(fire, beamDir, intensity, beam.muzzleFlashRadius or 1.4)
-    _spawnInfernalHitFlare(hit, intensity)
+    _spawnPerditionMuzzleFlash(fire, beamDir, intensity, beam.muzzleFlashRadius or 1.4)
+    _spawnPerditionHitFlare(hit, intensity)
 
     ParticleReset()
     ParticleColor(1.0, 0.98, 0.92, 1.0, 0.86, 0.34)
@@ -320,9 +320,9 @@ local function _spawnInfernalBeamParticles(beam, intensity, frameDt)
     PointLight(midPoint, 1.0, 0.62, 0.12, 2.2 + 3.6 * intensity)
 end
 
-function client.xSlotLaunchFxTick(dt)
-    local state = client.xSlotLaunchFxState
-    local cfg = client.xSlotLaunchFxConfig
+function client.tSlotLaunchFxTick(dt)
+    local state = client.tSlotLaunchFxState
+    local cfg = client.tSlotLaunchFxConfig
     local frameDt = dt or 0.0
     local nowTime = (GetTime ~= nil) and GetTime() or 0.0
 
@@ -330,7 +330,7 @@ function client.xSlotLaunchFxTick(dt)
     for i = 1, #shipIds do
         local shipBodyId = shipIds[i]
         if client.registryShipExists(shipBodyId) then
-            local render = client.xSlotRenderGetEvent(shipBodyId)
+            local render = client.tSlotRenderGetEvent(shipBodyId)
             if render ~= nil then
                 local seq = render.seq or -1
                 local shotId = render.shotId or -1
@@ -338,8 +338,8 @@ function client.xSlotLaunchFxTick(dt)
 
                 if seq ~= lastSeq then
                     if render.eventType == "launch_start" then
-                        if render.weaponType == "infernalRay" then
-                            _beginInfernalBeam(shipBodyId, render)
+                        if render.weaponType == "perditionBeam" then
+                            _beginPerditionBeam(shipBodyId, render)
                         else
                             _spawnLegacyLaunchFx(_tableToVec(render.firePoint), _tableToVec(render.hitPoint), cfg)
                         end
@@ -361,7 +361,7 @@ function client.xSlotLaunchFxTick(dt)
         else
             local normalized = _clamp(elapsed / duration, 0.0, 1.0)
             local intensity = _beamIntensity(normalized)
-            _spawnInfernalBeamParticles(beam, intensity, frameDt)
+            _spawnPerditionBeamParticles(beam, intensity, frameDt)
         end
     end
 end

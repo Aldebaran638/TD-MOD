@@ -10,7 +10,7 @@ shipTypeRegistryData.enigmaticCruiser = {
     maxArmorHP = 3000,
     maxBodyHP = 2000,
     shieldRadius = 7,
-    xSlotCount = 2,
+    tSlotCount = 2,
     regen = {
         tickInterval = 0.1,        -- 固定恢复步长（秒）
         shieldPerSecond = 70.0,    -- 护盾每秒恢复
@@ -31,7 +31,7 @@ shipTypeRegistryData.enigmaticCruiser = {
             baseParticleCount = 18,
         },
     },
-    xSlots = {
+    tSlots = {
         {
             weaponType = "tachyonLance",
             firePosOffset = { x = 0, y = 0, z = -4 },

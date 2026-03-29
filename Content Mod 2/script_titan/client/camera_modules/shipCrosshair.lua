@@ -13,7 +13,7 @@ client.shipCrosshairConfig = client.shipCrosshairConfig or {
 
 local function _resolveCrosshairRange()
     local defs = weaponData or {}
-    local tWeapon = defs.infernalRay or defs.tachyonLance or {}
+    local tWeapon = defs.perditionBeam or defs.tachyonLance or {}
     local maxRange = tonumber(tWeapon.maxRange) or 0
     if maxRange <= 0 then
         maxRange = tonumber(tWeapon.range) or 0

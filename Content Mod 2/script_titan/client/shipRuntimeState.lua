@@ -27,7 +27,7 @@ function client.setShipMainWeaponMode(shipBodyId, mode)
     if state == nil then
         return
     end
-    if mode == "tSlot" or mode == "xSlot" then
+    if mode == "tSlot" then
         state.currentMainWeapon = "tSlot"
     elseif mode == "lSlot" then
         state.currentMainWeapon = "lSlot"

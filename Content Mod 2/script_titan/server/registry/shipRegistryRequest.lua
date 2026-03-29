@@ -69,8 +69,8 @@ function server.shipRequestTWeaponHold(playerId, shipBodyId, request)
         return false
     end
 
-    if server.xSlotStateSetHoldRequested ~= nil then
-        server.xSlotStateSetHoldRequested(math.floor(request or 0) ~= 0)
+    if server.tSlotStateSetHoldRequested ~= nil then
+        server.tSlotStateSetHoldRequested(math.floor(request or 0) ~= 0)
     end
     return true
 end
@@ -88,11 +88,11 @@ function server.shipRequestTWeaponRelease(playerId, shipBodyId)
         return false
     end
 
-    if server.xSlotStateSetHoldRequested ~= nil then
-        server.xSlotStateSetHoldRequested(false)
+    if server.tSlotStateSetHoldRequested ~= nil then
+        server.tSlotStateSetHoldRequested(false)
     end
-    if server.xSlotStateSetReleaseRequested ~= nil then
-        server.xSlotStateSetReleaseRequested(true)
+    if server.tSlotStateSetReleaseRequested ~= nil then
+        server.tSlotStateSetReleaseRequested(true)
     end
     return true
 end

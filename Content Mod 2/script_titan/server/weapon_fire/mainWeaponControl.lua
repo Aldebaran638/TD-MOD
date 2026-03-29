@@ -56,7 +56,7 @@ end
 
 local function _mainWeaponModeUsable(mode)
     if mode == "tSlot" then
-        local slots = (server.xSlotState and server.xSlotState.slots) or {}
+        local slots = (server.tSlotState and server.tSlotState.slots) or {}
         for i = 1, #slots do
             local weaponType = (((slots[i] or {}).config) or {}).weaponType
             if _mainWeaponTypeUsable(weaponType) then
@@ -134,11 +134,11 @@ function server.mainWeaponControlTick(dt)
     end
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
         server.mainWeaponRequestReset()
-        if server.xSlotStateSetRequestFire ~= nil then
-            server.xSlotStateSetRequestFire(false)
+        if server.tSlotStateSetRequestFire ~= nil then
+            server.tSlotStateSetRequestFire(false)
         end
-        if server.xSlotStateResetRuntime ~= nil then
-            server.xSlotStateResetRuntime()
+        if server.tSlotStateResetRuntime ~= nil then
+            server.tSlotStateResetRuntime()
         end
         server.lSlotStateSetRequestFire(false)
         server.lSlotStateResetRuntime()
@@ -157,8 +157,8 @@ function server.mainWeaponControlTick(dt)
         if nextMode == "lSlot" then
             server.lSlotStatePushHud(true)
         elseif nextMode == "tSlot" then
-            if server.xSlotStatePushHud ~= nil then
-                server.xSlotStatePushHud(true)
+            if server.tSlotStatePushHud ~= nil then
+                server.tSlotStatePushHud(true)
             end
         elseif nextMode == "mSlot" and server.sSlotControlSyncHud ~= nil then
             server.sSlotControlSyncHud()
@@ -173,8 +173,8 @@ function server.mainWeaponControlTick(dt)
     if current == "lSlot" then
         server.lSlotStateSetRequestFire(true)
     elseif current == "tSlot" then
-        if server.xSlotStateSetRequestFire ~= nil then
-            server.xSlotStateSetRequestFire(true)
+        if server.tSlotStateSetRequestFire ~= nil then
+            server.tSlotStateSetRequestFire(true)
         end
     end
 end

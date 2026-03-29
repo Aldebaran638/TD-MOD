@@ -42,7 +42,7 @@ local function _runtimeClampMoveState(moveState)
 end
 
 local function _runtimeNormalizeMode(mode)
-    if mode == "tSlot" or mode == "xSlot" then
+    if mode == "tSlot" then
         return "tSlot"
     end
     if mode == "lSlot" then

@@ -3,15 +3,15 @@
 
 client = client or {}
 
-client.xSlotRenderStateByShip = client.xSlotRenderStateByShip or {}
+client.tSlotRenderStateByShip = client.tSlotRenderStateByShip or {}
 
-local function _xSlotRenderEnsureClientState(shipBodyId)
+local function _tSlotRenderEnsureClientState(shipBodyId)
     local body = math.floor(shipBodyId or 0)
     if body <= 0 then
         return nil
     end
 
-    local states = client.xSlotRenderStateByShip
+    local states = client.tSlotRenderStateByShip
     local state = states[body]
     if state == nil then
         state = {
@@ -35,7 +35,7 @@ local function _xSlotRenderEnsureClientState(shipBodyId)
     return state
 end
 
-function client.receiveXSlotRenderEvent(
+function client.receiveTSlotRenderEvent(
     shipBodyId,
     seq,
     shotId,
@@ -58,7 +58,7 @@ function client.receiveXSlotRenderEvent(
     normalZ,
     impactLayer
 )
-    local state = _xSlotRenderEnsureClientState(shipBodyId)
+    local state = _tSlotRenderEnsureClientState(shipBodyId)
     if state == nil then
         return
     end
@@ -79,10 +79,10 @@ function client.receiveXSlotRenderEvent(
     state.impactLayer = tostring(impactLayer or "none")
 end
 
-function client.xSlotRenderGetEvent(shipBodyId)
+function client.tSlotRenderGetEvent(shipBodyId)
     local body = math.floor(shipBodyId or 0)
     if body <= 0 then
         return nil
     end
-    return client.xSlotRenderStateByShip[body]
+    return client.tSlotRenderStateByShip[body]
 end

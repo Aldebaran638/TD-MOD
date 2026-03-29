@@ -13,14 +13,14 @@ end
 local function _resolveWeaponSettings(weaponType)
     local defs = weaponData or {}
     local resolvedWeaponType = weaponType or "tachyonLance"
-    local settings = defs[resolvedWeaponType] or defs.infernalRay or defs.tachyonLance or {}
+    local settings = defs[resolvedWeaponType] or defs.perditionBeam or defs.tachyonLance or {}
     if settings.cooldown == nil and settings.CD ~= nil then
         settings.cooldown = settings.CD
     end
     return settings
 end
 
-local function _xSlotWeaponTypeUsable(weaponType)
+local function _tSlotWeaponTypeUsable(weaponType)
     return weaponType ~= nil and weaponType ~= "" and weaponType ~= "none"
 end
 
@@ -101,7 +101,7 @@ local function _anyPlayerDrivingShip(shipBodyId)
     return false
 end
 
-local function _xSlotDecayCooldowns(slots, dt)
+local function _tSlotDecayCooldowns(slots, dt)
     for i = 1, #slots do
         local runtime = (slots[i] and slots[i].runtime) or nil
         if runtime ~= nil and (runtime.cd or 0.0) > 0.0 then
@@ -114,13 +114,13 @@ local function _xSlotDecayCooldowns(slots, dt)
     end
 end
 
-function server_xSlot_handleFireRequest()
-    if server.xSlotStateSetRequestFire ~= nil then
-        server.xSlotStateSetRequestFire(true)
+function server_tSlot_handleFireRequest()
+    if server.tSlotStateSetRequestFire ~= nil then
+        server.tSlotStateSetRequestFire(true)
     end
 end
 
-function server.xSlot_computeHitResult(shipBodyId, firePosOffset, fireDirRelative, weaponType)
+function server.tSlot_computeHitResult(shipBodyId, firePosOffset, fireDirRelative, weaponType)
     local invalidTarget = 0
 
     if shipBodyId == nil or shipBodyId == 0 or firePosOffset == nil or fireDirRelative == nil then
@@ -271,7 +271,7 @@ local function _applyLayeredShipDamage(hitBody, weaponType, damageScale)
     return result
 end
 
-local function _infernalRayDistanceToShipSurface(hitPos, targetBodyId)
+local function _perditionBeamDistanceToShipSurface(hitPos, targetBodyId)
     local center = _getBodyCenterWorld(targetBodyId)
     local shieldRadius = _resolveTargetShieldRadius(targetBodyId, server.defaultShipType or "titan")
     local centerDistance = VecLength(VecSub(hitPos, center))
@@ -282,7 +282,7 @@ local function _infernalRayDistanceToShipSurface(hitPos, targetBodyId)
     return surfaceDistance
 end
 
-local function _startInfernalRayHitShake(targetBodyId, strength, weaponSettings)
+local function _startPerditionBeamHitShake(targetBodyId, strength, weaponSettings)
     local amplitudeBase = tonumber((weaponSettings or {}).hitShakeAmplitude) or 0.18
     local duration = tonumber((weaponSettings or {}).hitShakeDuration) or 0.45
     local amplitude = amplitudeBase * math.max(0.0, tonumber(strength) or 0.0)
@@ -292,7 +292,7 @@ local function _startInfernalRayHitShake(targetBodyId, strength, weaponSettings)
     ClientCall(0, "client.startTitanHitShake", targetBodyId, amplitude, duration)
 end
 
-local function _applyInfernalRayAoe(ownerShipBody, hitPos, weaponType, directHitTarget)
+local function _applyPerditionBeamAoe(ownerShipBody, hitPos, weaponType, directHitTarget)
     local weaponSettings = _resolveWeaponSettings(weaponType)
     local aoeRadius = tonumber(weaponSettings.aoeRadius) or 0.0
     local minFactor = tonumber(weaponSettings.aoeMinDamageFactor) or 0.0
@@ -319,7 +319,7 @@ local function _applyInfernalRayAoe(ownerShipBody, hitPos, weaponType, directHit
         local bodyId = GetInt(registryShipIndexRoot .. "/" .. tostring(i) .. "/bodyId")
         if bodyId ~= nil and bodyId ~= 0 and bodyId ~= ownerShipBody and server.registryShipExists(bodyId) then
             if server.registryShipIsBodyDead == nil or (not server.registryShipIsBodyDead(bodyId)) then
-                local distance = _infernalRayDistanceToShipSurface(hitPos, bodyId)
+                local distance = _perditionBeamDistanceToShipSurface(hitPos, bodyId)
                 if distance <= aoeRadius then
                     local falloff = 1.0 - (distance / aoeRadius)
                     if falloff < 0.0 then
@@ -339,7 +339,7 @@ local function _applyInfernalRayAoe(ownerShipBody, hitPos, weaponType, directHit
                             summary.impactLayer = damageResult.impactLayer
                             summary.didHitStellarisBody = true
                         end
-                        _startInfernalRayHitShake(bodyId, falloff, weaponSettings)
+                        _startPerditionBeamHitShake(bodyId, falloff, weaponSettings)
                     end
                 end
             end
@@ -349,7 +349,7 @@ local function _applyInfernalRayAoe(ownerShipBody, hitPos, weaponType, directHit
     return summary
 end
 
-function server.xSlot_applyHitResult(shipBodyId, endPos, hitTarget, isHit, isHitStellarisBody, weaponType)
+function server.tSlot_applyHitResult(shipBodyId, endPos, hitTarget, isHit, isHitStellarisBody, weaponType)
     local renderResult = {
         didHitShield = false,
         impactLayer = "none",
@@ -362,8 +362,8 @@ function server.xSlot_applyHitResult(shipBodyId, endPos, hitTarget, isHit, isHit
     end
 
     local weaponSettings = _resolveWeaponSettings(weaponType)
-    if tostring(weaponSettings.weaponType or weaponType) == "infernalRay" then
-        local aoeResult = _applyInfernalRayAoe(shipBodyId, endPos, weaponType, hitTarget)
+    if tostring(weaponSettings.weaponType or weaponType) == "perditionBeam" then
+        local aoeResult = _applyPerditionBeamAoe(shipBodyId, endPos, weaponType, hitTarget)
         renderResult.didHitShield = aoeResult.didHitShield
         renderResult.impactLayer = aoeResult.impactLayer
         renderResult.hitTargetBodyId = aoeResult.hitTargetBodyId
@@ -390,8 +390,8 @@ function server.xSlot_applyHitResult(shipBodyId, endPos, hitTarget, isHit, isHit
     return renderResult
 end
 
-function server.xSlot_broadcastChargingStart(shipBodyId, slotIndex, weaponType, firePointWorld)
-    server.xSlotRenderPushEvent(shipBodyId, {
+function server.tSlot_broadcastChargingStart(shipBodyId, slotIndex, weaponType, firePointWorld)
+    server.tSlotRenderPushEvent(shipBodyId, {
         eventType = "charging_start",
         slotIndex = slotIndex,
         weaponType = weaponType,
@@ -407,8 +407,8 @@ function server.xSlot_broadcastChargingStart(shipBodyId, slotIndex, weaponType, 
     })
 end
 
-function server.xSlot_broadcastChargeState(shipBodyId, slotIndex, weaponType, firePointWorld, eventType)
-    server.xSlotRenderPushEvent(shipBodyId, {
+function server.tSlot_broadcastChargeState(shipBodyId, slotIndex, weaponType, firePointWorld, eventType)
+    server.tSlotRenderPushEvent(shipBodyId, {
         eventType = eventType or "charging_start",
         slotIndex = slotIndex,
         weaponType = weaponType,
@@ -424,8 +424,8 @@ function server.xSlot_broadcastChargeState(shipBodyId, slotIndex, weaponType, fi
     })
 end
 
-function server.xSlot_broadcastLaunchingStart(shipBodyId, slotIndex, weaponType, firePointWorld, hitPointWorld, didHit, didHitStellarisBody, didHitShield, hitTargetBodyId, normal, impactLayer)
-    server.xSlotRenderPushEvent(shipBodyId, {
+function server.tSlot_broadcastLaunchingStart(shipBodyId, slotIndex, weaponType, firePointWorld, hitPointWorld, didHit, didHitStellarisBody, didHitShield, hitTargetBodyId, normal, impactLayer)
+    server.tSlotRenderPushEvent(shipBodyId, {
         eventType = "launch_start",
         slotIndex = slotIndex,
         weaponType = weaponType,
@@ -441,8 +441,8 @@ function server.xSlot_broadcastLaunchingStart(shipBodyId, slotIndex, weaponType,
     })
 end
 
-function server.xSlot_broadcastWeaponIdle(shipBodyId, slotIndex, weaponType, firePointWorld)
-    server.xSlotRenderPushEvent(shipBodyId, {
+function server.tSlot_broadcastWeaponIdle(shipBodyId, slotIndex, weaponType, firePointWorld)
+    server.tSlotRenderPushEvent(shipBodyId, {
         eventType = "idle",
         slotIndex = slotIndex,
         weaponType = weaponType,
@@ -458,13 +458,13 @@ function server.xSlot_broadcastWeaponIdle(shipBodyId, slotIndex, weaponType, fir
     })
 end
 
-local function _xSlotPickReadySlot(slots, preferredSlot)
+local function _tSlotPickReadySlot(slots, preferredSlot)
     local preferred = math.floor(preferredSlot or 0)
     if preferred >= 1 and preferred <= #slots then
         local entry = slots[preferred] or {}
         local config = entry.config or {}
         local runtime = entry.runtime or {}
-        if _xSlotWeaponTypeUsable(config.weaponType) and (runtime.cd or 0.0) <= 0.0 then
+        if _tSlotWeaponTypeUsable(config.weaponType) and (runtime.cd or 0.0) <= 0.0 then
             return preferred
         end
     end
@@ -473,7 +473,7 @@ local function _xSlotPickReadySlot(slots, preferredSlot)
         local entry = slots[i] or {}
         local config = entry.config or {}
         local runtime = entry.runtime or {}
-        if _xSlotWeaponTypeUsable(config.weaponType) and (runtime.cd or 0.0) <= 0.0 then
+        if _tSlotWeaponTypeUsable(config.weaponType) and (runtime.cd or 0.0) <= 0.0 then
             return i
         end
     end
@@ -481,7 +481,7 @@ local function _xSlotPickReadySlot(slots, preferredSlot)
     return nil
 end
 
-local function _xSlotBeginLegacyCharging(slotEntry)
+local function _tSlotBeginLegacyCharging(slotEntry)
     local config = slotEntry.config or {}
     local runtime = slotEntry.runtime or {}
     runtime.state = "charging"
@@ -494,7 +494,7 @@ local function _xSlotBeginLegacyCharging(slotEntry)
     end
 end
 
-local function _xSlotTickHoldReleaseWeapon(slotEntry, holdRequested, releaseRequested, dt)
+local function _tSlotTickHoldReleaseWeapon(slotEntry, holdRequested, releaseRequested, dt)
     local config = slotEntry.config or {}
     local runtime = slotEntry.runtime or {}
     local currentState = tostring(runtime.state or "idle")
@@ -566,7 +566,7 @@ local function _xSlotTickHoldReleaseWeapon(slotEntry, holdRequested, releaseRequ
     return prevState, tostring(runtime.state or currentState), launchTriggered
 end
 
-local function _xSlotTickLegacyWeapon(slotEntry, requestFire, dt)
+local function _tSlotTickLegacyWeapon(slotEntry, requestFire, dt)
     local config = slotEntry.config or {}
     local runtime = slotEntry.runtime or {}
     local currentState = tostring(runtime.state or "idle")
@@ -574,7 +574,7 @@ local function _xSlotTickLegacyWeapon(slotEntry, requestFire, dt)
     local launchTriggered = false
 
     if currentState == "idle" and requestFire and (runtime.cd or 0.0) <= 0.0 then
-        _xSlotBeginLegacyCharging(slotEntry)
+        _tSlotBeginLegacyCharging(slotEntry)
         currentState = tostring(runtime.state or "charging")
         if currentState == "launching" then
             launchTriggered = true
@@ -608,7 +608,7 @@ local function _xSlotTickLegacyWeapon(slotEntry, requestFire, dt)
     return prevState, tostring(runtime.state or currentState), launchTriggered
 end
 
-function server.xSlotControlTick(dt)
+function server.tSlotControlTick(dt)
     local shipBody = server.shipBody
     if shipBody == nil or shipBody == 0 then
         return
@@ -617,24 +617,24 @@ function server.xSlotControlTick(dt)
         return
     end
 
-    local xState = server.xSlotState
-    if xState == nil then
+    local tState = server.tSlotState
+    if tState == nil then
         return
     end
 
-    local slots = xState.slots or {}
+    local slots = tState.slots or {}
     if #slots <= 0 then
         return
     end
 
-    _xSlotDecayCooldowns(slots, dt)
+    _tSlotDecayCooldowns(slots, dt)
 
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
-        if server.xSlotStateResetRuntime ~= nil then
-            server.xSlotStateResetRuntime()
+        if server.tSlotStateResetRuntime ~= nil then
+            server.tSlotStateResetRuntime()
         end
-        if server.xSlotStatePushHud ~= nil then
-            server.xSlotStatePushHud(true)
+        if server.tSlotStatePushHud ~= nil then
+            server.tSlotStatePushHud(true)
         end
         return
     end
@@ -643,19 +643,19 @@ function server.xSlotControlTick(dt)
     local shipOccupied = _anyPlayerDrivingShip(shipBody)
     local canOperate = (currentMode == "tSlot") and shipOccupied
     if not canOperate then
-        if server.xSlotStateClearTransientRuntime ~= nil then
-            server.xSlotStateClearTransientRuntime()
+        if server.tSlotStateClearTransientRuntime ~= nil then
+            server.tSlotStateClearTransientRuntime()
         end
     end
 
-    local holdRequested = canOperate and (server.xSlotStateGetHoldRequested ~= nil and server.xSlotStateGetHoldRequested() or false) or false
-    local releaseRequested = canOperate and (server.xSlotStateConsumeReleaseRequested ~= nil and server.xSlotStateConsumeReleaseRequested() or false) or false
-    local legacyRequest = canOperate and (server.xSlotStateConsumeRequestFire ~= nil and server.xSlotStateConsumeRequestFire() or false) or false
+    local holdRequested = canOperate and (server.tSlotStateGetHoldRequested ~= nil and server.tSlotStateGetHoldRequested() or false) or false
+    local releaseRequested = canOperate and (server.tSlotStateConsumeReleaseRequested ~= nil and server.tSlotStateConsumeReleaseRequested() or false) or false
+    local legacyRequest = canOperate and (server.tSlotStateConsumeRequestFire ~= nil and server.tSlotStateConsumeRequestFire() or false) or false
 
-    local activeSlot = math.floor(xState.activeSlot or 1)
+    local activeSlot = math.floor(tState.activeSlot or 1)
     if activeSlot < 1 or activeSlot > #slots then
         activeSlot = 1
-        xState.activeSlot = activeSlot
+        tState.activeSlot = activeSlot
     end
 
     local activeEntry = slots[activeSlot] or {}
@@ -664,17 +664,17 @@ function server.xSlotControlTick(dt)
     local activeState = tostring(activeRuntime.state or "idle")
     local triggerMode = tostring(activeConfig.triggerMode or "press")
 
-    if activeState == "idle" or (activeRuntime.cd or 0.0) > 0.0 or (not _xSlotWeaponTypeUsable(activeConfig.weaponType)) then
+    if activeState == "idle" or (activeRuntime.cd or 0.0) > 0.0 or (not _tSlotWeaponTypeUsable(activeConfig.weaponType)) then
         local preferredSlot = activeSlot
         if triggerMode == "hold_release" and ((activeRuntime.charge or 0.0) > 0.0) and (activeRuntime.cd or 0.0) <= 0.0 then
             preferredSlot = activeSlot
         elseif holdRequested or legacyRequest then
-            preferredSlot = _xSlotPickReadySlot(slots, activeSlot) or activeSlot
+            preferredSlot = _tSlotPickReadySlot(slots, activeSlot) or activeSlot
         end
 
         if preferredSlot ~= activeSlot then
             activeSlot = preferredSlot
-            xState.activeSlot = activeSlot
+            tState.activeSlot = activeSlot
             activeEntry = slots[activeSlot] or {}
             activeConfig = activeEntry.config or {}
             activeRuntime = activeEntry.runtime or {}
@@ -685,9 +685,9 @@ function server.xSlotControlTick(dt)
 
     local prevState, newState, launchTriggered
     if triggerMode == "hold_release" then
-        prevState, newState, launchTriggered = _xSlotTickHoldReleaseWeapon(activeEntry, holdRequested, releaseRequested, dt)
+        prevState, newState, launchTriggered = _tSlotTickHoldReleaseWeapon(activeEntry, holdRequested, releaseRequested, dt)
     else
-        prevState, newState, launchTriggered = _xSlotTickLegacyWeapon(activeEntry, legacyRequest, dt)
+        prevState, newState, launchTriggered = _tSlotTickLegacyWeapon(activeEntry, legacyRequest, dt)
     end
 
     local mountPos = activeConfig.firePosOffset or { x = 0, y = 0, z = -4 }
@@ -700,20 +700,20 @@ function server.xSlotControlTick(dt)
 
     if newState ~= prevState then
         if newState == "charging" then
-            server.xSlot_broadcastChargingStart(shipBody, activeSlot, runtimeWeaponType, firePointWorld)
+            server.tSlot_broadcastChargingStart(shipBody, activeSlot, runtimeWeaponType, firePointWorld)
         elseif newState == "charged" then
-            server.xSlot_broadcastChargeState(shipBody, activeSlot, runtimeWeaponType, firePointWorld, "charged_hold")
+            server.tSlot_broadcastChargeState(shipBody, activeSlot, runtimeWeaponType, firePointWorld, "charged_hold")
         elseif newState == "decaying" then
-            server.xSlot_broadcastChargeState(shipBody, activeSlot, runtimeWeaponType, firePointWorld, "decaying_start")
+            server.tSlot_broadcastChargeState(shipBody, activeSlot, runtimeWeaponType, firePointWorld, "decaying_start")
         elseif newState == "idle" then
-            server.xSlot_broadcastWeaponIdle(shipBody, activeSlot, runtimeWeaponType, firePointWorld)
+            server.tSlot_broadcastWeaponIdle(shipBody, activeSlot, runtimeWeaponType, firePointWorld)
         end
     end
 
-    if launchTriggered and _xSlotWeaponTypeUsable(runtimeWeaponType) then
-        local endPos, hitTarget, isHit, isHitStellarisBody, normal = server.xSlot_computeHitResult(shipBody, firePosOffset, fireDir, runtimeWeaponType)
-        local renderHitResult = server.xSlot_applyHitResult(shipBody, endPos, hitTarget, isHit, isHitStellarisBody, runtimeWeaponType)
-        server.xSlot_broadcastLaunchingStart(
+    if launchTriggered and _tSlotWeaponTypeUsable(runtimeWeaponType) then
+        local endPos, hitTarget, isHit, isHitStellarisBody, normal = server.tSlot_computeHitResult(shipBody, firePosOffset, fireDir, runtimeWeaponType)
+        local renderHitResult = server.tSlot_applyHitResult(shipBody, endPos, hitTarget, isHit, isHitStellarisBody, runtimeWeaponType)
+        server.tSlot_broadcastLaunchingStart(
             shipBody,
             activeSlot,
             runtimeWeaponType,
@@ -728,10 +728,10 @@ function server.xSlotControlTick(dt)
         )
     end
 
-    xState.lastTickState = tostring((activeEntry.runtime or {}).state or "idle")
-    xState.lastTickActiveSlot = activeSlot
+    tState.lastTickState = tostring((activeEntry.runtime or {}).state or "idle")
+    tState.lastTickActiveSlot = activeSlot
 
-    if server.xSlotStatePushHud ~= nil then
-        server.xSlotStatePushHud(false)
+    if server.tSlotStatePushHud ~= nil then
+        server.tSlotStatePushHud(false)
     end
 end

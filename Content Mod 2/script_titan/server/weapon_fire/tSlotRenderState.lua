@@ -3,12 +3,12 @@
 
 server = server or {}
 
-server.xSlotRenderState = server.xSlotRenderState or {
+server.tSlotRenderState = server.tSlotRenderState or {
     seq = 0,
     shotId = 0,
 }
 
-local function _xSlotRenderStateVec3ToArray(v, defaultX, defaultY, defaultZ)
+local function _tSlotRenderStateVec3ToArray(v, defaultX, defaultY, defaultZ)
     local t = v or {}
     local x = t.x
     if x == nil then x = t[1] end
@@ -24,22 +24,22 @@ local function _xSlotRenderStateVec3ToArray(v, defaultX, defaultY, defaultZ)
     }
 end
 
-function server.xSlotRenderStateInit()
-    server.xSlotRenderState = {
+function server.tSlotRenderStateInit()
+    server.tSlotRenderState = {
         seq = 0,
         shotId = 0,
     }
-    return server.xSlotRenderState
+    return server.tSlotRenderState
 end
 
-function server.xSlotRenderPushEvent(shipBodyId, payload)
+function server.tSlotRenderPushEvent(shipBodyId, payload)
     if shipBodyId == nil or shipBodyId == 0 then
         return false
     end
 
-    local state = server.xSlotRenderState
+    local state = server.tSlotRenderState
     if state == nil then
-        state = server.xSlotRenderStateInit()
+        state = server.tSlotRenderStateInit()
     end
 
     local p = payload or {}
@@ -49,9 +49,9 @@ function server.xSlotRenderPushEvent(shipBodyId, payload)
         state.shotId = math.floor((state.shotId or 0) + 1)
     end
 
-    local firePoint = _xSlotRenderStateVec3ToArray(p.firePoint, 0.0, 0.0, 0.0)
-    local hitPoint = _xSlotRenderStateVec3ToArray(p.hitPoint, 0.0, 0.0, 0.0)
-    local normal = _xSlotRenderStateVec3ToArray(p.normal, 0.0, 1.0, 0.0)
+    local firePoint = _tSlotRenderStateVec3ToArray(p.firePoint, 0.0, 0.0, 0.0)
+    local hitPoint = _tSlotRenderStateVec3ToArray(p.hitPoint, 0.0, 0.0, 0.0)
+    local normal = _tSlotRenderStateVec3ToArray(p.normal, 0.0, 1.0, 0.0)
     local impactLayer = tostring(p.impactLayer or "none")
     if impactLayer ~= "none"
         and impactLayer ~= "shield"
@@ -63,7 +63,7 @@ function server.xSlotRenderPushEvent(shipBodyId, payload)
 
     ClientCall(
         0,
-        "client.receiveXSlotRenderEvent",
+        "client.receiveTSlotRenderEvent",
         shipBodyId,
         state.seq,
         state.shotId or 0,

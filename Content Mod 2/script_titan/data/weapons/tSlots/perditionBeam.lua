@@ -1,10 +1,10 @@
 ---@diagnostic disable: undefined-global
 
-xSlotWeaponRegistryData = xSlotWeaponRegistryData or {}
+tSlotWeaponRegistryData = tSlotWeaponRegistryData or {}
 weaponData = weaponData or {}
 
-local infernalRayData = {
-    weaponType = "infernalRay",
+local perditionBeamData = {
+    weaponType = "perditionBeam",
     displayName = "Perdition Beam",
     triggerMode = "hold_release",
     maxRange = 2200,
@@ -43,5 +43,5 @@ local infernalRayData = {
     launchFxShellBurstPerStep = 4,
 }
 
-xSlotWeaponRegistryData.infernalRay = infernalRayData
-weaponData.infernalRay = infernalRayData
+tSlotWeaponRegistryData.perditionBeam = perditionBeamData
+weaponData.perditionBeam = perditionBeamData

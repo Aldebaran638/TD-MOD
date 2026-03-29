@@ -8,7 +8,7 @@ shipTypeRegistryData.titan = {
     maxArmorHP = 6000,
     maxBodyHP = 4000,
     shieldRadius = 10,
-    xSlotCount = 2,
+    tSlotCount = 2,
     regen = {
         tickInterval = 0.1,
         shieldPerSecond = 140.0,
@@ -31,12 +31,12 @@ shipTypeRegistryData.titan = {
     },
     tSlots = {
         {
-            weaponType = "infernalRay",
+            weaponType = "perditionBeam",
             firePosOffset = { x = 0, y = 0, z = -3.5 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
         },
         {
-            weaponType = "infernalRay",
+            weaponType = "perditionBeam",
             firePosOffset = { x = 0, y = 0, z = -3.5 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
         },

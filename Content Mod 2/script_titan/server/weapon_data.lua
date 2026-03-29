@@ -3,8 +3,8 @@
 
 weaponData = weaponData or {}
 
-#include "../data/weapons/xSlots/infernalRay.lua"
-#include "../data/weapons/xSlots/tachyonLance.lua"
+#include "../data/weapons/tSlots/perditionBeam.lua"
+#include "../data/weapons/tSlots/tachyonLance.lua"
 #include "../data/weapons/lSlots/kineticArtillery.lua"
 #include "../data/weapons/sSlots/swarmerMissile.lua"
 

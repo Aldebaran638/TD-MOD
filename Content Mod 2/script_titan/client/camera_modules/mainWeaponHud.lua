@@ -44,10 +44,10 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     targetLSlotHeatFraction2 = 0.0,
     lSlotOverheated1 = false,
     lSlotOverheated2 = false,
-    xSlotFill1 = 1.0,
-    xSlotFill2 = 1.0,
-    xSlotPhase1 = "idle",
-    xSlotPhase2 = "idle",
+    tSlotFill1 = 1.0,
+    tSlotFill2 = 1.0,
+    tSlotPhase1 = "idle",
+    tSlotPhase2 = "idle",
     sSlotProgress = 0.0,
     targetSSlotProgress = 0.0,
     sSlotStatus = "NO TARGET",
@@ -58,7 +58,7 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
 }
 
 client.lSlotHudStateByShip = client.lSlotHudStateByShip or {}
-client.xSlotHudStateByShip = client.xSlotHudStateByShip or {}
+client.tSlotHudStateByShip = client.tSlotHudStateByShip or {}
 client.sSlotHudStateByShip = client.sSlotHudStateByShip or {}
 
 local function _mainWeaponHudClamp(v, a, b)
@@ -132,13 +132,13 @@ local function _getOrCreateLSlotHudState(shipBodyId)
     return hud
 end
 
-local function _getOrCreateXSlotHudState(shipBodyId)
+local function _getOrCreateTSlotHudState(shipBodyId)
     local body = math.floor(shipBodyId or 0)
     if body <= 0 then
         return nil
     end
 
-    local states = client.xSlotHudStateByShip
+    local states = client.tSlotHudStateByShip
     local hud = states[body]
     if hud == nil then
         hud = {
@@ -185,8 +185,8 @@ function client.resetLSlotHudState(shipBodyId)
     end
 end
 
-function client.updateXSlotHudState(shipBodyId, value1, value2, maxValue1, maxValue2, phase1, phase2)
-    local hud = _getOrCreateXSlotHudState(shipBodyId)
+function client.updateTSlotHudState(shipBodyId, value1, value2, maxValue1, maxValue2, phase1, phase2)
+    local hud = _getOrCreateTSlotHudState(shipBodyId)
     if hud == nil then
         return
     end
@@ -198,7 +198,7 @@ function client.updateXSlotHudState(shipBodyId, value1, value2, maxValue1, maxVa
     hud.phase2 = tostring(phase2 or "idle")
 end
 
-local function _resolveXSlotFill(value, maxValue, phase)
+local function _resolveTSlotFill(value, maxValue, phase)
     local maxV = math.max(0.0, tonumber(maxValue) or 0.0)
     local curr = math.max(0.0, tonumber(value) or 0.0)
     local p = tostring(phase or "idle")
@@ -220,7 +220,7 @@ local function _resolveXSlotFill(value, maxValue, phase)
     return 1.0
 end
 
-local function _xSlotPhasePriority(phase)
+local function _tSlotPhasePriority(phase)
     local p = tostring(phase or "idle")
     if p == "charged" then return 6 end
     if p == "charging" then return 5 end
@@ -231,14 +231,14 @@ local function _xSlotPhasePriority(phase)
 end
 
 local function _resolveTSlotTopStatus(state)
-    local phase1 = tostring(state.xSlotPhase1 or "idle")
-    local phase2 = tostring(state.xSlotPhase2 or "idle")
-    local fill1 = tonumber(state.xSlotFill1) or 1.0
-    local fill2 = tonumber(state.xSlotFill2) or 1.0
+    local phase1 = tostring(state.tSlotPhase1 or "idle")
+    local phase2 = tostring(state.tSlotPhase2 or "idle")
+    local fill1 = tonumber(state.tSlotFill1) or 1.0
+    local fill2 = tonumber(state.tSlotFill2) or 1.0
 
     local phase = phase1
     local fill = fill1
-    if _xSlotPhasePriority(phase2) > _xSlotPhasePriority(phase1) or (_xSlotPhasePriority(phase2) == _xSlotPhasePriority(phase1) and fill2 > fill1) then
+    if _tSlotPhasePriority(phase2) > _tSlotPhasePriority(phase1) or (_tSlotPhasePriority(phase2) == _tSlotPhasePriority(phase1) and fill2 > fill1) then
         phase = phase2
         fill = fill2
     end
@@ -315,10 +315,10 @@ function client.mainWeaponHudTick(dt)
         state.currentMainWeapon = "tSlot"
         state.lSlotOverheated1 = false
         state.lSlotOverheated2 = false
-        state.xSlotFill1 = 1.0
-        state.xSlotFill2 = 1.0
-        state.xSlotPhase1 = "idle"
-        state.xSlotPhase2 = "idle"
+        state.tSlotFill1 = 1.0
+    state.tSlotFill2 = 1.0
+    state.tSlotPhase1 = "idle"
+    state.tSlotPhase2 = "idle"
         state.targetSSlotProgress = 0.0
         state.sSlotProgress = 0.0
         state.sSlotStatus = "NO TARGET"
@@ -358,7 +358,7 @@ function client.mainWeaponHudTick(dt)
     state.lSlotOverheated1 = group1.overheated and true or false
     state.lSlotOverheated2 = group2.overheated and true or false
 
-    local xHud = client.xSlotHudStateByShip[body] or {
+    local tHud = client.tSlotHudStateByShip[body] or {
         value1 = 0.0,
         value2 = 0.0,
         maxValue1 = 1.0,
@@ -366,10 +366,10 @@ function client.mainWeaponHudTick(dt)
         phase1 = "idle",
         phase2 = "idle",
     }
-    state.xSlotPhase1 = tostring(xHud.phase1 or "idle")
-    state.xSlotPhase2 = tostring(xHud.phase2 or "idle")
-    state.xSlotFill1 = _resolveXSlotFill(xHud.value1, xHud.maxValue1, xHud.phase1)
-    state.xSlotFill2 = _resolveXSlotFill(xHud.value2, xHud.maxValue2, xHud.phase2)
+    state.tSlotPhase1 = tostring(tHud.phase1 or "idle")
+    state.tSlotPhase2 = tostring(tHud.phase2 or "idle")
+    state.tSlotFill1 = _resolveTSlotFill(tHud.value1, tHud.maxValue1, tHud.phase1)
+    state.tSlotFill2 = _resolveTSlotFill(tHud.value2, tHud.maxValue2, tHud.phase2)
 
     if client.sSlotTargetingGetSummary ~= nil then
         local statusText, progress = client.sSlotTargetingGetSummary(body)
@@ -555,8 +555,8 @@ function client.mainWeaponHudDraw()
         UiPop()
 
         if currentMode == "tSlot" then
-            _drawXCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill1, "T1", cfg, cfg.tSlotColor)
-            _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill2, "T2", cfg, cfg.tSlotColor)
+            _drawXCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.tSlotFill1, "T1", cfg, cfg.tSlotColor)
+            _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.tSlotFill2, "T2", cfg, cfg.tSlotColor)
         elseif currentMode == "mSlot" then
             _drawXCooldownBar(12, 76, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.sSlotFill1, "M1", cfg, cfg.mSlotColor)
             _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 76, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.sSlotFill2, "M2", cfg, cfg.mSlotColor)

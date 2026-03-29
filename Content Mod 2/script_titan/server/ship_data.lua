@@ -12,5 +12,5 @@ shipData.titan = {
     bodyHP = 4000,
     shieldRecoveryRate = 50,
     armorRecoveryRate = 20,
-    xSlotNum = 2,
+    tSlotNum = 2,
 }

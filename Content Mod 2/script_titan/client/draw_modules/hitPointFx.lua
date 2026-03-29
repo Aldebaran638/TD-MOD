@@ -114,7 +114,7 @@ function client.hitPointFxTick(dt)
     for i = 1, #shipIds do
         local shipBodyId = shipIds[i]
         if client.registryShipExists(shipBodyId) then
-            local render = client.xSlotRenderGetEvent(shipBodyId)
+            local render = client.tSlotRenderGetEvent(shipBodyId)
             if render ~= nil then
                 local seq = render.seq or -1
                 local shotId = render.shotId or -1
