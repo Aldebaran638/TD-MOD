@@ -4,12 +4,12 @@
 client = client or {}
 
 client.shipCamera = client.shipCamera or {
-    r = 40,
+    r = 20,
     b = 0,
     c = 0,
 
-    rMin = 30,
-    rMax = 50,
+    rMin = 15,
+    rMax = 35,
 
     angleLimitPitch = 85,
     angleLimitYaw1 = -90,
@@ -20,7 +20,7 @@ client.shipCamera = client.shipCamera or {
     glideStrength = 0.55, -- 0.0=almost no glide, 1.0=very floaty
     zoomSpeed = 0.5,
     switchDuration = 0.30,
-    frontOffset = { x = 0, y = 3, z = -7 },
+    frontOffset = { x = 0, y = 0, z = -3 },
     viewMode = "rear",
     viewBlend = 0.0,
     viewBlendTarget = 0.0,
