@@ -9,7 +9,7 @@ local _soundVirtualNearDist = 40.0
 local _snd_engine_loop = nil
 local _snd_gamma_fire = {}
 local _snd_gamma_hit = {}
-local _snd_p_fire = nil
+local _snd_p_fire = {}
 local _snd_p_hit = nil
 local _snd_g_fire = {}
 local _snd_g_hit = {}
@@ -61,30 +61,34 @@ local function _isShipOccupied(shipBodyId)
 end
 
 function client.soundModuleInit()
-    _snd_engine_loop = LoadLoop("MOD/sound/engine.ogg")
-    _snd_gamma_fire[1] = LoadSound("MOD/sound/tachyon_lance_fire_01.ogg")
-    _snd_gamma_fire[2] = LoadSound("MOD/sound/tachyon_lance_fire_02.ogg")
-    _snd_gamma_hit[1] = LoadSound("MOD/sound/tachyon_lance_hit_01.ogg")
-    _snd_gamma_hit[2] = LoadSound("MOD/sound/tachyon_lance_hit_02.ogg")
-    _snd_p_fire = LoadSound("MOD/sound/kinectic_artillery_fire_01.ogg")
+    _snd_engine_loop = LoadLoop("MOD/sound/dem_sfx_psi_ship_transport_ship_idle_01.ogg")
+    _snd_gamma_fire[1] = LoadSound("MOD/sound/laser_fire_01.ogg")
+    _snd_gamma_fire[2] = LoadSound("MOD/sound/laser_fire_02.ogg")
+    _snd_gamma_fire[3] = LoadSound("MOD/sound/laser_fire_03.ogg")
+    _snd_gamma_hit[1] = LoadSound("MOD/sound/laser_hit_01.ogg")
+    _snd_p_fire[1] = LoadSound("MOD/sound/flak_weapon_fire_01.ogg")
+    _snd_p_fire[2] = LoadSound("MOD/sound/flak_weapon_fire_02.ogg")
+    _snd_p_fire[3] = LoadSound("MOD/sound/flak_weapon_fire_03.ogg")
+    _snd_p_fire[4] = LoadSound("MOD/sound/flak_weapon_fire_04.ogg")
     _snd_p_hit = LoadSound("MOD/sound/kinectic_artillery_hit_01.ogg")
-    _snd_g_fire[1] = LoadSound("MOD/sound/missile_fire_01.ogg")
-    _snd_g_fire[2] = LoadSound("MOD/sound/missile_fire_02.ogg")
+    _snd_g_fire[1] = LoadSound("MOD/sound/swarmer_missile_fire_01.ogg")
+    _snd_g_fire[2] = LoadSound("MOD/sound/swarmer_missile_fire_02.ogg")
+    _snd_g_fire[3] = LoadSound("MOD/sound/swarmer_missile_fire_03.ogg")
     _snd_g_hit[1] = LoadSound("MOD/sound/distance_missile_fire_01.ogg")
     _snd_g_hit[2] = LoadSound("MOD/sound/distance_missile_fire_02.ogg")
     _snd_missile_loop = LoadLoop("MOD/sound/missile_loop.ogg")
 end
 
 function client.playEscortPFireSound(x, y, z)
-    _playAt(_snd_p_fire, _resolvePlayPos(Vec(x or 0, y or 0, z or 0)), 0.85)
+    _playAt(_randomPick(_snd_p_fire), _resolvePlayPos(Vec(x or 0, y or 0, z or 0)), 1.0)
 end
 
 function client.playEscortPHitSound(x, y, z)
-    _playAt(_snd_p_hit, _resolvePlayPos(Vec(x or 0, y or 0, z or 0)), 0.9)
+    _playAt(_snd_p_hit, _resolvePlayPos(Vec(x or 0, y or 0, z or 0)), 1.0)
 end
 
 function client.playEscortGFireSound(x, y, z)
-    _playAt(_randomPick(_snd_g_fire), _resolvePlayPos(Vec(x or 0, y or 0, z or 0)), 1.0)
+    _playAt(_randomPick(_snd_g_fire), _resolvePlayPos(Vec(x or 0, y or 0, z or 0)), 0.2)
 end
 
 function client.playEscortGHitSound(x, y, z)
@@ -95,7 +99,7 @@ function client.playMissileLoopSound(x, y, z)
     if _snd_missile_loop == nil or _snd_missile_loop == 0 then
         return
     end
-    PlayLoop(_snd_missile_loop, _resolvePlayPos(Vec(x or 0, y or 0, z or 0)), 0.6)
+    PlayLoop(_snd_missile_loop, _resolvePlayPos(Vec(x or 0, y or 0, z or 0)), 1.0)
 end
 
 function client.soundModuleTick(dt)

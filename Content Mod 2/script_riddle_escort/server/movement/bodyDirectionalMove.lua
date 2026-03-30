@@ -4,8 +4,8 @@
 server = server or {}
 
 server.bodyDirectionalMoveConfig = server.bodyDirectionalMoveConfig or {
-    forwardAcceleration = 30.0,   -- W 前进加速度
-    backwardAcceleration = 20.0,  -- S 后退加速度
+    forwardAcceleration = 80.0,   -- W 前进加速度
+    backwardAcceleration = 70.0,  -- S 后退加速度
 }
 
 function server.bodyDirectionalMoveTick(dt)

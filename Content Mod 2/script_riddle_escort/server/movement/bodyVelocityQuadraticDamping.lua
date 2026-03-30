@@ -4,7 +4,7 @@
 server = server or {}
 
 server.bodyVelocityQuadraticDampingConfig = server.bodyVelocityQuadraticDampingConfig or {
-    quadraticRho = 20000,  -- 二次阻尼系数：阻尼力 = rho * speed^2
+    quadraticRho = 200,  -- 二次阻尼系数：阻尼力 = rho * speed^2
     minSpeed = 0.01,     -- 低于该速度时不施加阻尼
 }
 

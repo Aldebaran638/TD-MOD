@@ -33,25 +33,49 @@ end
 
 local function _spawnSphericalShockwave(pos, impactLayer, didHitShield)
     local r1, g1, b1, r2, g2, b2 = _resolveLayerColors(impactLayer)
-    PointLight(pos, r1, g1, b1, 6.0)
 
+    PointLight(pos, r1, g1, b1, 8.0)
+
+    -- 内部核心：创建一个实心的球体效果
     ParticleReset()
     ParticleColor(r1, g1, b1, r2, g2, b2)
-    ParticleRadius(0.35, 0.0, "easeout")
+    ParticleRadius(0.5, 0.0, "easeout")
     ParticleAlpha(0.94, 0.0)
     ParticleGravity(0.0)
     ParticleDrag(0.02)
-    ParticleEmissive(25.0, 0.0)
+    ParticleEmissive(35.0, 0.0)
     ParticleCollide(0.0)
-    for _ = 1, 40 do
+    for _ = 1, 60 do
         local dir = _randomUnitVec()
-        local spawnPos = VecAdd(pos, VecScale(dir, 0.5 * math.random()))
-        local vel = VecScale(dir, 8.0 + 6.0 * math.random())
-        SpawnParticle(spawnPos, vel, 0.8 + 0.2 * math.random())
+        local startRadius = 0.0 + 0.5 * math.random()
+        local spawnPos = VecAdd(pos, VecScale(dir, startRadius))
+        local radialSpeed = 10.0 + 8.0 * math.random()
+        local vel = VecScale(dir, radialSpeed)
+        local life = 1.0 + 0.3 * math.random()
+        SpawnParticle(spawnPos, vel, life)
+    end
+
+    -- 外部球体：创建一个明显的球形边界
+    ParticleReset()
+    ParticleColor(r1, g1, b1, r2, g2, b2)
+    ParticleRadius(0.6, 0.0, "easeout")
+    ParticleAlpha(0.8, 0.0)
+    ParticleGravity(0.0)
+    ParticleDrag(0.01)
+    ParticleEmissive(30.0, 0.0)
+    ParticleCollide(0.0)
+    for _ = 1, 45 do
+        local dir = _randomUnitVec()
+        local startRadius = 0.8 + 0.3 * math.random()
+        local spawnPos = VecAdd(pos, VecScale(dir, startRadius))
+        local radialSpeed = 8.0 + 6.0 * math.random()
+        local vel = VecScale(dir, radialSpeed)
+        local life = 1.2 + 0.4 * math.random()
+        SpawnParticle(spawnPos, vel, life)
     end
 
     if didHitShield then
-        PointLight(pos, 0.22, 0.88, 1.0, 6.5)
+        PointLight(pos, 0.22, 0.88, 1.0, 9.0)
     end
 end
 

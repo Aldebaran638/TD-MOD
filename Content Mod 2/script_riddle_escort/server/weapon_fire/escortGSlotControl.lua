@@ -484,6 +484,8 @@ end
 
 function server.escortGSlotControlUpdate(dt)
     local active = (server.escortGSlotState or {}).activeMissiles or {}
+    local gravity = GetGravity() or Vec(0, -9.81, 0)  -- 获取当前重力向量
+    
     for i = 1, #active do
         local missile = active[i]
         local bodyId = missile and missile.bodyId or 0
@@ -492,18 +494,23 @@ function server.escortGSlotControlUpdate(dt)
             local bodyT = GetBodyTransform(bodyId)
             local currentPos = bodyT.pos
             local currentVel = GetBodyVelocity(bodyId)
-            local currentSpeed = VecLength(currentVel)
-            local fallbackDir = _escortGNormalize(TransformToParentVec(bodyT, Vec(0, 0, -1)), Vec(0, 0, -1))
-            local currentDir = _escortGNormalize(currentVel, fallbackDir)
+            
+            -- 补偿重力影响
+            local gravityCompensation = VecScale(gravity, -(dt or 0.0))
+            local compensatedVel = VecAdd(currentVel, gravityCompensation)
+            
+            -- 使用飞船前方作为固定方向
+            local forwardDir = _escortGNormalize(TransformToParentVec(bodyT, Vec(0, 0, -1)), Vec(0, 0, -1))
+            local currentSpeed = VecLength(compensatedVel)
             local targetSpeed = math.max(currentSpeed, missile.cruiseSpeed or 0.0)
             targetSpeed = math.min(missile.maxSpeed or targetSpeed, targetSpeed + (missile.acceleration or 0.0) * (dt or 0.0))
-            local desiredVel = VecScale(currentDir, targetSpeed)
+            local desiredVel = VecScale(forwardDir, targetSpeed)
             local probes = _escortGGetProbePoints(bodyT)
 
             missile.prePhysicsCenterPos = Vec(probes.center[1], probes.center[2], probes.center[3])
             missile.prePhysicsHeadPos = Vec(probes.head[1], probes.head[2], probes.head[3])
             missile.prePhysicsMidPos = Vec(probes.mid[1], probes.mid[2], probes.mid[3])
-            missile.desiredRot = QuatLookAt(currentPos, VecAdd(currentPos, currentDir))
+            missile.desiredRot = QuatLookAt(currentPos, VecAdd(currentPos, forwardDir))
 
             SetBodyActive(bodyId, true)
             SetBodyVelocity(bodyId, desiredVel)

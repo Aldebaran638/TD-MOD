@@ -4,9 +4,9 @@ shipTypeRegistryData = shipTypeRegistryData or {}
 
 shipTypeRegistryData.riddle_escort = {
     shipType = "riddle_escort",
-    maxShieldHP = 3250,
-    maxArmorHP = 1950,
-    maxBodyHP = 1300,
+    maxShieldHP = 2800,
+    maxArmorHP = 1600,
+    maxBodyHP = 1000,
     shieldRadius = 7,
     regen = {
         tickInterval = 0.1,
@@ -91,17 +91,17 @@ shipTypeRegistryData.riddle_escort = {
     gSlots = {
         {
             weaponType = "devastatorTorpedoes",
-            firePosOffset = { x = 0.0, y = 0.0, z = -3.8 },
+            firePosOffset = { x = 0.0, y = 0.0, z = -3 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
         },
         {
             weaponType = "devastatorTorpedoes",
-            firePosOffset = { x = 1.8, y = 0.0, z = -3.3 },
+            firePosOffset = { x = 0, y = 0.0, z = -3 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
         },
         {
             weaponType = "devastatorTorpedoes",
-            firePosOffset = { x = -1.8, y = 0.0, z = -3.3 },
+            firePosOffset = { x = 0 , y = 0.0, z = -3 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
         },
     },

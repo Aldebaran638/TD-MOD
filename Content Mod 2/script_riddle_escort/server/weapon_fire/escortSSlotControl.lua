@@ -281,10 +281,15 @@ function server.escortSSlot_applyHitResult(endPos, hitTarget, isHit, isHitStella
         if targetBodyHP > maxBody then targetBodyHP = maxBody end
         server.registryShipSetHP(hitTarget, targetShieldHP, targetArmorHP, targetBodyHP)
         return renderResult
+    else
+        -- 对于非群星body，伽马激光和高射炮产生小型爆炸
+        local weaponSettings = _resolveEscortSSlotWeaponSettings(weaponType)
+        if weaponType == "gammaLaser" or weaponType == "flakCannon" then
+            Explosion(endPos, 0.1)  -- 0.1半径的小型爆炸
+        end
+        renderResult.impactLayer = "environment"
+        return renderResult
     end
-
-    renderResult.impactLayer = "environment"
-    return renderResult
 end
 
 local function _escortSSlotBroadcastLaunch(shipBodyId, slotIndex, weaponType, firePointWorld, hitPointWorld, renderHitResult, hitTarget, isHit, isHitStellarisBody, normal)

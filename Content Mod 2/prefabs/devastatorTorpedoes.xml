@@ -1,0 +1,8 @@
+<body name="body" tags="stellarisMissile" dynamic="false">
+  <vox
+    name="missile"
+    tags="missile"
+    pos="0.0 0.0 0.0"
+    file="MOD/prefabs/torpedoeBody.vox"
+  />
+</body>
