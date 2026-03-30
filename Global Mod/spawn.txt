@@ -1,2 +1,3 @@
 MOD/enigma_battlecruiser.xml : Enigma Battlecruiser
-MOD/paradox_titan.xml : Paradox Titan
+MOD/titan.xml : Titan
+MOD/riddle_escort.xml : Riddle Escort
