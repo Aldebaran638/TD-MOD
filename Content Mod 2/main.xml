@@ -84,5 +84,13 @@
 			<location name="exit" tags="exit" pos="0.0 3.8 8.6"/>
 		</vehicle>
 	</script>
+	<script pos="-18.0 8.0 8.0" file="MOD/script_riddle_escort/shipMain.lua">
+		<vehicle name="riddle_escort" tags="stellarisShip" pos="0.0 0.0 0.0" driven="true" sound=" " spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
+			<body name="body" tags="stellarisShip" pos="0.0 0.0 0.0" dynamic="true">
+				<vox pos="0.0 0.0 0.0" file="MOD/vox/escort.vox"/>
+			</body>
+			<location name="Player" tags="player" pos="0.0 -0.1 -0.3" rot="0 180 180"/>
+			<location name="exit" tags="exit" pos="0.0 0.2 -2.6"/>
+		</vehicle>
+	</script>
 </scene>
-
