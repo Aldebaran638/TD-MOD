@@ -41,6 +41,28 @@ local perditionBeamData = {
     launchFxShellStep = 1.0,
     launchFxCoreBurstPerStep = 3,
     launchFxShellBurstPerStep = 4,
+    
+    beamCount = 7,
+    beamSpacing = 0.3,
+    beamDuration = 1.5,
+    beamWaveCount = 5,
+    beamWaveInterval = 0.25,
+    beamParticleLife = 0.5,
+    beamParticleRadiusMin = 0.05,
+    beamParticleRadiusMax = 0.15,
+    beamParticlesPerUnit = 12,
+    beamForwardParticlesPerUnit = 5,
+    beamForwardParticleRadius = 0.07,
+    beamForwardParticleSpeed = 40.0,
+    beamForwardParticleEmissive = 30.0,
+    
+    explosionRadius = 4.0,
+    explosionStrength = 1.0,
+    explosionWaves = 10,
+    explosionWaveInterval = 0.1,
+    explosionFirstWaveCount = 12,
+    explosionWaveRadiusIncrement = 10.0,
+    explosionWaveCountIncrement = 8,
 }
 
 tSlotWeaponRegistryData.perditionBeam = perditionBeamData

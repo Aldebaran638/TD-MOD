@@ -5,6 +5,8 @@ server = server or {}
 
 local registryShipIndexRoot = "StellarisShips/server/ships/index"
 
+#include "perditionBeamExplosion.lua"
+
 local function _vec3TableToVec(v, defaultX, defaultY, defaultZ)
     local t = v or {}
     return Vec(t.x or defaultX or 0, t.y or defaultY or 0, t.z or defaultZ or 0)
@@ -391,7 +393,7 @@ function server.tSlot_applyHitResult(shipBodyId, endPos, hitTarget, isHit, isHit
         renderResult.didHitStellarisBody = aoeResult.didHitStellarisBody
 
         if directHitIsEnvironment and endPos ~= nil then
-            Explosion(endPos, 4.0)
+            server.perditionBeamExplosionStart(endPos, weaponSettings)
         end
 
         if renderResult.impactLayer == "none" then
@@ -635,6 +637,8 @@ local function _tSlotTickLegacyWeapon(slotEntry, requestFire, dt)
 end
 
 function server.tSlotControlTick(dt)
+    server.perditionBeamExplosionTick(dt)
+    
     local shipBody = server.shipBody
     if shipBody == nil or shipBody == 0 then
         return
