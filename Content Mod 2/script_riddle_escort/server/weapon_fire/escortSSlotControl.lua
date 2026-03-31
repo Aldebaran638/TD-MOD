@@ -285,7 +285,9 @@ function server.escortSSlot_applyHitResult(endPos, hitTarget, isHit, isHitStella
         -- 对于非群星body，伽马激光和高射炮产生小型爆炸
         local weaponSettings = _resolveEscortSSlotWeaponSettings(weaponType)
         if weaponType == "gammaLaser" or weaponType == "flakCannon" then
-            Explosion(endPos, 0.1)  -- 0.1半径的小型爆炸
+            local explosionRadius = tonumber(weaponSettings.explosionRadius) or 0.1
+            local explosionStrength = tonumber(weaponSettings.explosionStrength) or 0.3
+            Explosion(endPos, explosionRadius, explosionStrength)
         end
         renderResult.impactLayer = "environment"
         return renderResult
