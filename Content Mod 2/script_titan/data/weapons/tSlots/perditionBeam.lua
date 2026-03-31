@@ -48,21 +48,29 @@ local perditionBeamData = {
     beamWaveCount = 5,
     beamWaveInterval = 0.25,
     beamParticleLife = 0.5,
-    beamParticleRadiusMin = 0.05,
-    beamParticleRadiusMax = 0.15,
+    beamParticleRadiusMin = 0.15,
+    beamParticleRadiusMax = 0.45,
     beamParticlesPerUnit = 12,
     beamForwardParticlesPerUnit = 5,
     beamForwardParticleRadius = 0.07,
     beamForwardParticleSpeed = 40.0,
     beamForwardParticleEmissive = 30.0,
     
+    shockwaveParticleCount = 2400,
+    shockwaveLightIntensity = 175.0,
+    shockwaveParticleSpeedBase = 750.0,
+    shockwaveParticleSpeedDecay = 437.5,
+    shockwaveParticleSpeedRandom = 312.5,
+    
     explosionRadius = 4.0,
     explosionStrength = 1.0,
-    explosionWaves = 10,
-    explosionWaveInterval = 0.1,
+    explosionWaves = 20,
+    explosionWaveInterval = 0.4,
     explosionFirstWaveCount = 12,
     explosionWaveRadiusIncrement = 10.0,
     explosionWaveCountIncrement = 8,
+    explosionHeightLayers = 15,
+    explosionHeightSpacing = 3.0,
 }
 
 tSlotWeaponRegistryData.perditionBeam = perditionBeamData

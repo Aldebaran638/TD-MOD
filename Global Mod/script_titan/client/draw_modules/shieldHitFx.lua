@@ -4,15 +4,15 @@
 client = client or {}
 
 local ShieldConfig = {
-    maxRing = 4,
-    guaranteeRing = 3,
+    maxRing = 6,
+    guaranteeRing = 4,
 
     hexEdgeLength = 0.9,
     sphereRadius = 0.0,
     sphereRadiusScale = 1.35,
     sphereRadiusMin = 2.5,
 
-    particleRadius = 0.055,
+    particleRadius = 0.066,
     particleColor = {0.2, 0.7, 1.0},
     particleIntensity = 8.0,
 
