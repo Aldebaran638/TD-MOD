@@ -70,6 +70,43 @@ function server.shipRequestMainWeaponToggle(playerId, shipBodyId, request)
     end
 end
 
+function server.shipRequestXWeaponHold(playerId, shipBodyId, request)
+    if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
+        return false
+    end
+    if not _canAcceptShipRequest(playerId, shipBodyId) then
+        return false
+    end
+    if server.shipRuntimeGetCurrentMainWeapon ~= nil and server.shipRuntimeGetCurrentMainWeapon(shipBodyId) ~= "xSlot" then
+        return false
+    end
+
+    if server.xSlotStateSetHoldRequested ~= nil then
+        server.xSlotStateSetHoldRequested(math.floor(request or 0) ~= 0)
+    end
+    return true
+end
+
+function server.shipRequestXWeaponRelease(playerId, shipBodyId)
+    if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
+        return false
+    end
+    if not _canAcceptShipRequest(playerId, shipBodyId) then
+        return false
+    end
+    if server.shipRuntimeGetCurrentMainWeapon ~= nil and server.shipRuntimeGetCurrentMainWeapon(shipBodyId) ~= "xSlot" then
+        return false
+    end
+
+    if server.xSlotStateSetHoldRequested ~= nil then
+        server.xSlotStateSetHoldRequested(false)
+    end
+    if server.xSlotStateSetReleaseRequested ~= nil then
+        server.xSlotStateSetReleaseRequested(true)
+    end
+    return true
+end
+
 function server.shipRequestSWeaponFire(playerId, shipBodyId, targetVehicleId)
     if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
         return false

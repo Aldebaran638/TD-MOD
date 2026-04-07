@@ -43,6 +43,8 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     overheated = false,
     xSlotFill1 = 1.0,
     xSlotFill2 = 1.0,
+    xSlotPhase1 = "idle",
+    xSlotPhase2 = "idle",
     sSlotProgress = 0.0,
     targetSSlotProgress = 0.0,
     sSlotStatus = "NO TARGET",
@@ -128,14 +130,75 @@ local function _getOrCreateXSlotHudState(shipBodyId)
     local hud = states[body]
     if hud == nil then
         hud = {
-            cd1 = 0.0,
-            cd2 = 0.0,
-            maxCd1 = 1.0,
-            maxCd2 = 1.0,
+            value1 = 0.0,
+            value2 = 0.0,
+            maxValue1 = 1.0,
+            maxValue2 = 1.0,
+            phase1 = "idle",
+            phase2 = "idle",
         }
         states[body] = hud
     end
     return hud
+end
+
+local function _resolveXSlotFill(value, maxValue, phase)
+    local maxV = math.max(0.0, tonumber(maxValue) or 0.0)
+    local curr = math.max(0.0, tonumber(value) or 0.0)
+    local p = tostring(phase or "idle")
+
+    if p == "charging" or p == "charged" or p == "launching" then
+        if maxV <= 0.0001 then
+            return (p == "charged") and 1.0 or 0.0
+        end
+        return _mainWeaponHudClamp(curr / maxV, 0.0, 1.0)
+    end
+
+    if p == "cooldown" then
+        if maxV <= 0.0001 then
+            return 1.0
+        end
+        return _mainWeaponHudClamp(1.0 - (curr / maxV), 0.0, 1.0)
+    end
+
+    return 1.0
+end
+
+local function _xSlotPhasePriority(phase)
+    local p = tostring(phase or "idle")
+    if p == "charged" then return 5 end
+    if p == "charging" then return 4 end
+    if p == "launching" then return 3 end
+    if p == "cooldown" then return 2 end
+    return 1
+end
+
+local function _resolveXSlotTopStatus(state)
+    local phase1 = tostring(state.xSlotPhase1 or "idle")
+    local phase2 = tostring(state.xSlotPhase2 or "idle")
+    local fill1 = tonumber(state.xSlotFill1) or 1.0
+    local fill2 = tonumber(state.xSlotFill2) or 1.0
+
+    local phase = phase1
+    local fill = fill1
+    if _xSlotPhasePriority(phase2) > _xSlotPhasePriority(phase1) or (_xSlotPhasePriority(phase2) == _xSlotPhasePriority(phase1) and fill2 > fill1) then
+        phase = phase2
+        fill = fill2
+    end
+
+    if phase == "charged" then
+        return 1.0, "CHARGED"
+    end
+    if phase == "charging" then
+        return fill, string.format("CHARGE %d%%", math.floor(fill * 100 + 0.5))
+    end
+    if phase == "launching" then
+        return fill, string.format("FIRING %d%%", math.floor(fill * 100 + 0.5))
+    end
+    if phase == "cooldown" then
+        return fill, string.format("RECOVER %d%%", math.floor(fill * 100 + 0.5))
+    end
+    return 1.0, "READY"
 end
 
 function client.initLSlotHudState(shipBodyId, overheatThreshold)
@@ -164,15 +227,17 @@ function client.resetLSlotHudState(shipBodyId)
     hud.overheated = false
 end
 
-function client.updateXSlotHudState(shipBodyId, cd1, cd2, maxCd1, maxCd2)
+function client.updateXSlotHudState(shipBodyId, value1, value2, maxValue1, maxValue2, phase1, phase2)
     local hud = _getOrCreateXSlotHudState(shipBodyId)
     if hud == nil then
         return
     end
-    hud.cd1 = math.max(0.0, tonumber(cd1) or 0.0)
-    hud.cd2 = math.max(0.0, tonumber(cd2) or 0.0)
-    hud.maxCd1 = math.max(0.0, tonumber(maxCd1) or 0.0)
-    hud.maxCd2 = math.max(0.0, tonumber(maxCd2) or 0.0)
+    hud.value1 = math.max(0.0, tonumber(value1) or 0.0)
+    hud.value2 = math.max(0.0, tonumber(value2) or 0.0)
+    hud.maxValue1 = math.max(0.0, tonumber(maxValue1) or 0.0)
+    hud.maxValue2 = math.max(0.0, tonumber(maxValue2) or 0.0)
+    hud.phase1 = tostring(phase1 or "idle")
+    hud.phase2 = tostring(phase2 or "idle")
 end
 
 local function _getOrCreateSSlotHudState(shipBodyId)
@@ -228,6 +293,8 @@ function client.mainWeaponHudTick(dt)
         state.overheated = false
         state.xSlotFill1 = 1.0
         state.xSlotFill2 = 1.0
+        state.xSlotPhase1 = "idle"
+        state.xSlotPhase2 = "idle"
         state.targetSSlotProgress = 0.0
         state.sSlotProgress = 0.0
         state.sSlotStatus = "NO TARGET"
@@ -254,27 +321,17 @@ function client.mainWeaponHudTick(dt)
     state.overheated = hud.overheated and true or false
 
     local xHud = client.xSlotHudStateByShip[body] or {
-        cd1 = 0.0,
-        cd2 = 0.0,
-        maxCd1 = 1.0,
-        maxCd2 = 1.0,
+        value1 = 0.0,
+        value2 = 0.0,
+        maxValue1 = 1.0,
+        maxValue2 = 1.0,
+        phase1 = "idle",
+        phase2 = "idle",
     }
-    local cd1 = math.max(0.0, xHud.cd1 or 0.0)
-    local cd2 = math.max(0.0, xHud.cd2 or 0.0)
-    local maxCd1 = math.max(0.0, xHud.maxCd1 or 0.0)
-    local maxCd2 = math.max(0.0, xHud.maxCd2 or 0.0)
-
-    if maxCd1 > 0.0001 then
-        state.xSlotFill1 = _mainWeaponHudClamp(1.0 - (cd1 / maxCd1), 0.0, 1.0)
-    else
-        state.xSlotFill1 = 1.0
-    end
-
-    if maxCd2 > 0.0001 then
-        state.xSlotFill2 = _mainWeaponHudClamp(1.0 - (cd2 / maxCd2), 0.0, 1.0)
-    else
-        state.xSlotFill2 = 1.0
-    end
+    state.xSlotPhase1 = tostring(xHud.phase1 or "idle")
+    state.xSlotPhase2 = tostring(xHud.phase2 or "idle")
+    state.xSlotFill1 = _resolveXSlotFill(xHud.value1, xHud.maxValue1, xHud.phase1)
+    state.xSlotFill2 = _resolveXSlotFill(xHud.value2, xHud.maxValue2, xHud.phase2)
 
     if client.sSlotTargetingGetSummary ~= nil then
         local statusText, progress = client.sSlotTargetingGetSummary(body)
@@ -401,8 +458,7 @@ function client.mainWeaponHudDraw()
     local y = UiHeight() - panelH - cfg.bottomOffset
     local currentMode = state.currentMainWeapon or "xSlot"
 
-    local topFill = math.min(state.xSlotFill1, state.xSlotFill2)
-    local topText = string.format("READY %d%%", math.floor(topFill * 100 + 0.5))
+    local topFill, topText = _resolveXSlotTopStatus(state)
     local topColor = cfg.xSlotColor
     local titleText = "Tachyon Lance"
     local modeText = "Main Weapon: X-Slot"

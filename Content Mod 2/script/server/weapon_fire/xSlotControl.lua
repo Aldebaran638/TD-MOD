@@ -441,6 +441,12 @@ function server.xSlotControlTick(dt)
         if server.xSlotStateSetRequestFire ~= nil then
             server.xSlotStateSetRequestFire(false)
         end
+        if server.xSlotStateSetHoldRequested ~= nil then
+            server.xSlotStateSetHoldRequested(false)
+        end
+        if server.xSlotStateSetReleaseRequested ~= nil then
+            server.xSlotStateSetReleaseRequested(false)
+        end
         if server.xSlotStateResetRuntime ~= nil then
             server.xSlotStateResetRuntime()
         end
@@ -484,11 +490,10 @@ function server.xSlotControlTick(dt)
     local activeState = (activeRuntime and activeRuntime.state) or "idle"
 
     local request = server.xSlotStateConsumeRequestFire ~= nil and server.xSlotStateConsumeRequestFire() or false
-    if request and activeState ~= "idle" then
-        request = false
-    end
+    local holdRequested = server.xSlotStateGetHoldRequested ~= nil and server.xSlotStateGetHoldRequested() or false
+    local releaseRequested = server.xSlotStateConsumeReleaseRequested ~= nil and server.xSlotStateConsumeReleaseRequested() or false
 
-    if request and activeState == "idle" then
+    if (holdRequested or request) and activeState == "idle" then
         local selectedSlot = nil
         for i = 1, xSlotCount do
             local slotEntry = slots[i] or {}
@@ -514,9 +519,8 @@ function server.xSlotControlTick(dt)
                 chargeDuration = 0
             end
 
-            activeRuntime.chargeRemain = chargeDuration
+            activeRuntime.charge = 0
             activeRuntime.state = "charging"
-            activeRuntime.cd = -1
             activeState = "charging"
         end
     end
@@ -526,7 +530,7 @@ function server.xSlotControlTick(dt)
             local runtime = (slots[i] and slots[i].runtime) or nil
             if runtime ~= nil then
                 runtime.state = "idle"
-                runtime.chargeRemain = 0
+                runtime.charge = 0
                 runtime.launchRemain = 0
             end
         end
@@ -537,20 +541,28 @@ function server.xSlotControlTick(dt)
     end
 
     if activeState == "charging" then
-        local chargeRemain = (activeRuntime.chargeRemain or 0) - dt
-        if chargeRemain <= 0 then
-            local activeConfig = (slots[activeSlot] and slots[activeSlot].config) or {}
-            local launchDuration = activeConfig.launchDuration or 0
-            if launchDuration < 0 then
-                launchDuration = 0
+        local activeConfig = (slots[activeSlot] and slots[activeSlot].config) or {}
+        local chargeDuration = math.max(0.0, tonumber(activeConfig.chargeDuration) or 0.0)
+        if not holdRequested and chargeDuration > 0.0 and (activeRuntime.charge or 0.0) < chargeDuration then
+            activeRuntime.charge = 0.0
+            activeRuntime.state = "idle"
+            activeState = "idle"
+        else
+            local nextCharge = math.min(chargeDuration, (activeRuntime.charge or 0.0) + dt)
+            activeRuntime.charge = nextCharge
+            if chargeDuration <= 0.0 or nextCharge >= chargeDuration then
+                activeRuntime.charge = chargeDuration
+                activeRuntime.state = "charged"
+                activeState = "charged"
             end
-
-            activeRuntime.chargeRemain = 0
+        end
+    elseif activeState == "charged" then
+        if releaseRequested then
+            local activeConfig = (slots[activeSlot] and slots[activeSlot].config) or {}
+            local launchDuration = math.max(0.0, tonumber(activeConfig.launchDuration) or 0.0)
             activeRuntime.launchRemain = launchDuration
             activeRuntime.state = "launching"
             activeState = "launching"
-        else
-            activeRuntime.chargeRemain = chargeRemain
         end
     elseif activeState == "launching" then
         local launchRemain = (activeRuntime.launchRemain or 0) - dt
@@ -567,6 +579,7 @@ function server.xSlotControlTick(dt)
 
             activeRuntime.launchRemain = 0
             activeRuntime.state = "idle"
+            activeRuntime.charge = 0
             activeRuntime.cd = cooldown
             activeState = "idle"
         else
@@ -582,7 +595,6 @@ function server.xSlotControlTick(dt)
     if activeState ~= lastState or activeSlot ~= lastSlot then
         local activeConfig = (slots[activeSlot] and slots[activeSlot].config) or {}
         local mountPos = activeConfig.firePosOffset or { x = 0, y = 0, z = 4 }
-        local mountDir = activeConfig.fireDirRelative or { x = 0, y = 0, z = 1 }
         local runtimeWeaponType = activeConfig.weaponType or "none"
 
         local firePosOffset = _vec3TableToVec(mountPos, 0, 0, 4)
@@ -591,6 +603,8 @@ function server.xSlotControlTick(dt)
         local firePointWorld = TransformToParentPoint(shipT, firePosOffset)
 
         if activeState == "charging" then
+            server.xSlot_broadcastChargingStart(shipBody, activeSlot, runtimeWeaponType, firePointWorld)
+        elseif activeState == "charged" then
             server.xSlot_broadcastChargingStart(shipBody, activeSlot, runtimeWeaponType, firePointWorld)
         elseif activeState == "launching" then
             local endPos, hitTarget, isHit, isHitStellarisBody, normal = server.xSlot_computeHitResult(shipBody, firePosOffset, fireDir, runtimeWeaponType)
