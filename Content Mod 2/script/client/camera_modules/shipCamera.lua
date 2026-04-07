@@ -187,6 +187,59 @@ local function _shipCameraResolveWeaponConfig(shipBodyId)
     return defs.tachyonLance or {}, "xSlot"
 end
 
+local function _shipCameraResolveXSlotFireOriginLocal(shipBodyId)
+    local shipType = "enigmaticCruiser"
+    if client.registryShipGetShipType ~= nil then
+        local resolvedType = tostring(client.registryShipGetShipType(shipBodyId) or "")
+        if resolvedType ~= "" then
+            shipType = resolvedType
+        end
+    end
+
+    local defs = shipTypeRegistryData or {}
+    local shipDef = defs[shipType] or defs.enigmaticCruiser or {}
+    local xSlots = shipDef.xSlots or {}
+    local sx, sy, sz = 0.0, 0.0, 0.0
+    local count = 0
+
+    for i = 1, #xSlots do
+        local slot = xSlots[i] or {}
+        if tostring(slot.weaponType or "tachyonLance") == "tachyonLance" then
+            local firePos = slot.firePosOffset or {}
+            sx = sx + (tonumber(firePos.x) or 0.0)
+            sy = sy + (tonumber(firePos.y) or 0.0)
+            sz = sz + (tonumber(firePos.z) or -4.0)
+            count = count + 1
+        end
+    end
+
+    if count <= 0 then
+        return Vec(0, 0, -4)
+    end
+
+    return Vec(sx / count, sy / count, sz / count)
+end
+
+local function _shipCameraResolveLockedXTargetLocal(shipBodyId, shipTransform)
+    if client.getShipMainWeaponMode == nil or client.getShipMainWeaponMode(shipBodyId) ~= "xSlot" then
+        return nil
+    end
+    if client.getShipXSlotFireMode == nil or client.getShipXSlotFireMode(shipBodyId) ~= "lock" then
+        return nil
+    end
+    if client.xSlotTargetingGetLockedTargetWorld == nil then
+        return nil
+    end
+    local targetWorld = client.xSlotTargetingGetLockedTargetWorld(shipBodyId)
+    if targetWorld == nil then
+        return nil
+    end
+    local fireOriginLocal = _shipCameraResolveXSlotFireOriginLocal(shipBodyId)
+    local localPoint = TransformToLocalPoint(shipTransform, targetWorld)
+    local localDir = VecSub(localPoint, fireOriginLocal)
+    return _safeNormalize(localDir, Vec(0, 0, -1))
+end
+
 local function _shipCameraPushWeaponAim(cam, shipBodyId, active, localYaw, localPitch, worldDir)
     cam.weaponAimState = cam.weaponAimState or {
         active = false,
@@ -674,7 +727,8 @@ function client.shipCameraTick(dt)
     end
 
     local weaponConfig, currentMode = _shipCameraResolveWeaponConfig(body)
-    local weaponAimActive = (cam.rearFreelookActive or cam.frontFreelookActive)
+    local lockedTargetLocalDir = _shipCameraResolveLockedXTargetLocal(body, shipTransform)
+    local weaponAimActive = (cam.rearFreelookActive or cam.frontFreelookActive or lockedTargetLocalDir ~= nil)
         and (currentMode == "xSlot" or currentMode == "lSlot")
         and tostring(weaponConfig.aimControlMode or "fixed") == "camera_limited"
     local weaponAimWorldDir = rearForwardWorld
@@ -685,9 +739,12 @@ function client.shipCameraTick(dt)
         if cam.rearFreelookActive then
             viewLocalDir = _rearFreelookOffsetToAimLocal(shipTransform, cameraPos, shipPos)
         end
+        if lockedTargetLocalDir ~= nil then
+            viewLocalDir = lockedTargetLocalDir
+        end
         local limitedDir, limitedYaw, limitedPitch = _resolveRelativeAimVector(
             viewLocalDir,
-            tonumber(weaponConfig.aimPitchOffsetDeg) or 0.0,
+            (lockedTargetLocalDir ~= nil) and 0.0 or (tonumber(weaponConfig.aimPitchOffsetDeg) or 0.0),
             tonumber(weaponConfig.aimLimitDeg) or 0.0
         )
         weaponAimWorldDir = _safeNormalize(TransformToParentVec(shipTransform, limitedDir), rearForwardWorld)

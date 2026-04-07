@@ -70,6 +70,10 @@ function client.mainWeaponInputTick(dt)
         client.shipRequestMainWeaponToggle(shipBody, 1)
     end
 
+    if currentMode == "xSlot" and InputPressed("b") and client.toggleShipXSlotFireMode ~= nil then
+        client.toggleShipXSlotFireMode(shipBody)
+    end
+
     -- 步骤1：检测主武器输入状态（按下/松开）
     if currentMode == "xSlot" then
         if InputPressed("lmb") and client.shipRequestXWeaponHold ~= nil then

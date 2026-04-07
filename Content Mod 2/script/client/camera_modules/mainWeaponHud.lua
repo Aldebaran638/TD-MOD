@@ -45,6 +45,7 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     xSlotFill2 = 1.0,
     xSlotPhase1 = "idle",
     xSlotPhase2 = "idle",
+    xSlotFireMode = "aim",
     sSlotProgress = 0.0,
     targetSSlotProgress = 0.0,
     sSlotStatus = "NO TARGET",
@@ -295,6 +296,7 @@ function client.mainWeaponHudTick(dt)
         state.xSlotFill2 = 1.0
         state.xSlotPhase1 = "idle"
         state.xSlotPhase2 = "idle"
+        state.xSlotFireMode = "aim"
         state.targetSSlotProgress = 0.0
         state.sSlotProgress = 0.0
         state.sSlotStatus = "NO TARGET"
@@ -308,6 +310,7 @@ function client.mainWeaponHudTick(dt)
     else
         state.currentMainWeapon = "xSlot"
     end
+    state.xSlotFireMode = client.getShipXSlotFireMode ~= nil and client.getShipXSlotFireMode(body) or "aim"
 
     local hud = client.lSlotHudStateByShip[body] or {
         heat = 0.0,
@@ -461,7 +464,7 @@ function client.mainWeaponHudDraw()
     local topFill, topText = _resolveXSlotTopStatus(state)
     local topColor = cfg.xSlotColor
     local titleText = "Tachyon Lance"
-    local modeText = "Main Weapon: X-Slot"
+    local modeText = string.format("Main Weapon: X-Slot [%s]", string.upper(state.xSlotFireMode or "aim"))
 
     if currentMode == "lSlot" then
         topFill = state.heatFraction
