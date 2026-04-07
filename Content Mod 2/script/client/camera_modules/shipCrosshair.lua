@@ -24,6 +24,24 @@ local function _resolveCrosshairRange()
     return maxRange
 end
 
+local function _resolveCrosshairRangeByMode(mode)
+    local defs = weaponData or {}
+    if mode == "lSlot" then
+        local lWeapon = defs.kineticArtillery or {}
+        local maxRange = tonumber(lWeapon.maxRange) or 0.0
+        if maxRange > 0.0 then
+            return maxRange
+        end
+    elseif mode == "xSlot" then
+        local xWeapon = defs.tachyonLance or {}
+        local maxRange = tonumber(xWeapon.maxRange) or 0.0
+        if maxRange > 0.0 then
+            return maxRange
+        end
+    end
+    return _resolveCrosshairRange()
+end
+
 local function _resolveAimPointForBody(body, maxRange)
     if body == nil or body == 0 then
         return nil
@@ -43,6 +61,26 @@ local function _resolveAimPointForBody(body, maxRange)
         return VecAdd(rayOrigin, VecScale(forwardWorldDir, hitDist))
     end
     return VecAdd(rayOrigin, VecScale(forwardWorldDir, maxRange))
+end
+
+local function _resolveAimPointFromDirection(body, aimDirWorld, maxRange)
+    if body == nil or body == 0 then
+        return nil
+    end
+
+    local cfg = client.shipCrosshairConfig
+    local t = GetBodyTransform(body)
+    local rayOrigin = TransformToParentPoint(t, Vec(0, 0, -(cfg.originForwardOffset or 2)))
+    local dir = VecNormalize(aimDirWorld or TransformToParentVec(t, Vec(0, 0, -1)))
+
+    QueryRequire("physical")
+    QueryRejectBody(body)
+
+    local hit, hitDist = QueryRaycast(rayOrigin, dir, maxRange)
+    if hit then
+        return VecAdd(rayOrigin, VecScale(dir, hitDist))
+    end
+    return VecAdd(rayOrigin, VecScale(dir, maxRange))
 end
 
 local function _resolveControlledShipBody()
@@ -88,8 +126,15 @@ function client.shipCrosshairDraw()
         return
     end
 
-    local maxRange = _resolveCrosshairRange()
-    local aimPoint = _resolveAimPointForBody(body, maxRange)
+    local currentMode = client.getShipMainWeaponMode ~= nil and client.getShipMainWeaponMode(body) or "xSlot"
+    local maxRange = _resolveCrosshairRangeByMode(currentMode)
+    local weaponAimState = client.shipCameraGetWeaponAimState ~= nil and client.shipCameraGetWeaponAimState(body) or nil
+    local aimPoint = nil
+    if weaponAimState ~= nil and weaponAimState.active then
+        aimPoint = _resolveAimPointFromDirection(body, weaponAimState.worldDir, maxRange)
+    else
+        aimPoint = _resolveAimPointForBody(body, maxRange)
+    end
     if aimPoint == nil then
         return
     end
@@ -123,5 +168,11 @@ function client.shipCrosshairGetAimWorldPoint(shipBodyId)
     if body <= 0 then
         return nil
     end
-    return _resolveAimPointForBody(body, _resolveCrosshairRange())
+    local currentMode = client.getShipMainWeaponMode ~= nil and client.getShipMainWeaponMode(body) or "xSlot"
+    local maxRange = _resolveCrosshairRangeByMode(currentMode)
+    local weaponAimState = client.shipCameraGetWeaponAimState ~= nil and client.shipCameraGetWeaponAimState(body) or nil
+    if weaponAimState ~= nil and weaponAimState.active then
+        return _resolveAimPointFromDirection(body, weaponAimState.worldDir, maxRange)
+    end
+    return _resolveAimPointForBody(body, maxRange)
 end

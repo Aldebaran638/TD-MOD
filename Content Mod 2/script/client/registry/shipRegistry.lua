@@ -154,6 +154,26 @@ function client.shipRequestRotationError(shipBodyId, pitchError, yawError)
     return true
 end
 
+function client.shipRequestWeaponAim(shipBodyId, active, localYaw, localPitch)
+    if not client.registryShipExists(shipBodyId) then
+        return false
+    end
+
+    local activeValue = active and 1 or 0
+    local yawOut = tonumber(localYaw) or 0.0
+    local pitchOut = tonumber(localPitch) or 0.0
+    if yawOut ~= yawOut or yawOut == math.huge or yawOut == -math.huge then
+        yawOut = 0.0
+    end
+    if pitchOut ~= pitchOut or pitchOut == math.huge or pitchOut == -math.huge then
+        pitchOut = 0.0
+    end
+
+    local localPlayerId = GetLocalPlayer()
+    ServerCall("server.shipRequestWeaponAim", localPlayerId, shipBodyId, activeValue, yawOut, pitchOut)
+    return true
+end
+
 function client.shipRequestRollError(shipBodyId, rollError)
     if not client.registryShipExists(shipBodyId) then
         return false

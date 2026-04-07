@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 lSlotWeaponRegistryData = lSlotWeaponRegistryData or {}
+weaponData = weaponData or {}
 
 local kineticArtilleryMaxRange = 750.0
 local kineticArtilleryProjectileSpeed = 150.0
@@ -23,4 +24,9 @@ lSlotWeaponRegistryData.kineticArtillery = {
     heatDissipationPerSecond = 10.0,
     overheatThreshold = 100.0,
     recoverThreshold = 60.0,
+    aimControlMode = "camera_limited",
+    aimLimitDeg = 70.0,
+    aimPitchOffsetDeg = 6.0,
 }
+
+weaponData.kineticArtillery = lSlotWeaponRegistryData.kineticArtillery

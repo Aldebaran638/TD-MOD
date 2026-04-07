@@ -5,7 +5,7 @@ client = client or {}
 
 client.shipCamera = client.shipCamera or {
     r = 14,
-    b = 0,
+    b = 8,
     c = 0,
 
     rMin = 10,
@@ -24,13 +24,17 @@ client.shipCamera = client.shipCamera or {
     viewMode = "rear",
     viewBlend = 0.0,
     viewBlendTarget = 0.0,
-    frontAimPitchLimit = 85,
-    frontAimYaw1 = -85,
-    frontAimYaw2 = 85,
+    frontAimPitchLimit = 90,
+    frontAimYaw1 = -90,
+    frontAimYaw2 = 90,
     frontAimYaw = 0.0,
     frontAimPitch = 0.0,
+    rearDefaultPitch = 8.0,
+    freelookTurnYawError = 16.0,
+    weaponAimSyncKeepAlive = 0.2,
 
     rearFreelookActive = false,
+    frontFreelookActive = false,
     rmbLongPressSeconds = 0.22,
     rmbPressTime = 0.0,
     rmbLongTriggered = false,
@@ -127,6 +131,135 @@ local function _safeNormalize(v, fallback)
     return VecScale(v, 1.0 / len)
 end
 
+local function _clampDirectionToConeLocal(localDir, maxAngleDeg)
+    local forward = Vec(0, 0, -1)
+    local desired = _safeNormalize(localDir, forward)
+    local maxDeg = math.max(0.0, tonumber(maxAngleDeg) or 0.0)
+    if maxDeg <= 0.0001 then
+        return forward
+    end
+
+    local dot = VecDot(desired, forward)
+    if dot > 1.0 then dot = 1.0 end
+    if dot < -1.0 then dot = -1.0 end
+    local angle = math.deg(math.acos(dot))
+    if angle <= maxDeg then
+        return desired
+    end
+
+    local lateral = VecSub(desired, VecScale(forward, dot))
+    lateral = _safeNormalize(lateral, Vec(1, 0, 0))
+    local maxRad = math.rad(maxDeg)
+    return _safeNormalize(
+        VecAdd(VecScale(forward, math.cos(maxRad)), VecScale(lateral, math.sin(maxRad))),
+        forward
+    )
+end
+
+local function _resolveRelativeAimVector(localDir, pitchOffsetDeg, limitDeg)
+    local yaw, pitch = vectorToRelativeYawPitch(localDir)
+    pitch = pitch + (tonumber(pitchOffsetDeg) or 0.0)
+    local offsetDir = relativeYawPitchToVector(yaw, pitch)
+    local limitedDir = _clampDirectionToConeLocal(offsetDir, limitDeg)
+    local limitedYaw, limitedPitch = vectorToRelativeYawPitch(limitedDir)
+    return limitedDir, limitedYaw, limitedPitch
+end
+
+local function _rearFreelookOffsetToAimLocal(shipTransform, cameraPos, shipPos)
+    local orbitLocal = TransformToLocalVec(shipTransform, VecSub(cameraPos, shipPos))
+    local aimLocal = Vec(
+        -(orbitLocal[1] or 0.0),
+        -(orbitLocal[2] or 0.0),
+        -(orbitLocal[3] or 0.0)
+    )
+    return _safeNormalize(aimLocal, Vec(0, 0, -1))
+end
+
+local function _shipCameraResolveWeaponConfig(shipBodyId)
+    local mode = (client.getShipMainWeaponMode ~= nil and shipBodyId ~= 0) and client.getShipMainWeaponMode(shipBodyId) or "xSlot"
+    local defs = weaponData or {}
+    if mode == "lSlot" then
+        return defs.kineticArtillery or {}, mode
+    end
+    if mode == "sSlot" then
+        return defs.swarmerMissile or {}, mode
+    end
+    return defs.tachyonLance or {}, "xSlot"
+end
+
+local function _shipCameraPushWeaponAim(cam, shipBodyId, active, localYaw, localPitch, worldDir)
+    cam.weaponAimState = cam.weaponAimState or {
+        active = false,
+        shipBody = 0,
+        localYaw = 0.0,
+        localPitch = 0.0,
+        worldDir = Vec(0, 0, -1),
+        lastSyncAt = -1000.0,
+    }
+
+    local state = cam.weaponAimState
+    state.active = active and true or false
+    state.shipBody = shipBodyId or 0
+    state.localYaw = tonumber(localYaw) or 0.0
+    state.localPitch = tonumber(localPitch) or 0.0
+    local aimDir = worldDir or Vec(0, 0, -1)
+    state.worldDir = Vec(aimDir[1] or 0.0, aimDir[2] or 0.0, aimDir[3] or -1.0)
+
+    if client.shipRequestWeaponAim == nil or shipBodyId == nil or shipBodyId == 0 then
+        return
+    end
+
+    local now = (GetTime ~= nil) and GetTime() or 0.0
+    local changed = state.lastSentActive == nil
+        or state.lastSentActive ~= state.active
+        or math.abs((state.lastSentYaw or 0.0) - state.localYaw) > 0.05
+        or math.abs((state.lastSentPitch or 0.0) - state.localPitch) > 0.05
+        or state.lastSentBody ~= state.shipBody
+    local keepAliveDue = (now - (state.lastSyncAt or -1000.0)) >= (cam.weaponAimSyncKeepAlive or 0.2)
+    if (not changed) and (not keepAliveDue) then
+        return
+    end
+
+    client.shipRequestWeaponAim(shipBodyId, state.active, state.localYaw, state.localPitch)
+    state.lastSentActive = state.active
+    state.lastSentYaw = state.localYaw
+    state.lastSentPitch = state.localPitch
+    state.lastSentBody = state.shipBody
+    state.lastSyncAt = now
+end
+
+local function _shipCameraClearWeaponAim(cam)
+    local state = (cam or {}).weaponAimState or nil
+    if state == nil then
+        return
+    end
+
+    local body = math.floor(state.shipBody or 0)
+    if body > 0 and client.shipRequestWeaponAim ~= nil then
+        client.shipRequestWeaponAim(body, false, 0.0, 0.0)
+    end
+
+    state.active = false
+    state.shipBody = 0
+    state.localYaw = 0.0
+    state.localPitch = 0.0
+    state.worldDir = Vec(0, 0, -1)
+    state.lastSentActive = false
+    state.lastSentYaw = 0.0
+    state.lastSentPitch = 0.0
+    state.lastSentBody = 0
+end
+
+function client.shipCameraGetWeaponAimState(shipBodyId)
+    local cam = client.shipCamera or {}
+    local state = cam.weaponAimState or nil
+    local body = math.floor(shipBodyId or 0)
+    if state == nil or body <= 0 or (state.shipBody or 0) ~= body then
+        return nil
+    end
+    return state
+end
+
 local function _copyVec(v, fallback)
     local source = v or fallback or Vec(0, 0, 0)
     return Vec(source[1] or 0.0, source[2] or 0.0, source[3] or 0.0)
@@ -137,6 +270,10 @@ local function _resetRearFreelookState(cam)
     cam.rearFreelookSaved = nil
     cam.rearFreelookYaw = 0.0
     cam.rearFreelookPitch = 0.0
+end
+
+local function _resetFrontFreelookState(cam)
+    cam.frontFreelookActive = false
 end
 
 local function _beginRearFreelook(cam, shipTransform)
@@ -254,15 +391,18 @@ function client.shipCameraTick(dt)
     local cam = client.shipCamera
 
     if cam.rearFreelookActive == nil then cam.rearFreelookActive = false end
+    if cam.frontFreelookActive == nil then cam.frontFreelookActive = false end
     if cam.rmbLongPressSeconds == nil then cam.rmbLongPressSeconds = 0.22 end
     if cam.rmbPressTime == nil then cam.rmbPressTime = 0.0 end
     if cam.rmbLongTriggered == nil then cam.rmbLongTriggered = false end
 
     local vehicle = GetPlayerVehicle()
     if vehicle == nil or vehicle == 0 then
+        _shipCameraClearWeaponAim(cam)
         client.camshipBody = 0
         cam._lastControlledBody = 0
         _resetRearFreelookState(cam)
+        _resetFrontFreelookState(cam)
         cam.rmbLongTriggered = false
         return
     end
@@ -270,26 +410,32 @@ function client.shipCameraTick(dt)
     local playerBody = GetVehicleBody(vehicle)
     local scriptBody = client.shipBody or 0
     if scriptBody == 0 or playerBody == nil or playerBody == 0 or playerBody ~= scriptBody then
+        _shipCameraClearWeaponAim(cam)
         client.camshipBody = 0
         cam._lastControlledBody = 0
         _resetRearFreelookState(cam)
+        _resetFrontFreelookState(cam)
         cam.rmbLongTriggered = false
         return
     end
 
     local body = scriptBody
     if not HasTag(body, "stellarisShip") then
+        _shipCameraClearWeaponAim(cam)
         client.camshipBody = 0
         cam._lastControlledBody = 0
         _resetRearFreelookState(cam)
+        _resetFrontFreelookState(cam)
         cam.rmbLongTriggered = false
         return
     end
 
     if client.registryShipExists ~= nil and (not client.registryShipExists(body)) then
+        _shipCameraClearWeaponAim(cam)
         client.camshipBody = 0
         cam._lastControlledBody = 0
         _resetRearFreelookState(cam)
+        _resetFrontFreelookState(cam)
         cam.rmbLongTriggered = false
         return
     end
@@ -303,16 +449,20 @@ function client.shipCameraTick(dt)
     local shipBackYawWorld = wrapAngle180(shipYawWorld - 180)
 
     if cam._lastControlledBody ~= body then
+        local defaultRearPitch = cam.rearDefaultPitch or 8.0
+        cam.b = defaultRearPitch
         cam.c = shipBackYawWorld
+        cam.targetB = defaultRearPitch
         cam.targetC = shipBackYawWorld
-        cam.targetB = cam.b
         cam.cVel = 0
+        cam.bVel = 0
         cam.viewMode = "rear"
         cam.viewBlend = 0.0
         cam.viewBlendTarget = 0.0
         cam.frontAimYaw = 0.0
         cam.frontAimPitch = 0.0
         _resetRearFreelookState(cam)
+        _resetFrontFreelookState(cam)
         cam.rmbLongTriggered = false
         cam._lastControlledBody = body
     end
@@ -324,18 +474,26 @@ function client.shipCameraTick(dt)
         cam.rmbLongTriggered = false
     end
 
-    if cam.viewMode == "rear" and InputDown("rmb") and (not cam.rmbLongTriggered) then
+    if InputDown("rmb") and (not cam.rmbLongTriggered) then
         local now = (GetTime ~= nil) and GetTime() or 0
         local hold = now - (cam.rmbPressTime or now)
         if hold >= (cam.rmbLongPressSeconds or 0.22) then
             cam.rmbLongTriggered = true
-            _beginRearFreelook(cam, shipTransform)
+            if cam.viewMode == "rear" then
+                _beginRearFreelook(cam, shipTransform)
+            else
+                cam.frontFreelookActive = true
+            end
         end
     end
 
     if InputReleased("rmb") then
         if cam.rmbLongTriggered then
-            _endRearFreelook(cam)
+            if cam.viewMode == "rear" then
+                _endRearFreelook(cam)
+            else
+                _resetFrontFreelookState(cam)
+            end
         else
             if cam.viewMode == "rear" then
                 local rearOffsetNow = sphericalToCartesian(cam.r, cam.b, cam.c)
@@ -346,9 +504,13 @@ function client.shipCameraTick(dt)
 
                 cam.viewMode = "front"
                 cam.viewBlendTarget = 1.0
+                _resetFrontFreelookState(cam)
             else
                 cam.viewMode = "rear"
                 cam.viewBlendTarget = 0.0
+                cam.targetB = cam.rearDefaultPitch or 8.0
+                cam.targetC = shipBackYawWorld
+                _resetFrontFreelookState(cam)
             end
             _resetRearFreelookState(cam)
         end
@@ -485,12 +647,23 @@ function client.shipCameraTick(dt)
 
     local yawError = 0.0
     local pitchError = 0.0
+    local steerYaw = 0.0
+    if InputDown("a") and (not InputDown("d")) then
+        steerYaw = -(cam.freelookTurnYawError or 16.0)
+    elseif InputDown("d") and (not InputDown("a")) then
+        steerYaw = cam.freelookTurnYawError or 16.0
+    end
 
     if cam.viewMode == "front" then
-        yawError = frontErrorYaw
-        pitchError = frontErrorPitch
+        if cam.frontFreelookActive then
+            yawError = steerYaw
+            pitchError = 0.0
+        else
+            yawError = frontErrorYaw + steerYaw
+            pitchError = frontErrorPitch
+        end
     elseif cam.rearFreelookActive then
-        yawError = 0.0
+        yawError = steerYaw
         pitchError = 0.0
     else
         local camForwardWorld = rearForwardWorld
@@ -499,6 +672,29 @@ function client.shipCameraTick(dt)
         yawError = wrapAngle180(camAzimuth)
         pitchError = camZenith
     end
+
+    local weaponConfig, currentMode = _shipCameraResolveWeaponConfig(body)
+    local weaponAimActive = (cam.rearFreelookActive or cam.frontFreelookActive)
+        and (currentMode == "xSlot" or currentMode == "lSlot")
+        and tostring(weaponConfig.aimControlMode or "fixed") == "camera_limited"
+    local weaponAimWorldDir = rearForwardWorld
+    local weaponAimLocalYaw = 0.0
+    local weaponAimLocalPitch = 0.0
+    if weaponAimActive then
+        local viewLocalDir = TransformToLocalVec(shipTransform, blendedForward)
+        if cam.rearFreelookActive then
+            viewLocalDir = _rearFreelookOffsetToAimLocal(shipTransform, cameraPos, shipPos)
+        end
+        local limitedDir, limitedYaw, limitedPitch = _resolveRelativeAimVector(
+            viewLocalDir,
+            tonumber(weaponConfig.aimPitchOffsetDeg) or 0.0,
+            tonumber(weaponConfig.aimLimitDeg) or 0.0
+        )
+        weaponAimWorldDir = _safeNormalize(TransformToParentVec(shipTransform, limitedDir), rearForwardWorld)
+        weaponAimLocalYaw = limitedYaw
+        weaponAimLocalPitch = limitedPitch
+    end
+    _shipCameraPushWeaponAim(cam, body, weaponAimActive, weaponAimLocalYaw, weaponAimLocalPitch, weaponAimWorldDir)
 
     client.shipRequestRotationError(body, pitchError, yawError)
 end

@@ -57,6 +57,9 @@ local function _xSlotStateBuildConfig(slotDef)
         launchDuration = weaponDef.launchDuration or 0.0,
         randomTrajectoryAngle = weaponDef.randomTrajectoryAngle or 0.0,
         cooldown = cooldown or 0.0,
+        aimControlMode = tostring(weaponDef.aimControlMode or "fixed"),
+        aimLimitDeg = tonumber(weaponDef.aimLimitDeg) or 0.0,
+        aimPitchOffsetDeg = tonumber(weaponDef.aimPitchOffsetDeg) or 0.0,
     }
 end
 

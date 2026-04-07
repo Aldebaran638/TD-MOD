@@ -139,6 +139,27 @@ function server.shipRequestRotationError(playerId, shipBodyId, pitchError, yawEr
     return true
 end
 
+function server.shipRequestWeaponAim(playerId, shipBodyId, active, localYaw, localPitch)
+    if not _canAcceptShipRequest(playerId, shipBodyId) then
+        return false
+    end
+
+    local aimActive = math.floor(active or 0) ~= 0
+    local yawValue = tonumber(localYaw) or 0.0
+    local pitchValue = tonumber(localPitch) or 0.0
+    if yawValue ~= yawValue or yawValue == math.huge or yawValue == -math.huge then
+        yawValue = 0.0
+    end
+    if pitchValue ~= pitchValue or pitchValue == math.huge or pitchValue == -math.huge then
+        pitchValue = 0.0
+    end
+
+    if server.shipRuntimeSetWeaponAim ~= nil then
+        server.shipRuntimeSetWeaponAim(shipBodyId, aimActive, yawValue, pitchValue)
+    end
+    return true
+end
+
 function server.shipRequestRollError(playerId, shipBodyId, rollError)
     if not _canAcceptShipRequest(playerId, shipBodyId) then
         return false

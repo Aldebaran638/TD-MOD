@@ -27,6 +27,71 @@ local function _xSlotWeaponTypeUsable(weaponType)
     return weaponType ~= nil and weaponType ~= "" and weaponType ~= "none"
 end
 
+local function _xSlotSafeNormalize(v, fallback)
+    local len = VecLength(v)
+    if len < 0.0001 then
+        return fallback or Vec(0, 0, -1)
+    end
+    return VecScale(v, 1.0 / len)
+end
+
+local function _xSlotRelativeYawPitchToVector(yaw, pitch)
+    local yr = math.rad(yaw or 0.0)
+    local pr = math.rad(pitch or 0.0)
+    return Vec(
+        math.cos(pr) * math.sin(yr),
+        math.sin(pr),
+        -math.cos(pr) * math.cos(yr)
+    )
+end
+
+local function _xSlotClampDirectionToConeLocal(localDir, maxAngleDeg)
+    local forward = Vec(0, 0, -1)
+    local desired = _xSlotSafeNormalize(localDir, forward)
+    local maxDeg = math.max(0.0, tonumber(maxAngleDeg) or 0.0)
+    if maxDeg <= 0.0001 then
+        return forward
+    end
+
+    local dot = VecDot(desired, forward)
+    if dot > 1.0 then dot = 1.0 end
+    if dot < -1.0 then dot = -1.0 end
+    local angle = math.deg(math.acos(dot))
+    if angle <= maxDeg then
+        return desired
+    end
+
+    local lateral = VecSub(desired, VecScale(forward, dot))
+    lateral = _xSlotSafeNormalize(lateral, Vec(1, 0, 0))
+    local maxRad = math.rad(maxDeg)
+    return _xSlotSafeNormalize(
+        VecAdd(VecScale(forward, math.cos(maxRad)), VecScale(lateral, math.sin(maxRad))),
+        forward
+    )
+end
+
+local function _xSlotResolveFireDirRelative(shipBodyId, slotConfig)
+    local config = slotConfig or {}
+    local defaultDir = _vec3TableToVec(config.fireDirRelative, 0, 0, -1)
+    if tostring(config.aimControlMode or "fixed") ~= "camera_limited" then
+        return defaultDir
+    end
+
+    if server.shipRuntimeGetWeaponAim == nil then
+        return defaultDir
+    end
+
+    local active, localYaw, localPitch = server.shipRuntimeGetWeaponAim(shipBodyId)
+    if not active then
+        return defaultDir
+    end
+
+    return _xSlotClampDirectionToConeLocal(
+        _xSlotRelativeYawPitchToVector(localYaw, localPitch),
+        tonumber(config.aimLimitDeg) or 0.0
+    )
+end
+
 -- 读取目标飞船护盾半径（用于护盾球面入射点修正）
 local function _resolveTargetShieldRadius(targetBody, fallbackShipType)
     local radiusFallback = 20
@@ -521,7 +586,7 @@ function server.xSlotControlTick(dt)
         local runtimeWeaponType = activeConfig.weaponType or "none"
 
         local firePosOffset = _vec3TableToVec(mountPos, 0, 0, 4)
-        local fireDir = _vec3TableToVec(mountDir, 0, 0, 1)
+        local fireDir = _xSlotResolveFireDirRelative(shipBody, activeConfig)
         local shipT = GetBodyTransform(shipBody)
         local firePointWorld = TransformToParentPoint(shipT, firePosOffset)
 

@@ -16,6 +16,9 @@ local tachyonLanceData = {
     chargeDuration = 0.5,
     launchDuration = 0.2,
     randomTrajectoryAngle = 0,
+    aimControlMode = "camera_limited",
+    aimLimitDeg = 70.0,
+    aimPitchOffsetDeg = 6.0,
 }
 
 xSlotWeaponRegistryData.tachyonLance = tachyonLanceData
