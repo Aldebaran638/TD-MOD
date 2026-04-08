@@ -110,6 +110,13 @@ function client.mainWeaponInputTick(dt)
                     client.shipRequestSWeaponFire(shipBody, targetVehicleId)
                 end
             end
+        elseif currentMode == "hSlot" then
+            if client.sSlotTargetingCanFire ~= nil and client.sSlotTargetingCanFire(shipBody) then
+                local targetVehicleId = client.sSlotTargetingGetLockedVehicleId ~= nil and client.sSlotTargetingGetLockedVehicleId(shipBody) or 0
+                if targetVehicleId ~= 0 and client.shipRequestHWeaponFire ~= nil then
+                    client.shipRequestHWeaponFire(shipBody, targetVehicleId)
+                end
+            end
         else
             client.shipRequestMainWeaponFire(shipBody, 1)
         end

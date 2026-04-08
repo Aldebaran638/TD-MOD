@@ -121,6 +121,9 @@ end
 
 function server.xSlotStateInit(shipType)
     local shipDef = _xSlotStateResolveShipDefinition(shipType)
+    if server.shipSlotLoadoutResolveShipDefinition ~= nil then
+        shipDef = server.shipSlotLoadoutResolveShipDefinition(shipType) or shipDef
+    end
     local state = {
         requestFire = false,
         holdRequested = false,

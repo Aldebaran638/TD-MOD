@@ -138,6 +138,44 @@ function server.shipRequestSWeaponFire(playerId, shipBodyId, targetVehicleId)
     return true
 end
 
+function server.shipRequestHWeaponFire(playerId, shipBodyId, targetVehicleId)
+    if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
+        return false
+    end
+    if not _canAcceptShipRequest(playerId, shipBodyId) then
+        return false
+    end
+
+    if server.shipRuntimeGetCurrentMainWeapon ~= nil then
+        local current = server.shipRuntimeGetCurrentMainWeapon(shipBodyId)
+        if current ~= "hSlot" then
+            return false
+        end
+    end
+
+    local vehicleId = math.floor(targetVehicleId or 0)
+    if vehicleId <= 0 then
+        return false
+    end
+
+    local targetBody = GetVehicleBody(vehicleId)
+    if targetBody == nil or targetBody == 0 then
+        return false
+    end
+
+    server.hSlotLastFireRequest = {
+        shipBodyId = shipBodyId,
+        targetVehicleId = vehicleId,
+        targetBodyId = targetBody,
+        requestedAt = (GetTime ~= nil) and GetTime() or 0.0,
+    }
+
+    if server.hSlotControlSetFireRequested ~= nil then
+        server.hSlotControlSetFireRequested(true)
+    end
+    return true
+end
+
 function server.shipRequestMoveState(playerId, shipBodyId, moveState)
     if not _canAcceptShipRequest(playerId, shipBodyId) then
         return

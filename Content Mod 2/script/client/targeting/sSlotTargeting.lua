@@ -215,7 +215,7 @@ function client.sSlotTargetingTick(dt)
 
     local shipBody = _resolveControlledShipBody()
     local currentMode = (client.getShipMainWeaponMode ~= nil and shipBody ~= 0) and client.getShipMainWeaponMode(shipBody) or "xSlot"
-    if shipBody == 0 or currentMode ~= "sSlot" then
+    if shipBody == 0 or (currentMode ~= "sSlot" and currentMode ~= "hSlot") then
         _sSlotResetState(state)
         return
     end
@@ -231,7 +231,7 @@ function client.sSlotTargetingTick(dt)
     local camForward = VecNormalize(TransformToParentVec(camT, Vec(0, 0, -1)))
     local useCameraCone = client.shipCamera ~= nil
         and client.shipCamera.rearFreelookActive
-        and currentMode == "sSlot"
+        and (currentMode == "sSlot" or currentMode == "hSlot")
 
     local aimOrigin = shipPos
     local aimForward = shipForward

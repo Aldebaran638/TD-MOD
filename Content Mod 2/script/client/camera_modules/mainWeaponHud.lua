@@ -27,6 +27,7 @@ client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
     xSlotColor = { 0.18, 0.82, 1.0, 0.95 },
     lSlotColor = { 1.0, 0.42, 0.12, 0.95 },
     sSlotColor = { 1.0, 0.84, 0.18, 0.95 },
+    hSlotColor = { 0.86, 0.36, 1.0, 0.95 },
     heatBgColor = { 0.14, 0.16, 0.18, 0.95 },
     heatFillColor = { 1.0, 0.72, 0.18, 0.96 },
     heatOverColor = { 1.0, 0.22, 0.10, 0.98 },
@@ -53,11 +54,16 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     sSlotFill2 = 1.0,
     sSlotFill3 = 1.0,
     sSlotFill4 = 1.0,
+    hSlotFill1 = 1.0,
+    hSlotFill2 = 1.0,
+    hSlotActive1 = false,
+    hSlotActive2 = false,
 }
 
 client.lSlotHudStateByShip = client.lSlotHudStateByShip or {}
 client.xSlotHudStateByShip = client.xSlotHudStateByShip or {}
 client.sSlotHudStateByShip = client.sSlotHudStateByShip or {}
+client.hSlotHudStateByShip = client.hSlotHudStateByShip or {}
 
 local function _mainWeaponHudClamp(v, a, b)
     if v < a then return a end
@@ -265,6 +271,42 @@ local function _getOrCreateSSlotHudState(shipBodyId)
     return hud
 end
 
+local function _getOrCreateHSlotHudState(shipBodyId)
+    local body = math.floor(shipBodyId or 0)
+    if body <= 0 then
+        return nil
+    end
+
+    local states = client.hSlotHudStateByShip
+    local hud = states[body]
+    if hud == nil then
+        hud = {
+            cd1 = 0.0,
+            cd2 = 0.0,
+            maxCd1 = 1.0,
+            maxCd2 = 1.0,
+            active1 = false,
+            active2 = false,
+        }
+        states[body] = hud
+    end
+    return hud
+end
+
+function client.updateHSlotHudState(shipBodyId, cd1, cd2, maxCd1, maxCd2, active1, active2)
+    local hud = _getOrCreateHSlotHudState(shipBodyId)
+    if hud == nil then
+        return
+    end
+
+    hud.cd1 = math.max(0.0, tonumber(cd1) or 0.0)
+    hud.cd2 = math.max(0.0, tonumber(cd2) or 0.0)
+    hud.maxCd1 = math.max(0.0, tonumber(maxCd1) or 0.0)
+    hud.maxCd2 = math.max(0.0, tonumber(maxCd2) or 0.0)
+    hud.active1 = math.floor(active1 or 0) ~= 0
+    hud.active2 = math.floor(active2 or 0) ~= 0
+end
+
 function client.updateSSlotHudState(shipBodyId, cd1, cd2, cd3, cd4, maxCd1, maxCd2, maxCd3, maxCd4)
     local hud = _getOrCreateSSlotHudState(shipBodyId)
     if hud == nil then
@@ -300,6 +342,10 @@ function client.mainWeaponHudTick(dt)
         state.targetSSlotProgress = 0.0
         state.sSlotProgress = 0.0
         state.sSlotStatus = "NO TARGET"
+        state.hSlotFill1 = 1.0
+        state.hSlotFill2 = 1.0
+        state.hSlotActive1 = false
+        state.hSlotActive2 = false
         return
     end
 
@@ -390,6 +436,34 @@ function client.mainWeaponHudTick(dt)
     else
         state.sSlotFill4 = 1.0
     end
+
+    local hHud = client.hSlotHudStateByShip[body] or {
+        cd1 = 0.0,
+        cd2 = 0.0,
+        maxCd1 = 1.0,
+        maxCd2 = 1.0,
+        active1 = false,
+        active2 = false,
+    }
+
+    if hHud.active1 then
+        state.hSlotFill1 = 0.0
+    elseif (hHud.maxCd1 or 0.0) > 0.0001 then
+        state.hSlotFill1 = _mainWeaponHudClamp(1.0 - ((hHud.cd1 or 0.0) / (hHud.maxCd1 or 1.0)), 0.0, 1.0)
+    else
+        state.hSlotFill1 = 1.0
+    end
+
+    if hHud.active2 then
+        state.hSlotFill2 = 0.0
+    elseif (hHud.maxCd2 or 0.0) > 0.0001 then
+        state.hSlotFill2 = _mainWeaponHudClamp(1.0 - ((hHud.cd2 or 0.0) / (hHud.maxCd2 or 1.0)), 0.0, 1.0)
+    else
+        state.hSlotFill2 = 1.0
+    end
+
+    state.hSlotActive1 = hHud.active1 and true or false
+    state.hSlotActive2 = hHud.active2 and true or false
 end
 
 local function _drawWeaponIcon(x, y, size, fillColor, label, selected, cfg)
@@ -478,6 +552,13 @@ function client.mainWeaponHudDraw()
         topColor = (state.sSlotStatus == "LOCKED") and cfg.lockReadyColor or cfg.lockFillColor
         titleText = "Whirlwind Missiles"
         modeText = "Main Weapon: S-Slot"
+    elseif currentMode == "hSlot" then
+        local anyActive = state.hSlotActive1 or state.hSlotActive2
+        topFill = anyActive and 0.0 or math.max(state.hSlotFill1 or 0.0, state.hSlotFill2 or 0.0)
+        topText = anyActive and "STRIKE CRAFT DEPLOYED" or "HANGAR READY"
+        topColor = cfg.hSlotColor
+        titleText = "Gamma Strike Craft"
+        modeText = "Main Weapon: H-Slot"
     end
 
     UiPush()
@@ -493,16 +574,17 @@ function client.mainWeaponHudDraw()
         _drawWeaponIcon(12, 36, cfg.iconSize, cfg.xSlotColor, "X", currentMode == "xSlot", cfg)
         _drawWeaponIcon(46, 36, cfg.iconSize, cfg.lSlotColor, "L", currentMode == "lSlot", cfg)
         _drawWeaponIcon(80, 36, cfg.iconSize, cfg.sSlotColor, "S", currentMode == "sSlot", cfg)
+        _drawWeaponIcon(114, 36, cfg.iconSize, cfg.hSlotColor, "H", currentMode == "hSlot", cfg)
 
         UiPush()
-            UiTranslate(118, 34)
+            UiTranslate(150, 34)
             UiColor(cfg.textColor[1], cfg.textColor[2], cfg.textColor[3], cfg.textColor[4])
             UiFont("regular.ttf", cfg.labelSize)
             UiText(titleText)
         UiPop()
 
         UiPush()
-            UiTranslate(118, 54)
+            UiTranslate(150, 54)
             UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
             UiFont("regular.ttf", cfg.valueSize)
             UiText(modeText)
@@ -516,6 +598,9 @@ function client.mainWeaponHudDraw()
             _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 76, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.sSlotFill2, "S2", cfg)
             _drawXCooldownBar(12, 96, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.sSlotFill3, "S3", cfg)
             _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 96, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.sSlotFill4, "S4", cfg)
+        elseif currentMode == "hSlot" then
+            _drawXCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill1, state.hSlotActive1 and "H1*" or "H1", cfg)
+            _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill2, state.hSlotActive2 and "H2*" or "H2", cfg)
         else
             UiPush()
                 UiTranslate(12, 84)

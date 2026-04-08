@@ -82,6 +82,9 @@ end
 
 function server.lSlotStateInit(shipType)
     local shipDef = _lSlotResolveShipDefinition(shipType)
+    if server.shipSlotLoadoutResolveShipDefinition ~= nil then
+        shipDef = server.shipSlotLoadoutResolveShipDefinition(shipType) or shipDef
+    end
     local state = {
         requestFire = false,
         slots = {},
