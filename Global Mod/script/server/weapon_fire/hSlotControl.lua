@@ -434,6 +434,7 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
     end
 
     local didHitShield = _hSlotApplyBeamDamage(hitPos, hitBody, craft.weaponType, tonumber(weaponConfig.environmentExplosionSize) or 0.1)
+    ClientCall(0, "client.playHSlotGammaFireSound", origin[1], origin[2], origin[3])
     ClientCall(
         0,
         "client.spawnHSlotBeamFx",
