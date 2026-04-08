@@ -41,6 +41,65 @@ local function _lSlotApplyFireDeviation(dir, deviationAngleDeg)
     )
 end
 
+local function _lSlotRelativeYawPitchToVector(yaw, pitch)
+    local yr = math.rad(yaw or 0.0)
+    local pr = math.rad(pitch or 0.0)
+    return Vec(
+        math.cos(pr) * math.sin(yr),
+        math.sin(pr),
+        -math.cos(pr) * math.cos(yr)
+    )
+end
+
+local function _lSlotClampDirectionToConeLocal(localDir, maxAngleDeg)
+    local forward = Vec(0, 0, -1)
+    local desired = _lSlotSafeNormalize(localDir, forward)
+    local maxDeg = math.max(0.0, tonumber(maxAngleDeg) or 0.0)
+    if maxDeg <= 0.0001 then
+        return forward
+    end
+
+    local dot = VecDot(desired, forward)
+    if dot > 1.0 then dot = 1.0 end
+    if dot < -1.0 then dot = -1.0 end
+    local angle = math.deg(math.acos(dot))
+    if angle <= maxDeg then
+        return desired
+    end
+
+    local lateral = VecSub(desired, VecScale(forward, dot))
+    lateral = _lSlotSafeNormalize(lateral, Vec(1, 0, 0))
+    local maxRad = math.rad(maxDeg)
+    return _lSlotSafeNormalize(
+        VecAdd(VecScale(forward, math.cos(maxRad)), VecScale(lateral, math.sin(maxRad))),
+        forward
+    )
+end
+
+local function _resolveLSlotCameraAimPointLocal(shipBody, shipT, slotConfig)
+    local config = slotConfig or {}
+    if tostring(config.aimControlMode or "fixed") ~= "camera_limited" then
+        return nil
+    end
+    if server.shipRuntimeGetWeaponAim == nil then
+        return nil
+    end
+
+    local active, localYaw, localPitch = server.shipRuntimeGetWeaponAim(shipBody)
+    if not active then
+        return nil
+    end
+
+    local aimLocalDir = _lSlotClampDirectionToConeLocal(
+        _lSlotRelativeYawPitchToVector(localYaw, localPitch),
+        tonumber(config.aimLimitDeg) or 0.0
+    )
+    local aimWorldDir = _lSlotSafeNormalize(TransformToParentVec(shipT, aimLocalDir), TransformToParentVec(shipT, Vec(0, 0, -1)))
+    local maxRange = math.max(1.0, tonumber(config.maxRange) or 1.0)
+    local aimPointWorld = VecAdd(shipT.pos, VecScale(aimWorldDir, maxRange))
+    return TransformToLocalPoint(shipT, aimPointWorld)
+end
+
 local function _resolveLSlotForwardAimPointLocal(shipBody, shipT, maxRange)
     if shipBody == nil or shipBody == 0 then
         return nil
@@ -168,11 +227,14 @@ function server.lSlotControlTick(dt)
 
     local shipT = GetBodyTransform(shipBody)
     local primaryConfig = (slots[1] and slots[1].config) or {}
-    local forwardAimPointLocal = _resolveLSlotForwardAimPointLocal(
-        shipBody,
-        shipT,
-        math.max(1.0, primaryConfig.maxRange or 1.0)
-    )
+    local forwardAimPointLocal = _resolveLSlotCameraAimPointLocal(shipBody, shipT, primaryConfig)
+    if forwardAimPointLocal == nil then
+        forwardAimPointLocal = _resolveLSlotForwardAimPointLocal(
+            shipBody,
+            shipT,
+            math.max(1.0, primaryConfig.maxRange or 1.0)
+        )
+    end
     local fired = false
     for i = 1, #slots do
         local slot = slots[i] or {}

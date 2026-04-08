@@ -99,6 +99,27 @@ function client.shipRequestMainWeaponFire(shipBodyId, request)
     return true
 end
 
+function client.shipRequestXWeaponHold(shipBodyId, active)
+    if not client.registryShipExists(shipBodyId) then
+        return false
+    end
+
+    local value = active and 1 or 0
+    local localPlayerId = GetLocalPlayer()
+    ServerCall("server.shipRequestXWeaponHold", localPlayerId, shipBodyId, value)
+    return true
+end
+
+function client.shipRequestXWeaponRelease(shipBodyId)
+    if not client.registryShipExists(shipBodyId) then
+        return false
+    end
+
+    local localPlayerId = GetLocalPlayer()
+    ServerCall("server.shipRequestXWeaponRelease", localPlayerId, shipBodyId)
+    return true
+end
+
 function client.shipRequestSWeaponFire(shipBodyId, targetVehicleId)
     if not client.registryShipExists(shipBodyId) then
         return false
@@ -111,6 +132,21 @@ function client.shipRequestSWeaponFire(shipBodyId, targetVehicleId)
 
     local localPlayerId = GetLocalPlayer()
     ServerCall("server.shipRequestSWeaponFire", localPlayerId, shipBodyId, vehicleId)
+    return true
+end
+
+function client.shipRequestHWeaponFire(shipBodyId, targetVehicleId)
+    if not client.registryShipExists(shipBodyId) then
+        return false
+    end
+
+    local vehicleId = math.floor(targetVehicleId or 0)
+    if vehicleId <= 0 then
+        return false
+    end
+
+    local localPlayerId = GetLocalPlayer()
+    ServerCall("server.shipRequestHWeaponFire", localPlayerId, shipBodyId, vehicleId)
     return true
 end
 
@@ -151,6 +187,26 @@ function client.shipRequestRotationError(shipBodyId, pitchError, yawError)
     local yawOut = yawError or 0.0
     local localPlayerId = GetLocalPlayer()
     ServerCall("server.shipRequestRotationError", localPlayerId, shipBodyId, pitchOut, yawOut)
+    return true
+end
+
+function client.shipRequestWeaponAim(shipBodyId, active, localYaw, localPitch)
+    if not client.registryShipExists(shipBodyId) then
+        return false
+    end
+
+    local activeValue = active and 1 or 0
+    local yawOut = tonumber(localYaw) or 0.0
+    local pitchOut = tonumber(localPitch) or 0.0
+    if yawOut ~= yawOut or yawOut == math.huge or yawOut == -math.huge then
+        yawOut = 0.0
+    end
+    if pitchOut ~= pitchOut or pitchOut == math.huge or pitchOut == -math.huge then
+        pitchOut = 0.0
+    end
+
+    local localPlayerId = GetLocalPlayer()
+    ServerCall("server.shipRequestWeaponAim", localPlayerId, shipBodyId, activeValue, yawOut, pitchOut)
     return true
 end
 

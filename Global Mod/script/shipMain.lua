@@ -7,6 +7,7 @@
 #include "server/weapon_data.lua"
 
 #include "server/shipRuntimeState.lua"
+#include "server/shipSlotLoadout.lua"
 #include "server/registry/shipRegistry.lua"
 #include "server/registry/shipRegistryRequest.lua"
 
@@ -49,6 +50,7 @@ end
 #include "server/weapon_fire/xSlotControl.lua"
 #include "server/weapon_fire/lSlotControl.lua"
 #include "server/weapon_fire/sSlotControl.lua"
+#include "server/weapon_fire/hSlotControl.lua"
 #include "server/weapon_fire/projectileManager.lua"
 -- 移动类模块：根据 body 质量施加竖直向上�?
 #include "server/movement/bodyMassUpwardMove.lua"
@@ -87,11 +89,13 @@ function server.init()
     -- 注册当前飞船并加载飞船数�?
     server.registerCurrentShip("enigmaticCruiser")
     server.shipRuntimeStateInit(server.shipBody, "enigmaticCruiser", server.defaultShipType)
+    server.shipSlotLoadoutInit("enigmaticCruiser")
     server.mainWeaponRequestInit()
     server.xSlotStateInit("enigmaticCruiser")
     server.xSlotRenderStateInit()
     server.lSlotStateInit("enigmaticCruiser")
     server.sSlotStateInit("enigmaticCruiser")
+    server.hSlotStateInit("enigmaticCruiser")
     server.shipRuntimeSyncMainWeapon(server.shipBody, true)
 
 end
@@ -108,6 +112,7 @@ function server.serverTick(dt)
     server.xSlotControlTick(dt)
     server.lSlotControlTick(dt)
     server.sSlotControlTick(dt)
+    server.hSlotControlTick(dt)
     server.projectileManagerTick(dt)
     server.shipHpRecoveryTick(dt)
     server.shipDeathExplosionTick(dt)

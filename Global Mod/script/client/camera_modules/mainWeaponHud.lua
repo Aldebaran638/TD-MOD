@@ -27,6 +27,7 @@ client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
     xSlotColor = { 0.18, 0.82, 1.0, 0.95 },
     lSlotColor = { 1.0, 0.42, 0.12, 0.95 },
     sSlotColor = { 1.0, 0.84, 0.18, 0.95 },
+    hSlotColor = { 0.86, 0.36, 1.0, 0.95 },
     heatBgColor = { 0.14, 0.16, 0.18, 0.95 },
     heatFillColor = { 1.0, 0.72, 0.18, 0.96 },
     heatOverColor = { 1.0, 0.22, 0.10, 0.98 },
@@ -43,6 +44,9 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     overheated = false,
     xSlotFill1 = 1.0,
     xSlotFill2 = 1.0,
+    xSlotPhase1 = "idle",
+    xSlotPhase2 = "idle",
+    xSlotFireMode = "aim",
     sSlotProgress = 0.0,
     targetSSlotProgress = 0.0,
     sSlotStatus = "NO TARGET",
@@ -50,11 +54,26 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     sSlotFill2 = 1.0,
     sSlotFill3 = 1.0,
     sSlotFill4 = 1.0,
+    hSlotFill1 = 1.0,
+    hSlotFill2 = 1.0,
+    hSlotActive1 = false,
+    hSlotActive2 = false,
 }
 
 client.lSlotHudStateByShip = client.lSlotHudStateByShip or {}
 client.xSlotHudStateByShip = client.xSlotHudStateByShip or {}
 client.sSlotHudStateByShip = client.sSlotHudStateByShip or {}
+client.hSlotHudStateByShip = client.hSlotHudStateByShip or {}
+client.hSlotDebugState = client.hSlotDebugState or {
+    active = 0,
+    lastReason = "none",
+    slot1State = "none",
+    slot1Life = -1.0,
+    slot1Return = -1.0,
+    slot2State = "none",
+    slot2Life = -1.0,
+    slot2Return = -1.0,
+}
 
 local function _mainWeaponHudClamp(v, a, b)
     if v < a then return a end
@@ -65,6 +84,16 @@ end
 local function _mainWeaponHudSmooth(curr, target, speed, dt)
     local k = math.min(1.0, (speed or 8.0) * (dt or 0.0))
     return curr + (target - curr) * k
+end
+
+local function _mainWeaponHudSafeDebugWatch(label, value)
+    if type(DebugWatch) ~= "function" then
+        return
+    end
+    local ok, _ = pcall(DebugWatch, tostring(label or "DBG"), tostring(value or "-"))
+    if not ok then
+        return
+    end
 end
 
 local function _resolveControlledShipBody()
@@ -128,14 +157,75 @@ local function _getOrCreateXSlotHudState(shipBodyId)
     local hud = states[body]
     if hud == nil then
         hud = {
-            cd1 = 0.0,
-            cd2 = 0.0,
-            maxCd1 = 1.0,
-            maxCd2 = 1.0,
+            value1 = 0.0,
+            value2 = 0.0,
+            maxValue1 = 1.0,
+            maxValue2 = 1.0,
+            phase1 = "idle",
+            phase2 = "idle",
         }
         states[body] = hud
     end
     return hud
+end
+
+local function _resolveXSlotFill(value, maxValue, phase)
+    local maxV = math.max(0.0, tonumber(maxValue) or 0.0)
+    local curr = math.max(0.0, tonumber(value) or 0.0)
+    local p = tostring(phase or "idle")
+
+    if p == "charging" or p == "charged" or p == "launching" then
+        if maxV <= 0.0001 then
+            return (p == "charged") and 1.0 or 0.0
+        end
+        return _mainWeaponHudClamp(curr / maxV, 0.0, 1.0)
+    end
+
+    if p == "cooldown" then
+        if maxV <= 0.0001 then
+            return 1.0
+        end
+        return _mainWeaponHudClamp(1.0 - (curr / maxV), 0.0, 1.0)
+    end
+
+    return 1.0
+end
+
+local function _xSlotPhasePriority(phase)
+    local p = tostring(phase or "idle")
+    if p == "charged" then return 5 end
+    if p == "charging" then return 4 end
+    if p == "launching" then return 3 end
+    if p == "cooldown" then return 2 end
+    return 1
+end
+
+local function _resolveXSlotTopStatus(state)
+    local phase1 = tostring(state.xSlotPhase1 or "idle")
+    local phase2 = tostring(state.xSlotPhase2 or "idle")
+    local fill1 = tonumber(state.xSlotFill1) or 1.0
+    local fill2 = tonumber(state.xSlotFill2) or 1.0
+
+    local phase = phase1
+    local fill = fill1
+    if _xSlotPhasePriority(phase2) > _xSlotPhasePriority(phase1) or (_xSlotPhasePriority(phase2) == _xSlotPhasePriority(phase1) and fill2 > fill1) then
+        phase = phase2
+        fill = fill2
+    end
+
+    if phase == "charged" then
+        return 1.0, "CHARGED"
+    end
+    if phase == "charging" then
+        return fill, string.format("CHARGE %d%%", math.floor(fill * 100 + 0.5))
+    end
+    if phase == "launching" then
+        return fill, string.format("FIRING %d%%", math.floor(fill * 100 + 0.5))
+    end
+    if phase == "cooldown" then
+        return fill, string.format("RECOVER %d%%", math.floor(fill * 100 + 0.5))
+    end
+    return 1.0, "READY"
 end
 
 function client.initLSlotHudState(shipBodyId, overheatThreshold)
@@ -164,15 +254,17 @@ function client.resetLSlotHudState(shipBodyId)
     hud.overheated = false
 end
 
-function client.updateXSlotHudState(shipBodyId, cd1, cd2, maxCd1, maxCd2)
+function client.updateXSlotHudState(shipBodyId, value1, value2, maxValue1, maxValue2, phase1, phase2)
     local hud = _getOrCreateXSlotHudState(shipBodyId)
     if hud == nil then
         return
     end
-    hud.cd1 = math.max(0.0, tonumber(cd1) or 0.0)
-    hud.cd2 = math.max(0.0, tonumber(cd2) or 0.0)
-    hud.maxCd1 = math.max(0.0, tonumber(maxCd1) or 0.0)
-    hud.maxCd2 = math.max(0.0, tonumber(maxCd2) or 0.0)
+    hud.value1 = math.max(0.0, tonumber(value1) or 0.0)
+    hud.value2 = math.max(0.0, tonumber(value2) or 0.0)
+    hud.maxValue1 = math.max(0.0, tonumber(maxValue1) or 0.0)
+    hud.maxValue2 = math.max(0.0, tonumber(maxValue2) or 0.0)
+    hud.phase1 = tostring(phase1 or "idle")
+    hud.phase2 = tostring(phase2 or "idle")
 end
 
 local function _getOrCreateSSlotHudState(shipBodyId)
@@ -197,6 +289,84 @@ local function _getOrCreateSSlotHudState(shipBodyId)
         states[body] = hud
     end
     return hud
+end
+
+local function _getOrCreateHSlotHudState(shipBodyId)
+    local body = math.floor(shipBodyId or 0)
+    if body <= 0 then
+        return nil
+    end
+
+    local states = client.hSlotHudStateByShip
+    local hud = states[body]
+    if hud == nil then
+        hud = {
+            cd1 = 0.0,
+            cd2 = 0.0,
+            maxCd1 = 1.0,
+            maxCd2 = 1.0,
+            active1 = false,
+            active2 = false,
+            dbgReason = "none",
+            dbgS1State = "none",
+            dbgS1Life = -1.0,
+            dbgS1Return = -1.0,
+            dbgS2State = "none",
+            dbgS2Life = -1.0,
+            dbgS2Return = -1.0,
+        }
+        states[body] = hud
+    end
+    return hud
+end
+
+function client.updateHSlotHudState(
+    shipBodyId,
+    cd1,
+    cd2,
+    maxCd1,
+    maxCd2,
+    active1,
+    active2,
+    dbgReason,
+    dbgS1State,
+    dbgS1Life,
+    dbgS1Return,
+    dbgS2State,
+    dbgS2Life,
+    dbgS2Return
+)
+    local hud = _getOrCreateHSlotHudState(shipBodyId)
+    if hud == nil then
+        return
+    end
+
+    hud.cd1 = math.max(0.0, tonumber(cd1) or 0.0)
+    hud.cd2 = math.max(0.0, tonumber(cd2) or 0.0)
+    hud.maxCd1 = math.max(0.0, tonumber(maxCd1) or 0.0)
+    hud.maxCd2 = math.max(0.0, tonumber(maxCd2) or 0.0)
+    hud.active1 = math.floor(active1 or 0) ~= 0
+    hud.active2 = math.floor(active2 or 0) ~= 0
+    hud.dbgReason = tostring(dbgReason or hud.dbgReason or "none")
+    hud.dbgS1State = tostring(dbgS1State or hud.dbgS1State or "none")
+    hud.dbgS1Life = tonumber(dbgS1Life) or hud.dbgS1Life or -1.0
+    hud.dbgS1Return = tonumber(dbgS1Return) or hud.dbgS1Return or -1.0
+    hud.dbgS2State = tostring(dbgS2State or hud.dbgS2State or "none")
+    hud.dbgS2Life = tonumber(dbgS2Life) or hud.dbgS2Life or -1.0
+    hud.dbgS2Return = tonumber(dbgS2Return) or hud.dbgS2Return or -1.0
+end
+
+function client.receiveHSlotDebugState(activeCount, lastReason, s1State, s1Life, s1Return, s2State, s2Life, s2Return)
+    local d = client.hSlotDebugState or {}
+    d.active = math.floor(activeCount or 0)
+    d.lastReason = tostring(lastReason or "none")
+    d.slot1State = tostring(s1State or "none")
+    d.slot1Life = tonumber(s1Life) or -1.0
+    d.slot1Return = tonumber(s1Return) or -1.0
+    d.slot2State = tostring(s2State or "none")
+    d.slot2Life = tonumber(s2Life) or -1.0
+    d.slot2Return = tonumber(s2Return) or -1.0
+    client.hSlotDebugState = d
 end
 
 function client.updateSSlotHudState(shipBodyId, cd1, cd2, cd3, cd4, maxCd1, maxCd2, maxCd3, maxCd4)
@@ -228,9 +398,16 @@ function client.mainWeaponHudTick(dt)
         state.overheated = false
         state.xSlotFill1 = 1.0
         state.xSlotFill2 = 1.0
+        state.xSlotPhase1 = "idle"
+        state.xSlotPhase2 = "idle"
+        state.xSlotFireMode = "aim"
         state.targetSSlotProgress = 0.0
         state.sSlotProgress = 0.0
         state.sSlotStatus = "NO TARGET"
+        state.hSlotFill1 = 1.0
+        state.hSlotFill2 = 1.0
+        state.hSlotActive1 = false
+        state.hSlotActive2 = false
         return
     end
 
@@ -241,6 +418,7 @@ function client.mainWeaponHudTick(dt)
     else
         state.currentMainWeapon = "xSlot"
     end
+    state.xSlotFireMode = client.getShipXSlotFireMode ~= nil and client.getShipXSlotFireMode(body) or "aim"
 
     local hud = client.lSlotHudStateByShip[body] or {
         heat = 0.0,
@@ -254,27 +432,17 @@ function client.mainWeaponHudTick(dt)
     state.overheated = hud.overheated and true or false
 
     local xHud = client.xSlotHudStateByShip[body] or {
-        cd1 = 0.0,
-        cd2 = 0.0,
-        maxCd1 = 1.0,
-        maxCd2 = 1.0,
+        value1 = 0.0,
+        value2 = 0.0,
+        maxValue1 = 1.0,
+        maxValue2 = 1.0,
+        phase1 = "idle",
+        phase2 = "idle",
     }
-    local cd1 = math.max(0.0, xHud.cd1 or 0.0)
-    local cd2 = math.max(0.0, xHud.cd2 or 0.0)
-    local maxCd1 = math.max(0.0, xHud.maxCd1 or 0.0)
-    local maxCd2 = math.max(0.0, xHud.maxCd2 or 0.0)
-
-    if maxCd1 > 0.0001 then
-        state.xSlotFill1 = _mainWeaponHudClamp(1.0 - (cd1 / maxCd1), 0.0, 1.0)
-    else
-        state.xSlotFill1 = 1.0
-    end
-
-    if maxCd2 > 0.0001 then
-        state.xSlotFill2 = _mainWeaponHudClamp(1.0 - (cd2 / maxCd2), 0.0, 1.0)
-    else
-        state.xSlotFill2 = 1.0
-    end
+    state.xSlotPhase1 = tostring(xHud.phase1 or "idle")
+    state.xSlotPhase2 = tostring(xHud.phase2 or "idle")
+    state.xSlotFill1 = _resolveXSlotFill(xHud.value1, xHud.maxValue1, xHud.phase1)
+    state.xSlotFill2 = _resolveXSlotFill(xHud.value2, xHud.maxValue2, xHud.phase2)
 
     if client.sSlotTargetingGetSummary ~= nil then
         local statusText, progress = client.sSlotTargetingGetSummary(body)
@@ -330,6 +498,78 @@ function client.mainWeaponHudTick(dt)
     else
         state.sSlotFill4 = 1.0
     end
+
+    local hHud = client.hSlotHudStateByShip[body] or {
+        cd1 = 0.0,
+        cd2 = 0.0,
+        maxCd1 = 1.0,
+        maxCd2 = 1.0,
+        active1 = false,
+        active2 = false,
+    }
+
+    if hHud.active1 then
+        state.hSlotFill1 = 0.0
+    elseif (hHud.maxCd1 or 0.0) > 0.0001 then
+        state.hSlotFill1 = _mainWeaponHudClamp(1.0 - ((hHud.cd1 or 0.0) / (hHud.maxCd1 or 1.0)), 0.0, 1.0)
+    else
+        state.hSlotFill1 = 1.0
+    end
+
+    if hHud.active2 then
+        state.hSlotFill2 = 0.0
+    elseif (hHud.maxCd2 or 0.0) > 0.0001 then
+        state.hSlotFill2 = _mainWeaponHudClamp(1.0 - ((hHud.cd2 or 0.0) / (hHud.maxCd2 or 1.0)), 0.0, 1.0)
+    else
+        state.hSlotFill2 = 1.0
+    end
+
+    state.hSlotActive1 = hHud.active1 and true or false
+    state.hSlotActive2 = hHud.active2 and true or false
+
+    -- H 槽调试输出：固定 8 项，便于定位非碰撞自毁原因
+    local dbgRoot = "StellarisShips/debug/hslot"
+    local controlledBody = math.floor(body or 0)
+    local shipKey = tostring(controlledBody)
+    local shipRoot = dbgRoot .. "/byShip/" .. shipKey
+
+    local heartbeatDbg = GetInt(shipRoot .. "/heartbeat") or 0
+    local sourceBody = controlledBody
+    if heartbeatDbg <= 0 then
+        local lastShipBody = math.floor(GetInt(dbgRoot .. "/lastShipBody") or 0)
+        if lastShipBody > 0 then
+            sourceBody = lastShipBody
+            shipRoot = dbgRoot .. "/byShip/" .. tostring(lastShipBody)
+            heartbeatDbg = GetInt(shipRoot .. "/heartbeat") or 0
+        end
+    end
+
+    local activeDbg = GetInt(shipRoot .. "/active") or -1
+    local reasonDbg = GetString(shipRoot .. "/last_reason") or "none"
+    local s1StateDbg = GetString(shipRoot .. "/slot1/state") or "none"
+    local s1AttackDbg = GetFloat(shipRoot .. "/slot1/attack") or -1.0
+    local s1LifeDbg = GetFloat(shipRoot .. "/slot1/life") or -1.0
+    local s1ReturnDbg = GetFloat(shipRoot .. "/slot1/return") or -1.0
+    local s1FireDbg = GetFloat(shipRoot .. "/slot1/fire") or -1.0
+    local s2StateDbg = GetString(shipRoot .. "/slot2/state") or "none"
+    local s2AttackDbg = GetFloat(shipRoot .. "/slot2/attack") or -1.0
+    local s2LifeDbg = GetFloat(shipRoot .. "/slot2/life") or -1.0
+    local s2ReturnDbg = GetFloat(shipRoot .. "/slot2/return") or -1.0
+    local s2FireDbg = GetFloat(shipRoot .. "/slot2/fire") or -1.0
+
+    -- H 槽动态时间调试：10 项，专门观察攻击/返航/超时
+    _mainWeaponHudSafeDebugWatch("HDBG active", activeDbg)
+    _mainWeaponHudSafeDebugWatch("HDBG last_reason", reasonDbg)
+    _mainWeaponHudSafeDebugWatch("HDBG s1_state", s1StateDbg)
+    _mainWeaponHudSafeDebugWatch("HDBG s1_attack", string.format("%.2f", tonumber(s1AttackDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s1_life", string.format("%.2f", tonumber(s1LifeDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s1_return", string.format("%.2f", tonumber(s1ReturnDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s1_fire", string.format("%.2f", tonumber(s1FireDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s2_state", s2StateDbg)
+    _mainWeaponHudSafeDebugWatch("HDBG s2_attack", string.format("%.2f", tonumber(s2AttackDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s2_life", string.format("%.2f", tonumber(s2LifeDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s2_return", string.format("%.2f", tonumber(s2ReturnDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s2_fire", string.format("%.2f", tonumber(s2FireDbg) or -1.0))
 end
 
 local function _drawWeaponIcon(x, y, size, fillColor, label, selected, cfg)
@@ -401,11 +641,10 @@ function client.mainWeaponHudDraw()
     local y = UiHeight() - panelH - cfg.bottomOffset
     local currentMode = state.currentMainWeapon or "xSlot"
 
-    local topFill = math.min(state.xSlotFill1, state.xSlotFill2)
-    local topText = string.format("READY %d%%", math.floor(topFill * 100 + 0.5))
+    local topFill, topText = _resolveXSlotTopStatus(state)
     local topColor = cfg.xSlotColor
     local titleText = "Tachyon Lance"
-    local modeText = "Main Weapon: X-Slot"
+    local modeText = string.format("Main Weapon: X-Slot [%s]", string.upper(state.xSlotFireMode or "aim"))
 
     if currentMode == "lSlot" then
         topFill = state.heatFraction
@@ -419,6 +658,13 @@ function client.mainWeaponHudDraw()
         topColor = (state.sSlotStatus == "LOCKED") and cfg.lockReadyColor or cfg.lockFillColor
         titleText = "Whirlwind Missiles"
         modeText = "Main Weapon: S-Slot"
+    elseif currentMode == "hSlot" then
+        local anyActive = state.hSlotActive1 or state.hSlotActive2
+        topFill = anyActive and 0.0 or math.max(state.hSlotFill1 or 0.0, state.hSlotFill2 or 0.0)
+        topText = anyActive and "STRIKE CRAFT DEPLOYED" or "HANGAR READY"
+        topColor = cfg.hSlotColor
+        titleText = "Gamma Strike Craft"
+        modeText = "Main Weapon: H-Slot"
     end
 
     UiPush()
@@ -434,16 +680,17 @@ function client.mainWeaponHudDraw()
         _drawWeaponIcon(12, 36, cfg.iconSize, cfg.xSlotColor, "X", currentMode == "xSlot", cfg)
         _drawWeaponIcon(46, 36, cfg.iconSize, cfg.lSlotColor, "L", currentMode == "lSlot", cfg)
         _drawWeaponIcon(80, 36, cfg.iconSize, cfg.sSlotColor, "S", currentMode == "sSlot", cfg)
+        _drawWeaponIcon(114, 36, cfg.iconSize, cfg.hSlotColor, "H", currentMode == "hSlot", cfg)
 
         UiPush()
-            UiTranslate(118, 34)
+            UiTranslate(150, 34)
             UiColor(cfg.textColor[1], cfg.textColor[2], cfg.textColor[3], cfg.textColor[4])
             UiFont("regular.ttf", cfg.labelSize)
             UiText(titleText)
         UiPop()
 
         UiPush()
-            UiTranslate(118, 54)
+            UiTranslate(150, 54)
             UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
             UiFont("regular.ttf", cfg.valueSize)
             UiText(modeText)
@@ -457,6 +704,9 @@ function client.mainWeaponHudDraw()
             _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 76, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.sSlotFill2, "S2", cfg)
             _drawXCooldownBar(12, 96, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.sSlotFill3, "S3", cfg)
             _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 96, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.sSlotFill4, "S4", cfg)
+        elseif currentMode == "hSlot" then
+            _drawXCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill1, state.hSlotActive1 and "H1*" or "H1", cfg)
+            _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill2, state.hSlotActive2 and "H2*" or "H2", cfg)
         else
             UiPush()
                 UiTranslate(12, 84)

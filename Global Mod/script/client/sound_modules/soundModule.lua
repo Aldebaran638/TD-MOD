@@ -190,7 +190,7 @@ local function _tachyonEventTick(shipBodyId)
 end
 
 function client.soundModuleInit()
-    _snd_engine_loop = LoadLoop("MOD/sound/engine.ogg")
+    _snd_engine_loop = LoadLoop("MOD/sound/dem_sfx_psi_ship_transport_ship_idle_01.ogg")
     _snd_missile_loop = LoadLoop("MOD/sound/missile_loop.ogg")
 
     _snd_tachyon_fire_near[1] = LoadSound("MOD/sound/tachyon_lance_fire_01.ogg")

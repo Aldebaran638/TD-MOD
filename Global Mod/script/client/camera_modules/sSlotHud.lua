@@ -32,7 +32,7 @@ local function _drawHudLine(x1, y1, x2, y2, thickness, color)
 
     UiPush()
         UiTranslate(x1, y1)
-        UiRotate(math.deg(math.atan2(dy, dx)))
+        UiRotate(math.deg(math.atan(dy, dx)))
         UiColor(color[1], color[2], color[3], color[4])
         UiRect(len, thickness)
     UiPop()
@@ -117,7 +117,8 @@ local function _resolveAimRingCenter(state)
 end
 
 function client.sSlotHudDraw()
-    if _resolveCurrentMode() ~= "sSlot" then
+    local mode = _resolveCurrentMode()
+    if mode ~= "sSlot" and mode ~= "hSlot" then
         return
     end
 
@@ -137,8 +138,11 @@ function client.sSlotHudDraw()
     local ringRadius = (UiHeight() * 0.5) * math.tan(halfAngle) / math.tan(math.rad(fov * 0.5))
     ringRadius = math.max(12.0, ringRadius)
 
-    -- 暂时屏蔽锁定圆圈
-    -- _drawLockRing(centerX, centerY, ringRadius, cfg, cfg.acquiringColor)
+    -- 导弹模式下也移除中心锁定圆环，仅保留目标锁定框
+    local _ = centerX
+    local __ = centerY
+    local ___ = ringRadius
+    local ____ = cfg
 
     if state.targetWorldPos == nil then
         return

@@ -331,6 +331,9 @@ function server.sSlotStateInit(shipType)
     _sSlotClearAllMissiles()
 
     local shipDef = _sSlotResolveShipDefinition(shipType)
+    if server.shipSlotLoadoutResolveShipDefinition ~= nil then
+        shipDef = server.shipSlotLoadoutResolveShipDefinition(shipType) or shipDef
+    end
     local state = {
         nextMissileId = 1,
         nextLauncherIndex = 1,
@@ -338,7 +341,16 @@ function server.sSlotStateInit(shipType)
         activeMissiles = {},
     }
 
-    local slotDefs = shipDef.sSlots or {}
+    local slotDefs = {}
+    local sSlots = shipDef.sSlots or {}
+    local gSlots = shipDef.gSlots or {}
+    for i = 1, #sSlots do
+        slotDefs[#slotDefs + 1] = sSlots[i]
+    end
+    for i = 1, #gSlots do
+        slotDefs[#slotDefs + 1] = gSlots[i]
+    end
+
     for i = 1, #slotDefs do
         state.launchers[i] = {
             config = _sSlotBuildLauncherConfig(slotDefs[i]),

@@ -48,7 +48,7 @@ function client.shipRollErrorTick(dt)
         return
     end
 
-    if client.shipCamera ~= nil and client.shipCamera.rearFreelookActive then
+    if client.shipCamera ~= nil and (client.shipCamera.rearFreelookActive or client.shipCamera.frontFreelookActive) then
         client.shipRequestRollError(body, 0.0)
         return
     end

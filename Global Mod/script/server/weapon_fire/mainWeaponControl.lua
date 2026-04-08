@@ -73,6 +73,9 @@ function server.mainWeaponControlTick(dt)
         if server.sSlotStateResetRuntime ~= nil then
             server.sSlotStateResetRuntime()
         end
+        if server.hSlotStateResetRuntime ~= nil then
+            server.hSlotStateResetRuntime()
+        end
         return
     end
 
@@ -83,6 +86,8 @@ function server.mainWeaponControlTick(dt)
             nextMode = "lSlot"
         elseif current == "lSlot" then
             nextMode = "sSlot"
+        elseif current == "sSlot" then
+            nextMode = "hSlot"
         end
         server.shipRuntimeSetCurrentMainWeapon(shipBody, nextMode)
         server.shipRuntimeSyncMainWeapon(shipBody, true)

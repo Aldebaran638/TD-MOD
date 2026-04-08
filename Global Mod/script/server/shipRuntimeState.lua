@@ -48,6 +48,9 @@ local function _runtimeNormalizeMode(mode)
     if mode == "sSlot" then
         return "sSlot"
     end
+    if mode == "hSlot" then
+        return "hSlot"
+    end
     return "xSlot"
 end
 
@@ -102,6 +105,11 @@ local function _runtimeGetOrCreate(shipBodyId, shipType, defaultShipType)
             current = "xSlot",
             lastSentMode = "",
             lastSentAt = -1000.0,
+        },
+        weaponAim = {
+            active = false,
+            localYaw = 0.0,
+            localPitch = 0.0,
         },
     }
 
@@ -271,6 +279,38 @@ function server.shipRuntimeSetRotationError(shipBodyId, pitchError, yawError)
     end
     rotation.pitchError = pitchValue
     rotation.yawError = yawValue
+end
+
+function server.shipRuntimeGetWeaponAim(shipBodyId)
+    local state = _runtimeGetOrCreate(shipBodyId, server.defaultShipType, server.defaultShipType)
+    if state == nil then
+        return false, 0.0, 0.0
+    end
+
+    local weaponAim = state.weaponAim or {}
+    return weaponAim.active and true or false, tonumber(weaponAim.localYaw) or 0.0, tonumber(weaponAim.localPitch) or 0.0
+end
+
+function server.shipRuntimeSetWeaponAim(shipBodyId, active, localYaw, localPitch)
+    local state = _runtimeGetOrCreate(shipBodyId, server.defaultShipType, server.defaultShipType)
+    if state == nil then
+        return
+    end
+
+    local weaponAim = state.weaponAim or {}
+    local yawValue = tonumber(localYaw) or 0.0
+    local pitchValue = tonumber(localPitch) or 0.0
+    if yawValue ~= yawValue or yawValue == math.huge or yawValue == -math.huge then
+        yawValue = 0.0
+    end
+    if pitchValue ~= pitchValue or pitchValue == math.huge or pitchValue == -math.huge then
+        pitchValue = 0.0
+    end
+
+    weaponAim.active = active and true or false
+    weaponAim.localYaw = yawValue
+    weaponAim.localPitch = pitchValue
+    state.weaponAim = weaponAim
 end
 
 function server.shipRuntimeGetRollError(shipBodyId)

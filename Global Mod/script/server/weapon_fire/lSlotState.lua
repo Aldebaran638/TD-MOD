@@ -52,6 +52,9 @@ local function _lSlotBuildConfig(slotDef)
         heatDissipationPerSecond = weaponDef.heatDissipationPerSecond or 0.0,
         overheatThreshold = weaponDef.overheatThreshold or 0.0,
         recoverThreshold = weaponDef.recoverThreshold or 0.0,
+        aimControlMode = tostring(weaponDef.aimControlMode or "fixed"),
+        aimLimitDeg = tonumber(weaponDef.aimLimitDeg) or 0.0,
+        aimPitchOffsetDeg = tonumber(weaponDef.aimPitchOffsetDeg) or 0.0,
     }
 end
 
@@ -79,6 +82,9 @@ end
 
 function server.lSlotStateInit(shipType)
     local shipDef = _lSlotResolveShipDefinition(shipType)
+    if server.shipSlotLoadoutResolveShipDefinition ~= nil then
+        shipDef = server.shipSlotLoadoutResolveShipDefinition(shipType) or shipDef
+    end
     local state = {
         requestFire = false,
         slots = {},
