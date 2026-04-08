@@ -22,6 +22,8 @@ local _snd_missile_fire_near = {}
 local _snd_missile_fire_dist = {}
 local _snd_missile_hit_near = {}
 local _snd_missile_hit_dist = {}
+local _snd_gamma_fire_near = {}
+local _snd_gamma_fire_dist = {}
 
 client.soundModuleState = client.soundModuleState or {
     lastRenderSeqByShip = {},
@@ -118,6 +120,15 @@ local function _playMissileHit(hitPoint)
         _playAt(_randomPick(_snd_missile_hit_dist), playPos)
     else
         _playAt(_randomPick(_snd_missile_hit_near), playPos)
+    end
+end
+
+local function _playGammaFire(firePoint)
+    local playPos, isDistant = _resolvePlayPos(firePoint)
+    if isDistant then
+        _playAt(_randomPick(_snd_gamma_fire_dist), playPos)
+    else
+        _playAt(_randomPick(_snd_gamma_fire_near), playPos)
     end
 end
 
@@ -227,6 +238,13 @@ function client.soundModuleInit()
     _snd_missile_hit_near[3] = LoadSound("MOD/sound/missile_hit_03.ogg")
     _snd_missile_hit_dist[1] = LoadSound("MOD/sound/distance_missile_hit_01.ogg")
     _snd_missile_hit_dist[2] = LoadSound("MOD/sound/distance_missile_hit_02.ogg")
+
+    _snd_gamma_fire_near[1] = LoadSound("MOD/sound/laser_fire_01.ogg")
+    _snd_gamma_fire_near[2] = LoadSound("MOD/sound/laser_fire_02.ogg")
+    _snd_gamma_fire_near[3] = LoadSound("MOD/sound/laser_fire_03.ogg")
+    _snd_gamma_fire_dist[1] = LoadSound("MOD/sound/laser_fire_01.ogg")
+    _snd_gamma_fire_dist[2] = LoadSound("MOD/sound/laser_fire_02.ogg")
+    _snd_gamma_fire_dist[3] = LoadSound("MOD/sound/laser_fire_03.ogg")
 end
 
 function client.playKineticArtilleryFireSound(x, y, z)
@@ -250,6 +268,10 @@ function client.playMissileLoopSound(x, y, z)
         return
     end
     PlayLoop(_snd_missile_loop, Vec(x or 0, y or 0, z or 0), 1.0)
+end
+
+function client.playHSlotGammaFireSound(x, y, z)
+    _playGammaFire(Vec(x or 0, y or 0, z or 0))
 end
 
 function client.soundModuleTick(dt)
