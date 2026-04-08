@@ -434,6 +434,19 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
     end
 
     local didHitShield = _hSlotApplyBeamDamage(hitPos, hitBody, craft.weaponType, tonumber(weaponConfig.environmentExplosionSize) or 0.1)
+
+    local impactExplosionSize = math.max(0.0, tonumber(weaponConfig.beamImpactExplosionSize) or 0.0)
+    local impactExplosionImpulse = math.max(0.0, tonumber(weaponConfig.beamImpactExplosionImpulse) or 0.0)
+    local impactMinDistance = math.max(0.0, tonumber(weaponConfig.beamImpactExplosionMinDistance) or 0.0)
+    local impactDistance = VecLength(VecSub(hitPos, origin))
+    if impactExplosionSize > 0.0 and impactDistance >= impactMinDistance then
+        if impactExplosionImpulse > 0.0 then
+            Explosion(hitPos, impactExplosionSize, impactExplosionImpulse)
+        else
+            Explosion(hitPos, impactExplosionSize)
+        end
+    end
+
     ClientCall(0, "client.playHSlotGammaFireSound", origin[1], origin[2], origin[3])
     ClientCall(
         0,

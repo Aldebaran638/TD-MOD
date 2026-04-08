@@ -36,7 +36,10 @@ local gammaStrikeCraftData = {
     bodyFix = 1.25,
 
     collisionExplosionSize = 0.1,
-    environmentExplosionSize = 0.1,
+    environmentExplosionSize = 1,
+    beamImpactExplosionSize = 3.5,
+    beamImpactExplosionImpulse = 1.2,
+    beamImpactExplosionMinDistance = 2.2,
     beamLife = 0.14,
     beamWidth = 0.24,
 }
