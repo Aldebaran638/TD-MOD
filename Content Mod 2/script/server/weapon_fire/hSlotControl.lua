@@ -50,13 +50,38 @@ local function _hSlotSetCollisionDebug(hitBody, hitDist)
     server.hSlotDebugState = d
 end
 
-local function _hSlotSafeDebugWatch(label, value)
-    local _ = label
-    local __ = value
+local function _hSlotWriteExplosionDebug(shipBody, pos, size, impulse)
+    local ownerBody = math.floor(shipBody or 0)
+    if ownerBody <= 0 or pos == nil then
+        return
+    end
+
+    local dbgRoot = "StellarisShips/debug/hslot"
+    local shipRoot = dbgRoot .. "/byShip/" .. tostring(ownerBody)
+    local seq = (GetInt(shipRoot .. "/lastExplosion/seq") or 0) + 1
+    if seq > 1000000000 then seq = 1 end
+
+    SetInt(shipRoot .. "/lastExplosion/seq", seq)
+    SetFloat(shipRoot .. "/lastExplosion/pos/x", pos[1] or 0.0)
+    SetFloat(shipRoot .. "/lastExplosion/pos/y", pos[2] or 0.0)
+    SetFloat(shipRoot .. "/lastExplosion/pos/z", pos[3] or 0.0)
+    SetFloat(shipRoot .. "/lastExplosion/size", tonumber(size) or 0.0)
+    SetFloat(shipRoot .. "/lastExplosion/impulse", tonumber(impulse) or 0.0)
 end
 
-local function _hSlotDebugWatchTick(state)
-    local _ = state
+local function _hSlotBumpDebugCounter(shipBody, keyName)
+    local ownerBody = math.floor(shipBody or 0)
+    if ownerBody <= 0 then
+        return
+    end
+
+    local safeKey = tostring(keyName or "unknown")
+    local dbgRoot = "StellarisShips/debug/hslot"
+    local shipRoot = dbgRoot .. "/byShip/" .. tostring(ownerBody)
+    local fullKey = shipRoot .. "/counters/" .. safeKey
+    local v = (GetInt(fullKey) or 0) + 1
+    if v > 1000000000 then v = 1 end
+    SetInt(fullKey, v)
 end
 
 local function _hSlotCloneVec3(v, defaultX, defaultY, defaultZ)
@@ -175,6 +200,11 @@ local function _hSlotBuildLauncherConfig(slotDef)
         bodyFix = tonumber(weaponDef.bodyFix) or 1.0,
         collisionExplosionSize = tonumber(weaponDef.collisionExplosionSize) or 0.1,
         environmentExplosionSize = tonumber(weaponDef.environmentExplosionSize) or 0.1,
+        beamImpactExplosionSize = tonumber(weaponDef.beamImpactExplosionSize) or 0.0,
+        beamImpactExplosionImpulse = tonumber(weaponDef.beamImpactExplosionImpulse) or 0.0,
+        beamImpactExplosionMinDistance = tonumber(weaponDef.beamImpactExplosionMinDistance) or 0.0,
+        beamLife = tonumber(weaponDef.beamLife) or 0.08,
+        beamWidth = tonumber(weaponDef.beamWidth) or 0.16,
     }
 end
 
@@ -398,6 +428,8 @@ local function _hSlotRaySphereEntryT(origin, dir, center, radius)
 end
 
 local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
+    _hSlotBumpDebugCounter(shipBody, "beam_fire")
+
     local origin = craft.pos or targetCenter
     local toTarget = VecSub(targetCenter, origin)
     local dir = _hSlotNormalize(toTarget, craft.forward or Vec(0, 0, -1))
@@ -407,6 +439,7 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
     QueryRejectBody(shipBody)
     local hit, dist, normal, shape = QueryRaycast(origin, dir, maxRange, 0.05)
     if not hit then
+        _hSlotBumpDebugCounter(shipBody, "beam_nohit")
         local endPos = VecAdd(origin, VecScale(dir, maxRange))
         ClientCall(
             0,
@@ -419,6 +452,8 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
         )
         return
     end
+
+    _hSlotBumpDebugCounter(shipBody, "beam_hit")
 
     local hitPos = VecAdd(origin, VecScale(dir, dist))
     local hitBody = shape ~= nil and shape ~= 0 and GetShapeBody(shape) or 0
@@ -440,11 +475,16 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
     local impactMinDistance = math.max(0.0, tonumber(weaponConfig.beamImpactExplosionMinDistance) or 0.0)
     local impactDistance = VecLength(VecSub(hitPos, origin))
     if impactExplosionSize > 0.0 and impactDistance >= impactMinDistance then
+        _hSlotBumpDebugCounter(shipBody, "impact_explosion")
         if impactExplosionImpulse > 0.0 then
             Explosion(hitPos, impactExplosionSize, impactExplosionImpulse)
         else
             Explosion(hitPos, impactExplosionSize)
         end
+
+        _hSlotWriteExplosionDebug(shipBody, hitPos, impactExplosionSize, impactExplosionImpulse)
+    else
+        _hSlotBumpDebugCounter(shipBody, "impact_skipped")
     end
 
     ClientCall(0, "client.playHSlotGammaFireSound", origin[1], origin[2], origin[3])
@@ -484,10 +524,14 @@ local function _hSlotUpdateBeamFire(shipBody, craft, targetCenter, weaponConfig,
     end
 end
 
-local function _hSlotCraftExplode(craft, weaponConfig)
+local function _hSlotCraftExplode(shipBody, craft, weaponConfig)
+    _hSlotBumpDebugCounter(shipBody, "craft_explode")
+
     local pos = craft and craft.pos or nil
+    local size = tonumber(weaponConfig.collisionExplosionSize) or 0.1
     if pos ~= nil then
-        Explosion(pos, tonumber(weaponConfig.collisionExplosionSize) or 0.1)
+        Explosion(pos, size)
+        _hSlotWriteExplosionDebug(shipBody, pos, size, 0.0)
     end
     _hSlotDeleteCraftBody(craft and craft.bodyId or 0)
 end
@@ -703,7 +747,7 @@ function server.hSlotControlTick(dt)
         craft.lifeRemain = (craft.lifeRemain or 0.0) - (dt or 0.0)
         if keepUpdating and craft.lifeRemain <= 0.0 then
             _hSlotSetDebugReason(slotIndex, "life_timeout_explode", craft)
-            _hSlotCraftExplode(craft, weaponConfig)
+            _hSlotCraftExplode(shipBody, craft, weaponConfig)
             _hSlotFinishCraft(state, slotIndex)
             keepUpdating = false
         end
@@ -766,7 +810,7 @@ function server.hSlotControlTick(dt)
                 craft.returnRemain = (craft.returnRemain or (weaponConfig.returnTimeout or 6.0)) - (dt or 0.0)
                 if craft.returnRemain <= 0.0 then
                     _hSlotSetDebugReason(slotIndex, "return_timeout_explode", craft)
-                    _hSlotCraftExplode(craft, weaponConfig)
+                    _hSlotCraftExplode(shipBody, craft, weaponConfig)
                     _hSlotFinishCraft(state, slotIndex)
                     keepUpdating = false
                 end
@@ -871,10 +915,27 @@ function server.hSlotControlTick(dt)
                             end
 
                             if not ignoreDegenerateHit and not ignoreTargetSweep then
-                                _hSlotSetDebugReason(slotIndex, "step_collision_explode", craft)
-                                _hSlotCraftExplode(craft, weaponConfig)
-                                _hSlotFinishCraft(state, slotIndex)
-                                keepUpdating = false
+                                local n = hitNormal
+                                if n == nil or VecLength(n) < 0.0001 then
+                                    n = VecScale(sweepDir, -1.0)
+                                end
+                                n = _hSlotNormalize(n, Vec(0, 1, 0))
+
+                                local upBoost = Vec(0, 0.7, 0)
+                                local emergencyDir = _hSlotNormalize(
+                                    VecAdd(VecScale(blended, 0.25), VecAdd(VecScale(n, 1.35), upBoost)),
+                                    n
+                                )
+
+                                craft.state = "returning"
+                                craft.returnRemain = math.max(
+                                    tonumber(craft.returnRemain) or 0.0,
+                                    math.max(0.5, tonumber(weaponConfig.returnTimeout) or 6.0)
+                                )
+                                craft.forward = emergencyDir
+                                craft.pos = VecAdd(craft.pos, VecScale(n, 1.4))
+                                SetBodyVelocity(craft.bodyId, VecScale(emergencyDir, math.max(4.0, tonumber(weaponConfig.craftSpeed) or 30.0)))
+                                _hSlotSetDebugReason(slotIndex, "step_collision_redirect_return", craft)
                             end
                         end
                         end
@@ -904,8 +965,6 @@ function server.hSlotControlTick(dt)
         end
         end
     end
-
-    _hSlotDebugWatchTick(state)
 
     server.hSlotControlSyncHud()
 

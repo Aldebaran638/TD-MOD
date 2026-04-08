@@ -86,16 +86,6 @@ local function _mainWeaponHudSmooth(curr, target, speed, dt)
     return curr + (target - curr) * k
 end
 
-local function _mainWeaponHudSafeDebugWatch(label, value)
-    if type(DebugWatch) ~= "function" then
-        return
-    end
-    local ok, _ = pcall(DebugWatch, tostring(label or "DBG"), tostring(value or "-"))
-    if not ok then
-        return
-    end
-end
-
 local function _resolveControlledShipBody()
     if client.shipCameraGetControlledBody ~= nil then
         local body = client.shipCameraGetControlledBody()
@@ -527,49 +517,6 @@ function client.mainWeaponHudTick(dt)
     state.hSlotActive1 = hHud.active1 and true or false
     state.hSlotActive2 = hHud.active2 and true or false
 
-    -- H 槽调试输出：固定 8 项，便于定位非碰撞自毁原因
-    local dbgRoot = "StellarisShips/debug/hslot"
-    local controlledBody = math.floor(body or 0)
-    local shipKey = tostring(controlledBody)
-    local shipRoot = dbgRoot .. "/byShip/" .. shipKey
-
-    local heartbeatDbg = GetInt(shipRoot .. "/heartbeat") or 0
-    local sourceBody = controlledBody
-    if heartbeatDbg <= 0 then
-        local lastShipBody = math.floor(GetInt(dbgRoot .. "/lastShipBody") or 0)
-        if lastShipBody > 0 then
-            sourceBody = lastShipBody
-            shipRoot = dbgRoot .. "/byShip/" .. tostring(lastShipBody)
-            heartbeatDbg = GetInt(shipRoot .. "/heartbeat") or 0
-        end
-    end
-
-    local activeDbg = GetInt(shipRoot .. "/active") or -1
-    local reasonDbg = GetString(shipRoot .. "/last_reason") or "none"
-    local s1StateDbg = GetString(shipRoot .. "/slot1/state") or "none"
-    local s1AttackDbg = GetFloat(shipRoot .. "/slot1/attack") or -1.0
-    local s1LifeDbg = GetFloat(shipRoot .. "/slot1/life") or -1.0
-    local s1ReturnDbg = GetFloat(shipRoot .. "/slot1/return") or -1.0
-    local s1FireDbg = GetFloat(shipRoot .. "/slot1/fire") or -1.0
-    local s2StateDbg = GetString(shipRoot .. "/slot2/state") or "none"
-    local s2AttackDbg = GetFloat(shipRoot .. "/slot2/attack") or -1.0
-    local s2LifeDbg = GetFloat(shipRoot .. "/slot2/life") or -1.0
-    local s2ReturnDbg = GetFloat(shipRoot .. "/slot2/return") or -1.0
-    local s2FireDbg = GetFloat(shipRoot .. "/slot2/fire") or -1.0
-
-    -- H 槽动态时间调试：10 项，专门观察攻击/返航/超时
-    _mainWeaponHudSafeDebugWatch("HDBG active", activeDbg)
-    _mainWeaponHudSafeDebugWatch("HDBG last_reason", reasonDbg)
-    _mainWeaponHudSafeDebugWatch("HDBG s1_state", s1StateDbg)
-    _mainWeaponHudSafeDebugWatch("HDBG s1_attack", string.format("%.2f", tonumber(s1AttackDbg) or -1.0))
-    _mainWeaponHudSafeDebugWatch("HDBG s1_life", string.format("%.2f", tonumber(s1LifeDbg) or -1.0))
-    _mainWeaponHudSafeDebugWatch("HDBG s1_return", string.format("%.2f", tonumber(s1ReturnDbg) or -1.0))
-    _mainWeaponHudSafeDebugWatch("HDBG s1_fire", string.format("%.2f", tonumber(s1FireDbg) or -1.0))
-    _mainWeaponHudSafeDebugWatch("HDBG s2_state", s2StateDbg)
-    _mainWeaponHudSafeDebugWatch("HDBG s2_attack", string.format("%.2f", tonumber(s2AttackDbg) or -1.0))
-    _mainWeaponHudSafeDebugWatch("HDBG s2_life", string.format("%.2f", tonumber(s2LifeDbg) or -1.0))
-    _mainWeaponHudSafeDebugWatch("HDBG s2_return", string.format("%.2f", tonumber(s2ReturnDbg) or -1.0))
-    _mainWeaponHudSafeDebugWatch("HDBG s2_fire", string.format("%.2f", tonumber(s2FireDbg) or -1.0))
 end
 
 local function _drawWeaponIcon(x, y, size, fillColor, label, selected, cfg)
