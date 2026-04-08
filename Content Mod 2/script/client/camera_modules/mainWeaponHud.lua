@@ -64,6 +64,16 @@ client.lSlotHudStateByShip = client.lSlotHudStateByShip or {}
 client.xSlotHudStateByShip = client.xSlotHudStateByShip or {}
 client.sSlotHudStateByShip = client.sSlotHudStateByShip or {}
 client.hSlotHudStateByShip = client.hSlotHudStateByShip or {}
+client.hSlotDebugState = client.hSlotDebugState or {
+    active = 0,
+    lastReason = "none",
+    slot1State = "none",
+    slot1Life = -1.0,
+    slot1Return = -1.0,
+    slot2State = "none",
+    slot2Life = -1.0,
+    slot2Return = -1.0,
+}
 
 local function _mainWeaponHudClamp(v, a, b)
     if v < a then return a end
@@ -74,6 +84,16 @@ end
 local function _mainWeaponHudSmooth(curr, target, speed, dt)
     local k = math.min(1.0, (speed or 8.0) * (dt or 0.0))
     return curr + (target - curr) * k
+end
+
+local function _mainWeaponHudSafeDebugWatch(label, value)
+    if type(DebugWatch) ~= "function" then
+        return
+    end
+    local ok, _ = pcall(DebugWatch, tostring(label or "DBG"), tostring(value or "-"))
+    if not ok then
+        return
+    end
 end
 
 local function _resolveControlledShipBody()
@@ -287,13 +307,35 @@ local function _getOrCreateHSlotHudState(shipBodyId)
             maxCd2 = 1.0,
             active1 = false,
             active2 = false,
+            dbgReason = "none",
+            dbgS1State = "none",
+            dbgS1Life = -1.0,
+            dbgS1Return = -1.0,
+            dbgS2State = "none",
+            dbgS2Life = -1.0,
+            dbgS2Return = -1.0,
         }
         states[body] = hud
     end
     return hud
 end
 
-function client.updateHSlotHudState(shipBodyId, cd1, cd2, maxCd1, maxCd2, active1, active2)
+function client.updateHSlotHudState(
+    shipBodyId,
+    cd1,
+    cd2,
+    maxCd1,
+    maxCd2,
+    active1,
+    active2,
+    dbgReason,
+    dbgS1State,
+    dbgS1Life,
+    dbgS1Return,
+    dbgS2State,
+    dbgS2Life,
+    dbgS2Return
+)
     local hud = _getOrCreateHSlotHudState(shipBodyId)
     if hud == nil then
         return
@@ -305,6 +347,26 @@ function client.updateHSlotHudState(shipBodyId, cd1, cd2, maxCd1, maxCd2, active
     hud.maxCd2 = math.max(0.0, tonumber(maxCd2) or 0.0)
     hud.active1 = math.floor(active1 or 0) ~= 0
     hud.active2 = math.floor(active2 or 0) ~= 0
+    hud.dbgReason = tostring(dbgReason or hud.dbgReason or "none")
+    hud.dbgS1State = tostring(dbgS1State or hud.dbgS1State or "none")
+    hud.dbgS1Life = tonumber(dbgS1Life) or hud.dbgS1Life or -1.0
+    hud.dbgS1Return = tonumber(dbgS1Return) or hud.dbgS1Return or -1.0
+    hud.dbgS2State = tostring(dbgS2State or hud.dbgS2State or "none")
+    hud.dbgS2Life = tonumber(dbgS2Life) or hud.dbgS2Life or -1.0
+    hud.dbgS2Return = tonumber(dbgS2Return) or hud.dbgS2Return or -1.0
+end
+
+function client.receiveHSlotDebugState(activeCount, lastReason, s1State, s1Life, s1Return, s2State, s2Life, s2Return)
+    local d = client.hSlotDebugState or {}
+    d.active = math.floor(activeCount or 0)
+    d.lastReason = tostring(lastReason or "none")
+    d.slot1State = tostring(s1State or "none")
+    d.slot1Life = tonumber(s1Life) or -1.0
+    d.slot1Return = tonumber(s1Return) or -1.0
+    d.slot2State = tostring(s2State or "none")
+    d.slot2Life = tonumber(s2Life) or -1.0
+    d.slot2Return = tonumber(s2Return) or -1.0
+    client.hSlotDebugState = d
 end
 
 function client.updateSSlotHudState(shipBodyId, cd1, cd2, cd3, cd4, maxCd1, maxCd2, maxCd3, maxCd4)
@@ -464,6 +526,50 @@ function client.mainWeaponHudTick(dt)
 
     state.hSlotActive1 = hHud.active1 and true or false
     state.hSlotActive2 = hHud.active2 and true or false
+
+    -- H 槽调试输出：固定 8 项，便于定位非碰撞自毁原因
+    local dbgRoot = "StellarisShips/debug/hslot"
+    local controlledBody = math.floor(body or 0)
+    local shipKey = tostring(controlledBody)
+    local shipRoot = dbgRoot .. "/byShip/" .. shipKey
+
+    local heartbeatDbg = GetInt(shipRoot .. "/heartbeat") or 0
+    local sourceBody = controlledBody
+    if heartbeatDbg <= 0 then
+        local lastShipBody = math.floor(GetInt(dbgRoot .. "/lastShipBody") or 0)
+        if lastShipBody > 0 then
+            sourceBody = lastShipBody
+            shipRoot = dbgRoot .. "/byShip/" .. tostring(lastShipBody)
+            heartbeatDbg = GetInt(shipRoot .. "/heartbeat") or 0
+        end
+    end
+
+    local activeDbg = GetInt(shipRoot .. "/active") or -1
+    local reasonDbg = GetString(shipRoot .. "/last_reason") or "none"
+    local s1StateDbg = GetString(shipRoot .. "/slot1/state") or "none"
+    local s1AttackDbg = GetFloat(shipRoot .. "/slot1/attack") or -1.0
+    local s1LifeDbg = GetFloat(shipRoot .. "/slot1/life") or -1.0
+    local s1ReturnDbg = GetFloat(shipRoot .. "/slot1/return") or -1.0
+    local s1FireDbg = GetFloat(shipRoot .. "/slot1/fire") or -1.0
+    local s2StateDbg = GetString(shipRoot .. "/slot2/state") or "none"
+    local s2AttackDbg = GetFloat(shipRoot .. "/slot2/attack") or -1.0
+    local s2LifeDbg = GetFloat(shipRoot .. "/slot2/life") or -1.0
+    local s2ReturnDbg = GetFloat(shipRoot .. "/slot2/return") or -1.0
+    local s2FireDbg = GetFloat(shipRoot .. "/slot2/fire") or -1.0
+
+    -- H 槽动态时间调试：10 项，专门观察攻击/返航/超时
+    _mainWeaponHudSafeDebugWatch("HDBG active", activeDbg)
+    _mainWeaponHudSafeDebugWatch("HDBG last_reason", reasonDbg)
+    _mainWeaponHudSafeDebugWatch("HDBG s1_state", s1StateDbg)
+    _mainWeaponHudSafeDebugWatch("HDBG s1_attack", string.format("%.2f", tonumber(s1AttackDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s1_life", string.format("%.2f", tonumber(s1LifeDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s1_return", string.format("%.2f", tonumber(s1ReturnDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s1_fire", string.format("%.2f", tonumber(s1FireDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s2_state", s2StateDbg)
+    _mainWeaponHudSafeDebugWatch("HDBG s2_attack", string.format("%.2f", tonumber(s2AttackDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s2_life", string.format("%.2f", tonumber(s2LifeDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s2_return", string.format("%.2f", tonumber(s2ReturnDbg) or -1.0))
+    _mainWeaponHudSafeDebugWatch("HDBG s2_fire", string.format("%.2f", tonumber(s2FireDbg) or -1.0))
 end
 
 local function _drawWeaponIcon(x, y, size, fillColor, label, selected, cfg)

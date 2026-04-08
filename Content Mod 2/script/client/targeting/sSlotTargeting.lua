@@ -223,6 +223,16 @@ function client.sSlotTargetingTick(dt)
     state.active = true
     state.shipBody = shipBody
 
+    local modeCfg = cfg
+    if currentMode == "hSlot" then
+        modeCfg = {
+            lockDistance = (cfg.lockDistance or 0.0) * 2.0,
+            lockHalfAngleDeg = cfg.lockHalfAngleDeg,
+            lockAcquireTime = cfg.lockAcquireTime,
+            lockLoseGraceTime = cfg.lockLoseGraceTime,
+        }
+    end
+
     local shipT = GetBodyTransform(shipBody)
     local shipPos = shipT.pos
     local shipForward = VecNormalize(TransformToParentVec(shipT, Vec(0, 0, -1)))
@@ -240,7 +250,7 @@ function client.sSlotTargetingTick(dt)
         aimForward = camForward
     end
 
-    local centerDistance = math.max(12.0, math.min(cfg.lockDistance or 220.0, 100.0))
+    local centerDistance = math.max(12.0, math.min(modeCfg.lockDistance or 220.0, 100.0))
     local centerWorld = nil
     if useCameraCone then
         centerWorld = VecAdd(aimOrigin, VecScale(aimForward, centerDistance))
@@ -256,11 +266,11 @@ function client.sSlotTargetingTick(dt)
     end
     state.lockCenterWorld = centerWorld
 
-    local target = _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
+    local target = _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, centerLocal, camT, modeCfg)
     if target == nil then
         if state.candidateVehicleId ~= 0 or state.lockedVehicleId ~= 0 then
             state.loseTimer = state.loseTimer + (dt or 0.0)
-            if state.loseTimer > (cfg.lockLoseGraceTime or 0.0) then
+            if state.loseTimer > (modeCfg.lockLoseGraceTime or 0.0) then
                 _sSlotClearTarget(state)
             end
         else
@@ -289,7 +299,7 @@ function client.sSlotTargetingTick(dt)
         state.lockedVehicleId = target.vehicleId
         state.lockedBodyId = target.bodyId
     else
-        local acquireTime = math.max(0.001, cfg.lockAcquireTime or 1.0)
+        local acquireTime = math.max(0.001, modeCfg.lockAcquireTime or 1.0)
         state.progress = _sSlotClamp(state.progress + (dt or 0.0) / acquireTime, 0.0, 1.0)
         if state.progress >= 1.0 then
             state.progress = 1.0
