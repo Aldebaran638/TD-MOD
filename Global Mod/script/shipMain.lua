@@ -1,15 +1,16 @@
--- 该脚本的body点击左键以后向前方发射快子光�?
+﻿-- 该脚本的body点击左键以后向前方发射快子光�?
 -- 111
 #version 2
 #include "script/include/common.lua"
 
-#include "server/ship_data.lua"
-#include "server/weapon_data.lua"
+#include "data/ship_data.lua"
+#include "data/weapon_data.lua"
 
 #include "server/shipRuntimeState.lua"
 #include "server/shipSlotLoadout.lua"
 #include "server/registry/shipRegistry.lua"
 #include "server/registry/shipRegistryRequest.lua"
+#include "server/shipInitialization.lua"
 
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
@@ -20,28 +21,6 @@
 -- -- registry 访问�?
 -- #include "server/registry/shipRegistry.lua"
 
--- 服务端函数：注册“当前这艘飞船”到 Registry�?
--- 当前飞船�?server.shipBody 指定；该脚本只维护这一艘飞船�?
-function server.registerCurrentShip(shipType)
-
-    local shipBodyId = server.shipBody
-    if shipBodyId == nil or shipBodyId == 0 then
-        return false
-    end
-    server.registryShipRegister(shipBodyId, shipType, server.defaultShipType)
-    return true
-end
-
--- 服务端函数：确保“当前这艘飞船”在 Registry 中存在�?
--- 若当前飞船还未注册，则按默认飞船模板补齐运行时状态�?
-function server.ensureCurrentShipState(shipType)
-    local shipBodyId = server.shipBody
-    if shipBodyId == nil or shipBodyId == 0 then
-        return false
-    end
-    return server.registryShipEnsure(shipBodyId, shipType or server.defaultShipType, server.defaultShipType)
-end
-
 -- x 槽控制模块从外部抽取为独立文件：script/server/weapon_fire/xSlotControl.lua
 #include "server/weapon_fire/lSlotState.lua"
 #include "server/weapon_fire/mainWeaponControl.lua"
@@ -49,7 +28,10 @@ end
 #include "server/weapon_fire/xSlotRenderState.lua"
 #include "server/weapon_fire/xSlotControl.lua"
 #include "server/weapon_fire/lSlotControl.lua"
-#include "server/weapon_fire/sSlotControl.lua"
+#include "server/weapon_fire/sSlotState.lua"
+#include "server/weapon_fire/sSlotLauncher.lua"
+#include "server/weapon_fire/sSlotMovement.lua"
+#include "server/weapon_fire/sSlotCollider.lua"
 #include "server/weapon_fire/hSlotControl.lua"
 #include "server/weapon_fire/projectileManager.lua"
 -- 移动类模块：根据 body 质量施加竖直向上�?
@@ -84,10 +66,7 @@ function server.init()
     -- server.launchTime = 0.2
 
     -- 初始化当前飞船
-    server.shipBody = FindBody("stellarisShip", false)
-    SetBool("StellarisShips/debug/inputTestEnabled", false)
-    -- 注册当前飞船并加载飞船数�?
-    server.registerCurrentShip("enigmaticCruiser")
+    server.shipInitializationInit("enigmaticCruiser")
     server.shipRuntimeStateInit(server.shipBody, "enigmaticCruiser", server.defaultShipType)
     server.shipSlotLoadoutInit("enigmaticCruiser")
     server.mainWeaponRequestInit()
@@ -111,7 +90,7 @@ function server.serverTick(dt)
     server.shipRuntimeStateSyncTick(dt)
     server.xSlotControlTick(dt)
     server.lSlotControlTick(dt)
-    server.sSlotControlTick(dt)
+    server.sSlotLauncherTick(dt)
     server.hSlotControlTick(dt)
     server.projectileManagerTick(dt)
     server.shipHpRecoveryTick(dt)
@@ -123,13 +102,13 @@ function server.serverTick(dt)
 end
 
 function server.update(dt)
-    server.sSlotControlUpdate(dt)
+    server.sSlotMovementUpdate(dt)
     server.shipAttitudeControllerUpdate(dt)
     server.shipRollStabilizerUpdate(dt)
 end
 
 function server.postUpdate()
-    server.sSlotControlPostUpdate()
+    server.sSlotColliderPostUpdate()
 end
 
 #include "client/client.lua"
