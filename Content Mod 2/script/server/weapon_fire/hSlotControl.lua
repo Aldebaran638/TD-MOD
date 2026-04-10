@@ -101,6 +101,73 @@ local function _hSlotNormalize(v, fallback)
     return VecScale(v, 1.0 / len)
 end
 
+-- 计算从点P到以center为中心、radius为半径的圆的最小转弯切入点
+-- 返回：切入点和到达时的切线方向
+local function _hSlotComputeOptimalEntryPoint(planePos, planeForward, targetCenter, orbitRadius)
+    local toTarget = VecSub(targetCenter, planePos)
+    local distToTarget = VecLength(toTarget)
+    
+    -- 如果已经在轨道内，直接飞向目标
+    if distToTarget <= orbitRadius then
+        return targetCenter, _hSlotNormalize(toTarget, Vec(0, 0, -1))
+    end
+    
+    -- 归一化方向
+    local toTargetDir = _hSlotNormalize(toTarget, Vec(0, 0, -1))
+    local forwardDir = _hSlotNormalize(planeForward, Vec(0, 0, -1))
+    
+    -- 计算切点：在toTargetDir垂直方向上偏移
+    -- 找到垂直于toTargetDir的平面内的两个切点
+    local up = Vec(0, 1, 0)
+    local right = _hSlotNormalize(VecCross(toTargetDir, up), Vec(1, 0, 0))
+    up = _hSlotNormalize(VecCross(right, toTargetDir), Vec(0, 1, 0))
+    
+    -- 计算切线长度和角度
+    -- 从点P到圆的距离为d，半径为r，则切线长度为sqrt(d^2 - r^2)
+    -- 切点与圆心连线和toTargetDir的夹角为acos(r/d)
+    local d = distToTarget
+    local r = orbitRadius
+    local cosTheta = r / d
+    local sinTheta = math.sqrt(1.0 - cosTheta * cosTheta)
+    
+    -- 两个切点方向（相对目标中心）
+    local tangentOffset = VecAdd(VecScale(toTargetDir, -cosTheta), VecScale(right, sinTheta))
+    local leftTangentDir = _hSlotNormalize(tangentOffset, right)
+    tangentOffset = VecAdd(VecScale(toTargetDir, -cosTheta), VecScale(right, -sinTheta))
+    local rightTangentDir = _hSlotNormalize(tangentOffset, VecScale(right, -1))
+    
+    -- 两个切点位置
+    local leftTangentPoint = VecAdd(targetCenter, VecScale(leftTangentDir, r))
+    local rightTangentPoint = VecAdd(targetCenter, VecScale(rightTangentDir, r))
+    
+    -- 计算从当前位置到两个切点的方向
+    local toLeft = _hSlotNormalize(VecSub(leftTangentPoint, planePos), leftTangentDir)
+    local toRight = _hSlotNormalize(VecSub(rightTangentPoint, planePos), rightTangentDir)
+    
+    -- 计算当前朝向到两个切入方向的夹角（点积越大，角度越小）
+    local dotLeft = VecDot(forwardDir, toLeft)
+    local dotRight = VecDot(forwardDir, toRight)
+    
+    -- 选择夹角更小的（点积更大的）
+    if dotLeft >= dotRight then
+        -- 左转切入，返回切点和切线方向（切线方向垂直于半径方向）
+        local tangentDir = _hSlotNormalize(VecCross(up, leftTangentDir), Vec(0, 0, -1))
+        -- 确保切线方向是远离目标的方向（从目标中心向外看，切线方向应该是切线方向的反方向）
+        local awayFromTarget = VecDot(tangentDir, toTargetDir)
+        if awayFromTarget > 0 then
+            tangentDir = VecScale(tangentDir, -1)
+        end
+        return leftTangentPoint, tangentDir
+    else
+        local tangentDir = _hSlotNormalize(VecCross(up, rightTangentDir), Vec(0, 0, -1))
+        local awayFromTarget = VecDot(tangentDir, toTargetDir)
+        if awayFromTarget > 0 then
+            tangentDir = VecScale(tangentDir, -1)
+        end
+        return rightTangentPoint, tangentDir
+    end
+end
+
 local function _hSlotResolveShipDefinition(shipType)
     local defs = shipTypeRegistryData or {}
     local requested = shipType or server.defaultShipType or "enigmaticCruiser"
@@ -840,15 +907,10 @@ function server.hSlotControlTick(dt)
             elseif keepUpdating then
                 local approachTarget = nil
                 if targetCenter ~= nil then
-                    local shipCenter = _hSlotGetBodyCenterWorld(shipBody) or craft.pos
-                    local radialDir = _hSlotNormalize(VecSub(shipCenter, targetCenter), Vec(1, 0, 0))
-                    local tangentDir = _hSlotNormalize(VecCross(Vec(0, 1, 0), radialDir), Vec(0, 0, -1))
                     local orbitRadius = math.max(2.0, tonumber(weaponConfig.orbitRadius) or 10.0)
-                    local ahead = math.max(0.0, tonumber(weaponConfig.approachDistance) or 14.0)
-                    approachTarget = VecAdd(
-                        VecAdd(targetCenter, VecScale(radialDir, orbitRadius)),
-                        VecScale(tangentDir, ahead)
-                    )
+                    -- 使用最小转弯切入算法计算最佳切入点和方向
+                    local entryPoint, entryTangent = _hSlotComputeOptimalEntryPoint(craft.pos, craft.forward or Vec(0, 0, -1), targetCenter, orbitRadius)
+                    approachTarget = entryPoint
                 else
                     approachTarget = VecAdd(craft.pos, VecScale(craft.forward or desiredDir, math.max(8.0, tonumber(weaponConfig.approachDistance) or 14.0)))
                 end
