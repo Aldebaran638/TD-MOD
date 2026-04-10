@@ -1,18 +1,24 @@
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
 
+-- xslot_render_state.lua
+-- 客户端X槽渲染状态管理模块 - 符合规范的模块文件
+-- 只导出 client.xSlotRenderStateInit() 和 client.xSlotRenderStateTick()
+
 client = client or {}
 
-client.xSlotRenderStateByShip = client.xSlotRenderStateByShip or {}
+-- 模块内部状态
+local _stateByShip = {}
 
-local function _xSlotRenderEnsureClientState(shipBodyId)
+-- ============ 内部辅助函数 ============
+
+local function _ensureState(shipBodyId)
     local body = math.floor(shipBodyId or 0)
     if body <= 0 then
         return nil
     end
 
-    local states = client.xSlotRenderStateByShip
-    local state = states[body]
+    local state = _stateByShip[body]
     if state == nil then
         state = {
             seq = -1,
@@ -30,12 +36,16 @@ local function _xSlotRenderEnsureClientState(shipBodyId)
             normal = { x = 0.0, y = 1.0, z = 0.0 },
             impactLayer = "none",
         }
-        states[body] = state
+        _stateByShip[body] = state
     end
     return state
 end
 
-function client.receiveXSlotRenderEvent(
+-- ============ API函数（内部使用，通过API文件暴露） ============
+
+local _renderAPI = {}
+
+function _renderAPI.receiveRenderEvent(
     shipBodyId,
     seq,
     shotId,
@@ -58,10 +68,8 @@ function client.receiveXSlotRenderEvent(
     normalZ,
     impactLayer
 )
-    local state = _xSlotRenderEnsureClientState(shipBodyId)
-    if state == nil then
-        return
-    end
+    local state = _ensureState(shipBodyId)
+    if state == nil then return end
 
     state.seq = math.floor(seq or -1)
     state.shotId = math.floor(shotId or 0)
@@ -79,10 +87,22 @@ function client.receiveXSlotRenderEvent(
     state.impactLayer = tostring(impactLayer or "none")
 end
 
-function client.xSlotRenderGetEvent(shipBodyId)
+function _renderAPI.getEvent(shipBodyId)
     local body = math.floor(shipBodyId or 0)
-    if body <= 0 then
-        return nil
-    end
-    return client.xSlotRenderStateByShip[body]
+    if body <= 0 then return nil end
+    return _stateByShip[body]
+end
+
+-- 将API导出到client表，供API文件使用
+client._xSlotRenderStateAPI = _renderAPI
+
+-- ============ 规范化的模块接口 ============
+
+function client.xSlotRenderStateInit()
+    _stateByShip = {}
+end
+
+function client.xSlotRenderStateTick(dt)
+    -- X槽渲染状态通常不需要每tick更新
+    -- 但保留接口以符合规范
 end

@@ -4,8 +4,10 @@
 client = client or {}
 
 #include "registry/shipRegistry.lua"
-#include "shipRuntimeState.lua"
-#include "xSlotRenderState.lua"
+#include "state_management/ship_runtime_state.lua"
+#include "state_management/ship_runtime_state_api.lua"
+#include "state_management/xslot_render_state.lua"
+#include "state_management/xslot_render_state_api.lua"
 #include "targeting/xSlotTargeting.lua"
 #include "targeting/sSlotTargeting.lua"
 #include "input_handling/mainWeaponInput.lua"
@@ -30,6 +32,8 @@ client = client or {}
 #include "draw_modules/hSlotBeamFx.lua"
 
 function client.init()
+    client.shipRuntimeStateInit()
+    client.xSlotRenderStateInit()
     client.soundModuleInit()
     client.shipBody = FindBody("stellarisShip", false)
 end
