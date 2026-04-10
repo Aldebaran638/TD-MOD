@@ -157,14 +157,14 @@ local function _hSlotComputeOptimalEntryPoint(planePos, planeForward, targetCent
         if awayFromTarget > 0 then
             tangentDir = VecScale(tangentDir, -1)
         end
-        return leftTangentPoint, tangentDir
+        return leftTangentPoint, tangentDir, "counterclockwise"  -- 第三个返回值：方向选择
     else
         local tangentDir = _hSlotNormalize(VecCross(up, rightTangentDir), Vec(0, 0, -1))
         local awayFromTarget = VecDot(tangentDir, toTargetDir)
         if awayFromTarget > 0 then
             tangentDir = VecScale(tangentDir, -1)
         end
-        return rightTangentPoint, tangentDir
+        return rightTangentPoint, tangentDir, "clockwise"  -- 第三个返回值：方向选择
     end
 end
 
@@ -899,8 +899,17 @@ function server.hSlotControlTick(dt)
             elseif keepUpdating and craft.state == "orbit" and targetCenter ~= nil then
                 craft.orbitAngle = (craft.orbitAngle or 0.0) + (dt or 0.0) * 1.2
                 local radial = _hSlotNormalize(VecSub(craft.pos, targetCenter), Vec(1, 0, 0))
-                local tangent = _hSlotNormalize(VecCross(Vec(0, 1, 0), radial), Vec(0, 0, -1))
-                local dist = VecLength(VecSub(craft.pos, targetCenter))
+                -- 根据切入时选择的方向确定环绕方向
+                local orbitDirection = craft.orbitDirection or "clockwise"
+                local tangent
+                if orbitDirection == "counterclockwise" then
+                    -- 逆时针：使用 radial × up (左手定则)
+                    tangent = _hSlotNormalize(VecCross(radial, Vec(0, 1, 0)), Vec(0, 0, -1))
+                else
+                    -- 顺时针：使用 up × radial (右手定则)
+                    tangent = _hSlotNormalize(VecCross(Vec(0, 1, 0), radial), Vec(0, 0, -1))
+                end
+                local dist = VecLength(VecSub(targetCenter, craft.pos))
                 local radiusErr = ((weaponConfig.orbitRadius or 10.0) - dist)
                 local radialGain = tonumber(weaponConfig.orbitRadialGain) or 0.10
                 desiredDir = _hSlotNormalize(VecAdd(tangent, VecScale(radial, -radiusErr * radialGain)), tangent)
@@ -909,8 +918,10 @@ function server.hSlotControlTick(dt)
                 if targetCenter ~= nil then
                     local orbitRadius = math.max(2.0, tonumber(weaponConfig.orbitRadius) or 10.0)
                     -- 使用最小转弯切入算法计算最佳切入点和方向
-                    local entryPoint, entryTangent = _hSlotComputeOptimalEntryPoint(craft.pos, craft.forward or Vec(0, 0, -1), targetCenter, orbitRadius)
+                    local entryPoint, entryTangent, orbitDirection = _hSlotComputeOptimalEntryPoint(craft.pos, craft.forward or Vec(0, 0, -1), targetCenter, orbitRadius)
                     approachTarget = entryPoint
+                    -- 保存环绕方向，供环绕阶段使用
+                    craft.orbitDirection = orbitDirection
                 else
                     approachTarget = VecAdd(craft.pos, VecScale(craft.forward or desiredDir, math.max(8.0, tonumber(weaponConfig.approachDistance) or 14.0)))
                 end
