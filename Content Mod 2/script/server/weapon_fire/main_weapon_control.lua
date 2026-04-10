@@ -1,53 +1,63 @@
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
 
+-- main_weapon_control.lua
+-- 主武器控制模块 - 符合规范的模块文件
+-- 只导出 server.mainWeaponControlInit() 和 server.mainWeaponControlTick()
+
 server = server or {}
 
-server.mainWeaponRequestState = server.mainWeaponRequestState or {
+-- 模块内部状态
+local _requestState = {
     fireRequested = false,
     toggleRequested = false,
 }
 
-function server.mainWeaponRequestInit()
-    server.mainWeaponRequestState = {
+-- ============ 内部辅助函数 ============
+
+local function _consumeFireRequested()
+    local requested = _requestState.fireRequested and true or false
+    _requestState.fireRequested = false
+    return requested
+end
+
+local function _consumeToggleRequested()
+    local requested = _requestState.toggleRequested and true or false
+    _requestState.toggleRequested = false
+    return requested
+end
+
+local function _resetRequests()
+    _requestState.fireRequested = false
+    _requestState.toggleRequested = false
+end
+
+-- ============ API函数（内部使用，通过API文件暴露） ============
+
+local _weaponControlAPI = {}
+
+function _weaponControlAPI.setFireRequested(active)
+    _requestState.fireRequested = active and true or false
+end
+
+function _weaponControlAPI.setToggleRequested(active)
+    _requestState.toggleRequested = active and true or false
+end
+
+function _weaponControlAPI.resetRequests()
+    _resetRequests()
+end
+
+-- 将API导出到server表，供API文件使用
+server._mainWeaponControlAPI = _weaponControlAPI
+
+-- ============ 规范化的模块接口 ============
+
+function server.mainWeaponControlInit()
+    _requestState = {
         fireRequested = false,
         toggleRequested = false,
     }
-end
-
-function server.mainWeaponRequestReset()
-    local state = server.mainWeaponRequestState or {}
-    state.fireRequested = false
-    state.toggleRequested = false
-    server.mainWeaponRequestState = state
-end
-
-function server.mainWeaponRequestSetFireRequested(active)
-    local state = server.mainWeaponRequestState or {}
-    state.fireRequested = active and true or false
-    server.mainWeaponRequestState = state
-end
-
-function server.mainWeaponRequestSetToggleRequested(active)
-    local state = server.mainWeaponRequestState or {}
-    state.toggleRequested = active and true or false
-    server.mainWeaponRequestState = state
-end
-
-local function _consumeMainWeaponFireRequested()
-    local state = server.mainWeaponRequestState or {}
-    local requested = state.fireRequested and true or false
-    state.fireRequested = false
-    server.mainWeaponRequestState = state
-    return requested
-end
-
-local function _consumeMainWeaponToggleRequested()
-    local state = server.mainWeaponRequestState or {}
-    local requested = state.toggleRequested and true or false
-    state.toggleRequested = false
-    server.mainWeaponRequestState = state
-    return requested
 end
 
 function server.mainWeaponControlTick(dt)
@@ -60,7 +70,7 @@ function server.mainWeaponControlTick(dt)
         return
     end
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
-        server.mainWeaponRequestReset()
+        _resetRequests()
         if server.xSlotStateSetRequestFire ~= nil then
             server.xSlotStateSetRequestFire(false)
         end
@@ -79,7 +89,7 @@ function server.mainWeaponControlTick(dt)
         return
     end
 
-    if _consumeMainWeaponToggleRequested() then
+    if _consumeToggleRequested() then
         local current = server.shipRuntimeGetCurrentMainWeapon(shipBody)
         local nextMode = "xSlot"
         if current == "xSlot" then
@@ -94,7 +104,7 @@ function server.mainWeaponControlTick(dt)
         server.lSlotStatePushHud(true)
     end
 
-    if not _consumeMainWeaponFireRequested() then
+    if not _consumeFireRequested() then
         return
     end
 

@@ -6,11 +6,13 @@
 #include "data/ship_data.lua"
 #include "data/weapon_data.lua"
 
-#include "server/shipRuntimeState.lua"
-#include "server/shipSlotLoadout.lua"
+#include "server/state_management/runtime_state.lua"
+#include "server/state_management/runtime_state_api.lua"
+#include "server/loadout/slot_loadout.lua"
+#include "server/loadout/slot_loadout_api.lua"
 #include "server/registry/shipRegistry.lua"
 #include "server/registry/shipRegistryRequest.lua"
-#include "server/shipInitialization.lua"
+#include "server/initialization/ship_init.lua"
 
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
@@ -23,7 +25,8 @@
 
 -- x 槽控制模块从外部抽取为独立文件：script/server/weapon_fire/xSlotControl.lua
 #include "server/weapon_fire/lSlotState.lua"
-#include "server/weapon_fire/mainWeaponControl.lua"
+#include "server/weapon_fire/main_weapon_control.lua"
+#include "server/weapon_fire/main_weapon_control_api.lua"
 #include "server/weapon_fire/xSlotState.lua"
 #include "server/weapon_fire/xSlotRenderState.lua"
 #include "server/weapon_fire/xSlotControl.lua"
@@ -66,10 +69,10 @@ function server.init()
     -- server.launchTime = 0.2
 
     -- 初始化当前飞船
-    server.shipInitializationInit("enigmaticCruiser")
-    server.shipRuntimeStateInit(server.shipBody, "enigmaticCruiser", server.defaultShipType)
-    server.shipSlotLoadoutInit("enigmaticCruiser")
-    server.mainWeaponRequestInit()
+    server.shipInitInit("enigmaticCruiser")
+    server.runtimeStateInit(server.shipBody, "enigmaticCruiser", server.defaultShipType)
+    server.slotLoadoutInit("enigmaticCruiser")
+    server.mainWeaponControlInit()
     server.xSlotStateInit("enigmaticCruiser")
     server.xSlotRenderStateInit()
     server.lSlotStateInit("enigmaticCruiser")
@@ -87,7 +90,7 @@ end
 function server.serverTick(dt)
     -- server.ensureCurrentShipState(defaultShipType)
     server.mainWeaponControlTick(dt)
-    server.shipRuntimeStateSyncTick(dt)
+    server.runtimeStateTick(dt)
     server.xSlotControlTick(dt)
     server.lSlotControlTick(dt)
     server.sSlotLauncherTick(dt)
