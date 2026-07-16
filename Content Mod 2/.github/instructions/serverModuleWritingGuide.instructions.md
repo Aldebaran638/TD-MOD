@@ -8,13 +8,13 @@
 
 ## 当前模块分类
 
-1. 武器发射模块（`weapon_fire`）
+1. 武器模块（`weapon/server/controllers`）
 	- 负责武器状态机、命中计算、伤害结算、广播触发
-	- 例如：`server/weapon_fire/xSlotControl.lua`
+	- 例如：`weapon/server/controllers/xSlotControl.lua`
 
-2. 移动模块（`movement`）
+2. 飞船移动模块（`ship/battlecruiser/server/movement`）
 	- 负责推进、阻尼、悬浮、输入驱动运动状态等
-	- 例如：`server/movement/bodyDirectionalMove.lua`、`server/movement/bodyVelocityQuadraticDamping.lua`
+	- 例如：`ship/battlecruiser/server/movement/bodyDirectionalMove.lua`、`ship/battlecruiser/server/movement/bodyVelocityQuadraticDamping.lua`
 
 ## 如何判定“新的服务器模块是哪一类”
 

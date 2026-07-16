@@ -3,7 +3,7 @@
 
 server = server or {}
 
-#include "../../data/ships/enigmaticCruiser.lua"
+#include "../../../../data/ship/battlecruiser.lua"
 
 local registryShipRoot = "StellarisShips/server/ships/byId/"
 local registryShipIndexRoot = "StellarisShips/server/ships/index"
