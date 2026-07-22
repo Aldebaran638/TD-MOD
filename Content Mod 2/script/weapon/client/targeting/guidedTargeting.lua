@@ -3,7 +3,7 @@
 
 client = client or {}
 
-client.sSlotTargetingConfig = client.sSlotTargetingConfig or {
+client.guidedTargetingConfig = client.guidedTargetingConfig or {
     lockDistance = 660.0,
     lockHalfAngleDeg = 8.0,
     lockAcquireTime = 1.4,
@@ -13,7 +13,7 @@ client.sSlotTargetingConfig = client.sSlotTargetingConfig or {
     lockBoxScale = 2400.0,
 }
 
-client.sSlotTargetingState = client.sSlotTargetingState or {
+client.guidedTargetingState = client.guidedTargetingState or {
     active = false,
     shipBody = 0,
     candidateVehicleId = 0,
@@ -29,7 +29,7 @@ client.sSlotTargetingState = client.sSlotTargetingState or {
     isProjectedVisible = false,
 }
 
-local function _sSlotClamp(v, a, b)
+local function _guidedTargetingClamp(v, a, b)
     if v < a then
         return a
     end
@@ -39,7 +39,7 @@ local function _sSlotClamp(v, a, b)
     return v
 end
 
-local function _sSlotResetState(state)
+local function _guidedTargetingResetState(state)
     state.active = false
     state.shipBody = 0
     state.lockCenterWorld = nil
@@ -55,7 +55,7 @@ local function _sSlotResetState(state)
     state.lockedBodyId = 0
 end
 
-local function _sSlotClearTarget(state)
+local function _guidedTargetingClearTarget(state)
     state.targetWorldPos = nil
     state.targetDistance = 0.0
     state.isProjectedVisible = false
@@ -209,14 +209,14 @@ local function _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, cent
     return _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
 end
 
-function client.sSlotTargetingTick(dt)
-    local state = client.sSlotTargetingState
-    local cfg = client.sSlotTargetingConfig
+function client.guidedTargetingTick(dt)
+    local state = client.guidedTargetingState
+    local cfg = client.guidedTargetingConfig
 
     local shipBody = _resolveControlledShipBody()
     local currentMode = (client.getShipMainWeaponMode ~= nil and shipBody ~= 0) and client.getShipMainWeaponMode(shipBody) or "xSlot"
-    if shipBody == 0 or (currentMode ~= "sSlot" and currentMode ~= "hSlot") then
-        _sSlotResetState(state)
+    if shipBody == 0 or (currentMode ~= "mSlot" and currentMode ~= "gSlot" and currentMode ~= "hSlot") then
+        _guidedTargetingResetState(state)
         return
     end
 
@@ -241,7 +241,7 @@ function client.sSlotTargetingTick(dt)
     local camForward = VecNormalize(TransformToParentVec(camT, Vec(0, 0, -1)))
     local useCameraCone = client.shipCamera ~= nil
         and client.shipCamera.rearFreelookActive
-        and (currentMode == "sSlot" or currentMode == "hSlot")
+        and (currentMode == "mSlot" or currentMode == "gSlot" or currentMode == "hSlot")
 
     local aimOrigin = shipPos
     local aimForward = shipForward
@@ -271,10 +271,10 @@ function client.sSlotTargetingTick(dt)
         if state.candidateVehicleId ~= 0 or state.lockedVehicleId ~= 0 then
             state.loseTimer = state.loseTimer + (dt or 0.0)
             if state.loseTimer > (modeCfg.lockLoseGraceTime or 0.0) then
-                _sSlotClearTarget(state)
+                _guidedTargetingClearTarget(state)
             end
         else
-            _sSlotClearTarget(state)
+            _guidedTargetingClearTarget(state)
         end
         return
     end
@@ -300,7 +300,7 @@ function client.sSlotTargetingTick(dt)
         state.lockedBodyId = target.bodyId
     else
         local acquireTime = math.max(0.001, modeCfg.lockAcquireTime or 1.0)
-        state.progress = _sSlotClamp(state.progress + (dt or 0.0) / acquireTime, 0.0, 1.0)
+        state.progress = _guidedTargetingClamp(state.progress + (dt or 0.0) / acquireTime, 0.0, 1.0)
         if state.progress >= 1.0 then
             state.progress = 1.0
             state.state = "locked"
@@ -320,27 +320,27 @@ function client.sSlotTargetingTick(dt)
     end
 end
 
-function client.sSlotTargetingGetHudState()
-    return client.sSlotTargetingState
+function client.guidedTargetingGetHudState()
+    return client.guidedTargetingState
 end
 
-function client.sSlotTargetingCanFire(shipBodyId)
-    local state = client.sSlotTargetingState
+function client.guidedTargetingCanFire(shipBodyId)
+    local state = client.guidedTargetingState
     return state.active
         and state.shipBody == math.floor(shipBodyId or 0)
         and state.state == "locked"
         and state.lockedVehicleId ~= 0
 end
 
-function client.sSlotTargetingGetLockedVehicleId(shipBodyId)
-    if not client.sSlotTargetingCanFire(shipBodyId) then
+function client.guidedTargetingGetLockedVehicleId(shipBodyId)
+    if not client.guidedTargetingCanFire(shipBodyId) then
         return 0
     end
-    return client.sSlotTargetingState.lockedVehicleId or 0
+    return client.guidedTargetingState.lockedVehicleId or 0
 end
 
-function client.sSlotTargetingGetSummary(shipBodyId)
-    local state = client.sSlotTargetingState
+function client.guidedTargetingGetSummary(shipBodyId)
+    local state = client.guidedTargetingState
     if not state.active or state.shipBody ~= math.floor(shipBodyId or 0) then
         return "NO TARGET", 0.0
     end

@@ -181,8 +181,11 @@ local function _shipCameraResolveWeaponConfig(shipBodyId)
     if mode == "lSlot" then
         return defs.kineticArtillery or {}, mode
     end
-    if mode == "sSlot" then
+    if mode == "mSlot" then
         return defs.swarmerMissile or {}, mode
+    end
+    if mode == "gSlot" then
+        return defs.devastatorTorpedoes or {}, mode
     end
     return defs.tachyonLance or {}, "xSlot"
 end

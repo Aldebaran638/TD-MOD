@@ -9,7 +9,7 @@ client = client or {}
 #include "weapon/client/state/xslot_render_state.lua"
 #include "weapon/client/state/xslot_render_state_api.lua"
 #include "weapon/client/targeting/xSlotTargeting.lua"
-#include "weapon/client/targeting/sSlotTargeting.lua"
+#include "weapon/client/targeting/guidedTargeting.lua"
 #include "weapon/client/input/mainWeaponInput.lua"
 #include "ship/battlecruiser/client/input/bodyMoveInput.lua"
 #include "weapon/client/sound/soundModule.lua"
@@ -19,7 +19,7 @@ client = client or {}
 #include "weapon/client/hud/mainWeaponHud.lua"
 #include "ship/battlecruiser/client/camera/shipHelpOverlay.lua"
 #include "weapon/client/hud/shipCrosshair.lua"
-#include "weapon/client/hud/sSlotHud.lua"
+#include "weapon/client/hud/guidedTargetingHud.lua"
 #include "weapon/client/hud/xSlotLockHud.lua"
 #include "weapon/client/effects/xSlotChargingFx.lua"
 #include "weapon/client/effects/xSlotLaunchFx.lua"
@@ -53,7 +53,7 @@ function client.clientTick(dt)
     client.missileWarpFxTick(dt)
     client.hSlotBeamFxTick(dt)
 
-    client.sSlotTargetingTick(dt)
+    client.guidedTargetingTick(dt)
     client.xSlotTargetingTick(dt)
     client.shipHealthBarTick(dt)
     client.mainWeaponHudTick(dt)
@@ -65,7 +65,7 @@ function client.clientDraw()
     client.mainWeaponHudDraw()
     client.shipHelpOverlayDraw()
     client.shipCrosshairDraw()
-    client.sSlotHudDraw()
+    client.guidedTargetingHudDraw()
     client.xSlotLockHudDraw()
 end
 

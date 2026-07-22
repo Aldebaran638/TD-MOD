@@ -3,7 +3,7 @@
 
 client = client or {}
 
-client.sSlotHudConfig = client.sSlotHudConfig or {
+client.guidedTargetingHudConfig = client.guidedTargetingHudConfig or {
     ringThickness = 2.0,
     ringSegments = 40,
     boxThickness = 2.0,
@@ -12,7 +12,7 @@ client.sSlotHudConfig = client.sSlotHudConfig or {
     lockedColor = { 1.0, 0.24, 0.18, 0.98 },
 }
 
-local function _sSlotHudClamp(v, a, b)
+local function _guidedTargetingHudClamp(v, a, b)
     if v < a then
         return a
     end
@@ -116,14 +116,14 @@ local function _resolveAimRingCenter(state)
     return UiWidth() * 0.5, UiHeight() * 0.5
 end
 
-function client.sSlotHudDraw()
+function client.guidedTargetingHudDraw()
     local mode = _resolveCurrentMode()
-    if mode ~= "sSlot" and mode ~= "hSlot" then
+    if mode ~= "mSlot" and mode ~= "gSlot" and mode ~= "hSlot" then
         return
     end
 
-    local state = client.sSlotTargetingGetHudState ~= nil and client.sSlotTargetingGetHudState() or nil
-    local cfg = client.sSlotHudConfig
+    local state = client.guidedTargetingGetHudState ~= nil and client.guidedTargetingGetHudState() or nil
+    local cfg = client.guidedTargetingHudConfig
     if state == nil then
         return
     end
@@ -134,7 +134,7 @@ function client.sSlotHudDraw()
     if client.shipCamera ~= nil and tonumber(client.shipCamera.fov) ~= nil then
         fov = tonumber(client.shipCamera.fov) or fov
     end
-    local halfAngle = math.rad(client.sSlotTargetingConfig.lockHalfAngleDeg or 8.0)
+    local halfAngle = math.rad(client.guidedTargetingConfig.lockHalfAngleDeg or 8.0)
     local ringRadius = (UiHeight() * 0.5) * math.tan(halfAngle) / math.tan(math.rad(fov * 0.5))
     ringRadius = math.max(12.0, ringRadius)
 
@@ -153,12 +153,12 @@ function client.sSlotHudDraw()
         return
     end
 
-    local size = client.sSlotTargetingConfig.lockBoxMinSizePx or 20.0
+    local size = client.guidedTargetingConfig.lockBoxMinSizePx or 20.0
     if (state.targetDistance or 0.0) > 0.001 then
-        size = _sSlotHudClamp(
-            (client.sSlotTargetingConfig.lockBoxScale or 2400.0) / state.targetDistance,
-            client.sSlotTargetingConfig.lockBoxMinSizePx or 20.0,
-            client.sSlotTargetingConfig.lockBoxMaxSizePx or 60.0
+        size = _guidedTargetingHudClamp(
+            (client.guidedTargetingConfig.lockBoxScale or 2400.0) / state.targetDistance,
+            client.guidedTargetingConfig.lockBoxMinSizePx or 20.0,
+            client.guidedTargetingConfig.lockBoxMaxSizePx or 60.0
         )
     end
 

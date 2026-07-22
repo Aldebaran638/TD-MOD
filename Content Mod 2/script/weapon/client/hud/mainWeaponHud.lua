@@ -4,11 +4,11 @@
 client = client or {}
 
 client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
-    panelWidth = 290,
+    panelWidth = 350,
     panelHeight = 118,
     rightOffset = 270,
     bottomOffset = 34,
-    topBarWidth = 190,
+    topBarWidth = 240,
     topBarHeight = 12,
     topBarOffsetY = 12,
     xCooldownBarWidth = 72,
@@ -26,7 +26,8 @@ client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
     inactiveColor = { 0.22, 0.25, 0.30, 0.95 },
     xSlotColor = { 0.18, 0.82, 1.0, 0.95 },
     lSlotColor = { 1.0, 0.42, 0.12, 0.95 },
-    sSlotColor = { 1.0, 0.84, 0.18, 0.95 },
+    mSlotColor = { 1.0, 0.84, 0.18, 0.95 },
+    gSlotColor = { 1.0, 0.30, 0.22, 0.95 },
     hSlotColor = { 0.86, 0.36, 1.0, 0.95 },
     heatBgColor = { 0.14, 0.16, 0.18, 0.95 },
     heatFillColor = { 1.0, 0.72, 0.18, 0.96 },
@@ -47,13 +48,17 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     xSlotPhase1 = "idle",
     xSlotPhase2 = "idle",
     xSlotFireMode = "aim",
-    sSlotProgress = 0.0,
-    targetSSlotProgress = 0.0,
-    sSlotStatus = "NO TARGET",
-    sSlotFill1 = 1.0,
-    sSlotFill2 = 1.0,
-    sSlotFill3 = 1.0,
-    sSlotFill4 = 1.0,
+    guidedProgress = 0.0,
+    targetGuidedProgress = 0.0,
+    guidedStatus = "NO TARGET",
+    mSlotFill1 = 1.0,
+    mSlotFill2 = 1.0,
+    mSlotFill3 = 1.0,
+    mSlotFill4 = 1.0,
+    gSlotFill1 = 1.0,
+    gSlotFill2 = 1.0,
+    gSlotFill3 = 1.0,
+    gSlotFill4 = 1.0,
     hSlotFill1 = 1.0,
     hSlotFill2 = 1.0,
     hSlotActive1 = false,
@@ -62,7 +67,8 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
 
 client.lSlotHudStateByShip = client.lSlotHudStateByShip or {}
 client.xSlotHudStateByShip = client.xSlotHudStateByShip or {}
-client.sSlotHudStateByShip = client.sSlotHudStateByShip or {}
+client.mSlotHudStateByShip = client.mSlotHudStateByShip or {}
+client.gSlotHudStateByShip = client.gSlotHudStateByShip or {}
 client.hSlotHudStateByShip = client.hSlotHudStateByShip or {}
 client.hSlotDebugState = client.hSlotDebugState or {
     active = 0,
@@ -257,13 +263,13 @@ function client.updateXSlotHudState(shipBodyId, value1, value2, maxValue1, maxVa
     hud.phase2 = tostring(phase2 or "idle")
 end
 
-local function _getOrCreateSSlotHudState(shipBodyId)
+local function _getOrCreateMSlotHudState(shipBodyId)
     local body = math.floor(shipBodyId or 0)
     if body <= 0 then
         return nil
     end
 
-    local states = client.sSlotHudStateByShip
+    local states = client.mSlotHudStateByShip
     local hud = states[body]
     if hud == nil then
         hud = {
@@ -275,6 +281,21 @@ local function _getOrCreateSSlotHudState(shipBodyId)
             maxCd2 = 1.0,
             maxCd3 = 1.0,
             maxCd4 = 1.0,
+        }
+        states[body] = hud
+    end
+    return hud
+end
+
+local function _getOrCreateGSlotHudState(shipBodyId)
+    local body = math.floor(shipBodyId or 0)
+    if body <= 0 then return nil end
+    local states = client.gSlotHudStateByShip
+    local hud = states[body]
+    if hud == nil then
+        hud = {
+            cd1 = 0.0, cd2 = 0.0, cd3 = 0.0, cd4 = 0.0,
+            maxCd1 = 1.0, maxCd2 = 1.0, maxCd3 = 1.0, maxCd4 = 1.0,
         }
         states[body] = hud
     end
@@ -359,8 +380,8 @@ function client.receiveHSlotDebugState(activeCount, lastReason, s1State, s1Life,
     client.hSlotDebugState = d
 end
 
-function client.updateSSlotHudState(shipBodyId, cd1, cd2, cd3, cd4, maxCd1, maxCd2, maxCd3, maxCd4)
-    local hud = _getOrCreateSSlotHudState(shipBodyId)
+function client.updateMSlotHudState(shipBodyId, cd1, cd2, cd3, cd4, maxCd1, maxCd2, maxCd3, maxCd4)
+    local hud = _getOrCreateMSlotHudState(shipBodyId)
     if hud == nil then
         return
     end
@@ -372,6 +393,32 @@ function client.updateSSlotHudState(shipBodyId, cd1, cd2, cd3, cd4, maxCd1, maxC
     hud.maxCd2 = math.max(0.0, tonumber(maxCd2) or 0.0)
     hud.maxCd3 = math.max(0.0, tonumber(maxCd3) or 0.0)
     hud.maxCd4 = math.max(0.0, tonumber(maxCd4) or 0.0)
+end
+
+function client.updateGSlotHudState(shipBodyId, cd1, cd2, cd3, cd4, maxCd1, maxCd2, maxCd3, maxCd4)
+    local hud = _getOrCreateGSlotHudState(shipBodyId)
+    if hud == nil then return end
+    hud.cd1 = math.max(0.0, tonumber(cd1) or 0.0)
+    hud.cd2 = math.max(0.0, tonumber(cd2) or 0.0)
+    hud.cd3 = math.max(0.0, tonumber(cd3) or 0.0)
+    hud.cd4 = math.max(0.0, tonumber(cd4) or 0.0)
+    hud.maxCd1 = math.max(0.0, tonumber(maxCd1) or 0.0)
+    hud.maxCd2 = math.max(0.0, tonumber(maxCd2) or 0.0)
+    hud.maxCd3 = math.max(0.0, tonumber(maxCd3) or 0.0)
+    hud.maxCd4 = math.max(0.0, tonumber(maxCd4) or 0.0)
+end
+
+local function _updateGuidedSlotFills(state, prefix, hud)
+    local source = hud or {}
+    for i = 1, 4 do
+        local cooldown = math.max(0.0, tonumber(source["cd" .. tostring(i)]) or 0.0)
+        local maximum = math.max(0.0, tonumber(source["maxCd" .. tostring(i)]) or 0.0)
+        local fill = 1.0
+        if maximum > 0.0001 then
+            fill = _mainWeaponHudClamp(1.0 - (cooldown / maximum), 0.0, 1.0)
+        end
+        state[prefix .. "SlotFill" .. tostring(i)] = fill
+    end
 end
 
 function client.mainWeaponHudTick(dt)
@@ -391,9 +438,9 @@ function client.mainWeaponHudTick(dt)
         state.xSlotPhase1 = "idle"
         state.xSlotPhase2 = "idle"
         state.xSlotFireMode = "aim"
-        state.targetSSlotProgress = 0.0
-        state.sSlotProgress = 0.0
-        state.sSlotStatus = "NO TARGET"
+        state.targetGuidedProgress = 0.0
+        state.guidedProgress = 0.0
+        state.guidedStatus = "NO TARGET"
         state.hSlotFill1 = 1.0
         state.hSlotFill2 = 1.0
         state.hSlotActive1 = false
@@ -434,60 +481,20 @@ function client.mainWeaponHudTick(dt)
     state.xSlotFill1 = _resolveXSlotFill(xHud.value1, xHud.maxValue1, xHud.phase1)
     state.xSlotFill2 = _resolveXSlotFill(xHud.value2, xHud.maxValue2, xHud.phase2)
 
-    if client.sSlotTargetingGetSummary ~= nil then
-        local statusText, progress = client.sSlotTargetingGetSummary(body)
-        state.sSlotStatus = statusText or "NO TARGET"
-        state.targetSSlotProgress = _mainWeaponHudClamp(progress or 0.0, 0.0, 1.0)
+    if client.guidedTargetingGetSummary ~= nil then
+        local statusText, progress = client.guidedTargetingGetSummary(body)
+        state.guidedStatus = statusText or "NO TARGET"
+        state.targetGuidedProgress = _mainWeaponHudClamp(progress or 0.0, 0.0, 1.0)
     else
-        state.sSlotStatus = "NO TARGET"
-        state.targetSSlotProgress = 0.0
+        state.guidedStatus = "NO TARGET"
+        state.targetGuidedProgress = 0.0
     end
-    state.sSlotProgress = _mainWeaponHudSmooth(state.sSlotProgress, state.targetSSlotProgress, cfg.smoothSpeed, dt)
+    state.guidedProgress = _mainWeaponHudSmooth(state.guidedProgress, state.targetGuidedProgress, cfg.smoothSpeed, dt)
 
 
 
-    local sHud = client.sSlotHudStateByShip[body] or {
-        cd1 = 0.0,
-        cd2 = 0.0,
-        cd3 = 0.0,
-        cd4 = 0.0,
-        maxCd1 = 1.0,
-        maxCd2 = 1.0,
-        maxCd3 = 1.0,
-        maxCd4 = 1.0,
-    }
-    local cd1 = math.max(0.0, sHud.cd1 or 0.0)
-    local cd2 = math.max(0.0, sHud.cd2 or 0.0)
-    local cd3 = math.max(0.0, sHud.cd3 or 0.0)
-    local cd4 = math.max(0.0, sHud.cd4 or 0.0)
-    local maxCd1 = math.max(0.0, sHud.maxCd1 or 0.0)
-    local maxCd2 = math.max(0.0, sHud.maxCd2 or 0.0)
-    local maxCd3 = math.max(0.0, sHud.maxCd3 or 0.0)
-    local maxCd4 = math.max(0.0, sHud.maxCd4 or 0.0)
-
-    if maxCd1 > 0.0001 then
-        state.sSlotFill1 = _mainWeaponHudClamp(1.0 - (cd1 / maxCd1), 0.0, 1.0)
-    else
-        state.sSlotFill1 = 1.0
-    end
-
-    if maxCd2 > 0.0001 then
-        state.sSlotFill2 = _mainWeaponHudClamp(1.0 - (cd2 / maxCd2), 0.0, 1.0)
-    else
-        state.sSlotFill2 = 1.0
-    end
-
-    if maxCd3 > 0.0001 then
-        state.sSlotFill3 = _mainWeaponHudClamp(1.0 - (cd3 / maxCd3), 0.0, 1.0)
-    else
-        state.sSlotFill3 = 1.0
-    end
-
-    if maxCd4 > 0.0001 then
-        state.sSlotFill4 = _mainWeaponHudClamp(1.0 - (cd4 / maxCd4), 0.0, 1.0)
-    else
-        state.sSlotFill4 = 1.0
-    end
+    _updateGuidedSlotFills(state, "m", client.mSlotHudStateByShip[body])
+    _updateGuidedSlotFills(state, "g", client.gSlotHudStateByShip[body])
 
     local hHud = client.hSlotHudStateByShip[body] or {
         cd1 = 0.0,
@@ -553,7 +560,8 @@ local function _drawTopBar(x, y, width, height, fillFraction, fillColor, text, c
     UiPop()
 end
 
-local function _drawXCooldownBar(x, y, w, h, fill, label, cfg)
+local function _drawWeaponCooldownBar(x, y, w, h, fill, label, cfg, fillColor)
+    local color = fillColor or cfg.xSlotColor
     UiPush()
         UiTranslate(x, y)
         UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
@@ -563,16 +571,11 @@ local function _drawXCooldownBar(x, y, w, h, fill, label, cfg)
         UiTranslate(24, 3)
         UiColor(cfg.heatBgColor[1], cfg.heatBgColor[2], cfg.heatBgColor[3], cfg.heatBgColor[4])
         UiRect(w, h)
-        UiColor(cfg.xSlotColor[1], cfg.xSlotColor[2], cfg.xSlotColor[3], cfg.xSlotColor[4])
+        UiColor(color[1], color[2], color[3], color[4])
         UiRect(w * _mainWeaponHudClamp(fill or 0.0, 0.0, 1.0), h)
         UiColor(cfg.borderColor[1], cfg.borderColor[2], cfg.borderColor[3], 0.55)
         UiRectOutline(w, h, 1)
     UiPop()
-end
-
-function client.sSlotGetCooldown()
-    local cooldown, maxCooldown = ClientCall(0, "server.sSlotGetCooldown")
-    return tonumber(cooldown) or 0.0, tonumber(maxCooldown) or 10.0
 end
 
 function client.mainWeaponHudDraw()
@@ -599,12 +602,18 @@ function client.mainWeaponHudDraw()
         topColor = state.overheated and cfg.heatOverColor or cfg.heatFillColor
         titleText = "Kinetic Artillery"
         modeText = "Main Weapon: L-Slot"
-    elseif currentMode == "sSlot" then
-        topFill = state.sSlotProgress
-        topText = state.sSlotStatus or "NO TARGET"
-        topColor = (state.sSlotStatus == "LOCKED") and cfg.lockReadyColor or cfg.lockFillColor
+    elseif currentMode == "mSlot" then
+        topFill = state.guidedProgress
+        topText = state.guidedStatus or "NO TARGET"
+        topColor = (state.guidedStatus == "LOCKED") and cfg.lockReadyColor or cfg.lockFillColor
         titleText = "Whirlwind Missiles"
-        modeText = "Main Weapon: S-Slot"
+        modeText = "Main Weapon: M-Slot"
+    elseif currentMode == "gSlot" then
+        topFill = state.guidedProgress
+        topText = state.guidedStatus or "NO TARGET"
+        topColor = (state.guidedStatus == "LOCKED") and cfg.lockReadyColor or cfg.lockFillColor
+        titleText = "Devastator Torpedoes"
+        modeText = "Main Weapon: G-Slot"
     elseif currentMode == "hSlot" then
         local anyActive = state.hSlotActive1 or state.hSlotActive2
         topFill = anyActive and 0.0 or math.max(state.hSlotFill1 or 0.0, state.hSlotFill2 or 0.0)
@@ -626,34 +635,38 @@ function client.mainWeaponHudDraw()
 
         _drawWeaponIcon(12, 36, cfg.iconSize, cfg.xSlotColor, "X", currentMode == "xSlot", cfg)
         _drawWeaponIcon(46, 36, cfg.iconSize, cfg.lSlotColor, "L", currentMode == "lSlot", cfg)
-        _drawWeaponIcon(80, 36, cfg.iconSize, cfg.sSlotColor, "S", currentMode == "sSlot", cfg)
-        _drawWeaponIcon(114, 36, cfg.iconSize, cfg.hSlotColor, "H", currentMode == "hSlot", cfg)
+        _drawWeaponIcon(80, 36, cfg.iconSize, cfg.mSlotColor, "M", currentMode == "mSlot", cfg)
+        _drawWeaponIcon(114, 36, cfg.iconSize, cfg.gSlotColor, "G", currentMode == "gSlot", cfg)
+        _drawWeaponIcon(148, 36, cfg.iconSize, cfg.hSlotColor, "H", currentMode == "hSlot", cfg)
 
         UiPush()
-            UiTranslate(150, 34)
+            UiTranslate(190, 34)
             UiColor(cfg.textColor[1], cfg.textColor[2], cfg.textColor[3], cfg.textColor[4])
             UiFont("regular.ttf", cfg.labelSize)
             UiText(titleText)
         UiPop()
 
         UiPush()
-            UiTranslate(150, 54)
+            UiTranslate(190, 54)
             UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
             UiFont("regular.ttf", cfg.valueSize)
             UiText(modeText)
         UiPop()
 
         if currentMode == "xSlot" then
-            _drawXCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill1, "X1", cfg)
-            _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill2, "X2", cfg)
-        elseif currentMode == "sSlot" then
-            _drawXCooldownBar(12, 76, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.sSlotFill1, "S1", cfg)
-            _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 76, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.sSlotFill2, "S2", cfg)
-            _drawXCooldownBar(12, 96, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.sSlotFill3, "S3", cfg)
-            _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 96, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.sSlotFill4, "S4", cfg)
+            _drawWeaponCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill1, "X1", cfg, cfg.xSlotColor)
+            _drawWeaponCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill2, "X2", cfg, cfg.xSlotColor)
+        elseif currentMode == "mSlot" or currentMode == "gSlot" then
+            local prefix = currentMode == "mSlot" and "m" or "g"
+            local label = currentMode == "mSlot" and "M" or "G"
+            local color = currentMode == "mSlot" and cfg.mSlotColor or cfg.gSlotColor
+            _drawWeaponCooldownBar(12, 76, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill1"], label .. "1", cfg, color)
+            _drawWeaponCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 76, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill2"], label .. "2", cfg, color)
+            _drawWeaponCooldownBar(12, 96, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill3"], label .. "3", cfg, color)
+            _drawWeaponCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 96, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill4"], label .. "4", cfg, color)
         elseif currentMode == "hSlot" then
-            _drawXCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill1, state.hSlotActive1 and "H1*" or "H1", cfg)
-            _drawXCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill2, state.hSlotActive2 and "H2*" or "H2", cfg)
+            _drawWeaponCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill1, state.hSlotActive1 and "H1*" or "H1", cfg, cfg.hSlotColor)
+            _drawWeaponCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill2, state.hSlotActive2 and "H2*" or "H2", cfg, cfg.hSlotColor)
         else
             UiPush()
                 UiTranslate(12, 84)

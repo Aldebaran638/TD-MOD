@@ -32,6 +32,43 @@ local function _resetRequests()
     _requestState.toggleRequested = false
 end
 
+local _weaponModeOrder = { "xSlot", "lSlot", "mSlot", "gSlot", "hSlot" }
+local _mountCollectionByMode = {
+    xSlot = "xSlots",
+    lSlot = "lSlots",
+    mSlot = "mSlots",
+    gSlot = "gSlots",
+    hSlot = "hSlots",
+}
+
+local function _resolveCurrentShipDefinition()
+    local shipType = server.defaultShipType or "enigmaticCruiser"
+    if server.shipSlotLoadoutResolveShipDefinition ~= nil then
+        local resolved = server.shipSlotLoadoutResolveShipDefinition(shipType)
+        if resolved ~= nil then return resolved end
+    end
+    local defs = shipTypeRegistryData or {}
+    return defs[shipType] or defs.enigmaticCruiser or {}
+end
+
+local function _nextAvailableWeaponMode(current)
+    local definition = _resolveCurrentShipDefinition()
+    local currentIndex = 1
+    for i = 1, #_weaponModeOrder do
+        if _weaponModeOrder[i] == current then
+            currentIndex = i
+            break
+        end
+    end
+    for offset = 1, #_weaponModeOrder do
+        local index = ((currentIndex - 1 + offset) % #_weaponModeOrder) + 1
+        local mode = _weaponModeOrder[index]
+        local mounts = definition[_mountCollectionByMode[mode]] or {}
+        if #mounts > 0 then return mode end
+    end
+    return "xSlot"
+end
+
 -- ============ API函数（内部使用，通过API文件暴露） ============
 
 local _weaponControlAPI = {}
@@ -80,8 +117,14 @@ function server.mainWeaponControlTick(dt)
         server.lSlotStateSetRequestFire(false)
         server.lSlotStateResetRuntime()
         server.lSlotStatePushHudReset(true)
-        if server.sSlotStateResetRuntime ~= nil then
-            server.sSlotStateResetRuntime()
+        if server.mSlotControlResetRuntime ~= nil then
+            server.mSlotControlResetRuntime()
+        end
+        if server.gSlotControlResetRuntime ~= nil then
+            server.gSlotControlResetRuntime()
+        end
+        if server.guidedProjectileRuntimeInit ~= nil then
+            server.guidedProjectileRuntimeInit()
         end
         if server.hSlotStateResetRuntime ~= nil then
             server.hSlotStateResetRuntime()
@@ -91,14 +134,7 @@ function server.mainWeaponControlTick(dt)
 
     if _consumeToggleRequested() then
         local current = server.shipRuntimeGetCurrentMainWeapon(shipBody)
-        local nextMode = "xSlot"
-        if current == "xSlot" then
-            nextMode = "lSlot"
-        elseif current == "lSlot" then
-            nextMode = "sSlot"
-        elseif current == "sSlot" then
-            nextMode = "hSlot"
-        end
+        local nextMode = _nextAvailableWeaponMode(current)
         server.shipRuntimeSetCurrentMainWeapon(shipBody, nextMode)
         server.shipRuntimeSyncMainWeapon(shipBody, true)
         server.lSlotStatePushHud(true)

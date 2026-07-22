@@ -46,7 +46,7 @@ shipTypeRegistryData.enigmaticCruiser = {
             slotGroups = {
                 { slotType = "X", count = 2, mountCollection = "xSlots" },
                 { slotType = "L", count = 2, mountCollection = "lSlots" },
-                { slotType = "M", count = 4, mountCollection = "sSlots" },
+                { slotType = "M", count = 4, mountCollection = "mSlots" },
                 { slotType = "H", count = 2, mountCollection = "hSlots" },
             },
             defaultLoadout = {
@@ -80,7 +80,7 @@ shipTypeRegistryData.enigmaticCruiser = {
                         aimMode = "forwardConvergeByRange",
                     },
                 },
-                sSlots = {
+                mSlots = {
                     {
                         firePosOffset = { x = 0.3, y = 5, z = 2 },
                         fireDirRelative = { x = 600, y = 300, z = 0 },
@@ -117,7 +117,7 @@ shipTypeRegistryData.enigmaticCruiser = {
             slotGroups = {
                 { slotType = "X", count = 2, mountCollection = "xSlots" },
                 { slotType = "G", count = 4, mountCollection = "gSlots" },
-                { slotType = "M", count = 2, mountCollection = "sSlots" },
+                { slotType = "M", count = 2, mountCollection = "mSlots" },
                 { slotType = "H", count = 2, mountCollection = "hSlots" },
             },
             defaultLoadout = {
@@ -137,7 +137,7 @@ shipTypeRegistryData.enigmaticCruiser = {
                         fireDirRelative = { x = 0, y = 0, z = -1 },
                     },
                 },
-                sSlots = {
+                mSlots = {
                     {
                         firePosOffset = { x = 0.3, y = 5, z = 2 },
                         fireDirRelative = { x = 600, y = 300, z = 0 },
@@ -208,7 +208,7 @@ shipTypeRegistryData.enigmaticCruiser = {
             aimMode = "forwardConvergeByRange",
         },
     },
-    sSlots = {
+    mSlots = {
         {
             weaponType = "swarmerMissile",
             firePosOffset = { x = 0.3, y = 5, z = 2 },

@@ -114,7 +114,7 @@ local function _rebuildResolvedDefinition(shipType)
     local resolved = _cloneTable(definition)
     resolved.xSlots = _cloneTable((configuration.mounts or {}).xSlots or {})
     resolved.lSlots = _cloneTable((configuration.mounts or {}).lSlots or {})
-    resolved.sSlots = _cloneTable((configuration.mounts or {}).sSlots or {})
+    resolved.mSlots = _cloneTable((configuration.mounts or {}).mSlots or {})
     resolved.gSlots = _cloneTable((configuration.mounts or {}).gSlots or {})
     resolved.hSlots = _cloneTable((configuration.mounts or {}).hSlots or {})
     
@@ -126,8 +126,8 @@ local function _rebuildResolvedDefinition(shipType)
     for i = 1, #resolved.lSlots do
         resolved.lSlots[i].weaponType = loadout.L or resolved.lSlots[i].weaponType
     end
-    for i = 1, #resolved.sSlots do
-        resolved.sSlots[i].weaponType = loadout.M or resolved.sSlots[i].weaponType
+    for i = 1, #resolved.mSlots do
+        resolved.mSlots[i].weaponType = loadout.M or resolved.mSlots[i].weaponType
     end
     for i = 1, #resolved.gSlots do
         resolved.gSlots[i].weaponType = loadout.G or resolved.gSlots[i].weaponType
