@@ -3,16 +3,16 @@
 #version 2
 #include "script/include/common.lua"
 
-#include "data/ship_data.lua"
-#include "data/weapon_data.lua"
+#include "data/ship/ship_data.lua"
+#include "data/weapon/weapon_data.lua"
 
-#include "server/state_management/runtime_state.lua"
-#include "server/state_management/runtime_state_api.lua"
-#include "server/loadout/slot_loadout.lua"
-#include "server/loadout/slot_loadout_api.lua"
-#include "server/registry/shipRegistry.lua"
-#include "server/registry/shipRegistryRequest.lua"
-#include "server/initialization/ship_init.lua"
+#include "ship/battlecruiser/server/state/runtime_state.lua"
+#include "ship/battlecruiser/server/state/runtime_state_api.lua"
+#include "weapon/server/loadout/slot_loadout.lua"
+#include "weapon/server/loadout/slot_loadout_api.lua"
+#include "ship/battlecruiser/server/registry/shipRegistry.lua"
+#include "ship/battlecruiser/server/registry/shipRegistryRequest.lua"
+#include "ship/battlecruiser/server/initialization/ship_init.lua"
 
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
@@ -21,35 +21,35 @@
 -- server = server or {}
 
 -- -- registry 访问�?
--- #include "server/registry/shipRegistry.lua"
+-- #include "ship/battlecruiser/server/registry/shipRegistry.lua"
 
--- x 槽控制模块从外部抽取为独立文件：script/server/weapon_fire/xSlotControl.lua
-#include "server/weapon_fire/lSlotState.lua"
-#include "server/weapon_fire/main_weapon_control.lua"
-#include "server/weapon_fire/main_weapon_control_api.lua"
-#include "server/weapon_fire/xSlotState.lua"
-#include "server/weapon_fire/xSlotRenderState.lua"
-#include "server/weapon_fire/xSlotControl.lua"
-#include "server/weapon_fire/lSlotControl.lua"
-#include "server/weapon_fire/sSlotState.lua"
-#include "server/weapon_fire/sSlotLauncher.lua"
-#include "server/weapon_fire/sSlotMovement.lua"
-#include "server/weapon_fire/sSlotCollider.lua"
-#include "server/weapon_fire/hSlotControl.lua"
-#include "server/weapon_fire/projectileManager.lua"
+-- x 槽控制模块位于独立的武器系统目录中。
+#include "weapon/server/controllers/lSlotState.lua"
+#include "weapon/server/controllers/main_weapon_control.lua"
+#include "weapon/server/controllers/main_weapon_control_api.lua"
+#include "weapon/server/controllers/xSlotState.lua"
+#include "weapon/server/controllers/xSlotRenderState.lua"
+#include "weapon/server/controllers/xSlotControl.lua"
+#include "weapon/server/controllers/lSlotControl.lua"
+#include "weapon/server/controllers/sSlotState.lua"
+#include "weapon/server/controllers/sSlotLauncher.lua"
+#include "weapon/server/controllers/sSlotMovement.lua"
+#include "weapon/server/controllers/sSlotCollider.lua"
+#include "weapon/server/controllers/hSlotControl.lua"
+#include "weapon/server/controllers/projectileManager.lua"
 -- 移动类模块：根据 body 质量施加竖直向上�?
-#include "server/movement/bodyMassUpwardMove.lua"
+#include "ship/battlecruiser/server/movement/bodyMassUpwardMove.lua"
 -- 移动类模块：根据 W/S 输入施加前后推进�?
-#include "server/movement/bodyDirectionalMove.lua"
+#include "ship/battlecruiser/server/movement/bodyDirectionalMove.lua"
 -- 移动类模块：接收客户�?moveState 更新
-#include "server/movement/bodyMoveStateReceive.lua"
+#include "ship/battlecruiser/server/movement/bodyMoveStateReceive.lua"
 -- 移动类模块：始终施加与速度反向的平方阻�?
-#include "server/movement/bodyVelocityQuadraticDamping.lua"
+#include "ship/battlecruiser/server/movement/bodyVelocityQuadraticDamping.lua"
 -- 移动类模�?根据 registry 中的姿态误差施加扭矩进行自动调�?
-#include "server/movement/shipAttitudeController.lua"
-#include "server/movement/shipRollStabilizer.lua"
-#include "server/movement/shipDeathExplosion.lua"
-#include "server/recovery/shipHpRecovery.lua"
+#include "ship/battlecruiser/server/movement/shipAttitudeController.lua"
+#include "ship/battlecruiser/server/movement/shipRollStabilizer.lua"
+#include "ship/battlecruiser/server/movement/shipDeathExplosion.lua"
+#include "ship/battlecruiser/server/recovery/shipHpRecovery.lua"
 
 -- 服务端初始化
 function server.init()
@@ -114,7 +114,7 @@ function server.postUpdate()
     server.sSlotColliderPostUpdate()
 end
 
-#include "client/client.lua"
+#include "client.lua"
 
 
 -- 客户�?tick：只调用总控函数

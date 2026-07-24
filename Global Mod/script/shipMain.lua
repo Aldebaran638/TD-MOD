@@ -1,4 +1,4 @@
-﻿-- 该脚本的body点击左键以后向前方发射快子光�?
+-- 该脚本的body点击左键以后向前方发射快子光�?
 -- 111
 #version 2
 #include "script/include/common.lua"
@@ -50,6 +50,9 @@
 
 -- 服务端初始化
 function server.init()
+    DebugPrint("=== SHIP SCRIPT LOADED ===")
+    DebugPrint("Server Init Started")
+
     -- -- 当前武器状�?
     -- -- "idle"      空闲
     -- -- "charging"  充能�?
@@ -66,7 +69,10 @@ function server.init()
     -- server.launchTime = 0.2
 
     -- 初始化当前飞船
+    DebugPrint("Initializing ship...")
     server.shipInitializationInit("enigmaticCruiser")
+    DebugPrint("Ship body handle: " .. tostring(server.shipBody))
+
     server.shipRuntimeStateInit(server.shipBody, "enigmaticCruiser", server.defaultShipType)
     server.shipSlotLoadoutInit("enigmaticCruiser")
     server.mainWeaponRequestInit()
@@ -76,6 +82,8 @@ function server.init()
     server.sSlotStateInit("enigmaticCruiser")
     server.hSlotStateInit("enigmaticCruiser")
     server.shipRuntimeSyncMainWeapon(server.shipBody, true)
+
+    DebugPrint("Server Init Complete!")
 
 end
 
@@ -124,6 +132,22 @@ function client.draw()
 end
 
 function server.tick(dt)
+    -- 每30帧打印一次（约半秒一次）
+    if not server.debugFrameCount then
+        server.debugFrameCount = 0
+    end
+    server.debugFrameCount = server.debugFrameCount + 1
+
+    if server.debugFrameCount % 30 == 0 then
+        DebugPrint("Server Tick Running - Frame: " .. server.debugFrameCount)
+        if server.shipBody then
+            local vel = GetBodyVelocity(server.shipBody)
+            DebugPrint("Ship velocity: " .. VecStr(vel))
+        else
+            DebugPrint("ERROR: server.shipBody is nil!")
+        end
+    end
+
     server.serverTick(dt)
 
 end

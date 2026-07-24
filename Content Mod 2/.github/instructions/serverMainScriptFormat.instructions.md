@@ -31,9 +31,11 @@ StellarisShips/server/ships/byId/<bodyId>/xSlots/<i>/state
 ## 脚本组织建议
 
 - 目录约定（与客户端分层风格一致）：
-	- `server/registry/`：Registry 访问层
-	- `server/weapon_fire/`：武器发射类模块（如 `xSlotControl.lua`）
-	- `server/movement/`：移动类模块
+	- `ship/battlecruiser/server/registry/`：飞船 Registry 访问层
+	- `weapon/server/controllers/`：武器状态机、发射与弹丸控制模块
+	- `ship/battlecruiser/server/movement/`：飞船移动类模块
+	- `data/ship/`：飞船纯配置数据
+	- `data/weapon/`：武器纯配置数据
 	- 未来可扩展：`server/broadcast/`、`server/input/`、`server/simulation/` 等
 - 主脚本只做：
 	- 当前飞船 body 的初始化

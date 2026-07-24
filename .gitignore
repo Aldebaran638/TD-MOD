@@ -1,5 +1,11 @@
 ﻿*
 !.gitignore
+!check-encoding.ps1
+!test-check-encoding.ps1
+!check-lua.ps1
+!test-check-lua.ps1
+!docs/
+!docs/**
 !prompt.md
 !README
 !README.md
