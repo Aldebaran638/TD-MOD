@@ -24,6 +24,7 @@ client = client or {}
 #include "weapon/client/effects/xSlotChargingFx.lua"
 #include "weapon/client/effects/xSlotLaunchFx.lua"
 #include "weapon/client/effects/drawSpriteBeamTest.lua"
+#include "weapon/client/effects/tachyonMuzzleFx.lua"
 #include "weapon/client/effects/shieldHitFx.lua"
 #include "weapon/client/effects/hitPointFx.lua"
 #include "ship/battlecruiser/client/effects/shipDestroyedFx.lua"
@@ -38,6 +39,7 @@ function client.init()
     client.soundModuleInit()
     client.drawSpriteBeamTestInit()
     client.shipBody = FindBody("stellarisShip", false)
+    client.tachyonMuzzleFxInit()
 end
 
 function client.clientTick(dt)
@@ -48,6 +50,7 @@ function client.clientTick(dt)
     client.xSlotChargingFxTick(dt)
     client.xSlotLaunchFxTick(dt)
     client.drawSpriteBeamTestTick(dt)
+    client.tachyonMuzzleFxTick(dt)
     client.shieldHitFxTick(dt)
     client.hitPointFxTick(dt)
     client.shipDestroyedFxTick(dt)
@@ -79,4 +82,5 @@ function client.render()
     client.missileVisualTick(0)
     client.hSlotBeamFxRender()
     client.drawSpriteBeamTestRender()
+    client.tachyonMuzzleFxRender()
 end

@@ -14,8 +14,8 @@ client.xSlotLaunchFxConfig = client.xSlotLaunchFxConfig or {
     helixParticleRadiusStart = 0.09,
     helixParticleRadiusEnd = 0.02,
     helixParticleEmissive = 24.0,
-    helixParticleLifeMin = 0.22,
-    helixParticleLifeMax = 0.42,
+    helixParticleLifeMin = 0.088,
+    helixParticleLifeMax = 0.168,
     helixParticleTangentialSpeed = 2.5,
     helixParticleForwardSpeed = 1.6,
 
@@ -26,8 +26,8 @@ client.xSlotLaunchFxConfig = client.xSlotLaunchFxConfig or {
     coreLineParticleRadiusStart = 0.08,
     coreLineParticleRadiusEnd = 0.0150,
     coreLineParticleEmissive = 26.0,
-    coreLineParticleLifeMin = 0.20,
-    coreLineParticleLifeMax = 0.40,
+    coreLineParticleLifeMin = 0.08,
+    coreLineParticleLifeMax = 0.16,
     coreLineParticleForwardSpeed = 2.0,
     coreLineJitterRadius = 0.01,
 }
@@ -95,7 +95,7 @@ local function _spawnCoreLineParticlesOnce(fire, hit, cfg)
         local off = VecAdd(VecScale(right, math.cos(a) * rr), VecScale(up, math.sin(a) * rr))
         local pos = VecAdd(basePos, off)
         local vel = VecScale(beamDir, cfg.coreLineParticleForwardSpeed or 2.0)
-        local life = (cfg.coreLineParticleLifeMin or 0.20) + ((cfg.coreLineParticleLifeMax or 0.40) - (cfg.coreLineParticleLifeMin or 0.20)) * math.random()
+        local life = (cfg.coreLineParticleLifeMin or 0.08) + ((cfg.coreLineParticleLifeMax or 0.16) - (cfg.coreLineParticleLifeMin or 0.08)) * math.random()
         SpawnParticle(pos, vel, life)
     end
 end
@@ -141,7 +141,7 @@ local function _spawnHelixParticlesOnce(fire, hit, seed, cfg)
             VecScale(beamDir, cfg.helixParticleForwardSpeed or 1.6)
         )
 
-        local life = (cfg.helixParticleLifeMin or 0.22) + ((cfg.helixParticleLifeMax or 0.42) - (cfg.helixParticleLifeMin or 0.22)) * math.random()
+        local life = (cfg.helixParticleLifeMin or 0.088) + ((cfg.helixParticleLifeMax or 0.168) - (cfg.helixParticleLifeMin or 0.088)) * math.random()
         SpawnParticle(pos, vel, life)
     end
 end

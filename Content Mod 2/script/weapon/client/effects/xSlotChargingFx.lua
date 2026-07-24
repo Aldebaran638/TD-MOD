@@ -4,8 +4,14 @@
 
 client = client or {}
 
+client.xSlotChargingFxConfig = client.xSlotChargingFxConfig or {
+    emissionRate = 72.0,
+    maxSpawnPerFrame = 6,
+}
+
 client.xSlotChargingFxState = client.xSlotChargingFxState or {
     activeEffects = {},
+    emittersByShip = {},
     lastRenderSeqByShip = {},
     lastShotIdByShip = {},
 }
@@ -52,18 +58,25 @@ local function _spawnChargingEntry(shipBodyId, shipT, targetLocalPos, radiusScal
     })
 end
 
-local function _startChargingBurst(shipBodyId, firePointWorld)
+local function _startOrUpdateChargingEmitter(shipBodyId, firePointWorld)
     local shipT = GetBodyTransform(shipBodyId)
     local targetLocalPos = TransformToLocalPoint(shipT, firePointWorld)
-
-    -- simplified: one medium burst, no continuous emitter, less stutter
-    for _ = 1, 30 do
-        _spawnChargingEntry(shipBodyId, shipT, targetLocalPos, 1.25)
+    local emitters = client.xSlotChargingFxState.emittersByShip
+    local emitter = emitters[shipBodyId]
+    if emitter == nil then
+        emitter = {
+            accumulator = 0.0,
+            targetLocalPos = targetLocalPos,
+        }
+        emitters[shipBodyId] = emitter
+    else
+        emitter.targetLocalPos = targetLocalPos
     end
 end
 
 function client.xSlotChargingFxTick(dt)
     local state = client.xSlotChargingFxState
+    local config = client.xSlotChargingFxConfig
     local frameDt = dt or 0
 
     local shipIds = client.registryShipGetRegisteredBodyIds()
@@ -78,15 +91,36 @@ function client.xSlotChargingFxTick(dt)
 
                 if seq ~= lastSeq then
                     if render.eventType == "charging_start" then
-                        _clearEffectsByShip(shipBodyId)
-                        _startChargingBurst(shipBodyId, _tableToVec(render.firePoint))
+                        _startOrUpdateChargingEmitter(shipBodyId, _tableToVec(render.firePoint))
                     else
-                        _clearEffectsByShip(shipBodyId)
+                        state.emittersByShip[shipBodyId] = nil
                     end
 
                     state.lastRenderSeqByShip[shipBodyId] = seq
                     state.lastShotIdByShip[shipBodyId] = shotId
                 end
+            end
+        else
+            state.emittersByShip[shipBodyId] = nil
+            _clearEffectsByShip(shipBodyId)
+        end
+    end
+
+    for shipBodyId, emitter in pairs(state.emittersByShip) do
+        if not client.registryShipExists(shipBodyId) then
+            state.emittersByShip[shipBodyId] = nil
+            _clearEffectsByShip(shipBodyId)
+        else
+            local shipT = GetBodyTransform(shipBodyId)
+            emitter.accumulator = (emitter.accumulator or 0.0)
+                + math.max(0.0, frameDt) * math.max(0.0, tonumber(config.emissionRate) or 72.0)
+            local spawnCount = math.min(
+                math.floor(emitter.accumulator),
+                math.max(1, math.floor(tonumber(config.maxSpawnPerFrame) or 6))
+            )
+            emitter.accumulator = emitter.accumulator - spawnCount
+            for _ = 1, spawnCount do
+                _spawnChargingEntry(shipBodyId, shipT, emitter.targetLocalPos, 1.25)
             end
         end
     end
