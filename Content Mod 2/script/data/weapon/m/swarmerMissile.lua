@@ -1,6 +1,5 @@
 ---@diagnostic disable: undefined-global
 
-sSlotWeaponRegistryData = sSlotWeaponRegistryData or {}
 weaponData = weaponData or {}
 
 local swarmerMissileData = {
@@ -22,5 +21,4 @@ local swarmerMissileData = {
     bodyFix = 1.8,
 }
 
-sSlotWeaponRegistryData.swarmerMissile = swarmerMissileData
 weaponData.swarmerMissile = swarmerMissileData

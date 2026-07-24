@@ -120,7 +120,7 @@ function client.shipRequestXWeaponRelease(shipBodyId)
     return true
 end
 
-function client.shipRequestSWeaponFire(shipBodyId, targetVehicleId)
+function client.shipRequestMWeaponFire(shipBodyId, targetVehicleId)
     if not client.registryShipExists(shipBodyId) then
         return false
     end
@@ -131,7 +131,22 @@ function client.shipRequestSWeaponFire(shipBodyId, targetVehicleId)
     end
 
     local localPlayerId = GetLocalPlayer()
-    ServerCall("server.shipRequestSWeaponFire", localPlayerId, shipBodyId, vehicleId)
+    ServerCall("server.shipRequestMWeaponFire", localPlayerId, shipBodyId, vehicleId)
+    return true
+end
+
+function client.shipRequestGWeaponFire(shipBodyId, targetVehicleId)
+    if not client.registryShipExists(shipBodyId) then
+        return false
+    end
+
+    local vehicleId = math.floor(targetVehicleId or 0)
+    if vehicleId <= 0 then
+        return false
+    end
+
+    local localPlayerId = GetLocalPlayer()
+    ServerCall("server.shipRequestGWeaponFire", localPlayerId, shipBodyId, vehicleId)
     return true
 end
 

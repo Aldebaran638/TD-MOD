@@ -46,7 +46,8 @@ end
 
 local function _normalizeMode(mode)
     if mode == "lSlot" then return "lSlot" end
-    if mode == "sSlot" then return "sSlot" end
+    if mode == "mSlot" then return "mSlot" end
+    if mode == "gSlot" then return "gSlot" end
     if mode == "hSlot" then return "hSlot" end
     return "xSlot"
 end

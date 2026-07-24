@@ -107,7 +107,10 @@ function server.shipRequestXWeaponRelease(playerId, shipBodyId)
     return true
 end
 
-function server.shipRequestSWeaponFire(playerId, shipBodyId, targetVehicleId)
+local function _acceptGuidedWeaponFireRequest(playerId, shipBodyId, targetVehicleId, expectedMode, setRequest)
+    if setRequest == nil then
+        return false
+    end
     if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
         return false
     end
@@ -117,7 +120,7 @@ function server.shipRequestSWeaponFire(playerId, shipBodyId, targetVehicleId)
 
     if server.shipRuntimeGetCurrentMainWeapon ~= nil then
         local current = server.shipRuntimeGetCurrentMainWeapon(shipBodyId)
-        if current ~= "sSlot" then
+        if current ~= expectedMode then
             return false
         end
     end
@@ -129,13 +132,27 @@ function server.shipRequestSWeaponFire(playerId, shipBodyId, targetVehicleId)
 
     local targetBody = GetVehicleBody(vehicleId)
 
-    server.sSlotLastFireRequest = {
-        shipBodyId = shipBodyId,
-        targetVehicleId = vehicleId,
-        targetBodyId = targetBody or 0,
-        requestedAt = (GetTime ~= nil) and GetTime() or 0.0,
-    }
-    return true
+    return setRequest(shipBodyId, vehicleId, targetBody or 0)
+end
+
+function server.shipRequestMWeaponFire(playerId, shipBodyId, targetVehicleId)
+    return _acceptGuidedWeaponFireRequest(
+        playerId,
+        shipBodyId,
+        targetVehicleId,
+        "mSlot",
+        server.mSlotControlSetFireRequest
+    )
+end
+
+function server.shipRequestGWeaponFire(playerId, shipBodyId, targetVehicleId)
+    return _acceptGuidedWeaponFireRequest(
+        playerId,
+        shipBodyId,
+        targetVehicleId,
+        "gSlot",
+        server.gSlotControlSetFireRequest
+    )
 end
 
 function server.shipRequestHWeaponFire(playerId, shipBodyId, targetVehicleId)

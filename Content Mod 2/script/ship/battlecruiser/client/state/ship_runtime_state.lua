@@ -39,8 +39,10 @@ function _runtimeAPI.setMainWeaponMode(shipBodyId, mode)
     
     if mode == "lSlot" then
         state.currentMainWeapon = "lSlot"
-    elseif mode == "sSlot" then
-        state.currentMainWeapon = "sSlot"
+    elseif mode == "mSlot" then
+        state.currentMainWeapon = "mSlot"
+    elseif mode == "gSlot" then
+        state.currentMainWeapon = "gSlot"
     elseif mode == "hSlot" then
         state.currentMainWeapon = "hSlot"
     else
@@ -52,7 +54,7 @@ function _runtimeAPI.getMainWeaponMode(shipBodyId)
     local state = _getOrCreateState(shipBodyId)
     if state == nil then return "xSlot" end
     
-    if state.currentMainWeapon == "lSlot" or state.currentMainWeapon == "sSlot" or state.currentMainWeapon == "hSlot" then
+    if state.currentMainWeapon == "lSlot" or state.currentMainWeapon == "mSlot" or state.currentMainWeapon == "gSlot" or state.currentMainWeapon == "hSlot" then
         return state.currentMainWeapon
     end
     return "xSlot"

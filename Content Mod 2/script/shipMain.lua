@@ -25,16 +25,18 @@
 
 -- x 槽控制模块位于独立的武器系统目录中。
 #include "weapon/server/controllers/lSlotState.lua"
-#include "weapon/server/controllers/main_weapon_control.lua"
-#include "weapon/server/controllers/main_weapon_control_api.lua"
+#include "ship/battlecruiser/server/fire_control/main_weapon_control.lua"
+#include "ship/battlecruiser/server/fire_control/main_weapon_control_api.lua"
 #include "weapon/server/controllers/xSlotState.lua"
 #include "weapon/server/controllers/xSlotRenderState.lua"
 #include "weapon/server/controllers/xSlotControl.lua"
 #include "weapon/server/controllers/lSlotControl.lua"
-#include "weapon/server/controllers/sSlotState.lua"
-#include "weapon/server/controllers/sSlotLauncher.lua"
-#include "weapon/server/controllers/sSlotMovement.lua"
-#include "weapon/server/controllers/sSlotCollider.lua"
+#include "weapon/server/runtime/guided_projectile/runtime.lua"
+#include "weapon/server/runtime/guided_projectile/movement.lua"
+#include "weapon/server/runtime/guided_projectile/collider.lua"
+#include "ship/battlecruiser/server/fire_control/guided_slot_group.lua"
+#include "ship/battlecruiser/server/fire_control/m_slot_control.lua"
+#include "ship/battlecruiser/server/fire_control/g_slot_control.lua"
 #include "weapon/server/controllers/hSlotControl.lua"
 #include "weapon/server/controllers/projectileManager.lua"
 -- 移动类模块：根据 body 质量施加竖直向上�?
@@ -76,7 +78,9 @@ function server.init()
     server.xSlotStateInit("enigmaticCruiser")
     server.xSlotRenderStateInit()
     server.lSlotStateInit("enigmaticCruiser")
-    server.sSlotStateInit("enigmaticCruiser")
+    server.guidedProjectileRuntimeInit()
+    server.mSlotControlInit("enigmaticCruiser")
+    server.gSlotControlInit("enigmaticCruiser")
     server.hSlotStateInit("enigmaticCruiser")
     server.shipRuntimeSyncMainWeapon(server.shipBody, true)
 
@@ -93,7 +97,9 @@ function server.serverTick(dt)
     server.runtimeStateTick(dt)
     server.xSlotControlTick(dt)
     server.lSlotControlTick(dt)
-    server.sSlotLauncherTick(dt)
+    server.mSlotControlTick(dt)
+    server.gSlotControlTick(dt)
+    server.guidedProjectileRuntimeTick(dt)
     server.hSlotControlTick(dt)
     server.projectileManagerTick(dt)
     server.shipHpRecoveryTick(dt)
@@ -105,13 +111,13 @@ function server.serverTick(dt)
 end
 
 function server.update(dt)
-    server.sSlotMovementUpdate(dt)
+    server.guidedProjectileMovementUpdate(dt)
     server.shipAttitudeControllerUpdate(dt)
     server.shipRollStabilizerUpdate(dt)
 end
 
 function server.postUpdate()
-    server.sSlotColliderPostUpdate()
+    server.guidedProjectileColliderPostUpdate()
 end
 
 #include "client.lua"

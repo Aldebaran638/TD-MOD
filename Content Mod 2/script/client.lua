@@ -9,7 +9,7 @@ client = client or {}
 #include "weapon/client/state/xslot_render_state.lua"
 #include "weapon/client/state/xslot_render_state_api.lua"
 #include "weapon/client/targeting/xSlotTargeting.lua"
-#include "weapon/client/targeting/sSlotTargeting.lua"
+#include "weapon/client/targeting/guidedTargeting.lua"
 #include "weapon/client/input/mainWeaponInput.lua"
 #include "ship/battlecruiser/client/input/bodyMoveInput.lua"
 #include "weapon/client/sound/soundModule.lua"
@@ -19,10 +19,11 @@ client = client or {}
 #include "weapon/client/hud/mainWeaponHud.lua"
 #include "ship/battlecruiser/client/camera/shipHelpOverlay.lua"
 #include "weapon/client/hud/shipCrosshair.lua"
-#include "weapon/client/hud/sSlotHud.lua"
+#include "weapon/client/hud/guidedTargetingHud.lua"
 #include "weapon/client/hud/xSlotLockHud.lua"
 #include "weapon/client/effects/xSlotChargingFx.lua"
 #include "weapon/client/effects/xSlotLaunchFx.lua"
+#include "weapon/client/effects/drawSpriteBeamTest.lua"
 #include "weapon/client/effects/shieldHitFx.lua"
 #include "weapon/client/effects/hitPointFx.lua"
 #include "ship/battlecruiser/client/effects/shipDestroyedFx.lua"
@@ -35,6 +36,7 @@ function client.init()
     client.shipRuntimeStateInit()
     client.xSlotRenderStateInit()
     client.soundModuleInit()
+    client.drawSpriteBeamTestInit()
     client.shipBody = FindBody("stellarisShip", false)
 end
 
@@ -45,6 +47,7 @@ function client.clientTick(dt)
 
     client.xSlotChargingFxTick(dt)
     client.xSlotLaunchFxTick(dt)
+    client.drawSpriteBeamTestTick(dt)
     client.shieldHitFxTick(dt)
     client.hitPointFxTick(dt)
     client.shipDestroyedFxTick(dt)
@@ -53,7 +56,7 @@ function client.clientTick(dt)
     client.missileWarpFxTick(dt)
     client.hSlotBeamFxTick(dt)
 
-    client.sSlotTargetingTick(dt)
+    client.guidedTargetingTick(dt)
     client.xSlotTargetingTick(dt)
     client.shipHealthBarTick(dt)
     client.mainWeaponHudTick(dt)
@@ -65,7 +68,7 @@ function client.clientDraw()
     client.mainWeaponHudDraw()
     client.shipHelpOverlayDraw()
     client.shipCrosshairDraw()
-    client.sSlotHudDraw()
+    client.guidedTargetingHudDraw()
     client.xSlotLockHudDraw()
 end
 
@@ -75,4 +78,5 @@ function client.render()
     -- 更新导弹视觉效果
     client.missileVisualTick(0)
     client.hSlotBeamFxRender()
+    client.drawSpriteBeamTestRender()
 end

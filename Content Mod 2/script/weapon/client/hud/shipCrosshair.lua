@@ -122,8 +122,9 @@ function client.shipCrosshairDraw()
     if body == 0 then
         return
     end
-    if client.getShipMainWeaponMode ~= nil and client.getShipMainWeaponMode(body) == "sSlot" then
-        return
+    if client.getShipMainWeaponMode ~= nil then
+        local mode = client.getShipMainWeaponMode(body)
+        if mode == "mSlot" or mode == "gSlot" then return end
     end
 
     local currentMode = client.getShipMainWeaponMode ~= nil and client.getShipMainWeaponMode(body) or "xSlot"
