@@ -20,7 +20,7 @@ client.shipCamera = client.shipCamera or {
     glideStrength = 0.55, -- 0.0=almost no glide, 1.0=very floaty
     zoomSpeed = 0.5,
     switchDuration = 0.30,
-    frontOffset = { x = 0, y = 0, z = -3 },
+    frontOffset = { x = 0, y = 1.5, z = -3 },
     viewMode = "rear",
     viewBlend = 0.0,
     viewBlendTarget = 0.0,
