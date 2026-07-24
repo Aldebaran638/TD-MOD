@@ -1,4 +1,4 @@
--- Tachyon lance muzzle flash and XML light controller.
+-- Tachyon lance muzzle glare sprite.
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
 

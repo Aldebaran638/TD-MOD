@@ -13,7 +13,6 @@ client.xSlotChargingFxState = client.xSlotChargingFxState or {
     activeEffects = {},
     emittersByShip = {},
     lastRenderSeqByShip = {},
-    lastShotIdByShip = {},
 }
 
 local function _tableToVec(t)
@@ -86,7 +85,6 @@ function client.xSlotChargingFxTick(dt)
             local render = client.xSlotRenderGetEvent(shipBodyId)
             if render ~= nil then
                 local seq = render.seq or -1
-                local shotId = render.shotId or -1
                 local lastSeq = state.lastRenderSeqByShip[shipBodyId] or -1
 
                 if seq ~= lastSeq then
@@ -97,7 +95,6 @@ function client.xSlotChargingFxTick(dt)
                     end
 
                     state.lastRenderSeqByShip[shipBodyId] = seq
-                    state.lastShotIdByShip[shipBodyId] = shotId
                 end
             end
         else
