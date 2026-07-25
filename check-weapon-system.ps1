@@ -47,6 +47,7 @@ $mainWeaponHud = Read-Required "script\weapon\client\common\hud\main_weapon_hud.
 $crosshair = Read-Required "script\weapon\client\common\hud\ship_crosshair.lua"
 $projectileVisual = Read-Required "script\weapon\client\slots\l\kinetic_artillery\effects\projectile_visual.lua"
 $clientRegistry = Read-Required "script\ship\battlecruiser\client\registry\ship_registry.lua"
+$engineThrusterFx = Read-Required "script\ship\battlecruiser\client\effects\engine_thruster_fx.lua"
 $serverRequests = Read-Required "script\ship\battlecruiser\server\registry\ship_registry_request.lua"
 $groupRuntime = Read-Required "script\weapon\server\common\runtime\weapon_group.lua"
 $loadoutRuntime = Read-Required "script\weapon\server\common\loadout\slot_loadout.lua"
@@ -194,6 +195,17 @@ if ($guidedTargeting -notmatch 'shipCamera\.viewMode\s*==\s*"front"' -or
 }
 if ($client -notmatch 'generic_raycast_fx\.lua') {
     Add-Issue "generic raycast client FX is not included"
+}
+if ($client -notmatch 'ship/battlecruiser/client/effects/engine_thruster_fx\.lua' -or
+    $client -notmatch 'engineThrusterFxInit\(\)' -or
+    $client -notmatch 'engineThrusterFxTick\(dt\)' -or
+    $client -notmatch 'engineThrusterFxRender\(\)' -or
+    $engineThrusterFx -notmatch 'FindShapes\(tag,\s*false\)' -or
+    $engineThrusterFx -notmatch 'GetBodyVelocity\(body\)' -or
+    $engineThrusterFx -notmatch 'math\.exp\(-response\s*\*\s*frameDt\)' -or
+    $engineThrusterFx -notmatch 'SpawnParticle\(' -or
+    $engineThrusterFx -notmatch 'DrawSprite\(') {
+    Add-Issue "battlecruiser engine combustion and smooth velocity-driven exhaust are incomplete"
 }
 if ($arcChargingFx -notmatch 'focusedArcChargingFxRender' -or
     $arcChargingFx -notmatch '_focusedArcDrawBridge' -or
