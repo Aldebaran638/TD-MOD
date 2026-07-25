@@ -32,7 +32,14 @@ $catalog = Read-Required "script\data\weapons\weapon_catalog.lua"
 $ship = Read-Required "script\data\ships\battlecruiser.lua"
 $entry = Read-Required "script\shipMain.lua"
 $client = Read-Required "script\client.lua"
-$mainXml = Read-Required "main.xml"
+$mainXmlPath = Join-Path $modRoot "main.xml"
+$globalMainPath = Join-Path $modRoot "main.lua"
+$mainXml = if (Test-Path -LiteralPath $mainXmlPath -PathType Leaf) {
+    [IO.File]::ReadAllText($mainXmlPath)
+} else { "" }
+$globalMain = if (Test-Path -LiteralPath $globalMainPath -PathType Leaf) {
+    [IO.File]::ReadAllText($globalMainPath)
+} else { "" }
 $configurator = Read-Required "script\weapon_configurator.lua"
 $clientLoadout = Read-Required "script\weapon\client\common\state\weapon_loadout.lua"
 $configUi = Read-Required "script\weapon\client\config_ui\weapon_config_ui.lua"
@@ -187,9 +194,13 @@ if ($guidedTargeting -notmatch 'shipCamera\.viewMode\s*==\s*"front"' -or
 if ($client -notmatch 'generic_raycast_fx\.lua') {
     Add-Issue "generic raycast client FX is not included"
 }
-if ($mainXml -notmatch 'MOD/script/weapon_configurator\.lua' -or
+$sceneConfiguratorMounted = $mainXml -match 'MOD/script/weapon_configurator\.lua'
+$globalConfiguratorMounted =
+    $globalMain -match '#include\s+"script/weapon/client/config_ui/weapon_config_ui\.lua"' -and
+    $globalMain -match 'function\s+server\.weaponConfiguratorSaveTemplate\s*\('
+if ((-not $sceneConfiguratorMounted -and -not $globalConfiguratorMounted) -or
     $configurator -notmatch 'config_ui/weapon_config_ui\.lua') {
-    Add-Issue "independent weapon configurator is not mounted at scene level"
+    Add-Issue "independent weapon configurator is not mounted by main.xml or GM main.lua"
 }
 if ($configUi -notmatch 'InputPressed\("t"\)' -or
     $configUi -notmatch 'weaponConfiguratorSaveTemplate') {

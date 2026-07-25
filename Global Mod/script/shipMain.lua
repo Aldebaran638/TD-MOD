@@ -3,14 +3,25 @@
 #version 2
 #include "script/include/common.lua"
 
-#include "data/ship_data.lua"
-#include "data/weapon_data.lua"
+#include "data/ships/ship_catalog.lua"
+#include "data/weapons/weapon_catalog.lua"
 
-#include "server/shipRuntimeState.lua"
-#include "server/shipSlotLoadout.lua"
-#include "server/registry/shipRegistry.lua"
-#include "server/registry/shipRegistryRequest.lua"
-#include "server/shipInitialization.lua"
+#include "ship/battlecruiser/server/state/runtime_state.lua"
+#include "ship/battlecruiser/server/state/runtime_state_api.lua"
+#include "weapon/server/common/loadout/slot_loadout.lua"
+#include "weapon/server/common/loadout/slot_loadout_api.lua"
+#include "ship/battlecruiser/server/registry/ship_registry.lua"
+#include "ship/battlecruiser/server/registry/ship_registry_request.lua"
+#include "ship/battlecruiser/server/bootstrap/ship_init.lua"
+#include "weapon/server/common/runtime/damage.lua"
+#include "weapon/server/common/runtime/behavior_registry.lua"
+#include "weapon/server/behaviors/common.lua"
+#include "weapon/server/behaviors/raycast.lua"
+#include "weapon/server/behaviors/projectile.lua"
+#include "weapon/server/behaviors/rocket_projectile.lua"
+#include "weapon/server/behaviors/guided_projectile.lua"
+#include "weapon/server/behaviors/strike_craft.lua"
+#include "weapon/server/common/runtime/weapon_group.lua"
 
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
@@ -19,40 +30,40 @@
 -- server = server or {}
 
 -- -- registry 访问�?
--- #include "server/registry/shipRegistry.lua"
 
--- x 槽控制模块从外部抽取为独立文件：script/server/weapon_fire/xSlotControl.lua
-#include "server/weapon_fire/lSlotState.lua"
-#include "server/weapon_fire/mainWeaponControl.lua"
-#include "server/weapon_fire/xSlotState.lua"
-#include "server/weapon_fire/xSlotRenderState.lua"
-#include "server/weapon_fire/xSlotControl.lua"
-#include "server/weapon_fire/lSlotControl.lua"
-#include "server/weapon_fire/sSlotState.lua"
-#include "server/weapon_fire/sSlotLauncher.lua"
-#include "server/weapon_fire/sSlotMovement.lua"
-#include "server/weapon_fire/sSlotCollider.lua"
-#include "server/weapon_fire/hSlotControl.lua"
-#include "server/weapon_fire/projectileManager.lua"
+-- x 槽控制模块位于独立的武器系统目录中。
+#include "weapon/server/slots/l/kinetic_artillery/state.lua"
+#include "ship/battlecruiser/server/control/main_weapon_control.lua"
+#include "ship/battlecruiser/server/control/main_weapon_control_api.lua"
+#include "weapon/server/slots/x/tachyon_lance/state.lua"
+#include "weapon/server/slots/x/tachyon_lance/render_state.lua"
+#include "weapon/server/slots/x/tachyon_lance/muzzle_light.lua"
+#include "weapon/server/slots/x/tachyon_lance/control.lua"
+#include "weapon/server/slots/l/kinetic_artillery/control.lua"
+#include "weapon/server/guided/runtime.lua"
+#include "weapon/server/guided/movement.lua"
+#include "weapon/server/guided/collider.lua"
+#include "ship/battlecruiser/server/control/guided_slot_group.lua"
+#include "ship/battlecruiser/server/control/m_slot_control.lua"
+#include "ship/battlecruiser/server/control/g_slot_control.lua"
+#include "weapon/server/slots/h/gamma_strike_craft/control.lua"
+#include "weapon/server/slots/l/kinetic_artillery/projectile_manager.lua"
 -- 移动类模块：根据 body 质量施加竖直向上�?
-#include "server/movement/bodyMassUpwardMove.lua"
+#include "ship/battlecruiser/server/movement/body_mass_upward_move.lua"
 -- 移动类模块：根据 W/S 输入施加前后推进�?
-#include "server/movement/bodyDirectionalMove.lua"
+#include "ship/battlecruiser/server/movement/body_directional_move.lua"
 -- 移动类模块：接收客户�?moveState 更新
-#include "server/movement/bodyMoveStateReceive.lua"
+#include "ship/battlecruiser/server/movement/body_move_state_receive.lua"
 -- 移动类模块：始终施加与速度反向的平方阻�?
-#include "server/movement/bodyVelocityQuadraticDamping.lua"
+#include "ship/battlecruiser/server/movement/body_velocity_quadratic_damping.lua"
 -- 移动类模�?根据 registry 中的姿态误差施加扭矩进行自动调�?
-#include "server/movement/shipAttitudeController.lua"
-#include "server/movement/shipRollStabilizer.lua"
-#include "server/movement/shipDeathExplosion.lua"
-#include "server/recovery/shipHpRecovery.lua"
+#include "ship/battlecruiser/server/movement/ship_attitude_controller.lua"
+#include "ship/battlecruiser/server/movement/ship_roll_stabilizer.lua"
+#include "ship/battlecruiser/server/movement/ship_death_explosion.lua"
+#include "ship/battlecruiser/server/recovery/ship_hp_recovery.lua"
 
 -- 服务端初始化
 function server.init()
-    DebugPrint("=== SHIP SCRIPT LOADED ===")
-    DebugPrint("Server Init Started")
-
     -- -- 当前武器状�?
     -- -- "idle"      空闲
     -- -- "charging"  充能�?
@@ -69,21 +80,21 @@ function server.init()
     -- server.launchTime = 0.2
 
     -- 初始化当前飞船
-    DebugPrint("Initializing ship...")
-    server.shipInitializationInit("enigmaticCruiser")
-    DebugPrint("Ship body handle: " .. tostring(server.shipBody))
-
-    server.shipRuntimeStateInit(server.shipBody, "enigmaticCruiser", server.defaultShipType)
-    server.shipSlotLoadoutInit("enigmaticCruiser")
-    server.mainWeaponRequestInit()
+    server.shipInitInit("enigmaticCruiser")
+    server.runtimeStateInit(server.shipBody, "enigmaticCruiser", server.defaultShipType)
+    server.slotLoadoutInit("enigmaticCruiser")
+    server.mainWeaponControlInit()
     server.xSlotStateInit("enigmaticCruiser")
     server.xSlotRenderStateInit()
+    server.tachyonMuzzleLightInit()
     server.lSlotStateInit("enigmaticCruiser")
-    server.sSlotStateInit("enigmaticCruiser")
+    server.guidedProjectileRuntimeInit()
+    server.mSlotControlInit("enigmaticCruiser")
+    server.gSlotControlInit("enigmaticCruiser")
     server.hSlotStateInit("enigmaticCruiser")
+    server.weaponGroupInit("enigmaticCruiser")
     server.shipRuntimeSyncMainWeapon(server.shipBody, true)
-
-    DebugPrint("Server Init Complete!")
+    server.shipWeaponSyncConfiguration("enigmaticCruiser")
 
 end
 
@@ -95,10 +106,14 @@ end
 function server.serverTick(dt)
     -- server.ensureCurrentShipState(defaultShipType)
     server.mainWeaponControlTick(dt)
-    server.shipRuntimeStateSyncTick(dt)
+    server.weaponGroupTick(dt)
+    server.runtimeStateTick(dt)
     server.xSlotControlTick(dt)
+    server.tachyonMuzzleLightTick(dt)
     server.lSlotControlTick(dt)
-    server.sSlotLauncherTick(dt)
+    server.mSlotControlTick(dt)
+    server.gSlotControlTick(dt)
+    server.guidedProjectileRuntimeTick(dt)
     server.hSlotControlTick(dt)
     server.projectileManagerTick(dt)
     server.shipHpRecoveryTick(dt)
@@ -110,16 +125,16 @@ function server.serverTick(dt)
 end
 
 function server.update(dt)
-    server.sSlotMovementUpdate(dt)
+    server.guidedProjectileMovementUpdate(dt)
     server.shipAttitudeControllerUpdate(dt)
     server.shipRollStabilizerUpdate(dt)
 end
 
 function server.postUpdate()
-    server.sSlotColliderPostUpdate()
+    server.guidedProjectileColliderPostUpdate()
 end
 
-#include "client/client.lua"
+#include "client.lua"
 
 
 -- 客户�?tick：只调用总控函数
@@ -132,22 +147,6 @@ function client.draw()
 end
 
 function server.tick(dt)
-    -- 每30帧打印一次（约半秒一次）
-    if not server.debugFrameCount then
-        server.debugFrameCount = 0
-    end
-    server.debugFrameCount = server.debugFrameCount + 1
-
-    if server.debugFrameCount % 30 == 0 then
-        DebugPrint("Server Tick Running - Frame: " .. server.debugFrameCount)
-        if server.shipBody then
-            local vel = GetBodyVelocity(server.shipBody)
-            DebugPrint("Ship velocity: " .. VecStr(vel))
-        else
-            DebugPrint("ERROR: server.shipBody is nil!")
-        end
-    end
-
     server.serverTick(dt)
 
 end
