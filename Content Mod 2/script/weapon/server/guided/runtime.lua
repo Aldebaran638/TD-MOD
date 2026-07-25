@@ -84,9 +84,9 @@ function server.guidedProjectileClearAll()
     end
 end
 
-function server.guidedProjectilePlayImpactSound(hitPos)
+function server.guidedProjectilePlayImpactSound(weaponType, hitPos)
     local p = hitPos or Vec(0, 0, 0)
-    ClientCall(0, "client.playMissileImpactSound", p[1], p[2], p[3])
+    ClientCall(0, "client.playMissileImpactSound", weaponType or "", p[1], p[2], p[3])
 end
 
 function server.guidedProjectilePlayImpactFx(hitPos, impactLayer)
@@ -102,7 +102,9 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         return nil
     end
 
-    SetBodyDynamic(bodyId, true)
+    local ignoreGravity = cfg.ignoreGravity == true
+        or ((cfg.projectileProfile or {}).ignoreGravity == true)
+    SetBodyDynamic(bodyId, not ignoreGravity)
     SetBodyActive(bodyId, true)
     local ownerVelocity = GetBodyVelocity(ownerShipBody)
     local startVelocity = VecAdd(ownerVelocity, VecScale(dir, tonumber(cfg.muzzleSpeed) or 0.0))
@@ -120,7 +122,12 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         startVelocity[1], startVelocity[2], startVelocity[3]
     )
     ClientCall(0, "client.spawnMissileWarpFx", firePosWorld[1], firePosWorld[2], firePosWorld[3])
-    ClientCall(0, "client.playMissileFireSound", firePosWorld[1], firePosWorld[2], firePosWorld[3])
+    ClientCall(
+        0,
+        "client.playMissileFireSound",
+        tostring(cfg.weaponType or ""),
+        firePosWorld[1], firePosWorld[2], firePosWorld[3]
+    )
 
     local probes = server.guidedProjectileGetProbePoints(GetBodyTransform(bodyId))
     local projectile = {
@@ -132,6 +139,7 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         targetBodyId = math.floor(targetBodyId or 0),
         targetVehicleId = math.floor(targetVehicleId or 0),
         damage = tonumber(cfg.damage) or 0.0,
+        shieldFix = tonumber(cfg.shieldFix) or 1.0,
         armorFix = tonumber(cfg.armorFix) or 1.0,
         bodyFix = tonumber(cfg.bodyFix) or 1.0,
         cruiseSpeed = tonumber(cfg.cruiseSpeed) or 0.0,
@@ -147,6 +155,8 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         prePhysicsHeadPos = Vec(probes.head[1], probes.head[2], probes.head[3]),
         prePhysicsMidPos = Vec(probes.mid[1], probes.mid[2], probes.mid[3]),
         desiredRot = QuatLookAt(firePosWorld, VecAdd(firePosWorld, dir)),
+        ignoreGravity = ignoreGravity,
+        kinematicVelocity = Vec(startVelocity[1], startVelocity[2], startVelocity[3]),
     }
     table.insert(state.activeProjectiles, projectile)
     return projectile

@@ -11,9 +11,9 @@ server.projectileManagerState = server.projectileManagerState or {
 local registryShipIndexRoot = "StellarisShips/server/ships/index"
 
 local function _resolveProjectileWeaponSettings(weaponType)
-    local defs = lSlotWeaponRegistryData or {}
+    local defs = weaponData or {}
     local resolvedWeaponType = weaponType or "kineticArtillery"
-    return defs[resolvedWeaponType] or defs.kineticArtillery or {}
+    return defs[resolvedWeaponType] or (lSlotWeaponRegistryData or {})[resolvedWeaponType] or defs.kineticArtillery or {}
 end
 
 local function _safeNormalizeProjectile(v, fallback)
@@ -85,14 +85,23 @@ local function _finishProjectileVisual(projectileId, mode, hitPos)
     ClientCall(0, "client.finishProjectileVisual", projectileId, mode or "none", p[1], p[2], p[3])
 end
 
-local function _playProjectileFireSound(firePos)
-    local p = firePos or Vec(0, 0, 0)
-    ClientCall(0, "client.playKineticArtilleryFireSound", p[1], p[2], p[3])
+function server.projectileManagerReset()
+    local active = (server.projectileManagerState or {}).active or {}
+    for i = #active, 1, -1 do
+        _finishProjectileVisual(active[i].id or 0, "none", active[i].position)
+        active[i] = nil
+    end
+    server.projectileManagerState = { nextId = 1, active = {} }
 end
 
-local function _playProjectileHitSound(hitPos)
+local function _playProjectileFireSound(weaponType, firePos)
+    local p = firePos or Vec(0, 0, 0)
+    ClientCall(0, "client.playKineticArtilleryFireSound", weaponType or "", p[1], p[2], p[3])
+end
+
+local function _playProjectileHitSound(weaponType, hitPos)
     local p = hitPos or Vec(0, 0, 0)
-    ClientCall(0, "client.playKineticArtilleryHitSound", p[1], p[2], p[3])
+    ClientCall(0, "client.playKineticArtilleryHitSound", weaponType or "", p[1], p[2], p[3])
 end
 
 local function _playShieldImpactFx(hitTargetBodyId, hitPos)
@@ -266,7 +275,7 @@ function server.projectileManagerSpawnProjectile(ownerShipBody, weaponType, fire
     }
 
     table.insert(server.projectileManagerState.active, projectile)
-    _playProjectileFireSound(projectile.position)
+    _playProjectileFireSound(projectile.weaponType, projectile.position)
 
     ClientCall(
         0,
@@ -302,7 +311,7 @@ function server.projectileManagerTick(dt)
             if shieldHit ~= nil then
                 _applyProjectileShipDamage(shieldHit.bodyId, projectile.weaponType)
                 _finishProjectileVisual(projectile.id, "impact", shieldHit.hitPos)
-                _playProjectileHitSound(shieldHit.hitPos)
+                _playProjectileHitSound(projectile.weaponType, shieldHit.hitPos)
                 _playShieldImpactFx(shieldHit.bodyId, shieldHit.hitPos)
                 _removeProjectileAt(i)
                 removed = true
@@ -335,7 +344,7 @@ function server.projectileManagerTick(dt)
                     end
 
                     if shouldPlayImpact then
-                        _playProjectileHitSound(bodyHit.hitPos)
+                        _playProjectileHitSound(projectile.weaponType, bodyHit.hitPos)
                         _finishProjectileVisual(projectile.id, "impact", bodyHit.hitPos)
                     else
                         _finishProjectileVisual(projectile.id, "none", bodyHit.hitPos)

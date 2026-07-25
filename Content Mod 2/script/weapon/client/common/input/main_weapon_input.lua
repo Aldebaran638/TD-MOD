@@ -5,8 +5,10 @@ client = client or {}
 
 client.mainWeaponInputState = client.mainWeaponInputState or {
     localPlayerId = nil,
-    xHoldActive = false,
-    xHoldShipBody = 0,
+    holdActive = false,
+    holdShipBody = 0,
+    holdMode = "",
+    holdTargetVehicleId = 0,
 }
 
 local function _resolveMainWeaponLocalPlayerId()
@@ -14,118 +16,100 @@ local function _resolveMainWeaponLocalPlayerId()
     if state.localPlayerId ~= nil and state.localPlayerId ~= 0 then
         return state.localPlayerId
     end
-
-    local pid = GetLocalPlayer()
-    if pid ~= nil and pid ~= -1 and pid ~= 0 then
-        state.localPlayerId = pid
-        return pid
+    local playerId = GetLocalPlayer()
+    if playerId ~= nil and playerId ~= -1 and playerId ~= 0 then
+        state.localPlayerId = playerId
+        return playerId
     end
-
     return nil
 end
 
--- 主武器输入主逻辑：X 槽按住蓄力松开发射，M/G/H 使用目标锁定，L 槽点击开火。
+local function _releaseHeldWeapon(state)
+    if state.holdActive and state.holdShipBody ~= 0
+        and client.shipRequestWeaponHold ~= nil then
+        client.shipRequestWeaponHold(
+            state.holdShipBody,
+            state.holdMode,
+            false,
+            state.holdTargetVehicleId
+        )
+    end
+    state.holdActive = false
+    state.holdShipBody = 0
+    state.holdMode = ""
+    state.holdTargetVehicleId = 0
+end
+
+local function _lockedTargetForWeapon(shipBody, definition)
+    if tostring((definition or {}).targetingMode or "") ~= "target_lock" then return 0 end
+    if client.guidedTargetingCanFire == nil
+        or not client.guidedTargetingCanFire(shipBody) then
+        return 0
+    end
+    if client.guidedTargetingGetLockedVehicleId == nil then return 0 end
+    return math.floor(client.guidedTargetingGetLockedVehicleId(shipBody) or 0)
+end
+
+-- The server owns charge, cooldown and automatic refire. The client only sends
+-- hold state transitions and target-lock changes.
 function client.mainWeaponInputTick(dt)
     local _ = dt
     local state = client.mainWeaponInputState
-    local localPlayerId = _resolveMainWeaponLocalPlayerId()
-    if localPlayerId == nil then
-        state.xHoldActive = false
-        state.xHoldShipBody = 0
+    if client.weaponConfigUiIsOpen ~= nil and client.weaponConfigUiIsOpen() then
+        _releaseHeldWeapon(state)
         return
     end
 
-    local veh = GetPlayerVehicle(localPlayerId)
-    if veh == nil or veh == 0 then
-        if state.xHoldActive and state.xHoldShipBody ~= 0 and client.shipRequestXWeaponHold ~= nil then
-            client.shipRequestXWeaponHold(state.xHoldShipBody, false)
-        end
-        state.xHoldActive = false
-        state.xHoldShipBody = 0
+    local playerId = _resolveMainWeaponLocalPlayerId()
+    if playerId == nil then
+        _releaseHeldWeapon(state)
         return
     end
 
-    local body = GetVehicleBody(veh)
+    local vehicle = GetPlayerVehicle(playerId)
+    if vehicle == nil or vehicle == 0 then
+        _releaseHeldWeapon(state)
+        return
+    end
+
+    local body = GetVehicleBody(vehicle)
     local shipBody = client.shipBody
-    if body == nil or body == 0 or shipBody == nil or shipBody == 0 or body ~= shipBody then
-        if state.xHoldActive and state.xHoldShipBody ~= 0 and client.shipRequestXWeaponHold ~= nil then
-            client.shipRequestXWeaponHold(state.xHoldShipBody, false)
-        end
-        state.xHoldActive = false
-        state.xHoldShipBody = 0
-        return
-    end
-    if not client.registryShipExists(shipBody) then
-        if state.xHoldActive and state.xHoldShipBody ~= 0 and client.shipRequestXWeaponHold ~= nil then
-            client.shipRequestXWeaponHold(state.xHoldShipBody, false)
-        end
-        state.xHoldActive = false
-        state.xHoldShipBody = 0
+    if body == nil or body == 0 or shipBody == nil or shipBody == 0
+        or body ~= shipBody or not client.registryShipExists(shipBody) then
+        _releaseHeldWeapon(state)
         return
     end
 
-    local currentMode = (client.getShipMainWeaponMode ~= nil) and client.getShipMainWeaponMode(shipBody) or "xSlot"
+    local currentMode = client.getShipMainWeaponMode ~= nil
+        and client.getShipMainWeaponMode(shipBody) or "xSlot"
 
     if InputPressed("q") then
+        _releaseHeldWeapon(state)
         client.shipRequestMainWeaponToggle(shipBody, 1)
+        return
     end
-
-    if currentMode == "xSlot" and InputPressed("b") and client.toggleShipXSlotFireMode ~= nil then
+    if currentMode == "xSlot" and InputPressed("b")
+        and client.toggleShipXSlotFireMode ~= nil then
         client.toggleShipXSlotFireMode(shipBody)
     end
 
-    -- 步骤1：检测主武器输入状态（按下/松开）
-    if currentMode == "xSlot" then
-        if InputPressed("lmb") and client.shipRequestXWeaponHold ~= nil then
-            client.shipRequestXWeaponHold(shipBody, true)
-            state.xHoldActive = true
-            state.xHoldShipBody = shipBody
-        end
+    local definition = client.getShipWeaponDefinition ~= nil
+        and client.getShipWeaponDefinition(shipBody, currentMode) or {}
+    local targetVehicleId = _lockedTargetForWeapon(shipBody, definition)
+    local wantsFire = InputDown("lmb")
+    local changed = state.holdShipBody ~= shipBody
+        or state.holdMode ~= currentMode
+        or state.holdTargetVehicleId ~= targetVehicleId
 
-        if InputReleased("lmb") then
-            if state.xHoldActive and client.shipRequestXWeaponHold ~= nil then
-                client.shipRequestXWeaponHold(shipBody, false)
-            end
-            if client.shipRequestXWeaponRelease ~= nil then
-                client.shipRequestXWeaponRelease(shipBody)
-            end
-            state.xHoldActive = false
-            state.xHoldShipBody = shipBody
-        end
-        return
+    if state.holdActive and ((not wantsFire) or changed) then
+        _releaseHeldWeapon(state)
     end
 
-    if state.xHoldActive and state.xHoldShipBody ~= 0 and client.shipRequestXWeaponHold ~= nil then
-        client.shipRequestXWeaponHold(state.xHoldShipBody, false)
-    end
-    state.xHoldActive = false
-    state.xHoldShipBody = shipBody
-
-    -- 步骤2：按当前独立武器组发送开火请求。
-    if InputPressed("lmb") then
-        if currentMode == "mSlot" then
-            if client.guidedTargetingCanFire ~= nil and client.guidedTargetingCanFire(shipBody) then
-                local targetVehicleId = client.guidedTargetingGetLockedVehicleId ~= nil and client.guidedTargetingGetLockedVehicleId(shipBody) or 0
-                if targetVehicleId ~= 0 and client.shipRequestMWeaponFire ~= nil then
-                    client.shipRequestMWeaponFire(shipBody, targetVehicleId)
-                end
-            end
-        elseif currentMode == "gSlot" then
-            if client.guidedTargetingCanFire ~= nil and client.guidedTargetingCanFire(shipBody) then
-                local targetVehicleId = client.guidedTargetingGetLockedVehicleId ~= nil and client.guidedTargetingGetLockedVehicleId(shipBody) or 0
-                if targetVehicleId ~= 0 and client.shipRequestGWeaponFire ~= nil then
-                    client.shipRequestGWeaponFire(shipBody, targetVehicleId)
-                end
-            end
-        elseif currentMode == "hSlot" then
-            if client.guidedTargetingCanFire ~= nil and client.guidedTargetingCanFire(shipBody) then
-                local targetVehicleId = client.guidedTargetingGetLockedVehicleId ~= nil and client.guidedTargetingGetLockedVehicleId(shipBody) or 0
-                if targetVehicleId ~= 0 and client.shipRequestHWeaponFire ~= nil then
-                    client.shipRequestHWeaponFire(shipBody, targetVehicleId)
-                end
-            end
-        else
-            client.shipRequestMainWeaponFire(shipBody, 1)
-        end
+    if wantsFire and not state.holdActive and client.shipRequestWeaponHold ~= nil then
+        client.shipRequestWeaponHold(shipBody, currentMode, true, targetVehicleId)
+        state.holdActive = true
+        state.holdShipBody = shipBody
+        state.holdMode = currentMode
+        state.holdTargetVehicleId = targetVehicleId
     end
 end

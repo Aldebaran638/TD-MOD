@@ -6,6 +6,7 @@ shipTypeRegistryData = shipTypeRegistryData or {}
 -- 说明：这里是“类型定义层”，用于注册到 Registry 的 definitions 区域。
 shipTypeRegistryData.enigmaticCruiser = {
     shipType = "enigmaticCruiser",
+    displayName = "Enigma Battlecruiser",
     maxShieldHP = 5000,
     maxArmorHP = 3000,
     maxBodyHP = 2000,
@@ -32,11 +33,98 @@ shipTypeRegistryData.enigmaticCruiser = {
         },
     },
     slotWeaponPools = {
-        X = { "tachyonLance" },
-        L = { "kineticArtillery" },
-        M = { "swarmerMissile" },
-        G = { "devastatorTorpedoes" },
+        X = { "tachyonLance", "focusedArcEmitter", "gigaCannon" },
+        L = {
+            "largeGammaLaser",
+            "largePlasmaCannon",
+            "largeGaussCannon",
+            "kineticArtillery",
+            "largeStormfireAutocannon",
+        },
+        M = {
+            "mediumGammaLaser",
+            "mediumPlasmaCannon",
+            "phaseDisruptor",
+            "mediumGaussCannon",
+            "mediumStormfireAutocannon",
+            "swarmerMissile",
+        },
+        G = { "devastatorTorpedoes", "neutronLauncher" },
         H = { "gammaStrikeCraft" },
+    },
+    weaponMountProfiles = {
+        xSpinal = {
+            { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        },
+        lLaser = {
+            { firePosOffset = { x = 4.0, y = 1.4, z = -3.2 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -4.0, y = 1.4, z = -3.2 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+        },
+        lEnergy = {
+            { firePosOffset = { x = 4.2, y = 0.6, z = -3.8 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -4.2, y = 0.6, z = -3.8 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+        },
+        lKinetic = {
+            { firePosOffset = { x = 4.5, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 }, fireDeviationAngle = 1, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -4.5, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 }, fireDeviationAngle = 1, aimMode = "forwardConvergeByRange" },
+        },
+        lAutocannon = {
+            { firePosOffset = { x = 4.0, y = -1.5, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -4.0, y = -1.5, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+        },
+        mLaser = {
+            { firePosOffset = { x = 2.8, y = 1.2, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -2.8, y = 1.2, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = 2.8, y = -1.2, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -2.8, y = -1.2, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+        },
+        mEnergy = {
+            { firePosOffset = { x = 3.2, y = 0.8, z = -3.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -3.2, y = 0.8, z = -3.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = 3.2, y = -0.8, z = -3.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -3.2, y = -0.8, z = -3.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+        },
+        mKinetic = {
+            { firePosOffset = { x = 3.8, y = 1.0, z = -4.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -3.8, y = 1.0, z = -4.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = 3.8, y = -1.0, z = -4.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -3.8, y = -1.0, z = -4.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+        },
+        mAutocannon = {
+            { firePosOffset = { x = 3.5, y = 1.8, z = -2.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -3.5, y = 1.8, z = -2.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = 3.5, y = -1.8, z = -2.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -3.5, y = -1.8, z = -2.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+        },
+        mSwarmer = {
+            { firePosOffset = { x = 0.3, y = 5, z = 2 }, fireDirRelative = { x = 600, y = 300, z = 0 } },
+            { firePosOffset = { x = -0.3, y = 5, z = 2 }, fireDirRelative = { x = -600, y = 300, z = 0 } },
+            { firePosOffset = { x = 0.3, y = -5, z = 2 }, fireDirRelative = { x = 600, y = -300, z = 0 } },
+            { firePosOffset = { x = -0.3, y = -5, z = 2 }, fireDirRelative = { x = -600, y = -300, z = 0 } },
+        },
+        gRocket = {
+            { firePosOffset = { x = 0, y = 0, z = -4.8 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = 0, y = 0, z = -4.8 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = 0, y = 0, z = -4.8 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = 0, y = 0, z = -4.8 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        },
+        gNeutron = {
+            { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        },
+        gEnergy = {
+            { firePosOffset = { x = 5.5, y = 1.2, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = -5.5, y = 1.2, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = 5.5, y = -1.2, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = -5.5, y = -1.2, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        },
+        hHangar = {
+            { firePosOffset = { x = 2.8, y = 1.2, z = -1.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = -2.8, y = 1.2, z = -1.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        },
     },
     defaultSlotConfigurationId = "battleline_2x2l4m",
     slotConfigurations = {
@@ -112,12 +200,13 @@ shipTypeRegistryData.enigmaticCruiser = {
             },
         },
         {
-            configurationId = "siege_2x4g2m",
-            label = "2X 4G 2M",
+            configurationId = "torpedo_2x4g4m",
+            legacyConfigurationIds = { "siege_2x4g2m" },
+            label = "2H 2X 4G 4M",
             slotGroups = {
                 { slotType = "X", count = 2, mountCollection = "xSlots" },
                 { slotType = "G", count = 4, mountCollection = "gSlots" },
-                { slotType = "M", count = 2, mountCollection = "mSlots" },
+                { slotType = "M", count = 4, mountCollection = "mSlots" },
                 { slotType = "H", count = 2, mountCollection = "hSlots" },
             },
             defaultLoadout = {
@@ -145,6 +234,14 @@ shipTypeRegistryData.enigmaticCruiser = {
                     {
                         firePosOffset = { x = -0.3, y = 5, z = 2 },
                         fireDirRelative = { x = -600, y = 300, z = 0 },
+                    },
+                    {
+                        firePosOffset = { x = 0.3, y = -5, z = 2 },
+                        fireDirRelative = { x = 600, y = -300, z = 0 },
+                    },
+                    {
+                        firePosOffset = { x = -0.3, y = -5, z = 2 },
+                        fireDirRelative = { x = -600, y = -300, z = 0 },
                     },
                 },
                 gSlots = {

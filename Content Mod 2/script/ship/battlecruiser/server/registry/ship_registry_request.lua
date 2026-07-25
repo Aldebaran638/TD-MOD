@@ -56,6 +56,63 @@ function server.shipRequestMainWeaponFire(playerId, shipBodyId, request)
     end
 end
 
+function server.shipRequestWeaponHold(playerId, shipBodyId, groupId, active, targetVehicleId)
+    if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
+        return false
+    end
+
+    local id = tostring(groupId or "")
+    local held = math.floor(active or 0) ~= 0
+    -- Releasing is always safe and must still work on the frame where the player
+    -- has already left the vehicle; starting fire still requires ownership.
+    if held and not _canAcceptShipRequest(playerId, shipBodyId) then return false end
+    if held and server.shipRuntimeGetCurrentMainWeapon ~= nil
+        and server.shipRuntimeGetCurrentMainWeapon(shipBodyId) ~= id then
+        return false
+    end
+
+    local vehicleId = math.floor(targetVehicleId or 0)
+    local targetBodyId = 0
+    if vehicleId ~= 0 then
+        targetBodyId = math.floor(GetVehicleBody(vehicleId) or 0)
+    end
+
+    if id == "xSlot" then
+        local shipDef = server.shipSlotLoadoutResolveShipDefinition ~= nil
+            and server.shipSlotLoadoutResolveShipDefinition(
+                server.defaultShipType or "enigmaticCruiser"
+            ) or {}
+        local xSlot = ((shipDef or {}).xSlots or {})[1] or {}
+        local weaponDef = (weaponData or {})[tostring(xSlot.weaponType or "")] or {}
+        if tostring(weaponDef.legacyController or "") == "xSlot" then
+            if server.xSlotStateSetHoldRequested ~= nil then
+                server.xSlotStateSetHoldRequested(held)
+            end
+            if not held and server.xSlotStateSetReleaseRequested ~= nil then
+                server.xSlotStateSetReleaseRequested(true)
+            end
+            return true
+        end
+    end
+
+    if server.weaponGroupSetFireHeld == nil then return false end
+    return server.weaponGroupSetFireHeld(id, held, {
+        shipBodyId = shipBodyId,
+        targetVehicleId = vehicleId,
+        targetBodyId = targetBodyId,
+    })
+end
+
+function server.shipRequestWeaponConfiguration(playerId, shipBodyId)
+    if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
+        return false
+    end
+    if not _canAcceptShipRequest(playerId, shipBodyId) then return false end
+    if server.shipWeaponSyncConfiguration == nil then return false end
+    server.shipWeaponSyncConfiguration(server.defaultShipType or "enigmaticCruiser", playerId)
+    return true
+end
+
 function server.shipRequestMainWeaponToggle(playerId, shipBodyId, request)
     if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
         return
@@ -81,7 +138,11 @@ function server.shipRequestXWeaponHold(playerId, shipBodyId, request)
         return false
     end
 
-    if server.xSlotStateSetHoldRequested ~= nil then
+    local shipDef = server.shipSlotLoadoutResolveShipDefinition ~= nil
+        and server.shipSlotLoadoutResolveShipDefinition(server.defaultShipType or "enigmaticCruiser") or {}
+    local xSlot = ((shipDef or {}).xSlots or {})[1] or {}
+    local weaponDef = (weaponData or {})[tostring(xSlot.weaponType or "")] or {}
+    if tostring(weaponDef.legacyController or "") == "xSlot" and server.xSlotStateSetHoldRequested ~= nil then
         server.xSlotStateSetHoldRequested(math.floor(request or 0) ~= 0)
     end
     return true
@@ -98,6 +159,14 @@ function server.shipRequestXWeaponRelease(playerId, shipBodyId)
         return false
     end
 
+    local shipDef = server.shipSlotLoadoutResolveShipDefinition ~= nil
+        and server.shipSlotLoadoutResolveShipDefinition(server.defaultShipType or "enigmaticCruiser") or {}
+    local xSlot = ((shipDef or {}).xSlots or {})[1] or {}
+    local weaponDef = (weaponData or {})[tostring(xSlot.weaponType or "")] or {}
+    if tostring(weaponDef.legacyController or "") ~= "xSlot" then
+        if server.weaponGroupRequestFire == nil then return false end
+        return server.weaponGroupRequestFire("xSlot", { shipBodyId = shipBodyId })
+    end
     if server.xSlotStateSetHoldRequested ~= nil then
         server.xSlotStateSetHoldRequested(false)
     end
@@ -141,7 +210,13 @@ function server.shipRequestMWeaponFire(playerId, shipBodyId, targetVehicleId)
         shipBodyId,
         targetVehicleId,
         "mSlot",
-        server.mSlotControlSetFireRequest
+        function(ownerBody, vehicleId, targetBody)
+            return server.weaponGroupRequestFire("mSlot", {
+                shipBodyId = ownerBody,
+                targetVehicleId = vehicleId,
+                targetBodyId = targetBody,
+            })
+        end
     )
 end
 
@@ -151,7 +226,13 @@ function server.shipRequestGWeaponFire(playerId, shipBodyId, targetVehicleId)
         shipBodyId,
         targetVehicleId,
         "gSlot",
-        server.gSlotControlSetFireRequest
+        function(ownerBody, vehicleId, targetBody)
+            return server.weaponGroupRequestFire("gSlot", {
+                shipBodyId = ownerBody,
+                targetVehicleId = vehicleId,
+                targetBodyId = targetBody,
+            })
+        end
     )
 end
 
@@ -180,17 +261,13 @@ function server.shipRequestHWeaponFire(playerId, shipBodyId, targetVehicleId)
         return false
     end
 
-    server.hSlotLastFireRequest = {
+    if server.weaponGroupRequestFire == nil then return false end
+    return server.weaponGroupRequestFire("hSlot", {
         shipBodyId = shipBodyId,
         targetVehicleId = vehicleId,
         targetBodyId = targetBody,
         requestedAt = (GetTime ~= nil) and GetTime() or 0.0,
-    }
-
-    if server.hSlotControlSetFireRequested ~= nil then
-        server.hSlotControlSetFireRequested(true)
-    end
-    return true
+    })
 end
 
 function server.shipRequestMoveState(playerId, shipBodyId, moveState)

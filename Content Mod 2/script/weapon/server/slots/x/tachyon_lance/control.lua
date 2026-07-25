@@ -390,6 +390,17 @@ end
 -- 写入渲染事件：开始发射
 function server.xSlot_broadcastLaunchingStart(shipBodyId, slotIndex, weaponType, firePointWorld, hitPointWorld, didHit, didHitStellarisBody, didHitShield, hitTargetBodyId, normal, impactLayer)
     server.tachyonMuzzleLightTrigger(weaponType)
+    if tostring(weaponType or "") == "focusedArcEmitter" then
+        local hitNormal = normal or Vec(0, 1, 0)
+        ClientCall(
+            0, "client.spawnGenericRaycastWeaponFx",
+            weaponType, "focusedArcBeam",
+            firePointWorld[1], firePointWorld[2], firePointWorld[3],
+            hitPointWorld[1], hitPointWorld[2], hitPointWorld[3],
+            hitNormal[1], hitNormal[2], hitNormal[3],
+            didHit and 1 or 0
+        )
+    end
     server.xSlotRenderPushEvent(shipBodyId, {
         eventType = "launch_start",
         slotIndex = slotIndex,
@@ -566,6 +577,10 @@ function server.xSlotControlTick(dt)
             activeRuntime.launchRemain = launchDuration
             activeRuntime.state = "launching"
             activeState = "launching"
+        elseif not holdRequested then
+            activeRuntime.charge = 0.0
+            activeRuntime.state = "idle"
+            activeState = "idle"
         end
     elseif activeState == "launching" then
         local launchRemain = (activeRuntime.launchRemain or 0) - dt

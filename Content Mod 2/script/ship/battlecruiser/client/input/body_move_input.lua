@@ -62,8 +62,9 @@ function client.bodyMoveInputTick(dt)
         return
     end
 
-    local wDown = InputDown("w") and true or false
-    local sDown = InputDown("s") and true or false
+    local inputBlocked = client.weaponConfigUiIsOpen ~= nil and client.weaponConfigUiIsOpen()
+    local wDown = (not inputBlocked) and InputDown("w") and true or false
+    local sDown = (not inputBlocked) and InputDown("s") and true or false
 
     local moveState = 0
     if wDown then

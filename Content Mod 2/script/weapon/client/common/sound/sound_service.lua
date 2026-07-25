@@ -5,25 +5,9 @@ client = client or {}
 
 local _soundDistanceThreshold = 150.0
 local _soundVirtualNearDist = 40.0
-
-local _snd_engine_loop = nil
-local _snd_missile_loop = nil
-local _snd_tachyon_fire_near = {}
-local _snd_tachyon_fire_dist = {}
-local _snd_tachyon_hit_near = {}
-local _snd_tachyon_hit_dist = {}
-local _snd_tachyon_windup_near = nil
-local _snd_tachyon_windup_dist = nil
-local _snd_kinetic_fire_near = nil
-local _snd_kinetic_fire_dist = nil
-local _snd_kinetic_hit_near = {}
-local _snd_kinetic_hit_dist = {}
-local _snd_missile_fire_near = {}
-local _snd_missile_fire_dist = {}
-local _snd_missile_hit_near = {}
-local _snd_missile_hit_dist = {}
-local _snd_gamma_fire_near = {}
-local _snd_gamma_fire_dist = {}
+local _sndEngineLoop = nil
+local _sndMissileLoop = nil
+local _weaponSoundHandles = {}
 
 client.soundModuleState = client.soundModuleState or {
     lastRenderSeqByShip = {},
@@ -34,258 +18,133 @@ local function _tableToVec(t)
     return Vec(t.x or 0, t.y or 0, t.z or 0)
 end
 
-local function _randomPick(tbl)
-    if tbl == nil then return nil end
-    local n = #tbl
-    if n <= 0 then return nil end
-    return tbl[math.random(1, n)]
+local function _loadSounds(paths)
+    local result = {}
+    for i = 1, #(paths or {}) do
+        result[#result + 1] = LoadSound(paths[i])
+    end
+    return result
+end
+
+local function _randomPick(values)
+    if values == nil or #values == 0 then return nil end
+    return values[math.random(1, #values)]
 end
 
 local function _resolvePlayPos(eventPos)
-    local camT = GetCameraTransform()
-    local camPos = camT.pos
-    local dist = VecLength(VecSub(eventPos, camPos))
-
-    if dist > _soundDistanceThreshold then
-        local dir = VecNormalize(VecSub(eventPos, camPos))
-        local virtualPos = VecAdd(camPos, VecScale(dir, _soundVirtualNearDist))
-        return virtualPos, true
+    local cameraPos = GetCameraTransform().pos
+    local distance = VecLength(VecSub(eventPos, cameraPos))
+    if distance > _soundDistanceThreshold then
+        local direction = VecNormalize(VecSub(eventPos, cameraPos))
+        return VecAdd(cameraPos, VecScale(direction, _soundVirtualNearDist)), true
     end
-
     return eventPos, false
 end
 
-local function _playAt(handle, pos)
-    if handle == nil or handle == 0 then return end
-    PlaySound(handle, pos, 1.0)
-end
-
-local function _playTachyonWindup(firePoint)
-    local playPos, isDistant = _resolvePlayPos(firePoint)
-    if isDistant then
-        _playAt(_snd_tachyon_windup_dist, playPos)
-    else
-        _playAt(_snd_tachyon_windup_near, playPos)
+function client.playWeaponSound(weaponType, eventType, x, y, z)
+    local profile = _weaponSoundHandles[tostring(weaponType or "")]
+    if profile == nil then return end
+    local position, distant = _resolvePlayPos(Vec(x or 0, y or 0, z or 0))
+    local suffix = distant and "Far" or "Near"
+    local handles = profile[tostring(eventType or "") .. suffix]
+    if handles == nil or #handles == 0 then
+        handles = profile[tostring(eventType or "") .. "Near"]
     end
-end
-
-local function _playTachyonFire(firePoint)
-    local playPos, isDistant = _resolvePlayPos(firePoint)
-    if isDistant then
-        _playAt(_randomPick(_snd_tachyon_fire_dist), playPos)
-    else
-        _playAt(_randomPick(_snd_tachyon_fire_near), playPos)
-    end
-end
-
-local function _playTachyonHit(hitPoint)
-    local playPos, isDistant = _resolvePlayPos(hitPoint)
-    if isDistant then
-        _playAt(_randomPick(_snd_tachyon_hit_dist), playPos)
-    else
-        _playAt(_randomPick(_snd_tachyon_hit_near), playPos)
-    end
-end
-
-local function _playKineticFire(firePoint)
-    local playPos, isDistant = _resolvePlayPos(firePoint)
-    if isDistant then
-        _playAt(_snd_kinetic_fire_dist, playPos)
-    else
-        _playAt(_snd_kinetic_fire_near, playPos)
-    end
-end
-
-local function _playKineticHit(hitPoint)
-    local playPos, isDistant = _resolvePlayPos(hitPoint)
-    if isDistant then
-        _playAt(_randomPick(_snd_kinetic_hit_dist), playPos)
-    else
-        _playAt(_randomPick(_snd_kinetic_hit_near), playPos)
-    end
-end
-
-local function _playMissileFire(firePoint)
-    local playPos, isDistant = _resolvePlayPos(firePoint)
-    if isDistant then
-        _playAt(_randomPick(_snd_missile_fire_dist), playPos)
-    else
-        _playAt(_randomPick(_snd_missile_fire_near), playPos)
-    end
-end
-
-local function _playMissileHit(hitPoint)
-    local playPos, isDistant = _resolvePlayPos(hitPoint)
-    if isDistant then
-        _playAt(_randomPick(_snd_missile_hit_dist), playPos)
-    else
-        _playAt(_randomPick(_snd_missile_hit_near), playPos)
-    end
-end
-
-local function _playGammaFire(firePoint)
-    local playPos, isDistant = _resolvePlayPos(firePoint)
-    if isDistant then
-        _playAt(_randomPick(_snd_gamma_fire_dist), playPos)
-    else
-        _playAt(_randomPick(_snd_gamma_fire_near), playPos)
-    end
+    local handle = _randomPick(handles)
+    if handle ~= nil and handle ~= 0 then PlaySound(handle, position, 1.0) end
 end
 
 local function _isShipOccupied(shipBodyId)
-    local veh = GetBodyVehicle(shipBodyId)
-    if veh ~= nil and veh ~= 0 then
-        local playerVeh = GetPlayerVehicle()
-        if playerVeh ~= nil and playerVeh ~= 0 and playerVeh == veh then
-            return true
-        end
-    end
-
-    return false
+    local vehicle = GetBodyVehicle(shipBodyId)
+    return vehicle ~= nil and vehicle ~= 0 and GetPlayerVehicle() == vehicle
 end
 
 local function _shouldUseGenericShipSounds(shipBodyId)
-    if client.registryShipGetShipType == nil then
-        return true
-    end
-
-    local shipType = tostring(client.registryShipGetShipType(shipBodyId) or "")
-    return shipType ~= "titan"
+    if client.registryShipGetShipType == nil then return true end
+    return tostring(client.registryShipGetShipType(shipBodyId) or "") ~= "titan"
 end
 
 local function _engineTick(shipBodyId)
-    if _snd_engine_loop == nil or _snd_engine_loop == 0 then
+    if _sndEngineLoop == nil or _sndEngineLoop == 0
+        or not _shouldUseGenericShipSounds(shipBodyId)
+        or not _isShipOccupied(shipBodyId) then
         return
     end
-
-    if not _shouldUseGenericShipSounds(shipBodyId) then
-        return
-    end
-
-    if not _isShipOccupied(shipBodyId) then
-        return
-    end
-
-    local t = GetBodyTransform(shipBodyId)
-    PlayLoop(_snd_engine_loop, t.pos, 1.0)
+    PlayLoop(_sndEngineLoop, GetBodyTransform(shipBodyId).pos, 1.0)
 end
 
-local function _tachyonEventTick(shipBodyId)
-    local state = client.soundModuleState
+local function _xSlotEventTick(shipBodyId)
     local render = client.xSlotRenderGetEvent(shipBodyId)
-    if render == nil then
-        return
-    end
+    if render == nil then return end
+    local state = client.soundModuleState
+    local sequence = render.seq or -1
+    if sequence == (state.lastRenderSeqByShip[shipBodyId] or -1) then return end
+    state.lastRenderSeqByShip[shipBodyId] = sequence
 
-    local seq = render.seq or -1
-    local lastSeq = state.lastRenderSeqByShip[shipBodyId] or -1
-    if seq == lastSeq then
-        return
-    end
-
-    state.lastRenderSeqByShip[shipBodyId] = seq
-
-    if render.weaponType ~= "tachyonLance" then
-        return
-    end
-
-    local eventType = render.eventType or ""
+    local weaponType = tostring(render.weaponType or "")
+    if weaponType ~= "tachyonLance" and weaponType ~= "focusedArcEmitter" then return end
+    local firePoint = _tableToVec(render.firePoint)
+    local eventType = tostring(render.eventType or "")
     if eventType == "charging_start" then
-        _playTachyonWindup(_tableToVec(render.firePoint))
+        client.playWeaponSound(weaponType, "windup", firePoint[1], firePoint[2], firePoint[3])
     elseif eventType == "launch_start" then
-        _playTachyonFire(_tableToVec(render.firePoint))
+        client.playWeaponSound(weaponType, "fire", firePoint[1], firePoint[2], firePoint[3])
         if (render.didHit or 0) == 1 then
-            _playTachyonHit(_tableToVec(render.hitPoint))
+            local hitPoint = _tableToVec(render.hitPoint)
+            client.playWeaponSound(weaponType, "hit", hitPoint[1], hitPoint[2], hitPoint[3])
         end
     end
 end
 
 function client.soundModuleInit()
-    _snd_engine_loop = LoadLoop("MOD/sound/dem_sfx_psi_ship_transport_ship_idle_01.ogg")
-    _snd_missile_loop = LoadLoop("MOD/sound/missile_loop.ogg")
-
-    _snd_tachyon_fire_near[1] = LoadSound("MOD/sound/tachyon_lance_fire_01.ogg")
-    _snd_tachyon_fire_near[2] = LoadSound("MOD/sound/tachyon_lance_fire_02.ogg")
-    _snd_tachyon_fire_near[3] = LoadSound("MOD/sound/tachyon_lance_fire_03.ogg")
-
-    _snd_tachyon_fire_dist[1] = LoadSound("MOD/sound/distance_tachyon_lance_fire_01.ogg")
-    _snd_tachyon_fire_dist[2] = LoadSound("MOD/sound/distance_tachyon_lance_fire_02.ogg")
-    _snd_tachyon_fire_dist[3] = LoadSound("MOD/sound/distance_tachyon_lance_fire_03.ogg")
-
-    _snd_tachyon_hit_near[1] = LoadSound("MOD/sound/tachyon_lance_hit_01.ogg")
-    _snd_tachyon_hit_near[2] = LoadSound("MOD/sound/tachyon_lance_hit_02.ogg")
-    _snd_tachyon_hit_near[3] = LoadSound("MOD/sound/tachyon_lance_hit_03.ogg")
-
-    _snd_tachyon_hit_dist[1] = LoadSound("MOD/sound/distance_tachyon_lance_hit_01.ogg")
-    _snd_tachyon_hit_dist[2] = LoadSound("MOD/sound/distance_tachyon_lance_hit_02.ogg")
-
-    _snd_tachyon_windup_near = LoadSound("MOD/sound/tachyon_lance_windup_01.ogg")
-    _snd_tachyon_windup_dist = LoadSound("MOD/sound/distance_tachyon_lance_windup_01.ogg")
-    _snd_kinetic_fire_near = LoadSound("MOD/sound/kinectic_artillery_fire_01.ogg")
-    _snd_kinetic_fire_dist = LoadSound("MOD/sound/kinectic_artillery_fire_01.ogg")
-    _snd_kinetic_hit_near[1] = LoadSound("MOD/sound/kinectic_artillery_hit_01.ogg")
-    _snd_kinetic_hit_near[2] = LoadSound("MOD/sound/kinectic_artillery_hit_01.ogg")
-    _snd_kinetic_hit_near[3] = LoadSound("MOD/sound/kinectic_artillery_hit_01.ogg")
-    _snd_kinetic_hit_dist[1] = LoadSound("MOD/sound/kinectic_artillery_hit_01.ogg")
-    _snd_kinetic_hit_dist[2] = LoadSound("MOD/sound/kinectic_artillery_hit_01.ogg")
-    _snd_missile_fire_near[1] = LoadSound("MOD/sound/missile_fire_01.ogg")
-    _snd_missile_fire_near[2] = LoadSound("MOD/sound/missile_fire_02.ogg")
-    _snd_missile_fire_dist[1] = LoadSound("MOD/sound/distance_missile_fire_01.ogg")
-    _snd_missile_fire_dist[2] = LoadSound("MOD/sound/distance_missile_fire_02.ogg")
-    _snd_missile_fire_dist[3] = LoadSound("MOD/sound/distance_missile_fire_03.ogg")
-    _snd_missile_hit_near[1] = LoadSound("MOD/sound/kinectic_artillery_hit_01.ogg")
-    _snd_missile_hit_near[2] = LoadSound("MOD/sound/kinectic_artillery_hit_01.ogg")
-    _snd_missile_hit_near[3] = LoadSound("MOD/sound/kinectic_artillery_hit_01.ogg")
-    _snd_missile_hit_dist[1] = LoadSound("MOD/sound/distance_tachyon_lance_hit_01.ogg")
-    _snd_missile_hit_dist[2] = LoadSound("MOD/sound/distance_tachyon_lance_hit_02.ogg")
-
-    _snd_gamma_fire_near[1] = LoadSound("MOD/sound/laser_fire_01.ogg")
-    _snd_gamma_fire_near[2] = LoadSound("MOD/sound/laser_fire_02.ogg")
-    _snd_gamma_fire_near[3] = LoadSound("MOD/sound/laser_fire_03.ogg")
-    _snd_gamma_fire_dist[1] = LoadSound("MOD/sound/laser_fire_01.ogg")
-    _snd_gamma_fire_dist[2] = LoadSound("MOD/sound/laser_fire_02.ogg")
-    _snd_gamma_fire_dist[3] = LoadSound("MOD/sound/laser_fire_03.ogg")
+    _sndEngineLoop = LoadLoop("MOD/sound/dem_sfx_psi_ship_transport_ship_idle_01.ogg")
+    _sndMissileLoop = LoadLoop("MOD/sound/missile_loop.ogg")
+    _weaponSoundHandles = {}
+    for weaponType, profile in pairs(client.weaponSoundCatalog or {}) do
+        _weaponSoundHandles[weaponType] = {
+            windupNear = _loadSounds(profile.windupNear),
+            windupFar = _loadSounds(profile.windupFar),
+            fireNear = _loadSounds(profile.fireNear),
+            fireFar = _loadSounds(profile.fireFar),
+            hitNear = _loadSounds(profile.hitNear),
+            hitFar = _loadSounds(profile.hitFar),
+        }
+    end
 end
 
-function client.playKineticArtilleryFireSound(x, y, z)
-    _playKineticFire(Vec(x or 0, y or 0, z or 0))
+function client.playKineticArtilleryFireSound(weaponType, x, y, z)
+    client.playWeaponSound(weaponType, "fire", x, y, z)
 end
 
-function client.playKineticArtilleryHitSound(x, y, z)
-    _playKineticHit(Vec(x or 0, y or 0, z or 0))
+function client.playKineticArtilleryHitSound(weaponType, x, y, z)
+    client.playWeaponSound(weaponType, "hit", x, y, z)
 end
 
-function client.playMissileFireSound(x, y, z)
-    _playMissileFire(Vec(x or 0, y or 0, z or 0))
+function client.playMissileFireSound(weaponType, x, y, z)
+    client.playWeaponSound(weaponType, "fire", x, y, z)
 end
 
-function client.playMissileImpactSound(x, y, z)
-    _playMissileHit(Vec(x or 0, y or 0, z or 0))
+function client.playMissileImpactSound(weaponType, x, y, z)
+    client.playWeaponSound(weaponType, "hit", x, y, z)
 end
 
 function client.playMissileLoopSound(x, y, z)
-    if _snd_missile_loop == nil or _snd_missile_loop == 0 then
-        return
+    if _sndMissileLoop ~= nil and _sndMissileLoop ~= 0 then
+        PlayLoop(_sndMissileLoop, Vec(x or 0, y or 0, z or 0), 1.0)
     end
-    PlayLoop(_snd_missile_loop, Vec(x or 0, y or 0, z or 0), 1.0)
 end
 
 function client.playHSlotGammaFireSound(x, y, z)
-    _playGammaFire(Vec(x or 0, y or 0, z or 0))
+    client.playWeaponSound("gammaStrikeCraft", "fire", x, y, z)
 end
 
 function client.soundModuleTick(dt)
     local _ = dt
-    if client.registryShipGetRegisteredBodyIds == nil then
-        return
-    end
-
-    local shipIds = client.registryShipGetRegisteredBodyIds()
-    for i = 1, #shipIds do
-        local shipBodyId = shipIds[i]
+    if client.registryShipGetRegisteredBodyIds == nil then return end
+    for _, shipBodyId in ipairs(client.registryShipGetRegisteredBodyIds()) do
         if client.registryShipExists(shipBodyId) then
             _engineTick(shipBodyId)
-            _tachyonEventTick(shipBodyId)
+            _xSlotEventTick(shipBodyId)
         end
     end
 end

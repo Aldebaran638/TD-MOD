@@ -10,6 +10,7 @@ server = server or {}
 -- 模块内部状态
 local _stateByType = {}
 local _resolvedDefinitionByType = {}
+local _templateRegistryRoot = "StellarisShips/server/spawnTemplates"
 
 -- ============ 内部辅助函数 ============
 
@@ -37,6 +38,12 @@ local function _findConfiguration(definition, configurationId)
         if tostring(cfg.configurationId or "") == tostring(configurationId or "") then
             return cfg
         end
+        local aliases = cfg.legacyConfigurationIds or {}
+        for aliasIndex = 1, #aliases do
+            if tostring(aliases[aliasIndex] or "") == tostring(configurationId or "") then
+                return cfg
+            end
+        end
     end
     return nil
 end
@@ -46,7 +53,16 @@ local function _weaponAllowed(definition, slotType, weaponType)
     local pool = pools[slotType] or {}
     for i = 1, #pool do
         if tostring(pool[i]) == tostring(weaponType) then
-            return true
+            local weapon = (weaponData or {})[tostring(weaponType)]
+            if weapon == nil then return false end
+            local allowedSlots = weapon.slotTypes or {}
+            for slotIndex = 1, #allowedSlots do
+                if tostring(allowedSlots[slotIndex]) == tostring(slotType) then
+                    return weaponBehaviorProfiles ~= nil
+                        and weaponBehaviorProfiles[tostring(weapon.behaviorType or "")] == true
+                end
+            end
+            return false
         end
     end
     return false
@@ -99,6 +115,53 @@ local function _validateConfigurationShape(configuration)
     return true, nil
 end
 
+local function _templateKey(shipType, field)
+    return _templateRegistryRoot .. "/" .. tostring(shipType or "enigmaticCruiser") .. "/" .. tostring(field or "")
+end
+
+local function _readSpawnTemplate(shipType, definition)
+    local configurationId = GetString(_templateKey(shipType, "configurationId"))
+    if configurationId == nil or configurationId == "" then return nil end
+    local configuration = _findConfiguration(definition, configurationId)
+    if configuration == nil then return nil end
+    local requested = {}
+    for _, slotType in ipairs({ "X", "L", "M", "G", "H" }) do
+        requested[slotType] = GetString(_templateKey(shipType, slotType))
+    end
+    local loadout = _buildResolvedLoadout(definition, configuration, requested)
+    if loadout == nil then return nil end
+    return {
+        configurationId = tostring(configuration.configurationId or configurationId),
+        loadout = loadout,
+    }
+end
+
+local function _configurationGroup(configuration, slotType)
+    for _, group in ipairs(configuration.slotGroups or {}) do
+        if tostring(group.slotType or "") == tostring(slotType or "") then
+            return group
+        end
+    end
+    return nil
+end
+
+local function _resolvedMountsForWeapon(definition, configuration, slotType, weaponType)
+    local group = _configurationGroup(configuration, slotType)
+    if group == nil then return {} end
+
+    local count = math.max(0, math.floor(tonumber(group.count) or 0))
+    local collectionName = tostring(group.mountCollection or "")
+    local fallback = ((configuration.mounts or {})[collectionName]) or {}
+    local weaponDefinition = (weaponData or {})[tostring(weaponType or "")] or {}
+    local profileName = tostring(weaponDefinition.mountProfile or "")
+    local profile = ((definition.weaponMountProfiles or {})[profileName]) or fallback
+    local mounts = {}
+    for i = 1, math.min(count, #profile) do
+        mounts[i] = _cloneTable(profile[i])
+    end
+    return mounts
+end
+
 local function _rebuildResolvedDefinition(shipType)
     local state = _stateByType[shipType]
     if state == nil then
@@ -112,13 +175,12 @@ local function _rebuildResolvedDefinition(shipType)
     end
     
     local resolved = _cloneTable(definition)
-    resolved.xSlots = _cloneTable((configuration.mounts or {}).xSlots or {})
-    resolved.lSlots = _cloneTable((configuration.mounts or {}).lSlots or {})
-    resolved.mSlots = _cloneTable((configuration.mounts or {}).mSlots or {})
-    resolved.gSlots = _cloneTable((configuration.mounts or {}).gSlots or {})
-    resolved.hSlots = _cloneTable((configuration.mounts or {}).hSlots or {})
-    
     local loadout = state.loadout or {}
+    resolved.xSlots = _resolvedMountsForWeapon(definition, configuration, "X", loadout.X)
+    resolved.lSlots = _resolvedMountsForWeapon(definition, configuration, "L", loadout.L)
+    resolved.mSlots = _resolvedMountsForWeapon(definition, configuration, "M", loadout.M)
+    resolved.gSlots = _resolvedMountsForWeapon(definition, configuration, "G", loadout.G)
+    resolved.hSlots = _resolvedMountsForWeapon(definition, configuration, "H", loadout.H)
     
     for i = 1, #resolved.xSlots do
         resolved.xSlots[i].weaponType = loadout.X or resolved.xSlots[i].weaponType
@@ -147,7 +209,8 @@ local function _initInternal(shipType)
         return false, "ship type not found: " .. tostring(shipType)
     end
     
-    local defaultConfigId = definition.defaultSlotConfigurationId
+    local template = _readSpawnTemplate(shipType, definition)
+    local defaultConfigId = template and template.configurationId or definition.defaultSlotConfigurationId
     local configuration = _findConfiguration(definition, defaultConfigId)
     
     if configuration == nil then
@@ -168,7 +231,8 @@ local function _initInternal(shipType)
         return false, shapeError
     end
     
-    local loadout, loadoutError = _buildResolvedLoadout(definition, configuration, configuration.defaultLoadout or {})
+    local requestedLoadout = template and template.loadout or configuration.defaultLoadout or {}
+    local loadout, loadoutError = _buildResolvedLoadout(definition, configuration, requestedLoadout)
     if loadout == nil then
         return false, loadoutError
     end
@@ -282,7 +346,7 @@ end
 function _loadoutAPI.resolveShipDefinition(shipType)
     local resolvedType = shipType or server.defaultShipType or "enigmaticCruiser"
     if not _ensureInitialized(resolvedType) then
-        return _loadoutAPI.resolveShipDefinition(resolvedType)
+        return nil
     end
     
     local resolved = _resolvedDefinitionByType[resolvedType]
@@ -291,9 +355,43 @@ function _loadoutAPI.resolveShipDefinition(shipType)
     end
     
     if resolved == nil then
-        return _loadoutAPI.resolveShipDefinition(resolvedType)
+        return nil
     end
     return resolved
+end
+
+function _loadoutAPI.getSpawnTemplate(shipType)
+    local resolvedType = shipType or server.defaultShipType or "enigmaticCruiser"
+    local definition = _resolveShipDefinition(resolvedType)
+    local template = _readSpawnTemplate(resolvedType, definition)
+    if template ~= nil then return _cloneTable(template) end
+
+    local configuration = _findConfiguration(definition, definition.defaultSlotConfigurationId)
+    if configuration == nil then return nil end
+    local loadout = _buildResolvedLoadout(definition, configuration, configuration.defaultLoadout or {})
+    if loadout == nil then return nil end
+    return {
+        configurationId = tostring(configuration.configurationId or definition.defaultSlotConfigurationId),
+        loadout = loadout,
+    }
+end
+
+function _loadoutAPI.setSpawnTemplate(shipType, configurationId, requestedLoadout)
+    local resolvedType = shipType or server.defaultShipType or "enigmaticCruiser"
+    local definition = _resolveShipDefinition(resolvedType)
+    local configuration = _findConfiguration(definition, configurationId)
+    if configuration == nil then return false, "configuration not found" end
+
+    local shapeOk, shapeError = _validateConfigurationShape(configuration)
+    if not shapeOk then return false, shapeError end
+    local loadout, loadoutError = _buildResolvedLoadout(definition, configuration, requestedLoadout or {})
+    if loadout == nil then return false, loadoutError end
+
+    SetString(_templateKey(resolvedType, "configurationId"), tostring(configuration.configurationId or configurationId), true)
+    for _, slotType in ipairs({ "X", "L", "M", "G", "H" }) do
+        SetString(_templateKey(resolvedType, slotType), tostring(loadout[slotType] or ""), true)
+    end
+    return true, nil
 end
 
 -- 将API导出到server表，供API文件使用

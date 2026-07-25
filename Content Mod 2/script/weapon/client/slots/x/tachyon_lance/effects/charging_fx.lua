@@ -31,7 +31,7 @@ local function _clearEffectsByShip(shipBodyId)
     end
 end
 
-local function _spawnChargingEntry(shipBodyId, shipT, targetLocalPos, radiusScale)
+local function _spawnChargingEntry(shipBodyId, shipT, targetLocalPos, radiusScale, weaponType)
     local scale = radiusScale or 1.0
     local fxRadius = 3.0 * scale
 
@@ -54,10 +54,11 @@ local function _spawnChargingEntry(shipBodyId, shipT, targetLocalPos, radiusScal
         life = 0.52 + 0.22 * math.random(),
         radius = 0.056 + 0.035 * math.random(),
         speed = 7.0 + 4.5 * math.random(),
+        weaponType = tostring(weaponType or "tachyonLance"),
     })
 end
 
-local function _startOrUpdateChargingEmitter(shipBodyId, firePointWorld)
+local function _startOrUpdateChargingEmitter(shipBodyId, firePointWorld, weaponType)
     local shipT = GetBodyTransform(shipBodyId)
     local targetLocalPos = TransformToLocalPoint(shipT, firePointWorld)
     local emitters = client.tachyonChargingFxState.emittersByShip
@@ -66,10 +67,12 @@ local function _startOrUpdateChargingEmitter(shipBodyId, firePointWorld)
         emitter = {
             accumulator = 0.0,
             targetLocalPos = targetLocalPos,
+            weaponType = tostring(weaponType or "tachyonLance"),
         }
         emitters[shipBodyId] = emitter
     else
         emitter.targetLocalPos = targetLocalPos
+        emitter.weaponType = tostring(weaponType or "tachyonLance")
     end
 end
 
@@ -89,7 +92,11 @@ function client.tachyonChargingFxTick(dt)
 
                 if seq ~= lastSeq then
                     if render.eventType == "charging_start" then
-                        _startOrUpdateChargingEmitter(shipBodyId, _tableToVec(render.firePoint))
+                        _startOrUpdateChargingEmitter(
+                            shipBodyId,
+                            _tableToVec(render.firePoint),
+                            render.weaponType
+                        )
                     else
                         state.emittersByShip[shipBodyId] = nil
                     end
@@ -117,7 +124,13 @@ function client.tachyonChargingFxTick(dt)
             )
             emitter.accumulator = emitter.accumulator - spawnCount
             for _ = 1, spawnCount do
-                _spawnChargingEntry(shipBodyId, shipT, emitter.targetLocalPos, 1.25)
+                _spawnChargingEntry(
+                    shipBodyId,
+                    shipT,
+                    emitter.targetLocalPos,
+                    1.25,
+                    emitter.weaponType
+                )
             end
         end
     end
@@ -159,7 +172,11 @@ function client.tachyonChargingFxTick(dt)
             local pulse = 0.70 + 0.30 * (1.0 - rawT)
 
             ParticleReset()
-            ParticleColor(0.96, 1.0, 1.0, 0.16, 0.45, 1.0)
+            if entry.weaponType == "focusedArcEmitter" then
+                ParticleColor(0.82, 0.24, 1.0, 0.46, 0.08, 0.78)
+            else
+                ParticleColor(0.96, 1.0, 1.0, 0.16, 0.45, 1.0)
+            end
             ParticleRadius(entry.radius, 0.014, "easeout")
             ParticleAlpha(0.86, 0.0)
             ParticleGravity(0.0)

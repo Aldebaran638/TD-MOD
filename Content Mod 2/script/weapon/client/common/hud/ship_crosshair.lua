@@ -33,7 +33,9 @@ local function _resolveCrosshairRangeByMode(mode)
             return maxRange
         end
     elseif mode == "xSlot" then
-        local xWeapon = defs.tachyonLance or {}
+        local xWeapon = client.getShipWeaponDefinition ~= nil
+            and client.getShipWeaponDefinition(client.shipBody or 0, "xSlot")
+            or (defs.tachyonLance or {})
         local maxRange = tonumber(xWeapon.maxRange) or 0.0
         if maxRange > 0.0 then
             return maxRange
@@ -117,16 +119,12 @@ end
 
 function client.shipCrosshairDraw()
     local cfg = client.shipCrosshairConfig
+    if client.weaponConfigUiIsOpen ~= nil and client.weaponConfigUiIsOpen() then return end
 
     local body = _resolveControlledShipBody()
     if body == 0 then
         return
     end
-    if client.getShipMainWeaponMode ~= nil then
-        local mode = client.getShipMainWeaponMode(body)
-        if mode == "mSlot" or mode == "gSlot" then return end
-    end
-
     local currentMode = client.getShipMainWeaponMode ~= nil and client.getShipMainWeaponMode(body) or "xSlot"
     local maxRange = _resolveCrosshairRangeByMode(currentMode)
     local weaponAimState = client.shipCameraGetWeaponAimState ~= nil and client.shipCameraGetWeaponAimState(body) or nil

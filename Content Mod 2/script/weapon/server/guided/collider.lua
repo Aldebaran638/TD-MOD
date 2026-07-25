@@ -40,6 +40,7 @@ local function _guidedProjectileApplyShipDamage(hitBody, projectile)
         return hp
     end
 
+    targetShieldHP = _applyLayer("shield", targetShieldHP, projectile.shieldFix)
     targetArmorHP = _applyLayer("armor", targetArmorHP, projectile.armorFix)
     targetBodyHP = _applyLayer("body", targetBodyHP, projectile.bodyFix)
 
@@ -95,12 +96,12 @@ local function _guidedProjectileHandleHit(projectile, hitPos, hitBody)
     local bodyId = hitBody or 0
     if bodyId ~= 0 and server.registryShipExists(bodyId) and not server.registryShipIsBodyDead(bodyId) then
         local impactLayer = _guidedProjectileApplyShipDamage(bodyId, projectile)
-        server.guidedProjectilePlayImpactSound(pos)
+        server.guidedProjectilePlayImpactSound(projectile.weaponType, pos)
         server.guidedProjectilePlayImpactFx(pos, impactLayer ~= "none" and impactLayer or "body")
         return
     end
     if bodyId ~= 0 then
-        server.guidedProjectilePlayImpactSound(pos)
+        server.guidedProjectilePlayImpactSound(projectile.weaponType, pos)
         Explosion(pos, 1.0)
     end
 end
@@ -119,7 +120,9 @@ function server.guidedProjectileColliderPostUpdate()
             projectile.distanceTravelled = (projectile.distanceTravelled or 0.0) + VecLength(VecSub(probes.center, preCenter))
 
             local currentPos = bodyT.pos
-            local currentVel = GetBodyVelocity(bodyId)
+            local currentVel = projectile.ignoreGravity
+                and (projectile.kinematicVelocity or Vec(0, 0, 0))
+                or GetBodyVelocity(bodyId)
             ClientCall(
                 0,
                 "client.updateMissileVisual",
