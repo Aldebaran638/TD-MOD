@@ -8,6 +8,7 @@ weaponData = weaponData or {}
 #include "m/swarmer_missile.lua"
 #include "g/devastator_torpedoes.lua"
 #include "h/gamma_strike_craft.lua"
+#include "standard_weapons.lua"
 
 -- 可以在此处继续添加更多武器配置，例如：
 -- weaponData.plasmaCannon = { ... }

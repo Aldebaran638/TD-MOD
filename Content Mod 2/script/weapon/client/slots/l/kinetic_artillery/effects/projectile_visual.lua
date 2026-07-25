@@ -27,26 +27,33 @@ client.projectileVisualState = client.projectileVisualState or {
     byId = {},
 }
 
-local function _projectileColor(cfg)
+local function _projectileColor(cfg, fxProfile)
+    if fxProfile == "plasmaProjectile" then
+        return { 0.30, 0.75, 1.0 }, { 0.10, 0.25, 1.0 }
+    end
+    if fxProfile == "autocannonProjectile" then
+        return { 1.0, 0.98, 0.82 }, { 1.0, 0.48, 0.08 }
+    end
     local ca = cfg.colorA or { 1.0, 0.85, 0.45 }
     local cb = cfg.colorB or { 1.0, 0.45, 0.12 }
     return ca, cb
 end
 
 function client.spawnProjectileVisual(projectileId, weaponType, px, py, pz, vx, vy, vz, lifeRemain)
-    local _ = weaponType
+    local definition = (weaponData or {})[tostring(weaponType or "")] or {}
     client.projectileVisualState.byId[projectileId] = {
         id = projectileId,
         position = Vec(px or 0, py or 0, pz or 0),
         lastPosition = Vec(px or 0, py or 0, pz or 0),
         velocity = Vec(vx or 0, vy or 0, vz or 0),
         lifeRemain = tonumber(lifeRemain) or 0.0,
+        fxProfile = tostring(definition.fxProfile or "kineticProjectile"),
     }
 end
 
-local function _spawnProjectileImpact(pos)
+local function _spawnProjectileImpact(pos, fxProfile)
     local cfg = client.projectileVisualConfig
-    local ca, cb = _projectileColor(cfg)
+    local ca, cb = _projectileColor(cfg, fxProfile)
 
     PointLight(pos, ca[1], ca[2], ca[3], (cfg.pointLightRadius or 7.0) * 1.35)
     PointLight(pos, cb[1], cb[2], cb[3], (cfg.pointLightRadius or 7.0) * 0.95)
@@ -98,19 +105,19 @@ end
 
 function client.finishProjectileVisual(projectileId, mode, hitX, hitY, hitZ)
     local visuals = client.projectileVisualState.byId
+    local projectile = visuals[projectileId] or {}
     visuals[projectileId] = nil
 
     if mode == "impact" then
-        _spawnProjectileImpact(Vec(hitX or 0, hitY or 0, hitZ or 0))
+        _spawnProjectileImpact(Vec(hitX or 0, hitY or 0, hitZ or 0), projectile.fxProfile)
     end
 end
 
 function client.projectileVisualTick(dt)
     local visuals = client.projectileVisualState.byId
     local cfg = client.projectileVisualConfig
-    local ca, cb = _projectileColor(cfg)
-
     for projectileId, projectile in pairs(visuals) do
+        local ca, cb = _projectileColor(cfg, projectile.fxProfile)
         local stepDt = math.min(math.max(projectile.lifeRemain or 0.0, 0.0), math.max(dt or 0.0, 0.0))
         if stepDt <= 0.0 then
             visuals[projectileId] = nil

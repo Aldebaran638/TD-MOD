@@ -145,11 +145,7 @@ function server.mainWeaponControlTick(dt)
     end
 
     local current = server.shipRuntimeGetCurrentMainWeapon(shipBody)
-    if current == "lSlot" then
-        server.lSlotStateSetRequestFire(true)
-    elseif current == "xSlot" then
-        if server.xSlotStateSetRequestFire ~= nil then
-            server.xSlotStateSetRequestFire(true)
-        end
+    if server.weaponGroupRequestFire ~= nil then
+        server.weaponGroupRequestFire(current, { shipBodyId = shipBody })
     end
 end

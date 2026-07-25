@@ -13,6 +13,14 @@
 #include "ship/battlecruiser/server/registry/ship_registry.lua"
 #include "ship/battlecruiser/server/registry/ship_registry_request.lua"
 #include "ship/battlecruiser/server/bootstrap/ship_init.lua"
+#include "weapon/server/common/runtime/damage.lua"
+#include "weapon/server/common/runtime/behavior_registry.lua"
+#include "weapon/server/behaviors/common.lua"
+#include "weapon/server/behaviors/raycast.lua"
+#include "weapon/server/behaviors/projectile.lua"
+#include "weapon/server/behaviors/guided_projectile.lua"
+#include "weapon/server/behaviors/strike_craft.lua"
+#include "weapon/server/common/runtime/weapon_group.lua"
 
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
@@ -83,7 +91,9 @@ function server.init()
     server.mSlotControlInit("enigmaticCruiser")
     server.gSlotControlInit("enigmaticCruiser")
     server.hSlotStateInit("enigmaticCruiser")
+    server.weaponGroupInit("enigmaticCruiser")
     server.shipRuntimeSyncMainWeapon(server.shipBody, true)
+    server.shipWeaponSyncConfiguration("enigmaticCruiser")
 
 end
 
@@ -95,6 +105,7 @@ end
 function server.serverTick(dt)
     -- server.ensureCurrentShipState(defaultShipType)
     server.mainWeaponControlTick(dt)
+    server.weaponGroupTick(dt)
     server.runtimeStateTick(dt)
     server.xSlotControlTick(dt)
     server.tachyonMuzzleLightTick(dt)

@@ -11,9 +11,9 @@ server.projectileManagerState = server.projectileManagerState or {
 local registryShipIndexRoot = "StellarisShips/server/ships/index"
 
 local function _resolveProjectileWeaponSettings(weaponType)
-    local defs = lSlotWeaponRegistryData or {}
+    local defs = weaponData or {}
     local resolvedWeaponType = weaponType or "kineticArtillery"
-    return defs[resolvedWeaponType] or defs.kineticArtillery or {}
+    return defs[resolvedWeaponType] or (lSlotWeaponRegistryData or {})[resolvedWeaponType] or defs.kineticArtillery or {}
 end
 
 local function _safeNormalizeProjectile(v, fallback)
@@ -83,6 +83,15 @@ end
 local function _finishProjectileVisual(projectileId, mode, hitPos)
     local p = hitPos or Vec(0, 0, 0)
     ClientCall(0, "client.finishProjectileVisual", projectileId, mode or "none", p[1], p[2], p[3])
+end
+
+function server.projectileManagerReset()
+    local active = (server.projectileManagerState or {}).active or {}
+    for i = #active, 1, -1 do
+        _finishProjectileVisual(active[i].id or 0, "none", active[i].position)
+        active[i] = nil
+    end
+    server.projectileManagerState = { nextId = 1, active = {} }
 end
 
 local function _playProjectileFireSound(firePos)

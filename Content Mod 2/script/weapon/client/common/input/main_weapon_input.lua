@@ -103,21 +103,24 @@ function client.mainWeaponInputTick(dt)
 
     -- 步骤2：按当前独立武器组发送开火请求。
     if InputPressed("lmb") then
-        if currentMode == "mSlot" then
+        local weaponDefinition = client.getShipWeaponDefinition ~= nil
+            and client.getShipWeaponDefinition(shipBody, currentMode) or {}
+        local requiresLock = tostring(weaponDefinition.targetingMode or "") == "target_lock"
+        if requiresLock and currentMode == "mSlot" then
             if client.guidedTargetingCanFire ~= nil and client.guidedTargetingCanFire(shipBody) then
                 local targetVehicleId = client.guidedTargetingGetLockedVehicleId ~= nil and client.guidedTargetingGetLockedVehicleId(shipBody) or 0
                 if targetVehicleId ~= 0 and client.shipRequestMWeaponFire ~= nil then
                     client.shipRequestMWeaponFire(shipBody, targetVehicleId)
                 end
             end
-        elseif currentMode == "gSlot" then
+        elseif requiresLock and currentMode == "gSlot" then
             if client.guidedTargetingCanFire ~= nil and client.guidedTargetingCanFire(shipBody) then
                 local targetVehicleId = client.guidedTargetingGetLockedVehicleId ~= nil and client.guidedTargetingGetLockedVehicleId(shipBody) or 0
                 if targetVehicleId ~= 0 and client.shipRequestGWeaponFire ~= nil then
                     client.shipRequestGWeaponFire(shipBody, targetVehicleId)
                 end
             end
-        elseif currentMode == "hSlot" then
+        elseif requiresLock and currentMode == "hSlot" then
             if client.guidedTargetingCanFire ~= nil and client.guidedTargetingCanFire(shipBody) then
                 local targetVehicleId = client.guidedTargetingGetLockedVehicleId ~= nil and client.guidedTargetingGetLockedVehicleId(shipBody) or 0
                 if targetVehicleId ~= 0 and client.shipRequestHWeaponFire ~= nil then

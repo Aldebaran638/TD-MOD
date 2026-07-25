@@ -177,6 +177,10 @@ end
 
 local function _shipCameraResolveWeaponConfig(shipBodyId)
     local mode = (client.getShipMainWeaponMode ~= nil and shipBodyId ~= 0) and client.getShipMainWeaponMode(shipBodyId) or "xSlot"
+    if client.getShipWeaponDefinition ~= nil then
+        local configured = client.getShipWeaponDefinition(shipBodyId, mode)
+        if configured.weaponType ~= nil then return configured, mode end
+    end
     local defs = weaponData or {}
     if mode == "lSlot" then
         return defs.kineticArtillery or {}, mode

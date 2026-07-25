@@ -132,6 +132,7 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         targetBodyId = math.floor(targetBodyId or 0),
         targetVehicleId = math.floor(targetVehicleId or 0),
         damage = tonumber(cfg.damage) or 0.0,
+        shieldFix = tonumber(cfg.shieldFix) or 1.0,
         armorFix = tonumber(cfg.armorFix) or 1.0,
         bodyFix = tonumber(cfg.bodyFix) or 1.0,
         cruiseSpeed = tonumber(cfg.cruiseSpeed) or 0.0,

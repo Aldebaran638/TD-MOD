@@ -37,6 +37,12 @@ local function _findConfiguration(definition, configurationId)
         if tostring(cfg.configurationId or "") == tostring(configurationId or "") then
             return cfg
         end
+        local aliases = cfg.legacyConfigurationIds or {}
+        for aliasIndex = 1, #aliases do
+            if tostring(aliases[aliasIndex] or "") == tostring(configurationId or "") then
+                return cfg
+            end
+        end
     end
     return nil
 end
@@ -46,7 +52,16 @@ local function _weaponAllowed(definition, slotType, weaponType)
     local pool = pools[slotType] or {}
     for i = 1, #pool do
         if tostring(pool[i]) == tostring(weaponType) then
-            return true
+            local weapon = (weaponData or {})[tostring(weaponType)]
+            if weapon == nil then return false end
+            local allowedSlots = weapon.slotTypes or {}
+            for slotIndex = 1, #allowedSlots do
+                if tostring(allowedSlots[slotIndex]) == tostring(slotType) then
+                    return weaponBehaviorProfiles ~= nil
+                        and weaponBehaviorProfiles[tostring(weapon.behaviorType or "")] == true
+                end
+            end
+            return false
         end
     end
     return false
@@ -282,7 +297,7 @@ end
 function _loadoutAPI.resolveShipDefinition(shipType)
     local resolvedType = shipType or server.defaultShipType or "enigmaticCruiser"
     if not _ensureInitialized(resolvedType) then
-        return _loadoutAPI.resolveShipDefinition(resolvedType)
+        return nil
     end
     
     local resolved = _resolvedDefinitionByType[resolvedType]
@@ -291,7 +306,7 @@ function _loadoutAPI.resolveShipDefinition(shipType)
     end
     
     if resolved == nil then
-        return _loadoutAPI.resolveShipDefinition(resolvedType)
+        return nil
     end
     return resolved
 end

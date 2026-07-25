@@ -4,6 +4,8 @@
 !test-check-encoding.ps1
 !check-lua.ps1
 !test-check-lua.ps1
+!check-weapon-system.ps1
+!test-check-weapon-system.ps1
 !docs/
 !docs/**
 !prompt.md

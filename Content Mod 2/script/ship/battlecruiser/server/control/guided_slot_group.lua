@@ -44,6 +44,7 @@ local function _guidedGroupBuildLauncherConfig(slotDef)
         turnRate = tonumber(weaponDef.turnRate) or 0.0,
         turnImpulse = tonumber(weaponDef.turnImpulse) or 0.0,
         damage = tonumber(weaponDef.damage) or 0.0,
+        shieldFix = tonumber(weaponDef.shieldFix) or 1.0,
         armorFix = tonumber(weaponDef.armorFix) or 1.0,
         bodyFix = tonumber(weaponDef.bodyFix) or 1.0,
     }

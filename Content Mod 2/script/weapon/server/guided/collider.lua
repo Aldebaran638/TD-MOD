@@ -40,6 +40,7 @@ local function _guidedProjectileApplyShipDamage(hitBody, projectile)
         return hp
     end
 
+    targetShieldHP = _applyLayer("shield", targetShieldHP, projectile.shieldFix)
     targetArmorHP = _applyLayer("armor", targetArmorHP, projectile.armorFix)
     targetBodyHP = _applyLayer("body", targetBodyHP, projectile.bodyFix)
 

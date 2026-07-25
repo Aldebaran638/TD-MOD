@@ -32,10 +32,23 @@ shipTypeRegistryData.enigmaticCruiser = {
         },
     },
     slotWeaponPools = {
-        X = { "tachyonLance" },
-        L = { "kineticArtillery" },
-        M = { "swarmerMissile" },
-        G = { "devastatorTorpedoes" },
+        X = { "tachyonLance", "focusedArcEmitter", "gigaCannon" },
+        L = {
+            "largeGammaLaser",
+            "largePlasmaCannon",
+            "largeGaussCannon",
+            "kineticArtillery",
+            "largeStormfireAutocannon",
+        },
+        M = {
+            "mediumGammaLaser",
+            "mediumPlasmaCannon",
+            "phaseDisruptor",
+            "mediumGaussCannon",
+            "mediumStormfireAutocannon",
+            "swarmerMissile",
+        },
+        G = { "devastatorTorpedoes", "neutronLauncher" },
         H = { "gammaStrikeCraft" },
     },
     defaultSlotConfigurationId = "battleline_2x2l4m",
@@ -112,12 +125,13 @@ shipTypeRegistryData.enigmaticCruiser = {
             },
         },
         {
-            configurationId = "siege_2x4g2m",
-            label = "2X 4G 2M",
+            configurationId = "torpedo_2x4g4m",
+            legacyConfigurationIds = { "siege_2x4g2m" },
+            label = "2H 2X 4G 4M",
             slotGroups = {
                 { slotType = "X", count = 2, mountCollection = "xSlots" },
                 { slotType = "G", count = 4, mountCollection = "gSlots" },
-                { slotType = "M", count = 2, mountCollection = "mSlots" },
+                { slotType = "M", count = 4, mountCollection = "mSlots" },
                 { slotType = "H", count = 2, mountCollection = "hSlots" },
             },
             defaultLoadout = {
@@ -145,6 +159,14 @@ shipTypeRegistryData.enigmaticCruiser = {
                     {
                         firePosOffset = { x = -0.3, y = 5, z = 2 },
                         fireDirRelative = { x = -600, y = 300, z = 0 },
+                    },
+                    {
+                        firePosOffset = { x = 0.3, y = -5, z = 2 },
+                        fireDirRelative = { x = 600, y = -300, z = 0 },
+                    },
+                    {
+                        firePosOffset = { x = -0.3, y = -5, z = 2 },
+                        fireDirRelative = { x = -600, y = -300, z = 0 },
                     },
                 },
                 gSlots = {

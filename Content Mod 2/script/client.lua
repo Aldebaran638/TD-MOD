@@ -6,6 +6,7 @@ client = client or {}
 #include "ship/battlecruiser/client/registry/ship_registry.lua"
 #include "ship/battlecruiser/client/state/ship_runtime_state.lua"
 #include "ship/battlecruiser/client/state/ship_runtime_state_api.lua"
+#include "weapon/client/common/state/weapon_loadout.lua"
 #include "weapon/client/slots/x/state/render_state.lua"
 #include "weapon/client/slots/x/state/render_state_api.lua"
 #include "weapon/client/slots/x/targeting/x_slot_targeting.lua"
@@ -25,6 +26,7 @@ client = client or {}
 #include "weapon/client/slots/x/tachyon_lance/effects/beam_fx.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/muzzle_fx.lua"
 #include "weapon/client/common/effects/shield_hit_fx.lua"
+#include "weapon/client/common/effects/generic_raycast_fx.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/impact_fx.lua"
 #include "ship/battlecruiser/client/effects/ship_destroyed_fx.lua"
 #include "weapon/client/slots/l/kinetic_artillery/effects/projectile_visual.lua"
@@ -40,9 +42,11 @@ function client.init()
     client.tachyonBeamFxInit()
     client.shipBody = FindBody("stellarisShip", false)
     client.tachyonMuzzleFxInit()
+    client.genericRaycastFxInit()
 end
 
 function client.clientTick(dt)
+    client.weaponLoadoutSyncTick(dt)
     client.mainWeaponInputTick(dt)
     client.bodyMoveInputTick(dt)
     client.soundModuleTick(dt)
@@ -57,6 +61,7 @@ function client.clientTick(dt)
     client.missileVisualTick(dt)
     client.missileWarpFxTick(dt)
     client.hSlotBeamFxTick(dt)
+    client.genericRaycastFxTick(dt)
 
     client.guidedTargetingTick(dt)
     client.xSlotTargetingTick(dt)
@@ -82,4 +87,5 @@ function client.render()
     client.hSlotBeamFxRender()
     client.tachyonBeamFxRender()
     client.tachyonMuzzleFxRender()
+    client.genericRaycastFxRender()
 end
