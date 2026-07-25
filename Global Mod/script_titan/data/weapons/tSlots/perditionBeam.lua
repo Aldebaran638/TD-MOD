@@ -56,7 +56,7 @@ local perditionBeamData = {
     beamForwardParticleSpeed = 40.0,
     beamForwardParticleEmissive = 30.0,
     
-    shockwaveParticleCount = 2400,
+    shockwaveParticleCount = 360,
     shockwaveLightIntensity = 175.0,
     shockwaveParticleSpeedBase = 750.0,
     shockwaveParticleSpeedDecay = 437.5,
@@ -64,12 +64,12 @@ local perditionBeamData = {
     
     explosionRadius = 4.0,
     explosionStrength = 1.0,
-    explosionWaves = 20,
-    explosionWaveInterval = 0.4,
-    explosionFirstWaveCount = 12,
+    explosionWaves = 6,
+    explosionWaveInterval = 0.25,
+    explosionFirstWaveCount = 4,
     explosionWaveRadiusIncrement = 10.0,
-    explosionWaveCountIncrement = 8,
-    explosionHeightLayers = 15,
+    explosionWaveCountIncrement = 2,
+    explosionHeightLayers = 4,
     explosionHeightSpacing = 3.0,
 }
 

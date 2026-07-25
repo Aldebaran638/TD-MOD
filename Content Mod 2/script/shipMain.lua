@@ -29,6 +29,7 @@
 #include "ship/battlecruiser/server/fire_control/main_weapon_control_api.lua"
 #include "weapon/server/controllers/xSlotState.lua"
 #include "weapon/server/controllers/xSlotRenderState.lua"
+#include "weapon/server/effects/tachyonMuzzleLight.lua"
 #include "weapon/server/controllers/xSlotControl.lua"
 #include "weapon/server/controllers/lSlotControl.lua"
 #include "weapon/server/runtime/guided_projectile/runtime.lua"
@@ -77,6 +78,7 @@ function server.init()
     server.mainWeaponControlInit()
     server.xSlotStateInit("enigmaticCruiser")
     server.xSlotRenderStateInit()
+    server.tachyonMuzzleLightInit()
     server.lSlotStateInit("enigmaticCruiser")
     server.guidedProjectileRuntimeInit()
     server.mSlotControlInit("enigmaticCruiser")
@@ -96,6 +98,7 @@ function server.serverTick(dt)
     server.mainWeaponControlTick(dt)
     server.runtimeStateTick(dt)
     server.xSlotControlTick(dt)
+    server.tachyonMuzzleLightTick(dt)
     server.lSlotControlTick(dt)
     server.mSlotControlTick(dt)
     server.gSlotControlTick(dt)

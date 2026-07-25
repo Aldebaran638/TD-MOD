@@ -22,7 +22,8 @@ client = client or {}
 #include "weapon/client/hud/guidedTargetingHud.lua"
 #include "weapon/client/hud/xSlotLockHud.lua"
 #include "weapon/client/effects/xSlotChargingFx.lua"
-#include "weapon/client/effects/xSlotLaunchFx.lua"
+#include "weapon/client/effects/tachyonBeamFx.lua"
+#include "weapon/client/effects/tachyonMuzzleFx.lua"
 #include "weapon/client/effects/shieldHitFx.lua"
 #include "weapon/client/effects/hitPointFx.lua"
 #include "ship/battlecruiser/client/effects/shipDestroyedFx.lua"
@@ -35,7 +36,9 @@ function client.init()
     client.shipRuntimeStateInit()
     client.xSlotRenderStateInit()
     client.soundModuleInit()
+    client.tachyonBeamFxInit()
     client.shipBody = FindBody("stellarisShip", false)
+    client.tachyonMuzzleFxInit()
 end
 
 function client.clientTick(dt)
@@ -44,7 +47,8 @@ function client.clientTick(dt)
     client.soundModuleTick(dt)
 
     client.xSlotChargingFxTick(dt)
-    client.xSlotLaunchFxTick(dt)
+    client.tachyonBeamFxTick(dt)
+    client.tachyonMuzzleFxTick(dt)
     client.shieldHitFxTick(dt)
     client.hitPointFxTick(dt)
     client.shipDestroyedFxTick(dt)
@@ -75,4 +79,6 @@ function client.render()
     -- 更新导弹视觉效果
     client.missileVisualTick(0)
     client.hSlotBeamFxRender()
+    client.tachyonBeamFxRender()
+    client.tachyonMuzzleFxRender()
 end
