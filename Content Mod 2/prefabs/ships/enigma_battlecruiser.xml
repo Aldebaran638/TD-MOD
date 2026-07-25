@@ -9,6 +9,8 @@
 					<vox tags="missileLauncher" pos="0.5 -7.0 1.1" rot="0 0 180" file="MOD/vox/missileLauncher.vox" mirrorx="true"/>
 					<vox tags="primaryWeaponLauncher" pos="0.0 0.0 0.0" file="MOD/vox/primaryWeaponLauncher.vox">
 						<light name="Tachyon Muzzle Light" tags="tachyonMuzzleLight" pos="0.0 0.0 -4.0" color="0.45 0.85 1.0" scale="100" size="0.8" unshadowed="0.5" glare="1.0"/>
+						<light name="Arc Muzzle Light Left" tags="arcMuzzleLightLeft" pos="-2.5 0.0 -3.4" color="0.52 0.10 1.0" scale="100" size="0.65" unshadowed="0.5" glare="1.0"/>
+						<light name="Arc Muzzle Light Right" tags="arcMuzzleLightRight" pos="2.5 0.0 -3.4" color="0.52 0.10 1.0" scale="100" size="0.65" unshadowed="0.5" glare="1.0"/>
 					</vox>
 					<vox tags="hull" pos="0.0 0.0 0.0" file="MOD/vox/hull.vox"/>
 					<vox tags="thruster" pos="-1.1 0.4 1.3" file="MOD/vox/thruster.vox"/>

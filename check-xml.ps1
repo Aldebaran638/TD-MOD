@@ -171,6 +171,14 @@ if ($null -ne $prefabDocument) {
     if ($null -eq $light) {
         Add-Issue "battlecruiser prefab is missing light tag tachyonMuzzleLight"
     }
+    foreach ($arcLightTag in @("arcMuzzleLightLeft", "arcMuzzleLightRight")) {
+        $arcLight = @($prefabDocument.SelectNodes("//light") | Where-Object {
+            Test-TagToken ([string]$_.tags) $arcLightTag
+        }) | Select-Object -First 1
+        if ($null -eq $arcLight) {
+            Add-Issue "battlecruiser prefab is missing light tag $arcLightTag"
+        }
+    }
 
     $scriptNode = $prefabDocument.SelectSingleNode("/prefab/group//script[@file]")
     if ($null -ne $scriptNode) {

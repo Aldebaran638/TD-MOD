@@ -70,6 +70,8 @@ end
       <vehicle tags="stellarisShip">
         <body tags="stellarisShip">
           <light tags="tachyonMuzzleLight"/>
+          <light tags="arcMuzzleLightLeft"/>
+          <light tags="arcMuzzleLightRight"/>
         </body>
         <location name="Player" tags="player"/>
         <location name="exit" tags="exit"/>
