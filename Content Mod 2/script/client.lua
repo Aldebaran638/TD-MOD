@@ -51,6 +51,8 @@ end
 
 function client.clientTick(dt)
     client.weaponLoadoutSyncTick(dt)
+    client.guidedTargetingTick(dt)
+    client.xSlotTargetingTick(dt)
     client.mainWeaponInputTick(dt)
     client.bodyMoveInputTick(dt)
     client.soundModuleTick(dt)
@@ -67,8 +69,6 @@ function client.clientTick(dt)
     client.hSlotBeamFxTick(dt)
     client.genericRaycastFxTick(dt)
 
-    client.guidedTargetingTick(dt)
-    client.xSlotTargetingTick(dt)
     client.shipHealthBarTick(dt)
     client.mainWeaponHudTick(dt)
     client.shipHelpOverlayTick(dt)

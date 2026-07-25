@@ -42,7 +42,7 @@ local function _projectileStyle(cfg, fxProfile)
         return {
             colorA = { 0.90, 0.44, 1.0 },
             colorB = { 0.34, 0.04, 0.78 },
-            trailSpacing = 2.2,
+            trailSpacing = 1.1,
             particleRadius = 0.62,
             emissive = 38.0,
             pointLightRadius = 10.0,

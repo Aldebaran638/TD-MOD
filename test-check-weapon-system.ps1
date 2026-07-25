@@ -47,6 +47,25 @@ try {
     $invalid = Invoke-Checker
     Assert-True ($invalid.ExitCode -eq 1) "rejects a missing required weapon"
     Assert-True ($invalid.Output -match "focusedArcEmitter") "reports the missing weapon id"
+
+    [IO.File]::WriteAllText($standardPath, $text.Replace('_ray("brokenArcEmitter"', '_ray("focusedArcEmitter"'), (New-Object Text.UTF8Encoding($false)))
+    $profileText = [IO.File]::ReadAllText($standardPath)
+    $profileText = $profileText.Replace(
+        'gigaCannon = { "xSpinal", 1, "sequential" }',
+        'gigaCannon = { "xSpinal", 2, "grouped" }'
+    )
+    [IO.File]::WriteAllText($standardPath, $profileText, (New-Object Text.UTF8Encoding($false)))
+    $invalidGiga = Invoke-Checker
+    Assert-True ($invalidGiga.ExitCode -eq 1) "rejects simultaneous Giga Cannon barrels"
+    Assert-True ($invalidGiga.Output -match "Giga Cannon") "reports the Giga Cannon salvo contract"
+
+    [IO.File]::WriteAllText($standardPath, $text.Replace('_ray("brokenArcEmitter"', '_ray("focusedArcEmitter"'), (New-Object Text.UTF8Encoding($false)))
+    $inputPath = Join-Path $fixtureMod "script\weapon\client\common\input\main_weapon_input.lua"
+    $inputText = [IO.File]::ReadAllText($inputPath).Replace('InputDown("lmb")', 'InputPressed("lmb")')
+    [IO.File]::WriteAllText($inputPath, $inputText, (New-Object Text.UTF8Encoding($false)))
+    $invalidHold = Invoke-Checker
+    Assert-True ($invalidHold.ExitCode -eq 1) "rejects click-only weapon input"
+    Assert-True ($invalidHold.Output -match "hold-to-refire") "reports the continuous-fire input contract"
 }
 finally {
     if ($KeepFixtures) {

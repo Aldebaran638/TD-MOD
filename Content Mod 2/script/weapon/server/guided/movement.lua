@@ -13,7 +13,9 @@ function server.guidedProjectileMovementUpdate(dt)
             local bodyT = GetBodyTransform(bodyId)
             local currentRot = bodyT.rot
             local currentPos = bodyT.pos
-            local currentVel = GetBodyVelocity(bodyId)
+            local currentVel = projectile.ignoreGravity
+                and (projectile.kinematicVelocity or Vec(0, 0, 0))
+                or GetBodyVelocity(bodyId)
             local currentSpeed = VecLength(currentVel)
             local fallbackDir = server.guidedProjectileNormalize(TransformToParentVec(bodyT, Vec(0, 0, -1)), Vec(0, 0, -1))
             local currentDir = server.guidedProjectileNormalize(currentVel, fallbackDir)
@@ -65,15 +67,21 @@ function server.guidedProjectileMovementUpdate(dt)
             projectile.desiredRot = QuatLookAt(currentPos, VecAdd(currentPos, blendedDir))
 
             SetBodyActive(bodyId, true)
-            SetBodyVelocity(bodyId, desiredVel)
-            ConstrainOrientation(
-                bodyId,
-                0,
-                currentRot,
-                projectile.desiredRot,
-                projectile.turnRate or 0.0,
-                projectile.turnImpulse or 0.0
-            )
+            if projectile.ignoreGravity then
+                projectile.kinematicVelocity = desiredVel
+                local nextPos = VecAdd(currentPos, VecScale(desiredVel, math.max(0.0, dt or 0.0)))
+                SetBodyTransform(bodyId, Transform(nextPos, projectile.desiredRot))
+            else
+                SetBodyVelocity(bodyId, desiredVel)
+                ConstrainOrientation(
+                    bodyId,
+                    0,
+                    currentRot,
+                    projectile.desiredRot,
+                    projectile.turnRate or 0.0,
+                    projectile.turnImpulse or 0.0
+                )
+            end
         end
     end
 end

@@ -99,6 +99,19 @@ function client.shipRequestMainWeaponFire(shipBodyId, request)
     return true
 end
 
+function client.shipRequestWeaponHold(shipBodyId, groupId, active, targetVehicleId)
+    if not client.registryShipExists(shipBodyId) then return false end
+    ServerCall(
+        "server.shipRequestWeaponHold",
+        GetLocalPlayer(),
+        shipBodyId,
+        tostring(groupId or ""),
+        active and 1 or 0,
+        math.floor(targetVehicleId or 0)
+    )
+    return true
+end
+
 function client.shipRequestWeaponConfiguration(shipBodyId)
     if not client.registryShipExists(shipBodyId) then return false end
     ServerCall("server.shipRequestWeaponConfiguration", GetLocalPlayer(), shipBodyId)

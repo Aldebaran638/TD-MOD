@@ -116,8 +116,8 @@ end
 
 -- X
 _ray("tachyonLance", "快子光矛", { "X" }, 2115, 6.0, 500.0, 0.5, 2.0, 1.5, "tachyonLance", 0.50)
-_ray("focusedArcEmitter", "聚能电弧发射器", { "X" }, 1680, 6.5, 520.0, 1.0, 1.0, 2.3, "arcBeam", 0.38)
-_projectile("gigaCannon", "千兆级加农炮", { "X" }, 2350, 7.0, 750.0, 280.0, 2.0, 0.5, 1.0, "gigaCannonProjectile")
+_ray("focusedArcEmitter", "聚能电弧发射器", { "X" }, 1680, 6.0, 520.0, 0.0, 0.0, 2.3, "arcBeam", 0.50)
+_projectile("gigaCannon", "千兆级加农炮", { "X" }, 2350, 3.5, 750.0, 560.0, 2.0, 0.5, 1.0, "gigaCannonProjectile")
 
 -- L
 _ray("largeGammaLaser", "伽马激光", { "L" }, 185, 1.45, 560.0, 0.5, 1.5, 1.25, "energyBeam")
@@ -130,7 +130,8 @@ weaponData.largeStormfireAutocannon.fireProfile.burstInterval = 0.030
 -- M
 _ray("mediumGammaLaser", "伽马激光", { "M" }, 92, 1.1, 390.0, 0.5, 1.5, 1.25, "energyBeam")
 _projectile("mediumPlasmaCannon", "等离子加农炮", { "M" }, 118, 1.5, 330.0, 105.0, 0.5, 2.0, 1.5, "plasmaProjectile")
-_ray("phaseDisruptor", "相位裂解炮", { "M" }, 82, 1.25, 340.0, 1.0, 1.0, 2.0, "arcBeam")
+_ray("phaseDisruptor", "相位裂解炮", { "M" }, 82, 1.25, 340.0, 0.0, 0.0, 2.0, "arcBeam")
+weaponData.phaseDisruptor.suppressShipExplosion = true
 _projectile("mediumGaussCannon", "高斯炮", { "M" }, 104, 1.25, 430.0, 145.0, 1.5, 0.75, 1.0, "kineticProjectile")
 _projectile("mediumStormfireAutocannon", "火风暴机关炮", { "M" }, 28, 0.55, 180.0, 225.0, 1.5, 0.75, 1.0, "autocannonProjectile", 4)
 weaponData.mediumStormfireAutocannon.fireProfile.burstInterval = 0.028
@@ -157,13 +158,84 @@ xSlotWeaponRegistryData = xSlotWeaponRegistryData or {}
 lSlotWeaponRegistryData = lSlotWeaponRegistryData or {}
 hSlotWeaponRegistryData = hSlotWeaponRegistryData or {}
 xSlotWeaponRegistryData.tachyonLance = weaponData.tachyonLance
+xSlotWeaponRegistryData.focusedArcEmitter = weaponData.focusedArcEmitter
 lSlotWeaponRegistryData.kineticArtillery = weaponData.kineticArtillery
 hSlotWeaponRegistryData.gammaStrikeCraft = weaponData.gammaStrikeCraft
 
 weaponData.tachyonLance.legacyController = "xSlot"
+weaponData.focusedArcEmitter.legacyController = "xSlot"
 weaponData.kineticArtillery.legacyController = "lSlot"
 weaponData.swarmerMissile.legacyController = "mSlot"
 weaponData.gammaStrikeCraft.legacyController = "hSlot"
+
+-- Slot size controls compatibility; mountProfile and salvoProfile control how a
+-- particular ship installs and fires the weapon.
+local _runtimeProfiles = {
+    tachyonLance = { "xSpinal", 1, "sequential" },
+    focusedArcEmitter = { "xSpinal", 1, "sequential" },
+    gigaCannon = { "xSpinal", 1, "sequential" },
+    largeGammaLaser = { "lLaser", 1, "sequential" },
+    largePlasmaCannon = { "lEnergy", 2, "grouped" },
+    largeGaussCannon = { "lKinetic", 2, "grouped" },
+    kineticArtillery = { "lKinetic", 2, "grouped" },
+    largeStormfireAutocannon = { "lAutocannon", 2, "grouped" },
+    mediumGammaLaser = { "mLaser", 1, "sequential" },
+    mediumPlasmaCannon = { "mEnergy", 2, "grouped" },
+    phaseDisruptor = { "mEnergy", 1, "sequential" },
+    mediumGaussCannon = { "mKinetic", 2, "grouped" },
+    mediumStormfireAutocannon = { "mAutocannon", 2, "grouped" },
+    swarmerMissile = { "mSwarmer", 1, "sequential" },
+    devastatorTorpedoes = { "gRocket", 1, "sequential" },
+    neutronLauncher = { "xSpinal", 1, "sequential" },
+    gammaStrikeCraft = { "hHangar", 1, "sequential" },
+}
+
+for weaponType, profile in pairs(_runtimeProfiles) do
+    local definition = weaponData[weaponType]
+    definition.mountProfile = profile[1]
+    definition.salvoProfile = {
+        groupSize = profile[2],
+        sequence = profile[3],
+    }
+    definition.continuousFire = true
+end
+
+local _salvoIntervals = {
+    tachyonLance = 0.05,
+    focusedArcEmitter = 0.05,
+    gigaCannon = 0.18,
+    largeGammaLaser = 0.14,
+    largePlasmaCannon = 0.12,
+    largeGaussCannon = 0.10,
+    kineticArtillery = 0.05,
+    largeStormfireAutocannon = 0.05,
+    mediumGammaLaser = 0.10,
+    mediumPlasmaCannon = 0.10,
+    phaseDisruptor = 0.09,
+    mediumGaussCannon = 0.08,
+    mediumStormfireAutocannon = 0.04,
+    swarmerMissile = 0.18,
+    devastatorTorpedoes = 0.20,
+    neutronLauncher = 0.16,
+    gammaStrikeCraft = 0.25,
+}
+for weaponType, interval in pairs(_salvoIntervals) do
+    weaponData[weaponType].salvoProfile.interval = interval
+end
+
+for _, weaponType in ipairs({
+    "gigaCannon",
+    "largeGammaLaser", "largePlasmaCannon", "largeGaussCannon",
+    "largeStormfireAutocannon",
+    "mediumGammaLaser", "mediumPlasmaCannon", "phaseDisruptor",
+    "mediumGaussCannon", "mediumStormfireAutocannon",
+}) do
+    weaponData[weaponType].targetingMode = "forward"
+    weaponData[weaponType].aimControlMode = "forward_converge"
+end
+
+weaponData.devastatorTorpedoes.ignoreGravity = true
+weaponData.devastatorTorpedoes.projectileProfile.ignoreGravity = true
 
 local _officialMetadata = {
     tachyonLance = { "ENERGY_LANCE_2", "energy_lance" },

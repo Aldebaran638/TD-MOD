@@ -63,14 +63,48 @@ function client.genericRaycastFxRender()
         if length > 0.001 then
             local direction = VecScale(vector, 1.0 / length)
             local center = VecLerp(beam.startPos, beam.endPos, 0.5)
-            local transform = Transform(center, QuatAlignXZ(direction, _cameraAxis(direction, center)))
             local alpha = math.max(0.0, math.min(1.0, (beam.life or 0.0) / math.max(0.001, beam.maxLife or 0.1)))
             local color = profile.color
-            DrawSprite(state.sprite, transform, length, profile.width * 5.0,
-                color[1] * 2.0, color[2] * 2.0, color[3] * 2.0, alpha * 0.35,
-                true, true, false)
-            DrawSprite(state.sprite, transform, length, profile.width,
-                2.5, 2.5, 2.5, alpha, true, true, false)
+            if beam.profile == "arcBeam" then
+                local axisA = _cameraAxis(direction, center)
+                local axisB = _normalize(VecCross(direction, axisA), Vec(0, 1, 0))
+                local previous = beam.startPos
+                local segmentCount = math.max(8, math.min(18, math.floor(length / 24.0)))
+                local agePhase = (beam.maxLife - beam.life) * 95.0
+                for segmentIndex = 1, segmentCount do
+                    local t = segmentIndex / segmentCount
+                    local point = VecLerp(beam.startPos, beam.endPos, t)
+                    if segmentIndex < segmentCount then
+                        local envelope = math.sin(math.pi * t)
+                        local jitterA = math.sin(agePhase + segmentIndex * 2.17) * 0.95 * envelope
+                        local jitterB = math.cos(agePhase * 1.31 + segmentIndex * 1.63) * 0.65 * envelope
+                        point = VecAdd(point, VecAdd(VecScale(axisA, jitterA), VecScale(axisB, jitterB)))
+                    end
+                    local segment = VecSub(point, previous)
+                    local segmentLength = VecLength(segment)
+                    if segmentLength > 0.001 then
+                        local segmentDirection = VecScale(segment, 1.0 / segmentLength)
+                        local segmentCenter = VecLerp(previous, point, 0.5)
+                        local transform = Transform(
+                            segmentCenter,
+                            QuatAlignXZ(segmentDirection, _cameraAxis(segmentDirection, segmentCenter))
+                        )
+                        DrawSprite(state.sprite, transform, segmentLength, profile.width * 4.5,
+                            color[1] * 2.2, color[2] * 2.2, color[3] * 2.2, alpha * 0.42,
+                            true, true, false)
+                        DrawSprite(state.sprite, transform, segmentLength, profile.width * 0.72,
+                            2.5, 2.5, 2.5, alpha, true, true, false)
+                    end
+                    previous = point
+                end
+            else
+                local transform = Transform(center, QuatAlignXZ(direction, _cameraAxis(direction, center)))
+                DrawSprite(state.sprite, transform, length, profile.width * 5.0,
+                    color[1] * 2.0, color[2] * 2.0, color[3] * 2.0, alpha * 0.35,
+                    true, true, false)
+                DrawSprite(state.sprite, transform, length, profile.width,
+                    2.5, 2.5, 2.5, alpha, true, true, false)
+            end
             PointLight(beam.startPos, color[1], color[2], color[3], 8.0 * alpha)
         end
     end

@@ -102,7 +102,9 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         return nil
     end
 
-    SetBodyDynamic(bodyId, true)
+    local ignoreGravity = cfg.ignoreGravity == true
+        or ((cfg.projectileProfile or {}).ignoreGravity == true)
+    SetBodyDynamic(bodyId, not ignoreGravity)
     SetBodyActive(bodyId, true)
     local ownerVelocity = GetBodyVelocity(ownerShipBody)
     local startVelocity = VecAdd(ownerVelocity, VecScale(dir, tonumber(cfg.muzzleSpeed) or 0.0))
@@ -148,6 +150,8 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         prePhysicsHeadPos = Vec(probes.head[1], probes.head[2], probes.head[3]),
         prePhysicsMidPos = Vec(probes.mid[1], probes.mid[2], probes.mid[3]),
         desiredRot = QuatLookAt(firePosWorld, VecAdd(firePosWorld, dir)),
+        ignoreGravity = ignoreGravity,
+        kinematicVelocity = Vec(startVelocity[1], startVelocity[2], startVelocity[3]),
     }
     table.insert(state.activeProjectiles, projectile)
     return projectile

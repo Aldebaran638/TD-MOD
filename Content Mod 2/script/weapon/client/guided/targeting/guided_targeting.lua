@@ -240,7 +240,8 @@ function client.guidedTargetingTick(dt)
     local camPos = camT.pos
     local camForward = VecNormalize(TransformToParentVec(camT, Vec(0, 0, -1)))
     local useCameraCone = client.shipCamera ~= nil
-        and client.shipCamera.rearFreelookActive
+        and (client.shipCamera.rearFreelookActive
+            or client.shipCamera.viewMode == "front")
         and (currentMode == "mSlot" or currentMode == "gSlot" or currentMode == "hSlot")
 
     local aimOrigin = shipPos

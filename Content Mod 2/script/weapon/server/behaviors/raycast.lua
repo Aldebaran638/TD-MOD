@@ -14,7 +14,12 @@ local function _fireRaycast(context)
     if shape ~= nil and shape ~= 0 then hitBody = GetShapeBody(shape) or 0 end
 
     local _, didHitShield = server.weaponDamageApplyToShip(hitBody, context.weaponType)
-    if hit and not didHitShield then
+    local hitRegisteredShip = hitBody ~= 0
+        and server.registryShipExists ~= nil
+        and server.registryShipExists(hitBody)
+    local suppressPhysicalExplosion = definition.suppressShipExplosion == true
+        and hitRegisteredShip
+    if hit and not didHitShield and not suppressPhysicalExplosion then
         local explosionSize = math.max(0.0, tonumber(definition.environmentExplosionSize) or 0.0)
         if explosionSize > 0.0 then Explosion(endpoint, explosionSize) end
     end

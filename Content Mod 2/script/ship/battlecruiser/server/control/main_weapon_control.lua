@@ -108,6 +108,12 @@ function server.mainWeaponControlTick(dt)
     end
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
         _resetRequests()
+        if server.weaponGroupClearFireHeld ~= nil then
+            server.weaponGroupClearFireHeld()
+        end
+        if server.xSlotStateSetHoldRequested ~= nil then
+            server.xSlotStateSetHoldRequested(false)
+        end
         if server.xSlotStateSetRequestFire ~= nil then
             server.xSlotStateSetRequestFire(false)
         end
@@ -133,6 +139,12 @@ function server.mainWeaponControlTick(dt)
     end
 
     if _consumeToggleRequested() then
+        if server.weaponGroupClearFireHeld ~= nil then
+            server.weaponGroupClearFireHeld()
+        end
+        if server.xSlotStateSetHoldRequested ~= nil then
+            server.xSlotStateSetHoldRequested(false)
+        end
         local current = server.shipRuntimeGetCurrentMainWeapon(shipBody)
         local nextMode = _nextAvailableWeaponMode(current)
         server.shipRuntimeSetCurrentMainWeapon(shipBody, nextMode)

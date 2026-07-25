@@ -33,6 +33,9 @@ local function _buildState(groupId, shipType)
         nextMountIndex = 1,
         mounts = {},
         pending = nil,
+        fireHeld = false,
+        heldRequest = nil,
+        fireDelay = 0.0,
         hudSyncAge = 0.0,
     }
     for i = 1, #mounts do
@@ -44,16 +47,33 @@ local function _buildState(groupId, shipType)
     return state
 end
 
-local function _pickReadyMount(state)
+local function _pickReadyMounts(state, weaponDef)
     local count = #(state.mounts or {})
     if count == 0 then return nil, nil end
-    local start = math.max(1, math.min(count, math.floor(state.nextMountIndex or 1)))
-    for offset = 0, count - 1 do
-        local index = ((start - 1 + offset) % count) + 1
-        local mount = state.mounts[index]
-        if (tonumber(mount.cooldownRemain) or 0.0) <= 0.0 then
-            state.nextMountIndex = (index % count) + 1
-            return mount, index
+    local profile = (weaponDef or {}).salvoProfile or {}
+    local groupSize = math.max(1, math.min(count, math.floor(tonumber(profile.groupSize) or 1)))
+    local groupCount = math.ceil(count / groupSize)
+    local startMount = math.max(1, math.min(count, math.floor(state.nextMountIndex or 1)))
+    local startGroup = math.floor((startMount - 1) / groupSize) + 1
+
+    for offset = 0, groupCount - 1 do
+        local groupIndex = ((startGroup - 1 + offset) % groupCount) + 1
+        local firstIndex = (groupIndex - 1) * groupSize + 1
+        local mounts, indices = {}, {}
+        local ready = true
+        for index = firstIndex, math.min(count, firstIndex + groupSize - 1) do
+            local mount = state.mounts[index]
+            if (tonumber(mount.cooldownRemain) or 0.0) > 0.0 then
+                ready = false
+                break
+            end
+            mounts[#mounts + 1] = mount
+            indices[#indices + 1] = index
+        end
+        if ready and #mounts > 0 then
+            local nextGroup = (groupIndex % groupCount) + 1
+            state.nextMountIndex = (nextGroup - 1) * groupSize + 1
+            return mounts, indices
         end
     end
     return nil, nil
@@ -77,7 +97,14 @@ local function _pushHud(state)
         maximums[i] = mount and cooldown or 0.0
         phases[i] = remaining > 0.0001 and "cooldown" or "idle"
         local pending = state.pending
-        if mount ~= nil and pending ~= nil and pending.mount == mount then
+        local isPending = false
+        for pendingIndex = 1, #((pending or {}).mounts or {}) do
+            if pending.mounts[pendingIndex] == mount then
+                isPending = true
+                break
+            end
+        end
+        if mount ~= nil and pending ~= nil and isPending then
             local total = math.max(0.0, tonumber(pending.total) or 0.0)
             values[i] = math.max(0.0, total - math.max(0.0, tonumber(pending.remaining) or 0.0))
             maximums[i] = total
@@ -145,6 +172,9 @@ function server.weaponGroupReset()
     for _, state in pairs(server.weaponGroupStateById or {}) do
         state.nextMountIndex = 1
         state.pending = nil
+        state.fireHeld = false
+        state.heldRequest = nil
+        state.fireDelay = 0.0
         for i = 1, #(state.mounts or {}) do
             state.mounts[i].cooldownRemain = 0.0
         end
@@ -154,12 +184,60 @@ function server.weaponGroupReset()
     end
 end
 
+function server.weaponGroupSetFireHeld(groupId, active, request)
+    local state = server.weaponGroupStateById[tostring(groupId or "")]
+    if state == nil then return false, "unknown weapon group" end
+    state.fireHeld = active and true or false
+    if state.fireHeld then
+        local source = request or {}
+        state.heldRequest = {
+            shipBodyId = math.floor(source.shipBodyId or server.shipBody or 0),
+            targetVehicleId = math.floor(source.targetVehicleId or 0),
+            targetBodyId = math.floor(source.targetBodyId or 0),
+        }
+        -- A short click can be pressed and released between two server ticks.
+        -- Fire the first shot immediately; weaponGroupTick owns held refire.
+        return server.weaponGroupRequestFire(state.groupId, state.heldRequest)
+    else
+        state.heldRequest = nil
+    end
+    return true, nil
+end
+
+function server.weaponGroupClearFireHeld()
+    for _, state in pairs(server.weaponGroupStateById or {}) do
+        state.fireHeld = false
+        state.heldRequest = nil
+    end
+end
+
+local function _requestHasTarget(request)
+    local targetBodyId = math.floor((request or {}).targetBodyId or 0)
+    if targetBodyId ~= 0 and IsHandleValid(targetBodyId) then return true end
+    local targetVehicleId = math.floor((request or {}).targetVehicleId or 0)
+    if targetVehicleId == 0 then return false end
+    local vehicleBodyId = math.floor(GetVehicleBody(targetVehicleId) or 0)
+    return vehicleBodyId ~= 0 and IsHandleValid(vehicleBodyId)
+end
+
+local function _fireContexts(behavior, contexts, mounts, cooldown)
+    local fired = false
+    for i = 1, #contexts do
+        if behavior.fire(contexts[i]) then
+            mounts[i].cooldownRemain = cooldown
+            fired = true
+        end
+    end
+    return fired
+end
+
 function server.weaponGroupRequestFire(groupId, request)
     local id = tostring(groupId or "")
     local state = server.weaponGroupStateById[id]
     if state == nil then return false, "unknown weapon group" end
     local weaponType, weaponDef = _resolveWeapon(state)
     if weaponDef == nil or weaponType == "none" then return false, "weapon not found" end
+    if (tonumber(state.fireDelay) or 0.0) > 0.0 then return false, "weapon group pacing" end
 
     local normalizedRequest = request or {}
     normalizedRequest.shipBodyId = math.floor(normalizedRequest.shipBodyId or server.shipBody or 0)
@@ -168,41 +246,64 @@ function server.weaponGroupRequestFire(groupId, request)
     normalizedRequest.groupId = id
     normalizedRequest.weaponType = weaponType
 
-    local legacy = tostring(weaponDef.legacyController or "")
-    if legacy ~= "" then return _legacyFire(legacy, id, normalizedRequest) end
+    if tostring(weaponDef.targetingMode or "") == "target_lock"
+        and not _requestHasTarget(normalizedRequest) then
+        return false, "target lock required"
+    end
 
-    local mount, mountIndex = _pickReadyMount(state)
-    if mount == nil then return false, "all mounts cooling down" end
+    local legacy = tostring(weaponDef.legacyController or "")
+    if legacy ~= "" then
+        local fired = _legacyFire(legacy, id, normalizedRequest)
+        if fired then
+            state.fireDelay = math.max(
+                0.0,
+                tonumber((weaponDef.salvoProfile or {}).interval) or 0.0
+            )
+        end
+        return fired
+    end
+
+    if state.pending ~= nil then return false, "weapon group is charging" end
+    local mounts, mountIndices = _pickReadyMounts(state, weaponDef)
+    if mounts == nil then return false, "all mounts cooling down" end
     local behavior = server.weaponBehaviorGet(weaponDef.behaviorType)
     if behavior == nil then return false, "behavior not registered" end
-    local context = {
-        groupId = id,
-        slotType = state.slotType,
-        shipBodyId = normalizedRequest.shipBodyId,
-        targetVehicleId = normalizedRequest.targetVehicleId,
-        targetBodyId = normalizedRequest.targetBodyId,
-        weaponType = weaponType,
-        weaponDefinition = weaponDef,
-        mountDefinition = mount.definition,
-        mountIndex = mountIndex,
-    }
+    local contexts = {}
+    for i = 1, #mounts do
+        contexts[i] = {
+            groupId = id,
+            slotType = state.slotType,
+            shipBodyId = normalizedRequest.shipBodyId,
+            targetVehicleId = normalizedRequest.targetVehicleId,
+            targetBodyId = normalizedRequest.targetBodyId,
+            weaponType = weaponType,
+            weaponDefinition = weaponDef,
+            mountDefinition = mounts[i].definition,
+            mountIndex = mountIndices[i],
+        }
+    end
     local fireProfile = weaponDef.fireProfile or {}
     local chargeDuration = math.max(0.0, tonumber(fireProfile.chargeDuration) or 0.0)
+    local cooldown = math.max(0.0, tonumber(weaponDef.cooldown) or 0.0)
     if chargeDuration > 0.0 then
-        if state.pending ~= nil then return false, "weapon group is charging" end
         state.pending = {
             remaining = chargeDuration,
             total = chargeDuration,
             behavior = behavior,
-            context = context,
-            mount = mount,
-            cooldown = math.max(0.0, tonumber(weaponDef.cooldown) or 0.0),
+            contexts = contexts,
+            mounts = mounts,
+            cooldown = cooldown,
         }
         _pushHud(state)
         return true, nil
     end
-    local fired = behavior.fire(context) and true or false
-    if fired then mount.cooldownRemain = math.max(0.0, tonumber(weaponDef.cooldown) or 0.0) end
+    local fired = _fireContexts(behavior, contexts, mounts, cooldown)
+    if fired then
+        state.fireDelay = math.max(
+            0.0,
+            tonumber((weaponDef.salvoProfile or {}).interval) or 0.0
+        )
+    end
     _pushHud(state)
     return fired, fired and nil or "controller rejected fire"
 end
@@ -210,6 +311,7 @@ end
 function server.weaponGroupTick(dt)
     local delta = math.max(0.0, tonumber(dt) or 0.0)
     for _, state in pairs(server.weaponGroupStateById or {}) do
+        state.fireDelay = math.max(0.0, (tonumber(state.fireDelay) or 0.0) - delta)
         for i = 1, #(state.mounts or {}) do
             local mount = state.mounts[i]
             mount.cooldownRemain = math.max(0.0, (tonumber(mount.cooldownRemain) or 0.0) - delta)
@@ -218,10 +320,22 @@ function server.weaponGroupTick(dt)
         if pending ~= nil then
             pending.remaining = (tonumber(pending.remaining) or 0.0) - delta
             if pending.remaining <= 0.0 then
-                local fired = pending.behavior.fire(pending.context) and true or false
-                if fired then pending.mount.cooldownRemain = pending.cooldown end
+                _fireContexts(
+                    pending.behavior,
+                    pending.contexts or {},
+                    pending.mounts or {},
+                    pending.cooldown or 0.0
+                )
+                local _, weaponDef = _resolveWeapon(state)
+                state.fireDelay = math.max(
+                    0.0,
+                    tonumber(((weaponDef or {}).salvoProfile or {}).interval) or 0.0
+                )
                 state.pending = nil
             end
+        end
+        if state.fireHeld and state.pending == nil then
+            server.weaponGroupRequestFire(state.groupId, state.heldRequest or {})
         end
         state.hudSyncAge = (tonumber(state.hudSyncAge) or 0.0) + delta
         local currentMode = server.shipRuntimeGetCurrentMainWeapon ~= nil

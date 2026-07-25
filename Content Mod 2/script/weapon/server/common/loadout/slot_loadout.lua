@@ -136,6 +136,32 @@ local function _readSpawnTemplate(shipType, definition)
     }
 end
 
+local function _configurationGroup(configuration, slotType)
+    for _, group in ipairs(configuration.slotGroups or {}) do
+        if tostring(group.slotType or "") == tostring(slotType or "") then
+            return group
+        end
+    end
+    return nil
+end
+
+local function _resolvedMountsForWeapon(definition, configuration, slotType, weaponType)
+    local group = _configurationGroup(configuration, slotType)
+    if group == nil then return {} end
+
+    local count = math.max(0, math.floor(tonumber(group.count) or 0))
+    local collectionName = tostring(group.mountCollection or "")
+    local fallback = ((configuration.mounts or {})[collectionName]) or {}
+    local weaponDefinition = (weaponData or {})[tostring(weaponType or "")] or {}
+    local profileName = tostring(weaponDefinition.mountProfile or "")
+    local profile = ((definition.weaponMountProfiles or {})[profileName]) or fallback
+    local mounts = {}
+    for i = 1, math.min(count, #profile) do
+        mounts[i] = _cloneTable(profile[i])
+    end
+    return mounts
+end
+
 local function _rebuildResolvedDefinition(shipType)
     local state = _stateByType[shipType]
     if state == nil then
@@ -149,13 +175,12 @@ local function _rebuildResolvedDefinition(shipType)
     end
     
     local resolved = _cloneTable(definition)
-    resolved.xSlots = _cloneTable((configuration.mounts or {}).xSlots or {})
-    resolved.lSlots = _cloneTable((configuration.mounts or {}).lSlots or {})
-    resolved.mSlots = _cloneTable((configuration.mounts or {}).mSlots or {})
-    resolved.gSlots = _cloneTable((configuration.mounts or {}).gSlots or {})
-    resolved.hSlots = _cloneTable((configuration.mounts or {}).hSlots or {})
-    
     local loadout = state.loadout or {}
+    resolved.xSlots = _resolvedMountsForWeapon(definition, configuration, "X", loadout.X)
+    resolved.lSlots = _resolvedMountsForWeapon(definition, configuration, "L", loadout.L)
+    resolved.mSlots = _resolvedMountsForWeapon(definition, configuration, "M", loadout.M)
+    resolved.gSlots = _resolvedMountsForWeapon(definition, configuration, "G", loadout.G)
+    resolved.hSlots = _resolvedMountsForWeapon(definition, configuration, "H", loadout.H)
     
     for i = 1, #resolved.xSlots do
         resolved.xSlots[i].weaponType = loadout.X or resolved.xSlots[i].weaponType

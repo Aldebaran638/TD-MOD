@@ -120,7 +120,9 @@ function server.guidedProjectileColliderPostUpdate()
             projectile.distanceTravelled = (projectile.distanceTravelled or 0.0) + VecLength(VecSub(probes.center, preCenter))
 
             local currentPos = bodyT.pos
-            local currentVel = GetBodyVelocity(bodyId)
+            local currentVel = projectile.ignoreGravity
+                and (projectile.kinematicVelocity or Vec(0, 0, 0))
+                or GetBodyVelocity(bodyId)
             ClientCall(
                 0,
                 "client.updateMissileVisual",

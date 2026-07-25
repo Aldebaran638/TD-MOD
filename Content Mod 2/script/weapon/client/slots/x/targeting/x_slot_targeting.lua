@@ -152,7 +152,7 @@ local function _resolveXSlotFireOriginLocal(shipBody)
 
     for i = 1, #xSlots do
         local slot = xSlots[i] or {}
-        if tostring(slot.weaponType or "tachyonLance") == "tachyonLance" then
+        if tostring(slot.weaponType or "none") ~= "none" then
             local firePos = slot.firePosOffset or {}
             sx = sx + (tonumber(firePos.x) or 0.0)
             sy = sy + (tonumber(firePos.y) or 0.0)
@@ -183,8 +183,9 @@ local function _shipForwardAngleAllows(shipBody, targetPos, aimLimitDeg)
 end
 
 local function _resolveXSlotAimLimit(shipBody)
-    local defs = weaponData or {}
-    local xWeapon = defs.tachyonLance or {}
+    local xWeapon = client.getShipWeaponDefinition ~= nil
+        and client.getShipWeaponDefinition(shipBody, "xSlot")
+        or ((weaponData or {}).tachyonLance or {})
     return tonumber(xWeapon.aimLimitDeg) or 0.0
 end
 

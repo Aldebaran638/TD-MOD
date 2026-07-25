@@ -309,7 +309,9 @@ function client.tachyonImpactFxTick(dt)
                 local lastSeq = state.lastRenderSeqByShip[shipBodyId] or -1
 
                 if seq ~= lastSeq then
-                    if render.eventType == "launch_start" and render.didHit == 1 then
+                    if render.eventType == "launch_start"
+                        and tostring(render.weaponType or "") == "tachyonLance"
+                        and render.didHit == 1 then
                         local pos = _tableToVec(render.hitPoint)
                         local firePoint = _tableToVec(render.firePoint)
                         _spawnTachyonImpact(

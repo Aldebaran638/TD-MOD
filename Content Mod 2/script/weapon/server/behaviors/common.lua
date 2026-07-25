@@ -10,6 +10,7 @@ end
 
 function server.weaponBehaviorResolveFireTransform(context)
     local mount = context.mountDefinition or {}
+    local weapon = context.weaponDefinition or {}
     local offset = mount.firePosOffset or {}
     local relative = mount.fireDirRelative or {}
     local shipTransform = GetBodyTransform(context.shipBodyId)
@@ -26,12 +27,33 @@ function server.weaponBehaviorResolveFireTransform(context)
         )),
         Vec(0, 0, -1)
     )
-    if (context.weaponDefinition or {}).forceForward then
+    if weapon.forceForward then
         direction = server.weaponBehaviorNormalize(
             TransformToParentVec(shipTransform, Vec(0, 0, -1)),
             direction
         )
     end
+
+    if tostring(weapon.aimControlMode or "") == "forward_converge" then
+        local forward = server.weaponBehaviorNormalize(
+            TransformToParentVec(shipTransform, Vec(0, 0, -1)),
+            direction
+        )
+        local rayOrigin = TransformToParentPoint(shipTransform, Vec(0, 0, -2))
+        local range = math.max(1.0, tonumber(weapon.maxRange) or 500.0)
+        QueryRequire("physical")
+        QueryRejectBody(context.shipBodyId)
+        local hit, distance = QueryRaycast(rayOrigin, forward, range)
+        if hit then
+            local aimPoint = VecAdd(rayOrigin, VecScale(forward, distance))
+            direction = server.weaponBehaviorNormalize(VecSub(aimPoint, origin), forward)
+        else
+            direction = forward
+        end
+        return origin, direction
+    end
+
+    if weapon.forceForward then return origin, direction end
 
     local targetBody = math.floor(context.targetBodyId or 0)
     if targetBody ~= 0 and IsHandleValid(targetBody) then

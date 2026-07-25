@@ -4,16 +4,19 @@
 
 server = server or {}
 
-server.tachyonMuzzleLightConfig = server.tachyonMuzzleLightConfig or {
-    weaponType = "tachyonLance",
-    lightTag = "tachyonMuzzleLight",
-    chargeDuration = 0.50,
-    chargeStartIntensity = 5.0,
-    chargeEndIntensity = 50.0,
-    launchPeakIntensity = 100.0,
-    launchFlashDuration = 0.03,
-    launchFadeDuration = 0.10,
-}
+server.tachyonMuzzleLightConfig = server.tachyonMuzzleLightConfig or {}
+local _tachyonLightConfig = server.tachyonMuzzleLightConfig
+_tachyonLightConfig.weaponType = "tachyonLance"
+_tachyonLightConfig.weaponTypes = _tachyonLightConfig.weaponTypes or {}
+_tachyonLightConfig.weaponTypes.tachyonLance = true
+_tachyonLightConfig.weaponTypes.focusedArcEmitter = true
+_tachyonLightConfig.lightTag = _tachyonLightConfig.lightTag or "tachyonMuzzleLight"
+_tachyonLightConfig.chargeDuration = _tachyonLightConfig.chargeDuration or 0.50
+_tachyonLightConfig.chargeStartIntensity = _tachyonLightConfig.chargeStartIntensity or 5.0
+_tachyonLightConfig.chargeEndIntensity = _tachyonLightConfig.chargeEndIntensity or 50.0
+_tachyonLightConfig.launchPeakIntensity = _tachyonLightConfig.launchPeakIntensity or 100.0
+_tachyonLightConfig.launchFlashDuration = _tachyonLightConfig.launchFlashDuration or 0.03
+_tachyonLightConfig.launchFadeDuration = _tachyonLightConfig.launchFadeDuration or 0.10
 
 server.tachyonMuzzleLightState = server.tachyonMuzzleLightState or {
     light = 0,
@@ -27,10 +30,22 @@ local function _tachyonLightSmoothStep(value)
 end
 
 local function _tachyonLightSetIntensity(intensity)
-    local light = math.floor(server.tachyonMuzzleLightState.light or 0)
+    local state = server.tachyonMuzzleLightState
+    local light = math.floor(state.light or 0)
+    if light == 0 or not IsHandleValid(light) then
+        light = FindLight(server.tachyonMuzzleLightConfig.lightTag or "tachyonMuzzleLight", false)
+        state.light = light or 0
+    end
     if light ~= 0 and IsHandleValid(light) then
         SetLightIntensity(light, math.max(0.0, intensity))
     end
+end
+
+local function _tachyonLightSupportsWeapon(weaponType)
+    local config = server.tachyonMuzzleLightConfig
+    local requested = tostring(weaponType or "")
+    return requested == tostring(config.weaponType or "tachyonLance")
+        or (config.weaponTypes or {})[requested] == true
 end
 
 function server.tachyonMuzzleLightInit()
@@ -45,8 +60,7 @@ end
 function server.tachyonMuzzleLightBeginCharge(weaponType)
     local config = server.tachyonMuzzleLightConfig
     local state = server.tachyonMuzzleLightState
-    if tostring(weaponType or "") == tostring(config.weaponType or "tachyonLance")
-        and state.phase ~= "charging" then
+    if _tachyonLightSupportsWeapon(weaponType) and state.phase ~= "charging" then
         state.phase = "charging"
         state.age = 0.0
     end
@@ -54,7 +68,7 @@ end
 
 function server.tachyonMuzzleLightTrigger(weaponType)
     local config = server.tachyonMuzzleLightConfig
-    if tostring(weaponType or "") == tostring(config.weaponType or "tachyonLance") then
+    if _tachyonLightSupportsWeapon(weaponType) then
         server.tachyonMuzzleLightState.phase = "launch"
         server.tachyonMuzzleLightState.age = 0.0
     end
@@ -62,7 +76,7 @@ end
 
 function server.tachyonMuzzleLightStop(weaponType)
     local config = server.tachyonMuzzleLightConfig
-    if tostring(weaponType or "") == tostring(config.weaponType or "tachyonLance") then
+    if _tachyonLightSupportsWeapon(weaponType) then
         server.tachyonMuzzleLightState.phase = "idle"
         server.tachyonMuzzleLightState.age = 0.0
         _tachyonLightSetIntensity(0.0)

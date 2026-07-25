@@ -44,6 +44,16 @@ $serverRequests = Read-Required "script\ship\battlecruiser\server\registry\ship_
 $groupRuntime = Read-Required "script\weapon\server\common\runtime\weapon_group.lua"
 $loadoutRuntime = Read-Required "script\weapon\server\common\loadout\slot_loadout.lua"
 $loadoutApi = Read-Required "script\weapon\server\common\loadout\slot_loadout_api.lua"
+$mainWeaponInput = Read-Required "script\weapon\client\common\input\main_weapon_input.lua"
+$behaviorCommon = Read-Required "script\weapon\server\behaviors\common.lua"
+$raycastBehavior = Read-Required "script\weapon\server\behaviors\raycast.lua"
+$guidedRuntime = Read-Required "script\weapon\server\guided\runtime.lua"
+$guidedMovement = Read-Required "script\weapon\server\guided\movement.lua"
+$guidedCollider = Read-Required "script\weapon\server\guided\collider.lua"
+$guidedTargeting = Read-Required "script\weapon\client\guided\targeting\guided_targeting.lua"
+$clientMain = Read-Required "script\client.lua"
+$xSlotControl = Read-Required "script\weapon\server\slots\x\tachyon_lance\control.lua"
+$xSlotMuzzleLight = Read-Required "script\weapon\server\slots\x\tachyon_lance\muzzle_light.lua"
 
 $expected = [ordered]@{
     tachyonLance = "X"
@@ -80,6 +90,9 @@ foreach ($item in $expected.GetEnumerator()) {
     if (-not (Test-Path -LiteralPath (Join-Path $modRoot $iconRelative) -PathType Leaf)) {
         Add-Issue "weapon $($item.Key) is missing UI icon: $iconRelative"
     }
+    if ($standard -notmatch "(?m)^\s*$id\s*=\s*\{\s*`"[xlmgh][A-Za-z]+`",\s*[12],\s*`"(?:sequential|grouped)`"\s*\}") {
+        Add-Issue "weapon $($item.Key) has no mount/salvo runtime profile"
+    }
 }
 
 foreach ($behavior in @("raycast", "projectile", "rocketProjectile", "guidedProjectile", "strikeCraft")) {
@@ -111,6 +124,12 @@ if ($groupRuntime -notmatch 'function\s+server\.weaponGroupRequestFire\s*\(') {
 if ($groupRuntime -notmatch 'function\s+server\.weaponGroupTick\s*\(') {
     Add-Issue "weaponGroupTick API is missing"
 }
+if ($groupRuntime -notmatch 'function\s+server\.weaponGroupSetFireHeld\s*\(' -or
+    $groupRuntime -notmatch '_pickReadyMounts\s*\(' -or
+    $groupRuntime -notmatch 'salvoProfile' -or
+    $groupRuntime -notmatch 'return\s+server\.weaponGroupRequestFire\(state\.groupId,\s*state\.heldRequest\)') {
+    Add-Issue "weapon runtime does not support held fire and grouped salvos"
+}
 if ($loadoutApi -notmatch 'function\s+server\.shipWeaponApplyConfiguration\s*\(') {
     Add-Issue "shipWeaponApplyConfiguration API is missing"
 }
@@ -137,6 +156,16 @@ if ($clientRegistry -notmatch 'ServerCall\("server\.shipRequestWeaponConfigurati
 }
 if ($serverRequests -notmatch 'function\s+server\.shipRequestWeaponConfiguration\s*\(') {
     Add-Issue "server loadout resynchronization request is missing"
+}
+if ($clientRegistry -notmatch 'function\s+client\.shipRequestWeaponHold\s*\(' -or
+    $serverRequests -notmatch 'function\s+server\.shipRequestWeaponHold\s*\(' -or
+    $mainWeaponInput -notmatch 'InputDown\("lmb"\)' -or
+    $mainWeaponInput -notmatch '_releaseHeldWeapon') {
+    Add-Issue "all weapon groups must use server-owned hold-to-refire input"
+}
+if ($guidedTargeting -notmatch 'shipCamera\.viewMode\s*==\s*"front"' -or
+    $clientMain -notmatch '(?s)guidedTargetingTick\(dt\).*?mainWeaponInputTick\(dt\)') {
+    Add-Issue "guided and strike-craft target locks do not follow the front camera before fire input"
 }
 if ($client -notmatch 'generic_raycast_fx\.lua') {
     Add-Issue "generic raycast client FX is not included"
@@ -168,6 +197,13 @@ if ($standard -notmatch '(?s)_rocket\("devastatorTorpedoes".*?behaviorType\s*=\s
 if ($standard -match 'weaponData\.devastatorTorpedoes\.legacyController\s*=') {
     Add-Issue "Devastator Torpedoes still use the legacy guided controller"
 }
+if ($standard -notmatch 'weaponData\.devastatorTorpedoes\.ignoreGravity\s*=\s*true' -or
+    $guidedRuntime -notmatch 'SetBodyDynamic\(bodyId,\s*not ignoreGravity\)' -or
+    $guidedMovement -notmatch 'projectile\.ignoreGravity' -or
+    $guidedMovement -notmatch 'SetBodyTransform\(' -or
+    $guidedCollider -notmatch 'projectile\.kinematicVelocity') {
+    Add-Issue "Devastator Torpedoes do not have a complete gravity-free flight path"
+}
 if ($standard -notmatch '(?s)local function _rocket.*?targetingMode\s*=\s*"forward"') {
     Add-Issue "unguided rockets must use forward targeting"
 }
@@ -186,6 +222,52 @@ if ($standard -notmatch 'largeStormfireAutocannon".*?0\.65,\s*220\.0' -or
 }
 if ($crosshair -notmatch 'weaponConfigUiIsOpen') {
     Add-Issue "crosshair is not hidden while the independent UI is open"
+}
+if ($standard -notmatch 'focusedArcEmitter\.legacyController\s*=\s*"xSlot"' -or
+    $standard -notmatch '_ray\("focusedArcEmitter".*?0\.0,\s*0\.0,\s*2\.3.*?0\.50\)' -or
+    $xSlotControl -notmatch '(?s)elseif\s+activeState\s*==\s*"charged"\s+then.*?if\s+releaseRequested\s+then.*?elseif\s+not\s+holdRequested\s+then' -or
+    $xSlotControl -match 'if\s+holdRequested\s+or\s+releaseRequested\s+then') {
+    Add-Issue "Focused Arc Emitter does not share the Tachyon Lance charge/fire lifecycle"
+}
+if ($xSlotMuzzleLight -notmatch 'weaponTypes\.tachyonLance\s*=\s*true' -or
+    $xSlotMuzzleLight -notmatch 'weaponTypes\.focusedArcEmitter\s*=\s*true' -or
+    $xSlotMuzzleLight -notmatch 'FindLight\(server\.tachyonMuzzleLightConfig\.lightTag') {
+    Add-Issue "charged X weapons do not preserve and reacquire the XML muzzle light"
+}
+if ($standard -notmatch 'gigaCannon\s*=\s*\{\s*"xSpinal",\s*1,\s*"sequential"\s*\}' -or
+    $standard -match 'gigaCannon\s*=\s*\{\s*"xSpinal",\s*2') {
+    Add-Issue "Giga Cannon must use Tachyon hardpoints and fire one barrel at a time"
+}
+if ($standard -notmatch '_projectile\("gigaCannon".*?2350,\s*3\.5,\s*750\.0,\s*560\.0' -or
+    $projectileVisual -notmatch '(?s)fxProfile\s*==\s*"gigaCannonProjectile".*?trailSpacing\s*=\s*1\.1') {
+    Add-Issue "Giga Cannon speed, cooldown, and render frequency are not doubled"
+}
+if ($standard -notmatch 'neutronLauncher\s*=\s*\{\s*"xSpinal",\s*1,\s*"sequential"\s*\}' -or
+    $standard -notmatch 'weaponData\.neutronLauncher\.targetingMode\s*=\s*"forward"' -or
+    $standard -notmatch 'weaponData\.neutronLauncher\.forceForward\s*=\s*true') {
+    Add-Issue "Neutron Launcher must use X-slot hardpoints and fire forward"
+}
+if ($standard -notmatch 'weaponData\.phaseDisruptor\.suppressShipExplosion\s*=\s*true' -or
+    $raycastBehavior -notmatch 'suppressPhysicalExplosion\s*=\s*definition\.suppressShipExplosion\s*==\s*true' -or
+    $raycastBehavior -notmatch 'not\s+suppressPhysicalExplosion') {
+    Add-Issue "Phase Disruptor must not create physical explosions on registered ships"
+}
+foreach ($profile in @(
+    "xSpinal", "lLaser", "lEnergy", "lKinetic", "lAutocannon",
+    "mLaser", "mEnergy", "mKinetic", "mAutocannon", "mSwarmer",
+    "gRocket", "gEnergy", "hHangar"
+)) {
+    if ($ship -notmatch "(?m)^\s*$profile\s*=\s*\{") {
+        Add-Issue "battlecruiser mount profile is missing: $profile"
+    }
+}
+if ($loadoutRuntime -notmatch 'weaponMountProfiles' -or
+    $loadoutRuntime -notmatch 'weaponDefinition\.mountProfile') {
+    Add-Issue "loadout resolver does not select mounts by weapon profile"
+}
+if ($behaviorCommon -notmatch 'aimControlMode.*forward_converge' -or
+    $behaviorCommon -notmatch 'QueryRaycast\(rayOrigin,\s*forward,\s*range\)') {
+    Add-Issue "forward weapons do not converge on nearby crosshair obstacles"
 }
 
 if ($ship -notmatch 'configurationId\s*=\s*"battleline_2x2l4m"') {
