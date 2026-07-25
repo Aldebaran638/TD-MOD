@@ -47,13 +47,16 @@ $loadoutApi = Read-Required "script\weapon\server\common\loadout\slot_loadout_ap
 $mainWeaponInput = Read-Required "script\weapon\client\common\input\main_weapon_input.lua"
 $behaviorCommon = Read-Required "script\weapon\server\behaviors\common.lua"
 $raycastBehavior = Read-Required "script\weapon\server\behaviors\raycast.lua"
+$genericRaycastFx = Read-Required "script\weapon\client\common\effects\generic_raycast_fx.lua"
 $guidedRuntime = Read-Required "script\weapon\server\guided\runtime.lua"
 $guidedMovement = Read-Required "script\weapon\server\guided\movement.lua"
 $guidedCollider = Read-Required "script\weapon\server\guided\collider.lua"
 $guidedTargeting = Read-Required "script\weapon\client\guided\targeting\guided_targeting.lua"
 $clientMain = Read-Required "script\client.lua"
 $xSlotControl = Read-Required "script\weapon\server\slots\x\tachyon_lance\control.lua"
+$xSlotState = Read-Required "script\weapon\server\slots\x\tachyon_lance\state.lua"
 $xSlotMuzzleLight = Read-Required "script\weapon\server\slots\x\tachyon_lance\muzzle_light.lua"
+$xSlotChargingFx = Read-Required "script\weapon\client\slots\x\tachyon_lance\effects\charging_fx.lua"
 $weaponSoundCatalog = Read-Required "script\weapon\client\common\sound\weapon_sound_catalog.lua"
 $soundService = Read-Required "script\weapon\client\common\sound\sound_service.lua"
 $missileVisual = Read-Required "script\weapon\client\guided\effects\missile_visual.lua"
@@ -95,7 +98,7 @@ foreach ($item in $expected.GetEnumerator()) {
     if (-not (Test-Path -LiteralPath (Join-Path $modRoot $iconRelative) -PathType Leaf)) {
         Add-Issue "weapon $($item.Key) is missing UI icon: $iconRelative"
     }
-    if ($standard -notmatch "(?m)^\s*$id\s*=\s*\{\s*`"[xlmgh][A-Za-z]+`",\s*[12],\s*`"(?:sequential|grouped)`"\s*\}") {
+    if ($standard -notmatch "(?m)^\s*$id\s*=\s*\{\s*`"[xlmgh][A-Za-z]+`",\s*[124],\s*`"(?:sequential|grouped)`"\s*\}") {
         Add-Issue "weapon $($item.Key) has no mount/salvo runtime profile"
     }
     if ($weaponSoundCatalog -notmatch "(?m)^\s*$id\s*=") {
@@ -119,7 +122,7 @@ foreach ($behavior in @("raycast", "projectile", "rocketProjectile", "guidedProj
 }
 
 foreach ($profile in @(
-    "tachyonLance", "energyBeam", "arcBeam", "kineticProjectile",
+    "tachyonLance", "gammaBeam", "energyBeam", "focusedArcBeam", "arcBeam", "kineticProjectile",
     "plasmaProjectile", "autocannonProjectile", "gigaCannonProjectile",
     "neutronProjectile", "guidedMissile",
     "energyTorpedo", "strikeCraft"
@@ -234,11 +237,27 @@ if ($standard -notmatch 'largeStormfireAutocannon".*?0\.65,\s*220\.0' -or
     $standard -notmatch 'mediumStormfireAutocannon".*?0\.55,\s*180\.0') {
     Add-Issue "Stormfire Autocannons must remain short-range rapid-fire weapons"
 }
+if ($standard -notmatch '(?s)largeStormfireAutocannon\.fireProfile\.burstCount\s*=\s*1.*?largeStormfireAutocannon\.cooldown\s*=\s*0\.0' -or
+    $standard -notmatch '(?s)mediumStormfireAutocannon\.fireProfile\.burstCount\s*=\s*1.*?mediumStormfireAutocannon\.cooldown\s*=\s*0\.0' -or
+    $standard -notmatch '(?s)definition\.heatPerShot\s*=\s*4\.0.*?definition\.heatDissipationPerSecond\s*=\s*32\.0.*?definition\.overheatThreshold\s*=\s*100\.0.*?definition\.recoverThreshold\s*=\s*45\.0' -or
+    $standard -notmatch 'largeStormfireAutocannon\s*=\s*0\.06' -or
+    $standard -notmatch 'mediumStormfireAutocannon\s*=\s*0\.06') {
+    Add-Issue "Stormfire Autocannons do not match the escort P-slot heat and fire-rate profile"
+}
+if ($groupRuntime -notmatch 'mount\.overheated' -or
+    $groupRuntime -notmatch 'heatDissipationPerSecond' -or
+    $groupRuntime -notmatch 'recoverThreshold' -or
+    $mainWeaponHud -notmatch 'phase\s*==\s*"heat"' -or
+    $mainWeaponHud -notmatch 'phase\s*==\s*"overheated"') {
+    Add-Issue "generic weapon runtime/HUD does not implement heat and overheat recovery"
+}
 if ($crosshair -notmatch 'weaponConfigUiIsOpen') {
     Add-Issue "crosshair is not hidden while the independent UI is open"
 }
 if ($standard -notmatch 'focusedArcEmitter\.legacyController\s*=\s*"xSlot"' -or
     $standard -notmatch '_ray\("focusedArcEmitter".*?0\.0,\s*0\.0,\s*2\.3.*?0\.50\)' -or
+    $standard -notmatch 'focusedArcEmitter\.chargeDuration\s*=\s*weaponData\.focusedArcEmitter\.fireProfile\.chargeDuration' -or
+    $xSlotState -notmatch 'weaponDef\.chargeDuration\s+or\s+fireProfile\.chargeDuration' -or
     $xSlotControl -notmatch '(?s)elseif\s+activeState\s*==\s*"charged"\s+then.*?if\s+releaseRequested\s+then.*?elseif\s+not\s+holdRequested\s+then' -or
     $xSlotControl -match 'if\s+holdRequested\s+or\s+releaseRequested\s+then') {
     Add-Issue "Focused Arc Emitter does not share the Tachyon Lance charge/fire lifecycle"
@@ -273,20 +292,79 @@ if ($standard -notmatch '_projectile\("gigaCannon".*?2350,\s*3\.5,\s*750\.0,\s*5
     $projectileVisual -notmatch '(?s)fxProfile\s*==\s*"gigaCannonProjectile".*?trailSpacing\s*=\s*1\.1') {
     Add-Issue "Giga Cannon speed, cooldown, and render frequency are not doubled"
 }
-if ($standard -notmatch 'neutronLauncher\s*=\s*\{\s*"xSpinal",\s*1,\s*"sequential"\s*\}' -or
+if ($standard -notmatch 'neutronLauncher\s*=\s*\{\s*"gNeutron",\s*1,\s*"sequential"\s*\}' -or
+    $standard -notmatch '_projectile\("neutronLauncher".*?610,\s*4\.5,\s*1150\.0' -or
     $standard -notmatch 'weaponData\.neutronLauncher\.targetingMode\s*=\s*"forward"' -or
     $standard -notmatch 'weaponData\.neutronLauncher\.forceForward\s*=\s*true') {
-    Add-Issue "Neutron Launcher must use X-slot hardpoints and fire forward"
+    Add-Issue "Neutron Launcher must rotate through four X-aligned mounts with a 4.5s cooldown"
+}
+$gRocketBlock = [Regex]::Match($ship, '(?s)gRocket\s*=\s*\{(.*?)\n\s*\},\s*\n\s*gNeutron\s*=').Groups[1].Value
+$gNeutronBlock = [Regex]::Match($ship, '(?s)gNeutron\s*=\s*\{(.*?)\n\s*\},\s*\n\s*gEnergy\s*=').Groups[1].Value
+$rocketFrontMountPattern = 'firePosOffset\s*=\s*\{\s*x\s*=\s*0,\s*y\s*=\s*0,\s*z\s*=\s*-4\.8\s*\}.*?fireDirRelative\s*=\s*\{\s*x\s*=\s*0,\s*y\s*=\s*0,\s*z\s*=\s*-1\s*\}'
+$neutronFrontMountPattern = 'firePosOffset\s*=\s*\{\s*x\s*=\s*0,\s*y\s*=\s*0,\s*z\s*=\s*-4\s*\}.*?fireDirRelative\s*=\s*\{\s*x\s*=\s*0,\s*y\s*=\s*0,\s*z\s*=\s*-1\s*\}'
+if ([Regex]::Matches($gRocketBlock, $rocketFrontMountPattern).Count -ne 4 -or
+    $standard -notmatch '_rocket\("devastatorTorpedoes".*?1200\.0,\s*30\.8') {
+    Add-Issue "Devastator Torpedoes must use four X-aligned forward mounts"
+}
+if ([Regex]::Matches($gNeutronBlock, $neutronFrontMountPattern).Count -ne 4) {
+    Add-Issue "Neutron Launcher must expose four X-aligned forward mounts"
 }
 if ($standard -notmatch 'weaponData\.phaseDisruptor\.suppressShipExplosion\s*=\s*true' -or
     $raycastBehavior -notmatch 'suppressPhysicalExplosion\s*=\s*definition\.suppressShipExplosion\s*==\s*true' -or
     $raycastBehavior -notmatch 'not\s+suppressPhysicalExplosion') {
     Add-Issue "Phase Disruptor must not create physical explosions on registered ships"
 }
+if ($standard -notmatch '_ray\("phaseDisruptor".*?"arcBeam"\)' -or
+    $genericRaycastFx -notmatch 'arcBeam\s*=\s*\{\s*color\s*=\s*\{\s*0\.18,\s*1\.0,\s*0\.32\s*\}') {
+    Add-Issue "Phase Disruptor arc beam must use the green FX profile"
+}
+if ($standard -notmatch '_ray\("focusedArcEmitter".*?"focusedArcBeam",\s*0\.50\)' -or
+    $genericRaycastFx -notmatch 'focusedArcBeam\s*=\s*\{\s*color\s*=\s*\{\s*0\.72,\s*0\.22,\s*1\.0\s*\}' -or
+    $xSlotControl -notmatch 'weaponType,\s*"focusedArcBeam"' -or
+    $xSlotChargingFx -notmatch 'ParticleColor\(0\.82,\s*0\.24,\s*1\.0,\s*0\.46,\s*0\.08,\s*0\.78\)' -or
+    $xSlotMuzzleLight -notmatch 'SetLightColor\(light,\s*0\.72,\s*0\.22,\s*1\.0\)') {
+    Add-Issue "Focused Arc Emitter must use independent purple charge/beam/light FX"
+}
+if ($standard -notmatch '_ray\("largeGammaLaser".*?"gammaBeam"\)' -or
+    $standard -notmatch '_ray\("mediumGammaLaser".*?"gammaBeam"\)' -or
+    $genericRaycastFx -notmatch 'gammaBeam\s*=\s*\{(?s:.*?)color\s*=\s*\{\s*1\.0,\s*0\.38,\s*0\.05\s*\}' -or
+    $genericRaycastFx -match 'beam\.profile\s*==\s*"gammaBeam"') {
+    Add-Issue "Gamma Lasers must use a straight orange beam without arc/helix rendering"
+}
+if ($raycastBehavior -notmatch 'client\.playProjectileShieldImpactFx' -or
+    $raycastBehavior -notmatch '_resolveShieldEndpoint' -or
+    $genericRaycastFx -notmatch '_spawnImpactParticles\s*\(' -or
+    $genericRaycastFx -notmatch 'didHit\s*=\s*math\.floor') {
+    Add-Issue "generic raycast weapons do not provide body/shield impact feedback"
+}
+if ($ship -notmatch '(?s)lLaser\s*=\s*\{.*?x\s*=\s*4\.0.*?x\s*=\s*-4\.0' -or
+    $ship -notmatch '(?s)lEnergy\s*=\s*\{.*?x\s*=\s*4\.2.*?x\s*=\s*-4\.2' -or
+    $ship -notmatch '(?s)lKinetic\s*=\s*\{.*?x\s*=\s*4\.5.*?x\s*=\s*-4\.5' -or
+    $ship -notmatch '(?s)lAutocannon\s*=\s*\{.*?x\s*=\s*4\.0.*?x\s*=\s*-4\.0') {
+    Add-Issue "battlecruiser L-slot hardpoints are not using the tightened spacing"
+}
+if ($ship -notmatch '(?s)mLaser\s*=\s*\{.*?x\s*=\s*2\.8.*?x\s*=\s*-2\.8' -or
+    $ship -notmatch '(?s)mEnergy\s*=\s*\{.*?x\s*=\s*3\.2.*?x\s*=\s*-3\.2' -or
+    $ship -notmatch '(?s)mKinetic\s*=\s*\{.*?x\s*=\s*3\.8.*?x\s*=\s*-3\.8' -or
+    $ship -notmatch '(?s)mAutocannon\s*=\s*\{.*?x\s*=\s*3\.5.*?x\s*=\s*-3\.5' -or
+    $ship -notmatch '(?s)mSwarmer\s*=\s*\{.*?x\s*=\s*0\.3.*?x\s*=\s*-0\.3') {
+    Add-Issue "non-Swarmer M-slot hardpoints are not tightened or Swarmer mounts moved unexpectedly"
+}
+if ($standard -notmatch 'mediumStormfireAutocannon\s*=\s*\{\s*"mAutocannon",\s*4,\s*"grouped"\s*\}' -or
+    $standard -notmatch 'mediumGaussCannon\s*=\s*\{\s*"mKinetic",\s*2,\s*"grouped"\s*\}') {
+    Add-Issue "M Stormfire must fire all four mounts while M Gauss remains two grouped pairs"
+}
+if ($standard -notmatch '(?s)"largePlasmaCannon",\s*"mediumPlasmaCannon",\s*"largeGaussCannon",\s*"mediumGaussCannon".*?definition\.cooldown\s*=\s*0\.0.*?definition\.heatPerShot\s*=\s*12\.0.*?definition\.heatDissipationPerSecond\s*=\s*10\.0.*?definition\.overheatThreshold\s*=\s*100\.0.*?definition\.recoverThreshold\s*=\s*60\.0' -or
+    $standard -notmatch 'largePlasmaCannon\s*=\s*0\.10' -or
+    $standard -notmatch 'largeGaussCannon\s*=\s*0\.10' -or
+    $standard -notmatch 'mediumPlasmaCannon\s*=\s*0\.10' -or
+    $standard -notmatch 'mediumGaussCannon\s*=\s*0\.10') {
+    Add-Issue "Plasma/Gauss weapons do not use the slightly cooler Kinetic Artillery heat cycle"
+}
 foreach ($profile in @(
     "xSpinal", "lLaser", "lEnergy", "lKinetic", "lAutocannon",
     "mLaser", "mEnergy", "mKinetic", "mAutocannon", "mSwarmer",
-    "gRocket", "gEnergy", "hHangar"
+    "gRocket", "gNeutron", "gEnergy", "hHangar"
 )) {
     if ($ship -notmatch "(?m)^\s*$profile\s*=\s*\{") {
         Add-Issue "battlecruiser mount profile is missing: $profile"

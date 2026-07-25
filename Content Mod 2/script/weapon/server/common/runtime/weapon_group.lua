@@ -42,6 +42,8 @@ local function _buildState(groupId, shipType)
         state.mounts[i] = {
             definition = mounts[i],
             cooldownRemain = 0.0,
+            heat = 0.0,
+            overheated = false,
         }
     end
     return state
@@ -63,7 +65,8 @@ local function _pickReadyMounts(state, weaponDef)
         local ready = true
         for index = firstIndex, math.min(count, firstIndex + groupSize - 1) do
             local mount = state.mounts[index]
-            if (tonumber(mount.cooldownRemain) or 0.0) > 0.0 then
+            if (tonumber(mount.cooldownRemain) or 0.0) > 0.0
+                or (mount.overheated and true or false) then
                 ready = false
                 break
             end
@@ -89,13 +92,21 @@ local function _pushHud(state)
     local weaponType, weaponDef = _resolveWeapon(state)
     if tostring((weaponDef or {}).legacyController or "") ~= "" then return end
     local cooldown = math.max(0.0, tonumber((weaponDef or {}).cooldown) or 0.0)
+    local overheatThreshold = math.max(0.0, tonumber((weaponDef or {}).overheatThreshold) or 0.0)
+    local usesHeat = overheatThreshold > 0.0
     local values, maximums, phases = {}, {}, {}
     for i = 1, 4 do
         local mount = (state.mounts or {})[i]
         local remaining = mount and math.max(0.0, tonumber(mount.cooldownRemain) or 0.0) or 0.0
-        values[i] = remaining
-        maximums[i] = mount and cooldown or 0.0
-        phases[i] = remaining > 0.0001 and "cooldown" or "idle"
+        if mount ~= nil and usesHeat then
+            values[i] = math.max(0.0, tonumber(mount.heat) or 0.0)
+            maximums[i] = overheatThreshold
+            phases[i] = mount.overheated and "overheated" or "heat"
+        else
+            values[i] = remaining
+            maximums[i] = mount and cooldown or 0.0
+            phases[i] = remaining > 0.0001 and "cooldown" or "idle"
+        end
         local pending = state.pending
         local isPending = false
         for pendingIndex = 1, #((pending or {}).mounts or {}) do
@@ -177,6 +188,8 @@ function server.weaponGroupReset()
         state.fireDelay = 0.0
         for i = 1, #(state.mounts or {}) do
             state.mounts[i].cooldownRemain = 0.0
+            state.mounts[i].heat = 0.0
+            state.mounts[i].overheated = false
         end
     end
     for _, behavior in pairs(server.weaponBehaviorRegistry or {}) do
@@ -225,6 +238,21 @@ local function _fireContexts(behavior, contexts, mounts, cooldown)
     for i = 1, #contexts do
         if behavior.fire(contexts[i]) then
             mounts[i].cooldownRemain = cooldown
+            local definition = contexts[i].weaponDefinition or {}
+            local overheatThreshold = math.max(
+                0.0,
+                tonumber(definition.overheatThreshold) or 0.0
+            )
+            if overheatThreshold > 0.0 then
+                mounts[i].heat = math.min(
+                    overheatThreshold,
+                    math.max(0.0, tonumber(mounts[i].heat) or 0.0)
+                        + math.max(0.0, tonumber(definition.heatPerShot) or 0.0)
+                )
+                if mounts[i].heat >= overheatThreshold then
+                    mounts[i].overheated = true
+                end
+            end
             fired = true
         end
     end
@@ -312,9 +340,25 @@ function server.weaponGroupTick(dt)
     local delta = math.max(0.0, tonumber(dt) or 0.0)
     for _, state in pairs(server.weaponGroupStateById or {}) do
         state.fireDelay = math.max(0.0, (tonumber(state.fireDelay) or 0.0) - delta)
+        local _, weaponDef = _resolveWeapon(state)
+        local heatDissipation = math.max(
+            0.0,
+            tonumber((weaponDef or {}).heatDissipationPerSecond) or 0.0
+        )
+        local recoverThreshold = math.max(
+            0.0,
+            tonumber((weaponDef or {}).recoverThreshold) or 0.0
+        )
         for i = 1, #(state.mounts or {}) do
             local mount = state.mounts[i]
             mount.cooldownRemain = math.max(0.0, (tonumber(mount.cooldownRemain) or 0.0) - delta)
+            mount.heat = math.max(
+                0.0,
+                (tonumber(mount.heat) or 0.0) - heatDissipation * delta
+            )
+            if mount.overheated and mount.heat <= recoverThreshold then
+                mount.overheated = false
+            end
         end
         local pending = state.pending
         if pending ~= nil then

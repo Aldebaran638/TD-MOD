@@ -394,10 +394,11 @@ function server.xSlot_broadcastLaunchingStart(shipBodyId, slotIndex, weaponType,
         local hitNormal = normal or Vec(0, 1, 0)
         ClientCall(
             0, "client.spawnGenericRaycastWeaponFx",
-            weaponType, "arcBeam",
+            weaponType, "focusedArcBeam",
             firePointWorld[1], firePointWorld[2], firePointWorld[3],
             hitPointWorld[1], hitPointWorld[2], hitPointWorld[3],
-            hitNormal[1], hitNormal[2], hitNormal[3]
+            hitNormal[1], hitNormal[2], hitNormal[3],
+            didHit and 1 or 0
         )
     end
     server.xSlotRenderPushEvent(shipBodyId, {

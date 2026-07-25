@@ -75,6 +75,7 @@ end
 local function _xSlotStateBuildConfig(slotDef)
     local weaponType = tostring((slotDef and slotDef.weaponType) or "none")
     local weaponDef = _xSlotStateResolveWeaponDefinition(weaponType)
+    local fireProfile = weaponDef.fireProfile or {}
     local cooldown = weaponDef.cooldown
     if cooldown == nil then
         cooldown = weaponDef.CD
@@ -84,8 +85,8 @@ local function _xSlotStateBuildConfig(slotDef)
         weaponType = weaponType,
         firePosOffset = _xSlotStateCloneVec3(slotDef and slotDef.firePosOffset, 0, 0, -4),
         fireDirRelative = _xSlotStateCloneVec3(slotDef and slotDef.fireDirRelative, 0, 0, -1),
-        chargeDuration = weaponDef.chargeDuration or 0.0,
-        launchDuration = weaponDef.launchDuration or 0.0,
+        chargeDuration = weaponDef.chargeDuration or fireProfile.chargeDuration or 0.0,
+        launchDuration = weaponDef.launchDuration or fireProfile.launchDuration or 0.0,
         randomTrajectoryAngle = weaponDef.randomTrajectoryAngle or 0.0,
         cooldown = cooldown or 0.0,
         aimControlMode = tostring(weaponDef.aimControlMode or "fixed"),

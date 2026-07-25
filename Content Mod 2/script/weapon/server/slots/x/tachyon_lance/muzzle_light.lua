@@ -41,6 +41,22 @@ local function _tachyonLightSetIntensity(intensity)
     end
 end
 
+local function _tachyonLightSetColor(weaponType)
+    local state = server.tachyonMuzzleLightState
+    local light = math.floor(state.light or 0)
+    if light == 0 or not IsHandleValid(light) then
+        light = FindLight(server.tachyonMuzzleLightConfig.lightTag or "tachyonMuzzleLight", false)
+        state.light = light or 0
+    end
+    if light ~= 0 and IsHandleValid(light) then
+        if tostring(weaponType or "") == "focusedArcEmitter" then
+            SetLightColor(light, 0.72, 0.22, 1.0)
+        else
+            SetLightColor(light, 0.45, 0.85, 1.0)
+        end
+    end
+end
+
 local function _tachyonLightSupportsWeapon(weaponType)
     local config = server.tachyonMuzzleLightConfig
     local requested = tostring(weaponType or "")
@@ -54,21 +70,26 @@ function server.tachyonMuzzleLightInit()
     state.light = FindLight(config.lightTag or "tachyonMuzzleLight", false)
     state.phase = "idle"
     state.age = 0.0
+    _tachyonLightSetColor("tachyonLance")
     _tachyonLightSetIntensity(0.0)
 end
 
 function server.tachyonMuzzleLightBeginCharge(weaponType)
     local config = server.tachyonMuzzleLightConfig
     local state = server.tachyonMuzzleLightState
-    if _tachyonLightSupportsWeapon(weaponType) and state.phase ~= "charging" then
-        state.phase = "charging"
-        state.age = 0.0
+    if _tachyonLightSupportsWeapon(weaponType) then
+        _tachyonLightSetColor(weaponType)
+        if state.phase ~= "charging" then
+            state.phase = "charging"
+            state.age = 0.0
+        end
     end
 end
 
 function server.tachyonMuzzleLightTrigger(weaponType)
     local config = server.tachyonMuzzleLightConfig
     if _tachyonLightSupportsWeapon(weaponType) then
+        _tachyonLightSetColor(weaponType)
         server.tachyonMuzzleLightState.phase = "launch"
         server.tachyonMuzzleLightState.age = 0.0
     end

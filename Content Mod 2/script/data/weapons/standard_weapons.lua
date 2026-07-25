@@ -10,7 +10,9 @@ weaponBehaviorProfiles = weaponBehaviorProfiles or {
 }
 weaponFxProfiles = weaponFxProfiles or {
     tachyonLance = true,
+    gammaBeam = true,
     energyBeam = true,
+    focusedArcBeam = true,
     arcBeam = true,
     kineticProjectile = true,
     plasmaProjectile = true,
@@ -44,7 +46,7 @@ local function _ray(id, name, slots, damage, cooldown, range, shieldFix, armorFi
             mode = charge and "charged" or "instant",
             chargeDuration = charge or 0.0,
             launchDuration = charge and 0.20 or 0.10,
-            rayStyle = fx == "arcBeam" and "arc" or "beam",
+            rayStyle = (fx == "arcBeam" or fx == "focusedArcBeam") and "arc" or "beam",
         },
         projectileProfile = { mode = "none" }, fxProfile = fx,
         damage = damage, damageMin = damage, damageMax = damage,
@@ -116,30 +118,38 @@ end
 
 -- X
 _ray("tachyonLance", "快子光矛", { "X" }, 2115, 6.0, 500.0, 0.5, 2.0, 1.5, "tachyonLance", 0.50)
-_ray("focusedArcEmitter", "聚能电弧发射器", { "X" }, 1680, 6.0, 520.0, 0.0, 0.0, 2.3, "arcBeam", 0.50)
+_ray("focusedArcEmitter", "聚能电弧发射器", { "X" }, 1680, 6.0, 520.0, 0.0, 0.0, 2.3, "focusedArcBeam", 0.50)
 _projectile("gigaCannon", "千兆级加农炮", { "X" }, 2350, 3.5, 750.0, 560.0, 2.0, 0.5, 1.0, "gigaCannonProjectile")
 
 -- L
-_ray("largeGammaLaser", "伽马激光", { "L" }, 185, 1.45, 560.0, 0.5, 1.5, 1.25, "energyBeam")
+_ray("largeGammaLaser", "伽马激光", { "L" }, 185, 1.45, 560.0, 0.5, 1.5, 1.25, "gammaBeam")
 _projectile("largePlasmaCannon", "等离子加农炮", { "L" }, 235, 2.0, 430.0, 115.0, 0.5, 2.0, 1.5, "plasmaProjectile")
 _projectile("largeGaussCannon", "高斯炮", { "L" }, 205, 1.65, 610.0, 155.0, 1.5, 0.75, 1.0, "kineticProjectile")
 _projectile("kineticArtillery", "先进动能火炮", { "L" }, 200, 0.1, 750.0, 150.0, 2.0, 0.5, 1.0, "kineticProjectile")
 _projectile("largeStormfireAutocannon", "火风暴机关炮", { "L" }, 56, 0.65, 220.0, 235.0, 1.5, 0.75, 1.0, "autocannonProjectile", 5)
-weaponData.largeStormfireAutocannon.fireProfile.burstInterval = 0.030
+weaponData.largeStormfireAutocannon.fireProfile.mode = "single"
+weaponData.largeStormfireAutocannon.fireProfile.burstCount = 1
+weaponData.largeStormfireAutocannon.fireProfile.burstInterval = 0.0
+weaponData.largeStormfireAutocannon.cooldown = 0.0
+weaponData.largeStormfireAutocannon.CD = 0.0
 
 -- M
-_ray("mediumGammaLaser", "伽马激光", { "M" }, 92, 1.1, 390.0, 0.5, 1.5, 1.25, "energyBeam")
+_ray("mediumGammaLaser", "伽马激光", { "M" }, 92, 1.1, 390.0, 0.5, 1.5, 1.25, "gammaBeam")
 _projectile("mediumPlasmaCannon", "等离子加农炮", { "M" }, 118, 1.5, 330.0, 105.0, 0.5, 2.0, 1.5, "plasmaProjectile")
 _ray("phaseDisruptor", "相位裂解炮", { "M" }, 82, 1.25, 340.0, 0.0, 0.0, 2.0, "arcBeam")
 weaponData.phaseDisruptor.suppressShipExplosion = true
 _projectile("mediumGaussCannon", "高斯炮", { "M" }, 104, 1.25, 430.0, 145.0, 1.5, 0.75, 1.0, "kineticProjectile")
 _projectile("mediumStormfireAutocannon", "火风暴机关炮", { "M" }, 28, 0.55, 180.0, 225.0, 1.5, 0.75, 1.0, "autocannonProjectile", 4)
-weaponData.mediumStormfireAutocannon.fireProfile.burstInterval = 0.028
+weaponData.mediumStormfireAutocannon.fireProfile.mode = "single"
+weaponData.mediumStormfireAutocannon.fireProfile.burstCount = 1
+weaponData.mediumStormfireAutocannon.fireProfile.burstInterval = 0.0
+weaponData.mediumStormfireAutocannon.cooldown = 0.0
+weaponData.mediumStormfireAutocannon.CD = 0.0
 _guided("swarmerMissile", "旋风导弹", { "M" }, 210, 10.0, 975.0, 43.875, 1.0, 1.2, 1.8, "MOD/prefabs/swarmerMissile.xml", "guidedMissile")
 
 -- G
-_rocket("devastatorTorpedoes", "毁灭者鱼雷", { "G" }, 700, 18.0, 1200.0, 28.0, 1.0, 1.0, 1.0, "MOD/prefabs/devastatorTorpedoes.xml", "guidedMissile")
-_projectile("neutronLauncher", "中子发射器", { "G" }, 610, 14.0, 1150.0, 420.0, 0.5, 2.0, 1.75, "neutronProjectile")
+_rocket("devastatorTorpedoes", "毁灭者鱼雷", { "G" }, 700, 18.0, 1200.0, 30.8, 1.0, 1.0, 1.0, "MOD/prefabs/devastatorTorpedoes.xml", "guidedMissile")
+_projectile("neutronLauncher", "中子发射器", { "G" }, 610, 4.5, 1150.0, 420.0, 0.5, 2.0, 1.75, "neutronProjectile")
 weaponData.neutronLauncher.targetingMode = "forward"
 weaponData.neutronLauncher.aimControlMode = "fixed"
 weaponData.neutronLauncher.forceForward = true
@@ -164,6 +174,8 @@ hSlotWeaponRegistryData.gammaStrikeCraft = weaponData.gammaStrikeCraft
 
 weaponData.tachyonLance.legacyController = "xSlot"
 weaponData.focusedArcEmitter.legacyController = "xSlot"
+weaponData.focusedArcEmitter.chargeDuration = weaponData.focusedArcEmitter.fireProfile.chargeDuration
+weaponData.focusedArcEmitter.launchDuration = weaponData.focusedArcEmitter.fireProfile.launchDuration
 weaponData.kineticArtillery.legacyController = "lSlot"
 weaponData.swarmerMissile.legacyController = "mSlot"
 weaponData.gammaStrikeCraft.legacyController = "hSlot"
@@ -183,10 +195,10 @@ local _runtimeProfiles = {
     mediumPlasmaCannon = { "mEnergy", 2, "grouped" },
     phaseDisruptor = { "mEnergy", 1, "sequential" },
     mediumGaussCannon = { "mKinetic", 2, "grouped" },
-    mediumStormfireAutocannon = { "mAutocannon", 2, "grouped" },
+    mediumStormfireAutocannon = { "mAutocannon", 4, "grouped" },
     swarmerMissile = { "mSwarmer", 1, "sequential" },
     devastatorTorpedoes = { "gRocket", 1, "sequential" },
-    neutronLauncher = { "xSpinal", 1, "sequential" },
+    neutronLauncher = { "gNeutron", 1, "sequential" },
     gammaStrikeCraft = { "hHangar", 1, "sequential" },
 }
 
@@ -200,20 +212,46 @@ for weaponType, profile in pairs(_runtimeProfiles) do
     definition.continuousFire = true
 end
 
+for _, weaponType in ipairs({
+    "largeStormfireAutocannon",
+    "mediumStormfireAutocannon",
+}) do
+    local definition = weaponData[weaponType]
+    definition.heatPerShot = 4.0
+    definition.heatDissipationPerSecond = 32.0
+    definition.overheatThreshold = 100.0
+    definition.recoverThreshold = 45.0
+end
+
+for _, weaponType in ipairs({
+    "largePlasmaCannon",
+    "mediumPlasmaCannon",
+    "largeGaussCannon",
+    "mediumGaussCannon",
+}) do
+    local definition = weaponData[weaponType]
+    definition.cooldown = 0.0
+    definition.CD = 0.0
+    definition.heatPerShot = 12.0
+    definition.heatDissipationPerSecond = 10.0
+    definition.overheatThreshold = 100.0
+    definition.recoverThreshold = 60.0
+end
+
 local _salvoIntervals = {
     tachyonLance = 0.05,
     focusedArcEmitter = 0.05,
     gigaCannon = 0.18,
     largeGammaLaser = 0.14,
-    largePlasmaCannon = 0.12,
+    largePlasmaCannon = 0.10,
     largeGaussCannon = 0.10,
     kineticArtillery = 0.05,
-    largeStormfireAutocannon = 0.05,
+    largeStormfireAutocannon = 0.06,
     mediumGammaLaser = 0.10,
     mediumPlasmaCannon = 0.10,
     phaseDisruptor = 0.09,
-    mediumGaussCannon = 0.08,
-    mediumStormfireAutocannon = 0.04,
+    mediumGaussCannon = 0.10,
+    mediumStormfireAutocannon = 0.06,
     swarmerMissile = 0.18,
     devastatorTorpedoes = 0.20,
     neutronLauncher = 0.16,

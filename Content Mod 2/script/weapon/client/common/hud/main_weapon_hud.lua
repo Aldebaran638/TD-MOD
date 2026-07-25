@@ -192,6 +192,10 @@ local function _resolveXSlotFill(value, maxValue, phase)
         end
         return _mainWeaponHudClamp(1.0 - (curr / maxV), 0.0, 1.0)
     end
+    if p == "heat" or p == "overheated" then
+        if maxV <= 0.0001 then return 0.0 end
+        return _mainWeaponHudClamp(curr / maxV, 0.0, 1.0)
+    end
 
     return 1.0
 end
@@ -227,7 +231,7 @@ end
 local function _resolveGenericTopStatus(state)
     local phase = "idle"
     local fill = 1.0
-    local priority = { idle = 1, cooldown = 2, charging = 3 }
+    local priority = { idle = 1, cooldown = 2, heat = 3, charging = 4, overheated = 5 }
     for i = 1, 4 do
         local candidate = tostring(state["genericPhase" .. tostring(i)] or "idle")
         local candidateFill = tonumber(state["genericFill" .. tostring(i)]) or 1.0
@@ -238,6 +242,9 @@ local function _resolveGenericTopStatus(state)
             fill = candidateFill
         elseif candidate == phase and candidate == "cooldown" and candidateFill < fill then
             fill = candidateFill
+        elseif candidate == phase and (candidate == "heat" or candidate == "overheated")
+            and candidateFill > fill then
+            fill = candidateFill
         end
     end
     if phase == "charging" then
@@ -245,6 +252,12 @@ local function _resolveGenericTopStatus(state)
     end
     if phase == "cooldown" then
         return fill, string.format("RECOVER %d%%", math.floor(fill * 100 + 0.5))
+    end
+    if phase == "overheated" then
+        return fill, string.format("OVERHEAT %d%%", math.floor(fill * 100 + 0.5))
+    end
+    if phase == "heat" then
+        return fill, string.format("HEAT %d%%", math.floor(fill * 100 + 0.5))
     end
     return 1.0, "READY"
 end
@@ -723,6 +736,17 @@ function client.mainWeaponHudDraw()
         topColor = cfg.hSlotColor
         modeText = "Main Weapon: H-Slot"
     end
+    if usesGenericRuntime then
+        for i = 1, 4 do
+            local phase = tostring(state["genericPhase" .. tostring(i)] or "")
+            if phase == "overheated" then
+                topColor = cfg.heatOverColor
+                break
+            elseif phase == "heat" then
+                topColor = cfg.heatFillColor
+            end
+        end
+    end
 
     UiPush()
         UiAlign("left top")
@@ -772,10 +796,17 @@ function client.mainWeaponHudDraw()
                 local row = math.floor((i - 1) / 2)
                 local barX = 12 + column * (24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap)
                 local barY = 76 + row * 20
+                local phase = tostring(state["genericPhase" .. tostring(i)] or "")
+                local barColor = slotColor
+                if phase == "overheated" then
+                    barColor = cfg.heatOverColor
+                elseif phase == "heat" then
+                    barColor = cfg.heatFillColor
+                end
                 _drawWeaponCooldownBar(
                     barX, barY, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight,
                     state["genericFill" .. tostring(i)],
-                    slotLabel .. tostring(i), cfg, slotColor
+                    slotLabel .. tostring(i), cfg, barColor
                 )
             end
         elseif currentMode == "xSlot" then

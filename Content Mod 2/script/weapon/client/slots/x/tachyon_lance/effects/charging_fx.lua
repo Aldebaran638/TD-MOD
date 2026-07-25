@@ -173,7 +173,7 @@ function client.tachyonChargingFxTick(dt)
 
             ParticleReset()
             if entry.weaponType == "focusedArcEmitter" then
-                ParticleColor(0.72, 0.28, 1.0, 0.22, 0.68, 1.0)
+                ParticleColor(0.82, 0.24, 1.0, 0.46, 0.08, 0.78)
             else
                 ParticleColor(0.96, 1.0, 1.0, 0.16, 0.45, 1.0)
             end

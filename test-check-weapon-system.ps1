@@ -43,6 +43,14 @@ try {
 
     $standardPath = Join-Path $fixtureMod "script\data\weapons\standard_weapons.lua"
     $text = [IO.File]::ReadAllText($standardPath)
+
+    $heatText = $text.Replace('definition.heatPerShot = 4.0', 'definition.heatPerShot = 5.0')
+    [IO.File]::WriteAllText($standardPath, $heatText, (New-Object Text.UTF8Encoding($false)))
+    $invalidHeat = Invoke-Checker
+    Assert-True ($invalidHeat.ExitCode -eq 1) "rejects a mismatched Stormfire heat profile"
+    Assert-True ($invalidHeat.Output -match "Stormfire Autocannons") "reports the Stormfire heat contract"
+
+    [IO.File]::WriteAllText($standardPath, $text, (New-Object Text.UTF8Encoding($false)))
     $text = $text.Replace('_ray("focusedArcEmitter"', '_ray("brokenArcEmitter"')
     [IO.File]::WriteAllText($standardPath, $text, (New-Object Text.UTF8Encoding($false)))
 
