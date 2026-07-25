@@ -47,6 +47,7 @@ $mainWeaponHud = Read-Required "script\weapon\client\common\hud\main_weapon_hud.
 $crosshair = Read-Required "script\weapon\client\common\hud\ship_crosshair.lua"
 $projectileVisual = Read-Required "script\weapon\client\slots\l\kinetic_artillery\effects\projectile_visual.lua"
 $clientRegistry = Read-Required "script\ship\battlecruiser\client\registry\ship_registry.lua"
+$engineThrusterFx = Read-Required "script\ship\battlecruiser\client\effects\engine_thruster_fx.lua"
 $serverRequests = Read-Required "script\ship\battlecruiser\server\registry\ship_registry_request.lua"
 $groupRuntime = Read-Required "script\weapon\server\common\runtime\weapon_group.lua"
 $loadoutRuntime = Read-Required "script\weapon\server\common\loadout\slot_loadout.lua"
@@ -64,6 +65,7 @@ $xSlotControl = Read-Required "script\weapon\server\slots\x\tachyon_lance\contro
 $xSlotState = Read-Required "script\weapon\server\slots\x\tachyon_lance\state.lua"
 $xSlotMuzzleLight = Read-Required "script\weapon\server\slots\x\tachyon_lance\muzzle_light.lua"
 $xSlotChargingFx = Read-Required "script\weapon\client\slots\x\tachyon_lance\effects\charging_fx.lua"
+$arcChargingFx = Read-Required "script\weapon\client\slots\x\focused_arc_emitter\effects\charging_fx.lua"
 $weaponSoundCatalog = Read-Required "script\weapon\client\common\sound\weapon_sound_catalog.lua"
 $soundService = Read-Required "script\weapon\client\common\sound\sound_service.lua"
 $missileVisual = Read-Required "script\weapon\client\guided\effects\missile_visual.lua"
@@ -194,13 +196,39 @@ if ($guidedTargeting -notmatch 'shipCamera\.viewMode\s*==\s*"front"' -or
 if ($client -notmatch 'generic_raycast_fx\.lua') {
     Add-Issue "generic raycast client FX is not included"
 }
+if ($client -notmatch 'ship/battlecruiser/client/effects/engine_thruster_fx\.lua' -or
+    $client -notmatch 'engineThrusterFxInit\(\)' -or
+    $client -notmatch 'engineThrusterFxTick\(dt\)' -or
+    $client -notmatch 'engineThrusterFxRender\(\)' -or
+    $engineThrusterFx -notmatch 'FindShapes\(tag,\s*false\)' -or
+    $engineThrusterFx -notmatch 'GetBodyVelocity\(body\)' -or
+    $engineThrusterFx -notmatch 'math\.exp\(-response\s*\*\s*frameDt\)' -or
+    $engineThrusterFx -notmatch 'SpawnParticle\(' -or
+    $engineThrusterFx -notmatch 'DrawSprite\(') {
+    Add-Issue "battlecruiser engine combustion and smooth velocity-driven exhaust are incomplete"
+}
+if ($arcChargingFx -notmatch 'focusedArcChargingFxRender' -or
+    $arcChargingFx -notmatch '_focusedArcDrawBridge' -or
+    $xSlotChargingFx -notmatch '(?s)focusedArcEmitter.*emittersByShip' -or
+    $xSlotMuzzleLight -notmatch 'arcMuzzleLightLeft' -or
+    $xSlotMuzzleLight -notmatch 'arcMuzzleLightRight' -or
+    $xSlotMuzzleLight -notmatch '_tachyonLightOverloadWave') {
+    Add-Issue "Focused Arc Emitter charging FX is not isolated into three unstable light nodes"
+}
 $sceneConfiguratorMounted = $mainXml -match 'MOD/script/weapon_configurator\.lua'
+$externalConfiguratorDeclared =
+    $mainXml -match 'weapon-configurator-host:\s*Global Mod/main\.lua'
 $globalConfiguratorMounted =
     $globalMain -match '#include\s+"script/weapon/client/config_ui/weapon_config_ui\.lua"' -and
     $globalMain -match 'function\s+server\.weaponConfiguratorSaveTemplate\s*\('
-if ((-not $sceneConfiguratorMounted -and -not $globalConfiguratorMounted) -or
+if ((-not $sceneConfiguratorMounted -and
+        -not $externalConfiguratorDeclared -and
+        -not $globalConfiguratorMounted) -or
     $configurator -notmatch 'config_ui/weapon_config_ui\.lua') {
     Add-Issue "independent weapon configurator is not mounted by main.xml or GM main.lua"
+}
+if ($sceneConfiguratorMounted -and $externalConfiguratorDeclared) {
+    Add-Issue "weapon configurator is mounted by both CM2 and GM, causing duplicate UI panels"
 }
 if ($configUi -notmatch 'InputPressed\("t"\)' -or
     $configUi -notmatch 'weaponConfiguratorSaveTemplate') {
@@ -275,7 +303,8 @@ if ($standard -notmatch 'focusedArcEmitter\.legacyController\s*=\s*"xSlot"' -or
 }
 if ($xSlotMuzzleLight -notmatch 'weaponTypes\.tachyonLance\s*=\s*true' -or
     $xSlotMuzzleLight -notmatch 'weaponTypes\.focusedArcEmitter\s*=\s*true' -or
-    $xSlotMuzzleLight -notmatch 'FindLight\(server\.tachyonMuzzleLightConfig\.lightTag') {
+    $xSlotMuzzleLight -notmatch 'function\s+_tachyonLightResolveHandle\s*\(' -or
+    $xSlotMuzzleLight -notmatch 'FindLight\(tag,\s*false\)') {
     Add-Issue "charged X weapons do not preserve and reacquire the XML muzzle light"
 }
 if ($client -notmatch '(?s)weapon_sound_catalog\.lua.*?sound_service\.lua' -or
@@ -332,8 +361,11 @@ if ($standard -notmatch '_ray\("phaseDisruptor".*?"arcBeam"\)' -or
 if ($standard -notmatch '_ray\("focusedArcEmitter".*?"focusedArcBeam",\s*0\.50\)' -or
     $genericRaycastFx -notmatch 'focusedArcBeam\s*=\s*\{\s*color\s*=\s*\{\s*0\.72,\s*0\.22,\s*1\.0\s*\}' -or
     $xSlotControl -notmatch 'weaponType,\s*"focusedArcBeam"' -or
-    $xSlotChargingFx -notmatch 'ParticleColor\(0\.82,\s*0\.24,\s*1\.0,\s*0\.46,\s*0\.08,\s*0\.78\)' -or
-    $xSlotMuzzleLight -notmatch 'SetLightColor\(light,\s*0\.72,\s*0\.22,\s*1\.0\)') {
+    $client -notmatch 'focused_arc_emitter/effects/charging_fx\.lua' -or
+    $arcChargingFx -notmatch 'focusedArcChargingFxRender' -or
+    $xSlotChargingFx -notmatch '(?s)focusedArcEmitter.*?_clearEffectsByShip' -or
+    $xSlotChargingFx -match 'ParticleColor\(0\.82,\s*0\.24,\s*1\.0' -or
+    $xSlotMuzzleLight -notmatch 'SetLightColor\(center,\s*0\.72,\s*0\.22,\s*1\.0\)') {
     Add-Issue "Focused Arc Emitter must use independent purple charge/beam/light FX"
 }
 if ($standard -notmatch '_ray\("largeGammaLaser".*?"gammaBeam"\)' -or

@@ -28,12 +28,14 @@ end
 #include "weapon/client/guided/hud/guided_targeting_hud.lua"
 #include "weapon/client/slots/x/hud/x_slot_lock_hud.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/charging_fx.lua"
+#include "weapon/client/slots/x/focused_arc_emitter/effects/charging_fx.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/beam_fx.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/muzzle_fx.lua"
 #include "weapon/client/common/effects/shield_hit_fx.lua"
 #include "weapon/client/common/effects/generic_raycast_fx.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/impact_fx.lua"
 #include "ship/battlecruiser/client/effects/ship_destroyed_fx.lua"
+#include "ship/battlecruiser/client/effects/engine_thruster_fx.lua"
 #include "weapon/client/slots/l/kinetic_artillery/effects/projectile_visual.lua"
 #include "weapon/client/guided/effects/missile_impact_fx.lua"
 #include "weapon/client/guided/effects/missile_visual.lua"
@@ -46,7 +48,9 @@ function client.init()
     client.soundModuleInit()
     client.tachyonBeamFxInit()
     client.shipBody = FindBody("stellarisShip", false)
+    client.engineThrusterFxInit()
     client.tachyonMuzzleFxInit()
+    client.focusedArcChargingFxInit()
     client.genericRaycastFxInit()
 end
 
@@ -59,11 +63,13 @@ function client.clientTick(dt)
     client.soundModuleTick(dt)
 
     client.tachyonChargingFxTick(dt)
+    client.focusedArcChargingFxTick(dt)
     client.tachyonBeamFxTick(dt)
     client.tachyonMuzzleFxTick(dt)
     client.shieldHitFxTick(dt)
     client.tachyonImpactFxTick(dt)
     client.shipDestroyedFxTick(dt)
+    client.engineThrusterFxTick(dt)
     client.projectileVisualTick(dt)
     client.missileVisualTick(dt)
     client.missileWarpFxTick(dt)
@@ -92,5 +98,7 @@ function client.render()
     client.hSlotBeamFxRender()
     client.tachyonBeamFxRender()
     client.tachyonMuzzleFxRender()
+    client.focusedArcChargingFxRender()
     client.genericRaycastFxRender()
+    client.engineThrusterFxRender()
 end
