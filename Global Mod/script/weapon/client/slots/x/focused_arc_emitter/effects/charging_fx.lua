@@ -46,8 +46,6 @@ local function _focusedArcStartOrUpdate(shipBodyId, firePointWorld)
             targetLocalPos = targetLocalPos,
         }
         client.focusedArcChargingFxState.emittersByShip[shipBodyId] = emitter
-    else
-        emitter.targetLocalPos = targetLocalPos
     end
 end
 
@@ -65,19 +63,17 @@ local function _focusedArcDrawBridge(sprite, startPos, endPos, age, seed, streng
         math.floor(tonumber(client.focusedArcChargingFxConfig.segmentCount) or 7)
     )
     local previous = startPos
-    local flicker = 0.88
-        + 0.08 * math.sin(age * 33.0 + seed * 1.7)
-        + 0.04 * math.sin(age * 71.0 + seed * 3.1)
+    local agePhase = age * 95.0 + seed * 7.0
 
     for segmentIndex = 1, segmentCount do
         local t = segmentIndex / segmentCount
         local point = VecLerp(startPos, endPos, t)
         if segmentIndex < segmentCount then
             local envelope = math.sin(math.pi * t)
-            local jitterA = math.sin(age * 54.0 + seed + segmentIndex * 2.13)
-                * 0.085 * envelope
-            local jitterB = math.cos(age * 67.0 + seed * 0.7 + segmentIndex * 1.61)
-                * 0.055 * envelope
+            local jitterA = math.sin(agePhase + segmentIndex * 2.17)
+                * 0.11 * envelope
+            local jitterB = math.cos(agePhase * 1.31 + segmentIndex * 1.63)
+                * 0.075 * envelope
             point = VecAdd(
                 point,
                 VecAdd(VecScale(axisA, jitterA), VecScale(axisB, jitterB))
@@ -96,16 +92,16 @@ local function _focusedArcDrawBridge(sprite, startPos, endPos, age, seed, streng
                     _focusedArcCameraAxis(segmentDirection, segmentCenter)
                 )
             )
-            local alpha = math.max(0.0, strength * flicker)
+            local alpha = math.max(0.0, math.min(1.55, strength))
             DrawSprite(
                 sprite,
                 transform,
                 segmentLength,
-                0.48,
-                1.15,
-                0.32,
-                1.8,
-                alpha * 0.58,
+                0.42,
+                0.72 * 2.2,
+                0.22 * 2.2,
+                1.0 * 2.2,
+                alpha * 0.42,
                 true,
                 true,
                 false
@@ -114,11 +110,11 @@ local function _focusedArcDrawBridge(sprite, startPos, endPos, age, seed, streng
                 sprite,
                 transform,
                 segmentLength,
-                0.095,
-                4.5,
-                2.2,
-                6.0,
-                math.min(1.0, alpha),
+                0.075,
+                2.5,
+                2.5,
+                2.5,
+                alpha,
                 true,
                 true,
                 false
@@ -193,13 +189,13 @@ function client.focusedArcChargingFxRender()
             local leftWorld = TransformToParentPoint(shipT, leftLocal)
             local rightWorld = TransformToParentPoint(shipT, rightLocal)
             local charge = math.max(0.0, math.min(1.0, (emitter.age or 0.0) / chargeDuration))
-            local strength = charge * charge
+            local strength = charge
             if charge >= 1.0 then
                 strength = math.min(
-                    1.35,
-                    1.0
-                        + 0.18 * math.max(0.0, math.sin((emitter.age or 0.0) * 47.0))
-                        + 0.17 * math.max(0.0, math.sin((emitter.age or 0.0) * 91.0))
+                    1.55,
+                    0.45
+                        + 0.58 * math.max(0.0, math.sin((emitter.age or 0.0) * 17.0))
+                        + 0.52 * math.max(0.0, math.sin((emitter.age or 0.0) * 37.0))
                 )
             end
             _focusedArcDrawBridge(sprite, leftWorld, centerWorld, emitter.age or 0.0, 1.0, strength)

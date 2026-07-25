@@ -19,11 +19,11 @@ _tachyonLightConfig.chargeEndIntensity = _tachyonLightConfig.chargeEndIntensity 
 _tachyonLightConfig.launchPeakIntensity = _tachyonLightConfig.launchPeakIntensity or 100.0
 _tachyonLightConfig.launchFlashDuration = _tachyonLightConfig.launchFlashDuration or 0.03
 _tachyonLightConfig.launchFadeDuration = _tachyonLightConfig.launchFadeDuration or 0.10
-_tachyonLightConfig.arcChargeStartIntensity = _tachyonLightConfig.arcChargeStartIntensity or 3.0
-_tachyonLightConfig.arcCenterChargeEndIntensity = _tachyonLightConfig.arcCenterChargeEndIntensity or 32.0
-_tachyonLightConfig.arcSideChargeEndIntensity = _tachyonLightConfig.arcSideChargeEndIntensity or 14.4
-_tachyonLightConfig.arcCenterOverloadPeak = _tachyonLightConfig.arcCenterOverloadPeak or 61.0
-_tachyonLightConfig.arcSideOverloadPeak = _tachyonLightConfig.arcSideOverloadPeak or 28.2
+_tachyonLightConfig.arcChargeStartIntensity = _tachyonLightConfig.arcChargeStartIntensity or 0.0
+_tachyonLightConfig.arcCenterChargeEndIntensity = _tachyonLightConfig.arcCenterChargeEndIntensity or 1.70
+_tachyonLightConfig.arcSideChargeEndIntensity = _tachyonLightConfig.arcSideChargeEndIntensity or 0.65
+_tachyonLightConfig.arcCenterOverloadPeak = _tachyonLightConfig.arcCenterOverloadPeak or 1.70
+_tachyonLightConfig.arcSideOverloadPeak = _tachyonLightConfig.arcSideOverloadPeak or 0.65
 
 server.tachyonMuzzleLightState = server.tachyonMuzzleLightState or {
     centerLight = 0,
@@ -158,10 +158,10 @@ function server.tachyonMuzzleLightStop(weaponType)
 end
 
 local function _tachyonLightOverloadWave(age, phase)
-    local slow = 0.5 + 0.5 * math.sin(age * 35.0 + phase)
-    local fast = 0.5 + 0.5 * math.sin(age * 79.0 + phase * 1.73)
-    local spike = math.pow(math.max(0.0, math.sin(age * 113.0 + phase * 2.31)), 10.0)
-    return math.max(0.0, math.min(1.0, slow * 0.36 + fast * 0.22 + spike * 0.72))
+    local slow = 0.5 + 0.5 * math.sin(age * 13.0 + phase)
+    local fast = 0.5 + 0.5 * math.sin(age * 31.0 + phase * 1.73)
+    local spike = math.pow(math.max(0.0, math.sin(age * 47.0 + phase * 2.31)), 8.0)
+    return math.max(0.0, math.min(1.0, slow * 0.34 + fast * 0.24 + spike * 0.76))
 end
 
 function server.tachyonMuzzleLightTick(dt)
@@ -174,25 +174,26 @@ function server.tachyonMuzzleLightTick(dt)
         local t = math.max(0.0, math.min(1.0, state.age / duration))
         local accelerated = t * t
         if tostring(state.weaponType or "") == "focusedArcEmitter" then
-            local startIntensity = tonumber(config.arcChargeStartIntensity) or 3.0
-            local centerEnd = tonumber(config.arcCenterChargeEndIntensity) or 32.0
-            local sideEnd = tonumber(config.arcSideChargeEndIntensity) or 14.4
+            local startIntensity = tonumber(config.arcChargeStartIntensity) or 0.0
+            local centerEnd = tonumber(config.arcCenterChargeEndIntensity) or 1.70
+            local sideEnd = tonumber(config.arcSideChargeEndIntensity) or 0.65
             if t < 1.0 then
-                local center = startIntensity + (centerEnd - startIntensity) * accelerated
-                local side = startIntensity + (sideEnd - startIntensity) * accelerated
+                local visibleRamp = _tachyonLightSmoothStep(t)
+                local center = startIntensity + (centerEnd - startIntensity) * visibleRamp
+                local side = startIntensity + (sideEnd - startIntensity) * visibleRamp
                 _tachyonLightSetIntensities(center, side * 0.96, side)
                 return
             end
 
-            local centerPeak = tonumber(config.arcCenterOverloadPeak) or 61.0
-            local sidePeak = tonumber(config.arcSideOverloadPeak) or 28.2
+            local centerPeak = tonumber(config.arcCenterOverloadPeak) or 1.70
+            local sidePeak = tonumber(config.arcSideOverloadPeak) or 0.65
             local centerWave = _tachyonLightOverloadWave(state.age, 0.0)
             local leftWave = _tachyonLightOverloadWave(state.age, 2.1)
             local rightWave = _tachyonLightOverloadWave(state.age, 4.7)
             _tachyonLightSetIntensities(
-                centerPeak * (0.22 + 0.78 * centerWave),
-                sidePeak * (0.18 + 0.82 * leftWave),
-                sidePeak * (0.18 + 0.82 * rightWave)
+                centerPeak * (0.04 + 0.96 * centerWave),
+                sidePeak * (0.03 + 0.97 * leftWave),
+                sidePeak * (0.03 + 0.97 * rightWave)
             )
             return
         end
@@ -210,9 +211,9 @@ function server.tachyonMuzzleLightTick(dt)
     if state.phase == "launch" then
         local peak = tonumber(config.launchPeakIntensity) or 100.0
         local isArc = tostring(state.weaponType or "") == "focusedArcEmitter"
-        local sidePeak = isArc and (tonumber(config.arcSideOverloadPeak) or 28.2) or 0.0
+        local sidePeak = isArc and (tonumber(config.arcSideOverloadPeak) or 0.65) or 0.0
         if isArc then
-            peak = tonumber(config.arcCenterOverloadPeak) or 61.0
+            peak = tonumber(config.arcCenterOverloadPeak) or 1.70
         end
         local flashDuration = math.max(0.0, tonumber(config.launchFlashDuration) or 0.03)
         local fadeDuration = math.max(0.001, tonumber(config.launchFadeDuration) or 0.10)
