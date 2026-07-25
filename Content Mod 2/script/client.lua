@@ -3,34 +3,35 @@
 
 client = client or {}
 
-#include "ship/battlecruiser/client/registry/shipRegistry.lua"
+#include "ship/battlecruiser/client/registry/ship_registry.lua"
 #include "ship/battlecruiser/client/state/ship_runtime_state.lua"
 #include "ship/battlecruiser/client/state/ship_runtime_state_api.lua"
-#include "weapon/client/state/xslot_render_state.lua"
-#include "weapon/client/state/xslot_render_state_api.lua"
-#include "weapon/client/targeting/xSlotTargeting.lua"
-#include "weapon/client/targeting/guidedTargeting.lua"
-#include "weapon/client/input/mainWeaponInput.lua"
-#include "ship/battlecruiser/client/input/bodyMoveInput.lua"
-#include "weapon/client/sound/soundModule.lua"
-#include "ship/battlecruiser/client/camera/shipCamera.lua"
-#include "ship/battlecruiser/client/camera/shipRollError.lua"
-#include "ship/battlecruiser/client/camera/shipHealthBar.lua"
-#include "weapon/client/hud/mainWeaponHud.lua"
-#include "ship/battlecruiser/client/camera/shipHelpOverlay.lua"
-#include "weapon/client/hud/shipCrosshair.lua"
-#include "weapon/client/hud/guidedTargetingHud.lua"
-#include "weapon/client/hud/xSlotLockHud.lua"
-#include "weapon/client/effects/xSlotChargingFx.lua"
-#include "weapon/client/effects/tachyonBeamFx.lua"
-#include "weapon/client/effects/tachyonMuzzleFx.lua"
-#include "weapon/client/effects/shieldHitFx.lua"
-#include "weapon/client/effects/hitPointFx.lua"
-#include "ship/battlecruiser/client/effects/shipDestroyedFx.lua"
-#include "weapon/client/effects/projectileVisual.lua"
-#include "weapon/client/effects/missileVisual.lua"
-#include "weapon/client/effects/missileWarpFx.lua"
-#include "weapon/client/effects/hSlotBeamFx.lua"
+#include "weapon/client/slots/x/state/render_state.lua"
+#include "weapon/client/slots/x/state/render_state_api.lua"
+#include "weapon/client/slots/x/targeting/x_slot_targeting.lua"
+#include "weapon/client/guided/targeting/guided_targeting.lua"
+#include "weapon/client/common/input/main_weapon_input.lua"
+#include "ship/battlecruiser/client/input/body_move_input.lua"
+#include "weapon/client/common/sound/sound_service.lua"
+#include "ship/battlecruiser/client/camera/ship_camera.lua"
+#include "ship/battlecruiser/client/hud/ship_roll_error.lua"
+#include "ship/battlecruiser/client/hud/ship_health_bar.lua"
+#include "weapon/client/common/hud/main_weapon_hud.lua"
+#include "ship/battlecruiser/client/hud/ship_help_overlay.lua"
+#include "weapon/client/common/hud/ship_crosshair.lua"
+#include "weapon/client/guided/hud/guided_targeting_hud.lua"
+#include "weapon/client/slots/x/hud/x_slot_lock_hud.lua"
+#include "weapon/client/slots/x/tachyon_lance/effects/charging_fx.lua"
+#include "weapon/client/slots/x/tachyon_lance/effects/beam_fx.lua"
+#include "weapon/client/slots/x/tachyon_lance/effects/muzzle_fx.lua"
+#include "weapon/client/common/effects/shield_hit_fx.lua"
+#include "weapon/client/slots/x/tachyon_lance/effects/impact_fx.lua"
+#include "ship/battlecruiser/client/effects/ship_destroyed_fx.lua"
+#include "weapon/client/slots/l/kinetic_artillery/effects/projectile_visual.lua"
+#include "weapon/client/guided/effects/missile_impact_fx.lua"
+#include "weapon/client/guided/effects/missile_visual.lua"
+#include "weapon/client/guided/effects/missile_warp_fx.lua"
+#include "weapon/client/slots/h/gamma_strike_craft/effects/beam_fx.lua"
 
 function client.init()
     client.shipRuntimeStateInit()
@@ -46,11 +47,11 @@ function client.clientTick(dt)
     client.bodyMoveInputTick(dt)
     client.soundModuleTick(dt)
 
-    client.xSlotChargingFxTick(dt)
+    client.tachyonChargingFxTick(dt)
     client.tachyonBeamFxTick(dt)
     client.tachyonMuzzleFxTick(dt)
     client.shieldHitFxTick(dt)
-    client.hitPointFxTick(dt)
+    client.tachyonImpactFxTick(dt)
     client.shipDestroyedFxTick(dt)
     client.projectileVisualTick(dt)
     client.missileVisualTick(dt)

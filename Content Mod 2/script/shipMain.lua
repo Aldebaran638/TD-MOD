@@ -3,16 +3,16 @@
 #version 2
 #include "script/include/common.lua"
 
-#include "data/ship/ship_data.lua"
-#include "data/weapon/weapon_data.lua"
+#include "data/ships/ship_catalog.lua"
+#include "data/weapons/weapon_catalog.lua"
 
 #include "ship/battlecruiser/server/state/runtime_state.lua"
 #include "ship/battlecruiser/server/state/runtime_state_api.lua"
-#include "weapon/server/loadout/slot_loadout.lua"
-#include "weapon/server/loadout/slot_loadout_api.lua"
-#include "ship/battlecruiser/server/registry/shipRegistry.lua"
-#include "ship/battlecruiser/server/registry/shipRegistryRequest.lua"
-#include "ship/battlecruiser/server/initialization/ship_init.lua"
+#include "weapon/server/common/loadout/slot_loadout.lua"
+#include "weapon/server/common/loadout/slot_loadout_api.lua"
+#include "ship/battlecruiser/server/registry/ship_registry.lua"
+#include "ship/battlecruiser/server/registry/ship_registry_request.lua"
+#include "ship/battlecruiser/server/bootstrap/ship_init.lua"
 
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
@@ -21,38 +21,37 @@
 -- server = server or {}
 
 -- -- registry 访问�?
--- #include "ship/battlecruiser/server/registry/shipRegistry.lua"
 
 -- x 槽控制模块位于独立的武器系统目录中。
-#include "weapon/server/controllers/lSlotState.lua"
-#include "ship/battlecruiser/server/fire_control/main_weapon_control.lua"
-#include "ship/battlecruiser/server/fire_control/main_weapon_control_api.lua"
-#include "weapon/server/controllers/xSlotState.lua"
-#include "weapon/server/controllers/xSlotRenderState.lua"
-#include "weapon/server/effects/tachyonMuzzleLight.lua"
-#include "weapon/server/controllers/xSlotControl.lua"
-#include "weapon/server/controllers/lSlotControl.lua"
-#include "weapon/server/runtime/guided_projectile/runtime.lua"
-#include "weapon/server/runtime/guided_projectile/movement.lua"
-#include "weapon/server/runtime/guided_projectile/collider.lua"
-#include "ship/battlecruiser/server/fire_control/guided_slot_group.lua"
-#include "ship/battlecruiser/server/fire_control/m_slot_control.lua"
-#include "ship/battlecruiser/server/fire_control/g_slot_control.lua"
-#include "weapon/server/controllers/hSlotControl.lua"
-#include "weapon/server/controllers/projectileManager.lua"
+#include "weapon/server/slots/l/kinetic_artillery/state.lua"
+#include "ship/battlecruiser/server/control/main_weapon_control.lua"
+#include "ship/battlecruiser/server/control/main_weapon_control_api.lua"
+#include "weapon/server/slots/x/tachyon_lance/state.lua"
+#include "weapon/server/slots/x/tachyon_lance/render_state.lua"
+#include "weapon/server/slots/x/tachyon_lance/muzzle_light.lua"
+#include "weapon/server/slots/x/tachyon_lance/control.lua"
+#include "weapon/server/slots/l/kinetic_artillery/control.lua"
+#include "weapon/server/guided/runtime.lua"
+#include "weapon/server/guided/movement.lua"
+#include "weapon/server/guided/collider.lua"
+#include "ship/battlecruiser/server/control/guided_slot_group.lua"
+#include "ship/battlecruiser/server/control/m_slot_control.lua"
+#include "ship/battlecruiser/server/control/g_slot_control.lua"
+#include "weapon/server/slots/h/gamma_strike_craft/control.lua"
+#include "weapon/server/slots/l/kinetic_artillery/projectile_manager.lua"
 -- 移动类模块：根据 body 质量施加竖直向上�?
-#include "ship/battlecruiser/server/movement/bodyMassUpwardMove.lua"
+#include "ship/battlecruiser/server/movement/body_mass_upward_move.lua"
 -- 移动类模块：根据 W/S 输入施加前后推进�?
-#include "ship/battlecruiser/server/movement/bodyDirectionalMove.lua"
+#include "ship/battlecruiser/server/movement/body_directional_move.lua"
 -- 移动类模块：接收客户�?moveState 更新
-#include "ship/battlecruiser/server/movement/bodyMoveStateReceive.lua"
+#include "ship/battlecruiser/server/movement/body_move_state_receive.lua"
 -- 移动类模块：始终施加与速度反向的平方阻�?
-#include "ship/battlecruiser/server/movement/bodyVelocityQuadraticDamping.lua"
+#include "ship/battlecruiser/server/movement/body_velocity_quadratic_damping.lua"
 -- 移动类模�?根据 registry 中的姿态误差施加扭矩进行自动调�?
-#include "ship/battlecruiser/server/movement/shipAttitudeController.lua"
-#include "ship/battlecruiser/server/movement/shipRollStabilizer.lua"
-#include "ship/battlecruiser/server/movement/shipDeathExplosion.lua"
-#include "ship/battlecruiser/server/recovery/shipHpRecovery.lua"
+#include "ship/battlecruiser/server/movement/ship_attitude_controller.lua"
+#include "ship/battlecruiser/server/movement/ship_roll_stabilizer.lua"
+#include "ship/battlecruiser/server/movement/ship_death_explosion.lua"
+#include "ship/battlecruiser/server/recovery/ship_hp_recovery.lua"
 
 -- 服务端初始化
 function server.init()
