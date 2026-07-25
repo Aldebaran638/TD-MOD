@@ -28,6 +28,7 @@ end
 #include "weapon/client/guided/hud/guided_targeting_hud.lua"
 #include "weapon/client/slots/x/hud/x_slot_lock_hud.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/charging_fx.lua"
+#include "weapon/client/slots/x/focused_arc_emitter/effects/charging_fx.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/beam_fx.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/muzzle_fx.lua"
 #include "weapon/client/common/effects/shield_hit_fx.lua"
@@ -47,6 +48,7 @@ function client.init()
     client.tachyonBeamFxInit()
     client.shipBody = FindBody("stellarisShip", false)
     client.tachyonMuzzleFxInit()
+    client.focusedArcChargingFxInit()
     client.genericRaycastFxInit()
 end
 
@@ -59,6 +61,7 @@ function client.clientTick(dt)
     client.soundModuleTick(dt)
 
     client.tachyonChargingFxTick(dt)
+    client.focusedArcChargingFxTick(dt)
     client.tachyonBeamFxTick(dt)
     client.tachyonMuzzleFxTick(dt)
     client.shieldHitFxTick(dt)
@@ -92,5 +95,6 @@ function client.render()
     client.hSlotBeamFxRender()
     client.tachyonBeamFxRender()
     client.tachyonMuzzleFxRender()
+    client.focusedArcChargingFxRender()
     client.genericRaycastFxRender()
 end
