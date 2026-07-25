@@ -29,6 +29,9 @@ function Invoke-Checker {
 try {
     [IO.Directory]::CreateDirectory($fixtureMod) | Out-Null
     Copy-Item -LiteralPath (Join-Path $sourceMod "script") -Destination $fixtureMod -Recurse
+    Copy-Item -LiteralPath (Join-Path $sourceMod "main.xml") -Destination (Join-Path $fixtureMod "main.xml")
+    [IO.Directory]::CreateDirectory((Join-Path $fixtureMod "gfx\ui")) | Out-Null
+    Copy-Item -LiteralPath (Join-Path $sourceMod "gfx\ui\weapon_icons") -Destination (Join-Path $fixtureMod "gfx\ui") -Recurse
     [IO.Directory]::CreateDirectory((Join-Path $fixtureMod "prefabs")) | Out-Null
     Copy-Item -LiteralPath (Join-Path $sourceMod "prefabs\swarmerMissile.xml") -Destination (Join-Path $fixtureMod "prefabs\swarmerMissile.xml")
     Copy-Item -LiteralPath (Join-Path $sourceMod "prefabs\devastatorTorpedoes.xml") -Destination (Join-Path $fixtureMod "prefabs\devastatorTorpedoes.xml")

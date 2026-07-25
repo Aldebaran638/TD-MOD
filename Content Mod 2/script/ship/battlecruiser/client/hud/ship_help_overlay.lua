@@ -46,6 +46,11 @@ local shipHelpOverlayRows = {
         subtitle = "Left click to fire",
     },
     {
+        key = "T",
+        title = "Weapon configuration",
+        subtitle = "Select the ship frame and slot weapons",
+    },
+    {
         key = "RMB / Q\n/ U",
         title = "Camera / Weapon / Help",
         subtitle = "Right click changes camera, Q swaps weapons\nU toggles help",

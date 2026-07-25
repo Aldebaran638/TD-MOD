@@ -31,6 +31,31 @@ function server.shipSlotLoadoutResolveShipDefinition(shipType)
     return _api.resolveShipDefinition(shipType)
 end
 
+function server.shipWeaponGetSpawnTemplate(shipType)
+    return _api.getSpawnTemplate(shipType)
+end
+
+function server.shipWeaponSetSpawnTemplate(shipType, configurationId, requestedLoadout)
+    return _api.setSpawnTemplate(shipType, configurationId, requestedLoadout)
+end
+
+function server.shipWeaponSyncSpawnTemplate(shipType, recipientPlayerId)
+    local resolvedType = tostring(shipType or server.defaultShipType or "enigmaticCruiser")
+    local template = server.shipWeaponGetSpawnTemplate(resolvedType) or {}
+    local loadout = template.loadout or {}
+    ClientCall(
+        math.floor(recipientPlayerId or 0),
+        "client.updateShipWeaponSpawnTemplate",
+        resolvedType,
+        tostring(template.configurationId or ""),
+        tostring(loadout.X or ""),
+        tostring(loadout.L or ""),
+        tostring(loadout.M or ""),
+        tostring(loadout.G or ""),
+        tostring(loadout.H or "")
+    )
+end
+
 function server.shipWeaponSyncConfiguration(shipType, recipientPlayerId)
     local resolvedType = tostring(shipType or server.defaultShipType or "enigmaticCruiser")
     local state = server.shipSlotLoadoutGetState(resolvedType) or {}

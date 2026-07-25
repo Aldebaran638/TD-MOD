@@ -27,16 +27,57 @@ client.projectileVisualState = client.projectileVisualState or {
     byId = {},
 }
 
-local function _projectileColor(cfg, fxProfile)
+local function _projectileStyle(cfg, fxProfile)
     if fxProfile == "plasmaProjectile" then
-        return { 0.30, 0.75, 1.0 }, { 0.10, 0.25, 1.0 }
+        return {
+            colorA = { 0.30, 1.0, 0.34 },
+            colorB = { 0.04, 0.58, 0.10 },
+            trailSpacing = 4.0,
+            particleRadius = 0.78,
+            emissive = 34.0,
+            pointLightRadius = 11.0,
+        }
+    end
+    if fxProfile == "gigaCannonProjectile" then
+        return {
+            colorA = { 0.90, 0.44, 1.0 },
+            colorB = { 0.34, 0.04, 0.78 },
+            trailSpacing = 2.2,
+            particleRadius = 0.62,
+            emissive = 38.0,
+            pointLightRadius = 10.0,
+        }
+    end
+    if fxProfile == "neutronProjectile" then
+        return {
+            colorA = { 0.52, 0.90, 1.0 },
+            colorB = { 0.04, 0.28, 1.0 },
+            trailSpacing = 1.8,
+            particleRadius = 0.48,
+            emissive = 42.0,
+            pointLightRadius = 12.0,
+        }
     end
     if fxProfile == "autocannonProjectile" then
-        return { 1.0, 0.98, 0.82 }, { 1.0, 0.48, 0.08 }
+        return {
+            colorA = { 1.0, 0.98, 0.82 },
+            colorB = { 1.0, 0.48, 0.08 },
+            trailSpacing = 5.0,
+            particleRadius = 0.30,
+            emissive = 24.0,
+            pointLightRadius = 4.0,
+            trailLife = 0.24,
+        }
     end
-    local ca = cfg.colorA or { 1.0, 0.85, 0.45 }
-    local cb = cfg.colorB or { 1.0, 0.45, 0.12 }
-    return ca, cb
+    return {
+        colorA = cfg.colorA or { 1.0, 0.85, 0.45 },
+        colorB = cfg.colorB or { 1.0, 0.45, 0.12 },
+        trailSpacing = cfg.trailSpacing,
+        particleRadius = cfg.particleRadius,
+        emissive = cfg.emissive,
+        pointLightRadius = cfg.pointLightRadius,
+        trailLife = cfg.trailLife,
+    }
 end
 
 function client.spawnProjectileVisual(projectileId, weaponType, px, py, pz, vx, vy, vz, lifeRemain)
@@ -47,24 +88,26 @@ function client.spawnProjectileVisual(projectileId, weaponType, px, py, pz, vx, 
         lastPosition = Vec(px or 0, py or 0, pz or 0),
         velocity = Vec(vx or 0, vy or 0, vz or 0),
         lifeRemain = tonumber(lifeRemain) or 0.0,
+        weaponType = tostring(weaponType or ""),
         fxProfile = tostring(definition.fxProfile or "kineticProjectile"),
     }
 end
 
 local function _spawnProjectileImpact(pos, fxProfile)
     local cfg = client.projectileVisualConfig
-    local ca, cb = _projectileColor(cfg, fxProfile)
+    local style = _projectileStyle(cfg, fxProfile)
+    local ca, cb = style.colorA, style.colorB
 
     PointLight(pos, ca[1], ca[2], ca[3], (cfg.pointLightRadius or 7.0) * 1.35)
     PointLight(pos, cb[1], cb[2], cb[3], (cfg.pointLightRadius or 7.0) * 0.95)
 
     ParticleReset()
     ParticleColor(ca[1], ca[2], ca[3], cb[1], cb[2], cb[3])
-    ParticleRadius(cfg.particleRadius * 1.10, 0.08, "easeout")
+    ParticleRadius((style.particleRadius or cfg.particleRadius) * 1.10, 0.08, "easeout")
     ParticleAlpha(0.98, 0.0)
     ParticleGravity(0.0)
     ParticleDrag(0.10)
-    ParticleEmissive((cfg.emissive or 18.0) * 1.1, 0.0)
+    ParticleEmissive((style.emissive or cfg.emissive or 18.0) * 1.1, 0.0)
     ParticleCollide(0.0)
 
     local shellCount = cfg.impactSphereShellCount or cfg.impactCount or 36
@@ -83,11 +126,11 @@ local function _spawnProjectileImpact(pos, fxProfile)
 
     ParticleReset()
     ParticleColor(1.0, 0.98, 0.92, cb[1], cb[2], cb[3])
-    ParticleRadius(cfg.particleRadius * 0.75, 0.03, "easeout")
+    ParticleRadius((style.particleRadius or cfg.particleRadius) * 0.75, 0.03, "easeout")
     ParticleAlpha(0.82, 0.0)
     ParticleGravity(0.0)
     ParticleDrag(0.18)
-    ParticleEmissive((cfg.emissive or 18.0) * 0.85, 0.0)
+    ParticleEmissive((style.emissive or cfg.emissive or 18.0) * 0.85, 0.0)
     ParticleCollide(0.0)
 
     for _ = 1, cfg.impactSphereCoreCount or 24 do
@@ -117,7 +160,8 @@ function client.projectileVisualTick(dt)
     local visuals = client.projectileVisualState.byId
     local cfg = client.projectileVisualConfig
     for projectileId, projectile in pairs(visuals) do
-        local ca, cb = _projectileColor(cfg, projectile.fxProfile)
+        local style = _projectileStyle(cfg, projectile.fxProfile)
+        local ca, cb = style.colorA, style.colorB
         local stepDt = math.min(math.max(projectile.lifeRemain or 0.0, 0.0), math.max(dt or 0.0, 0.0))
         if stepDt <= 0.0 then
             visuals[projectileId] = nil
@@ -131,17 +175,17 @@ function client.projectileVisualTick(dt)
             local particleVel = VecScale(dir, math.max(0.0, speed * (cfg.tailVelocityFactor or 0.01)))
             local moveVec = VecSub(projectile.position, projectile.lastPosition)
             local moveLen = VecLength(moveVec)
-            local spacing = math.max(1.0, cfg.trailSpacing or 12.0)
+            local spacing = math.max(0.5, style.trailSpacing or cfg.trailSpacing or 12.0)
             local particleCount = math.max(1, math.ceil(moveLen / spacing))
             particleCount = math.min(particleCount, cfg.maxTrailParticlesPerTick or 8)
 
             ParticleReset()
             ParticleColor(ca[1], ca[2], ca[3], cb[1], cb[2], cb[3])
-            ParticleRadius(cfg.particleRadius or 0.18, 0.02, "easeout")
+            ParticleRadius(style.particleRadius or cfg.particleRadius or 0.18, 0.02, "easeout")
             ParticleAlpha(0.96, 0.0)
             ParticleGravity(0.0)
             ParticleDrag(cfg.tailDrag or 0.24)
-            ParticleEmissive(cfg.emissive or 18.0, 0.0)
+            ParticleEmissive(style.emissive or cfg.emissive or 18.0, 0.0)
             ParticleCollide(0.0)
 
             for i = 0, particleCount - 1 do
@@ -150,10 +194,10 @@ function client.projectileVisualTick(dt)
                     t = i / (particleCount - 1)
                 end
                 local pos = VecAdd(projectile.lastPosition, VecScale(moveVec, t))
-                SpawnParticle(pos, particleVel, cfg.trailLife or 0.28)
+                SpawnParticle(pos, particleVel, style.trailLife or cfg.trailLife or 0.28)
             end
 
-            PointLight(projectile.position, cb[1], cb[2], cb[3], cfg.pointLightRadius or 6.0)
+            PointLight(projectile.position, cb[1], cb[2], cb[3], style.pointLightRadius or cfg.pointLightRadius or 6.0)
 
             if projectile.lifeRemain <= 0.0 then
                 visuals[projectileId] = nil

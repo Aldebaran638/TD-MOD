@@ -4,6 +4,7 @@ weaponData = weaponData or {}
 weaponBehaviorProfiles = weaponBehaviorProfiles or {
     raycast = true,
     projectile = true,
+    rocketProjectile = true,
     guidedProjectile = true,
     strikeCraft = true,
 }
@@ -14,6 +15,8 @@ weaponFxProfiles = weaponFxProfiles or {
     kineticProjectile = true,
     plasmaProjectile = true,
     autocannonProjectile = true,
+    gigaCannonProjectile = true,
+    neutronProjectile = true,
     guidedMissile = true,
     energyTorpedo = true,
     strikeCraft = true,
@@ -94,29 +97,52 @@ local function _guided(id, name, slots, damage, cooldown, range, speed, shieldFi
     })
 end
 
+local function _rocket(id, name, slots, damage, cooldown, range, speed, shieldFix, armorFix, bodyFix, prefab, fx)
+    _register({
+        weaponType = id, displayName = name, slotTypes = slots,
+        behaviorType = "rocketProjectile", targetingMode = "forward",
+        fireProfile = { mode = "single" },
+        projectileProfile = { mode = "unguided_rocket", speed = speed }, fxProfile = fx,
+        damage = damage, cooldown = cooldown, maxRange = range, prefabPath = prefab,
+        spawnForwardOffset = 2.0, muzzleSpeed = math.max(7.0, speed * 0.22),
+        cruiseSpeed = speed, maxSpeed = speed * 1.25,
+        acceleration = speed * 0.22,
+        lifetime = math.max(12.0, range / math.max(1.0, speed) * 1.4),
+        turnBlendRate = 0.0, turnRate = 7.0, turnImpulse = 165.0,
+        shieldFix = shieldFix, armorFix = armorFix, bodyFix = bodyFix,
+        aimControlMode = "fixed", forceForward = true,
+    })
+end
+
 -- X
 _ray("tachyonLance", "快子光矛", { "X" }, 2115, 6.0, 500.0, 0.5, 2.0, 1.5, "tachyonLance", 0.50)
 _ray("focusedArcEmitter", "聚能电弧发射器", { "X" }, 1680, 6.5, 520.0, 1.0, 1.0, 2.3, "arcBeam", 0.38)
-_projectile("gigaCannon", "千兆级加农炮", { "X" }, 2350, 7.0, 750.0, 185.0, 2.0, 0.5, 1.0, "kineticProjectile")
+_projectile("gigaCannon", "千兆级加农炮", { "X" }, 2350, 7.0, 750.0, 280.0, 2.0, 0.5, 1.0, "gigaCannonProjectile")
 
 -- L
 _ray("largeGammaLaser", "伽马激光", { "L" }, 185, 1.45, 560.0, 0.5, 1.5, 1.25, "energyBeam")
 _projectile("largePlasmaCannon", "等离子加农炮", { "L" }, 235, 2.0, 430.0, 115.0, 0.5, 2.0, 1.5, "plasmaProjectile")
 _projectile("largeGaussCannon", "高斯炮", { "L" }, 205, 1.65, 610.0, 155.0, 1.5, 0.75, 1.0, "kineticProjectile")
 _projectile("kineticArtillery", "先进动能火炮", { "L" }, 200, 0.1, 750.0, 150.0, 2.0, 0.5, 1.0, "kineticProjectile")
-_projectile("largeStormfireAutocannon", "火风暴机关炮", { "L" }, 56, 1.25, 300.0, 205.0, 1.5, 0.75, 1.0, "autocannonProjectile", 5)
+_projectile("largeStormfireAutocannon", "火风暴机关炮", { "L" }, 56, 0.65, 220.0, 235.0, 1.5, 0.75, 1.0, "autocannonProjectile", 5)
+weaponData.largeStormfireAutocannon.fireProfile.burstInterval = 0.030
 
 -- M
 _ray("mediumGammaLaser", "伽马激光", { "M" }, 92, 1.1, 390.0, 0.5, 1.5, 1.25, "energyBeam")
 _projectile("mediumPlasmaCannon", "等离子加农炮", { "M" }, 118, 1.5, 330.0, 105.0, 0.5, 2.0, 1.5, "plasmaProjectile")
 _ray("phaseDisruptor", "相位裂解炮", { "M" }, 82, 1.25, 340.0, 1.0, 1.0, 2.0, "arcBeam")
 _projectile("mediumGaussCannon", "高斯炮", { "M" }, 104, 1.25, 430.0, 145.0, 1.5, 0.75, 1.0, "kineticProjectile")
-_projectile("mediumStormfireAutocannon", "火风暴机关炮", { "M" }, 28, 0.95, 250.0, 195.0, 1.5, 0.75, 1.0, "autocannonProjectile", 4)
+_projectile("mediumStormfireAutocannon", "火风暴机关炮", { "M" }, 28, 0.55, 180.0, 225.0, 1.5, 0.75, 1.0, "autocannonProjectile", 4)
+weaponData.mediumStormfireAutocannon.fireProfile.burstInterval = 0.028
 _guided("swarmerMissile", "旋风导弹", { "M" }, 210, 10.0, 975.0, 43.875, 1.0, 1.2, 1.8, "MOD/prefabs/swarmerMissile.xml", "guidedMissile")
 
 -- G
-_guided("devastatorTorpedoes", "毁灭者鱼雷", { "G" }, 700, 18.0, 1200.0, 28.0, 1.0, 1.0, 1.0, "MOD/prefabs/devastatorTorpedoes.xml", "guidedMissile")
-_guided("neutronLauncher", "中子发射器", { "G" }, 610, 14.0, 1150.0, 36.0, 0.5, 2.0, 1.75, "MOD/prefabs/devastatorTorpedoes.xml", "energyTorpedo")
+_rocket("devastatorTorpedoes", "毁灭者鱼雷", { "G" }, 700, 18.0, 1200.0, 28.0, 1.0, 1.0, 1.0, "MOD/prefabs/devastatorTorpedoes.xml", "guidedMissile")
+_projectile("neutronLauncher", "中子发射器", { "G" }, 610, 14.0, 1150.0, 420.0, 0.5, 2.0, 1.75, "neutronProjectile")
+weaponData.neutronLauncher.targetingMode = "forward"
+weaponData.neutronLauncher.aimControlMode = "fixed"
+weaponData.neutronLauncher.forceForward = true
+weaponData.neutronLauncher.projectileProfile.mode = "energy"
 
 -- H
 _register({
@@ -137,7 +163,6 @@ hSlotWeaponRegistryData.gammaStrikeCraft = weaponData.gammaStrikeCraft
 weaponData.tachyonLance.legacyController = "xSlot"
 weaponData.kineticArtillery.legacyController = "lSlot"
 weaponData.swarmerMissile.legacyController = "mSlot"
-weaponData.devastatorTorpedoes.legacyController = "gSlot"
 weaponData.gammaStrikeCraft.legacyController = "hSlot"
 
 local _officialMetadata = {
@@ -166,4 +191,22 @@ for weaponType, metadata in pairs(_officialMetadata) do
     definition.family = metadata[2]
     definition.catalogTier = "highest"
     definition.runtimeReady = true
+    definition.iconPath = "MOD/gfx/ui/weapon_icons/" .. weaponType .. ".png"
+    definition.officialSourceVersion = "4.2.4"
 end
+
+-- Qualitative behavior metadata from the 4.2.4 component templates.
+-- CM2 intentionally does not implement Stellaris minimum-range restrictions.
+weaponData.gigaCannon.officialProjectileGfx = "adv_kinetic_artillery"
+weaponData.gigaCannon.officialCombatRole = "artillery"
+weaponData.largePlasmaCannon.officialProjectileGfx = "plasma_cannon_l"
+weaponData.largePlasmaCannon.officialCombatRole = "anti_armor"
+weaponData.mediumPlasmaCannon.officialProjectileGfx = "plasma_cannon_m"
+weaponData.mediumPlasmaCannon.officialCombatRole = "anti_armor"
+weaponData.neutronLauncher.officialProjectileGfx = "neutron_torpedoes"
+weaponData.neutronLauncher.officialCombatRole = "artillery"
+weaponData.neutronLauncher.officialFiringArcDeg = 25.0
+weaponData.largeStormfireAutocannon.officialProjectileGfx = "stormfire_auto_cannons_l"
+weaponData.largeStormfireAutocannon.officialCombatRole = "brawler"
+weaponData.mediumStormfireAutocannon.officialProjectileGfx = "stormfire_auto_cannons_m"
+weaponData.mediumStormfireAutocannon.officialCombatRole = "brawler"

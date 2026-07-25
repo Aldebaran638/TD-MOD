@@ -33,6 +33,7 @@ local function _buildState(groupId, shipType)
         nextMountIndex = 1,
         mounts = {},
         pending = nil,
+        hudSyncAge = 0.0,
     }
     for i = 1, #mounts do
         state.mounts[i] = {
@@ -62,6 +63,37 @@ local function _resolveWeapon(state)
     local first = (state.mounts or {})[1]
     local weaponType = tostring(first and first.definition and first.definition.weaponType or "none")
     return weaponType, (weaponData or {})[weaponType]
+end
+
+local function _pushHud(state)
+    local weaponType, weaponDef = _resolveWeapon(state)
+    if tostring((weaponDef or {}).legacyController or "") ~= "" then return end
+    local cooldown = math.max(0.0, tonumber((weaponDef or {}).cooldown) or 0.0)
+    local values, maximums, phases = {}, {}, {}
+    for i = 1, 4 do
+        local mount = (state.mounts or {})[i]
+        local remaining = mount and math.max(0.0, tonumber(mount.cooldownRemain) or 0.0) or 0.0
+        values[i] = remaining
+        maximums[i] = mount and cooldown or 0.0
+        phases[i] = remaining > 0.0001 and "cooldown" or "idle"
+        local pending = state.pending
+        if mount ~= nil and pending ~= nil and pending.mount == mount then
+            local total = math.max(0.0, tonumber(pending.total) or 0.0)
+            values[i] = math.max(0.0, total - math.max(0.0, tonumber(pending.remaining) or 0.0))
+            maximums[i] = total
+            phases[i] = "charging"
+        end
+    end
+    ClientCall(
+        0,
+        "client.updateWeaponGroupHudState",
+        server.shipBody or 0,
+        tostring(state.groupId or ""),
+        weaponType,
+        values[1], values[2], values[3], values[4],
+        maximums[1], maximums[2], maximums[3], maximums[4],
+        phases[1], phases[2], phases[3], phases[4]
+    )
 end
 
 local function _legacyFire(controllerId, groupId, request)
@@ -160,15 +192,18 @@ function server.weaponGroupRequestFire(groupId, request)
         if state.pending ~= nil then return false, "weapon group is charging" end
         state.pending = {
             remaining = chargeDuration,
+            total = chargeDuration,
             behavior = behavior,
             context = context,
             mount = mount,
             cooldown = math.max(0.0, tonumber(weaponDef.cooldown) or 0.0),
         }
+        _pushHud(state)
         return true, nil
     end
     local fired = behavior.fire(context) and true or false
     if fired then mount.cooldownRemain = math.max(0.0, tonumber(weaponDef.cooldown) or 0.0) end
+    _pushHud(state)
     return fired, fired and nil or "controller rejected fire"
 end
 
@@ -187,6 +222,13 @@ function server.weaponGroupTick(dt)
                 if fired then pending.mount.cooldownRemain = pending.cooldown end
                 state.pending = nil
             end
+        end
+        state.hudSyncAge = (tonumber(state.hudSyncAge) or 0.0) + delta
+        local currentMode = server.shipRuntimeGetCurrentMainWeapon ~= nil
+            and server.shipRuntimeGetCurrentMainWeapon(server.shipBody or 0) or ""
+        if state.hudSyncAge >= 0.10 and currentMode == state.groupId then
+            state.hudSyncAge = 0.0
+            _pushHud(state)
         end
     end
     for _, behavior in pairs(server.weaponBehaviorRegistry or {}) do

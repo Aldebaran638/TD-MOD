@@ -6,6 +6,7 @@ shipTypeRegistryData = shipTypeRegistryData or {}
 -- 说明：这里是“类型定义层”，用于注册到 Registry 的 definitions 区域。
 shipTypeRegistryData.enigmaticCruiser = {
     shipType = "enigmaticCruiser",
+    displayName = "Enigma Battlecruiser",
     maxShieldHP = 5000,
     maxArmorHP = 3000,
     maxBodyHP = 2000,

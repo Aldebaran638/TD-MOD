@@ -18,6 +18,7 @@
 #include "weapon/server/behaviors/common.lua"
 #include "weapon/server/behaviors/raycast.lua"
 #include "weapon/server/behaviors/projectile.lua"
+#include "weapon/server/behaviors/rocket_projectile.lua"
 #include "weapon/server/behaviors/guided_projectile.lua"
 #include "weapon/server/behaviors/strike_craft.lua"
 #include "weapon/server/common/runtime/weapon_group.lua"

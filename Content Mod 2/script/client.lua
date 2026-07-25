@@ -3,6 +3,10 @@
 
 client = client or {}
 
+function client.weaponConfigUiIsOpen()
+    return GetBool("StellarisShips/client/weaponConfigUiOpen/" .. tostring(GetLocalPlayer() or 0))
+end
+
 #include "ship/battlecruiser/client/registry/ship_registry.lua"
 #include "ship/battlecruiser/client/state/ship_runtime_state.lua"
 #include "ship/battlecruiser/client/state/ship_runtime_state_api.lua"

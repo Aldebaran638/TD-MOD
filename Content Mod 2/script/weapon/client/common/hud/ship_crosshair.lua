@@ -117,6 +117,7 @@ end
 
 function client.shipCrosshairDraw()
     local cfg = client.shipCrosshairConfig
+    if client.weaponConfigUiIsOpen ~= nil and client.weaponConfigUiIsOpen() then return end
 
     local body = _resolveControlledShipBody()
     if body == 0 then
@@ -124,7 +125,8 @@ function client.shipCrosshairDraw()
     end
     if client.getShipMainWeaponMode ~= nil then
         local mode = client.getShipMainWeaponMode(body)
-        if mode == "mSlot" or mode == "gSlot" then return end
+        local definition = client.getShipWeaponDefinition ~= nil and client.getShipWeaponDefinition(body, mode) or {}
+        if tostring(definition.targetingMode or "") == "target_lock" then return end
     end
 
     local currentMode = client.getShipMainWeaponMode ~= nil and client.getShipMainWeaponMode(body) or "xSlot"

@@ -28,6 +28,15 @@ end
 function client.mainWeaponInputTick(dt)
     local _ = dt
     local state = client.mainWeaponInputState
+    if client.weaponConfigUiIsOpen ~= nil and client.weaponConfigUiIsOpen() then
+        if state.xHoldActive and state.xHoldShipBody ~= 0 and client.shipRequestXWeaponHold ~= nil then
+            client.shipRequestXWeaponHold(state.xHoldShipBody, false)
+        end
+        state.xHoldActive = false
+        state.xHoldShipBody = 0
+        return
+    end
+
     local localPlayerId = _resolveMainWeaponLocalPlayerId()
     if localPlayerId == nil then
         state.xHoldActive = false

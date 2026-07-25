@@ -26,6 +26,12 @@ function server.weaponBehaviorResolveFireTransform(context)
         )),
         Vec(0, 0, -1)
     )
+    if (context.weaponDefinition or {}).forceForward then
+        direction = server.weaponBehaviorNormalize(
+            TransformToParentVec(shipTransform, Vec(0, 0, -1)),
+            direction
+        )
+    end
 
     local targetBody = math.floor(context.targetBodyId or 0)
     if targetBody ~= 0 and IsHandleValid(targetBody) then

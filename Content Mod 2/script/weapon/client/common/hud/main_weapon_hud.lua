@@ -63,6 +63,14 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     hSlotFill2 = 1.0,
     hSlotActive1 = false,
     hSlotActive2 = false,
+    genericFill1 = 1.0,
+    genericFill2 = 1.0,
+    genericFill3 = 1.0,
+    genericFill4 = 1.0,
+    genericPhase1 = "idle",
+    genericPhase2 = "idle",
+    genericPhase3 = "idle",
+    genericPhase4 = "idle",
 }
 
 client.lSlotHudStateByShip = client.lSlotHudStateByShip or {}
@@ -70,6 +78,7 @@ client.xSlotHudStateByShip = client.xSlotHudStateByShip or {}
 client.mSlotHudStateByShip = client.mSlotHudStateByShip or {}
 client.gSlotHudStateByShip = client.gSlotHudStateByShip or {}
 client.hSlotHudStateByShip = client.hSlotHudStateByShip or {}
+client.weaponGroupHudStateByShip = client.weaponGroupHudStateByShip or {}
 client.hSlotDebugState = client.hSlotDebugState or {
     active = 0,
     lastReason = "none",
@@ -185,6 +194,59 @@ local function _resolveXSlotFill(value, maxValue, phase)
     end
 
     return 1.0
+end
+
+function client.updateWeaponGroupHudState(
+    shipBodyId,
+    groupId,
+    weaponType,
+    value1, value2, value3, value4,
+    maxValue1, maxValue2, maxValue3, maxValue4,
+    phase1, phase2, phase3, phase4
+)
+    local body = math.floor(shipBodyId or 0)
+    if body == 0 then return end
+    client.weaponGroupHudStateByShip[body] = client.weaponGroupHudStateByShip[body] or {}
+    client.weaponGroupHudStateByShip[body][tostring(groupId or "")] = {
+        weaponType = tostring(weaponType or ""),
+        values = {
+            tonumber(value1) or 0.0, tonumber(value2) or 0.0,
+            tonumber(value3) or 0.0, tonumber(value4) or 0.0,
+        },
+        maximums = {
+            tonumber(maxValue1) or 0.0, tonumber(maxValue2) or 0.0,
+            tonumber(maxValue3) or 0.0, tonumber(maxValue4) or 0.0,
+        },
+        phases = {
+            tostring(phase1 or "idle"), tostring(phase2 or "idle"),
+            tostring(phase3 or "idle"), tostring(phase4 or "idle"),
+        },
+    }
+end
+
+local function _resolveGenericTopStatus(state)
+    local phase = "idle"
+    local fill = 1.0
+    local priority = { idle = 1, cooldown = 2, charging = 3 }
+    for i = 1, 4 do
+        local candidate = tostring(state["genericPhase" .. tostring(i)] or "idle")
+        local candidateFill = tonumber(state["genericFill" .. tostring(i)]) or 1.0
+        if (priority[candidate] or 1) > (priority[phase] or 1) then
+            phase = candidate
+            fill = candidateFill
+        elseif candidate == phase and candidate == "charging" and candidateFill > fill then
+            fill = candidateFill
+        elseif candidate == phase and candidate == "cooldown" and candidateFill < fill then
+            fill = candidateFill
+        end
+    end
+    if phase == "charging" then
+        return fill, string.format("CHARGE %d%%", math.floor(fill * 100 + 0.5))
+    end
+    if phase == "cooldown" then
+        return fill, string.format("RECOVER %d%%", math.floor(fill * 100 + 0.5))
+    end
+    return 1.0, "READY"
 end
 
 local function _xSlotPhasePriority(phase)
@@ -445,6 +507,10 @@ function client.mainWeaponHudTick(dt)
         state.hSlotFill2 = 1.0
         state.hSlotActive1 = false
         state.hSlotActive2 = false
+        for i = 1, 4 do
+            state["genericFill" .. tostring(i)] = 1.0
+            state["genericPhase" .. tostring(i)] = "idle"
+        end
         return
     end
 
@@ -480,6 +546,20 @@ function client.mainWeaponHudTick(dt)
     state.xSlotPhase2 = tostring(xHud.phase2 or "idle")
     state.xSlotFill1 = _resolveXSlotFill(xHud.value1, xHud.maxValue1, xHud.phase1)
     state.xSlotFill2 = _resolveXSlotFill(xHud.value2, xHud.maxValue2, xHud.phase2)
+
+    local genericHud = ((client.weaponGroupHudStateByShip[body] or {})[state.currentMainWeapon]) or {}
+    local genericValues = genericHud.values or {}
+    local genericMaximums = genericHud.maximums or {}
+    local genericPhases = genericHud.phases or {}
+    for i = 1, 4 do
+        local phase = tostring(genericPhases[i] or "idle")
+        state["genericPhase" .. tostring(i)] = phase
+        state["genericFill" .. tostring(i)] = _resolveXSlotFill(
+            genericValues[i] or 0.0,
+            genericMaximums[i] or 0.0,
+            phase
+        )
+    end
 
     if client.guidedTargetingGetSummary ~= nil then
         local statusText, progress = client.guidedTargetingGetSummary(body)
@@ -590,36 +670,57 @@ function client.mainWeaponHudDraw()
     local x = UiWidth() - panelW - cfg.rightOffset
     local y = UiHeight() - panelH - cfg.bottomOffset
     local currentMode = state.currentMainWeapon or "xSlot"
+    local weaponDefinition = client.getShipWeaponDefinition ~= nil
+        and client.getShipWeaponDefinition(state.shipBody, currentMode) or {}
+    local usesGenericRuntime = tostring(weaponDefinition.legacyController or "") == ""
 
     local topFill, topText = _resolveXSlotTopStatus(state)
     local topColor = cfg.xSlotColor
-    local titleText = "Tachyon Lance"
+    local titleText = tostring(weaponDefinition.displayName or "Tachyon Lance")
     local modeText = string.format("Main Weapon: X-Slot [%s]", string.upper(state.xSlotFireMode or "aim"))
 
+    if usesGenericRuntime then
+        topFill, topText = _resolveGenericTopStatus(state)
+    end
+
     if currentMode == "lSlot" then
-        topFill = state.heatFraction
-        topText = state.overheated and "OVERHEAT" or string.format("HEAT %d%%", math.floor(state.heatFraction * 100 + 0.5))
-        topColor = state.overheated and cfg.heatOverColor or cfg.heatFillColor
-        titleText = "Kinetic Artillery"
+        if not usesGenericRuntime then
+            topFill = state.heatFraction
+            topText = state.overheated and "OVERHEAT" or string.format("HEAT %d%%", math.floor(state.heatFraction * 100 + 0.5))
+        end
+        if usesGenericRuntime then
+            topColor = cfg.lSlotColor
+        else
+            topColor = state.overheated and cfg.heatOverColor or cfg.heatFillColor
+        end
         modeText = "Main Weapon: L-Slot"
     elseif currentMode == "mSlot" then
-        topFill = state.guidedProgress
-        topText = state.guidedStatus or "NO TARGET"
-        topColor = (state.guidedStatus == "LOCKED") and cfg.lockReadyColor or cfg.lockFillColor
-        titleText = "Whirlwind Missiles"
+        if not usesGenericRuntime then
+            topFill = state.guidedProgress
+            topText = state.guidedStatus or "NO TARGET"
+        end
+        if usesGenericRuntime then
+            topColor = cfg.mSlotColor
+        else
+            topColor = (state.guidedStatus == "LOCKED") and cfg.lockReadyColor or cfg.lockFillColor
+        end
         modeText = "Main Weapon: M-Slot"
     elseif currentMode == "gSlot" then
-        topFill = state.guidedProgress
-        topText = state.guidedStatus or "NO TARGET"
-        topColor = (state.guidedStatus == "LOCKED") and cfg.lockReadyColor or cfg.lockFillColor
-        titleText = "Devastator Torpedoes"
+        if not usesGenericRuntime then
+            topFill = state.guidedProgress
+            topText = state.guidedStatus or "NO TARGET"
+        end
+        if usesGenericRuntime then
+            topColor = cfg.gSlotColor
+        else
+            topColor = (state.guidedStatus == "LOCKED") and cfg.lockReadyColor or cfg.lockFillColor
+        end
         modeText = "Main Weapon: G-Slot"
     elseif currentMode == "hSlot" then
         local anyActive = state.hSlotActive1 or state.hSlotActive2
         topFill = anyActive and 0.0 or math.max(state.hSlotFill1 or 0.0, state.hSlotFill2 or 0.0)
         topText = anyActive and "STRIKE CRAFT DEPLOYED" or "HANGAR READY"
         topColor = cfg.hSlotColor
-        titleText = "Gamma Strike Craft"
         modeText = "Main Weapon: H-Slot"
     end
 
@@ -653,7 +754,31 @@ function client.mainWeaponHudDraw()
             UiText(modeText)
         UiPop()
 
-        if currentMode == "xSlot" then
+        if usesGenericRuntime then
+            local slotLabel = string.upper(string.sub(currentMode, 1, 1))
+            local slotColor = cfg.xSlotColor
+            if currentMode == "lSlot" then slotColor = cfg.lSlotColor end
+            if currentMode == "mSlot" then slotColor = cfg.mSlotColor end
+            if currentMode == "gSlot" then slotColor = cfg.gSlotColor end
+            local barCount = 0
+            for i = 1, 4 do
+                local groupHud = ((client.weaponGroupHudStateByShip[state.shipBody] or {})[currentMode]) or {}
+                if tonumber((groupHud.maximums or {})[i]) ~= nil and tonumber((groupHud.maximums or {})[i]) > 0.0 then
+                    barCount = i
+                end
+            end
+            for i = 1, barCount do
+                local column = (i - 1) % 2
+                local row = math.floor((i - 1) / 2)
+                local barX = 12 + column * (24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap)
+                local barY = 76 + row * 20
+                _drawWeaponCooldownBar(
+                    barX, barY, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight,
+                    state["genericFill" .. tostring(i)],
+                    slotLabel .. tostring(i), cfg, slotColor
+                )
+            end
+        elseif currentMode == "xSlot" then
             _drawWeaponCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill1, "X1", cfg, cfg.xSlotColor)
             _drawWeaponCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill2, "X2", cfg, cfg.xSlotColor)
         elseif currentMode == "mSlot" or currentMode == "gSlot" then

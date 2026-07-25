@@ -528,13 +528,16 @@ function client.shipCameraTick(dt)
     end
 
     local frameDt = _resolveFrameDt(dt, cam)
+    local inputBlocked = client.weaponConfigUiIsOpen ~= nil and client.weaponConfigUiIsOpen()
 
-    if InputPressed("rmb") then
+    if inputBlocked then
+        cam.rmbLongTriggered = false
+    elseif InputPressed("rmb") then
         cam.rmbPressTime = (GetTime ~= nil) and GetTime() or 0
         cam.rmbLongTriggered = false
     end
 
-    if InputDown("rmb") and (not cam.rmbLongTriggered) then
+    if (not inputBlocked) and InputDown("rmb") and (not cam.rmbLongTriggered) then
         local now = (GetTime ~= nil) and GetTime() or 0
         local hold = now - (cam.rmbPressTime or now)
         if hold >= (cam.rmbLongPressSeconds or 0.22) then
@@ -547,7 +550,7 @@ function client.shipCameraTick(dt)
         end
     end
 
-    if InputReleased("rmb") then
+    if (not inputBlocked) and InputReleased("rmb") then
         if cam.rmbLongTriggered then
             if cam.viewMode == "rear" then
                 _endRearFreelook(cam)
@@ -577,9 +580,9 @@ function client.shipCameraTick(dt)
         cam.rmbLongTriggered = false
     end
 
-    local mouseDX = InputValue("mousedx")
-    local mouseDY = InputValue("mousedy")
-    local mouseWheel = InputValue("mousewheel")
+    local mouseDX = inputBlocked and 0 or InputValue("mousedx")
+    local mouseDY = inputBlocked and 0 or InputValue("mousedy")
+    local mouseWheel = inputBlocked and 0 or InputValue("mousewheel")
 
     if not cam.rearFreelookActive then
         cam.r = cam.r - mouseWheel * cam.zoomSpeed
@@ -708,9 +711,9 @@ function client.shipCameraTick(dt)
     local yawError = 0.0
     local pitchError = 0.0
     local steerYaw = 0.0
-    if InputDown("a") and (not InputDown("d")) then
+    if (not inputBlocked) and InputDown("a") and (not InputDown("d")) then
         steerYaw = -(cam.freelookTurnYawError or 16.0)
-    elseif InputDown("d") and (not InputDown("a")) then
+    elseif (not inputBlocked) and InputDown("d") and (not InputDown("a")) then
         steerYaw = cam.freelookTurnYawError or 16.0
     end
 
