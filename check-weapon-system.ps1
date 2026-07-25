@@ -54,6 +54,11 @@ $guidedTargeting = Read-Required "script\weapon\client\guided\targeting\guided_t
 $clientMain = Read-Required "script\client.lua"
 $xSlotControl = Read-Required "script\weapon\server\slots\x\tachyon_lance\control.lua"
 $xSlotMuzzleLight = Read-Required "script\weapon\server\slots\x\tachyon_lance\muzzle_light.lua"
+$weaponSoundCatalog = Read-Required "script\weapon\client\common\sound\weapon_sound_catalog.lua"
+$soundService = Read-Required "script\weapon\client\common\sound\sound_service.lua"
+$missileVisual = Read-Required "script\weapon\client\guided\effects\missile_visual.lua"
+$projectileManager = Read-Required "script\weapon\server\slots\l\kinetic_artillery\projectile_manager.lua"
+$hSlotControl = Read-Required "script\weapon\server\slots\h\gamma_strike_craft\control.lua"
 
 $expected = [ordered]@{
     tachyonLance = "X"
@@ -92,6 +97,15 @@ foreach ($item in $expected.GetEnumerator()) {
     }
     if ($standard -notmatch "(?m)^\s*$id\s*=\s*\{\s*`"[xlmgh][A-Za-z]+`",\s*[12],\s*`"(?:sequential|grouped)`"\s*\}") {
         Add-Issue "weapon $($item.Key) has no mount/salvo runtime profile"
+    }
+    if ($weaponSoundCatalog -notmatch "(?m)^\s*$id\s*=") {
+        Add-Issue "weapon $($item.Key) has no dedicated sound profile"
+    }
+    $soundRelative = "sound\weapons\$($item.Key)"
+    $soundDirectory = Join-Path $modRoot $soundRelative
+    if (-not (Test-Path -LiteralPath $soundDirectory -PathType Container) -or
+        @(Get-ChildItem -LiteralPath $soundDirectory -Filter "*.ogg" -File -ErrorAction SilentlyContinue).Count -eq 0) {
+        Add-Issue "weapon $($item.Key) has no dedicated OGG assets: $soundRelative"
     }
 }
 
@@ -234,6 +248,23 @@ if ($xSlotMuzzleLight -notmatch 'weaponTypes\.tachyonLance\s*=\s*true' -or
     $xSlotMuzzleLight -notmatch 'FindLight\(server\.tachyonMuzzleLightConfig\.lightTag') {
     Add-Issue "charged X weapons do not preserve and reacquire the XML muzzle light"
 }
+if ($client -notmatch '(?s)weapon_sound_catalog\.lua.*?sound_service\.lua' -or
+    $soundService -notmatch 'function\s+client\.playWeaponSound\s*\(' -or
+    $soundService -notmatch 'client\.weaponSoundCatalog') {
+    Add-Issue "per-weapon sound catalog is not loaded before the generic sound service"
+}
+if ($soundService -notmatch 'LoadLoop\("MOD/sound/missile_loop\.ogg"\)' -or
+    $missileVisual -notmatch 'playMissileLoopSound') {
+    Add-Issue "guided weapon flight loop is not connected"
+}
+if ($projectileManager -notmatch 'playKineticArtilleryFireSound",\s*weaponType' -or
+    $projectileManager -notmatch 'playKineticArtilleryHitSound",\s*weaponType' -or
+    $guidedRuntime -notmatch '(?s)playMissileFireSound".*?cfg\.weaponType' -or
+    $guidedCollider -notmatch 'guidedProjectilePlayImpactSound\(projectile\.weaponType' -or
+    $raycastBehavior -notmatch 'client\.playWeaponSound",\s*context\.weaponType' -or
+    $hSlotControl -notmatch '(?s)client\.playWeaponSound".*?craft\.weaponType') {
+    Add-Issue "one or more weapon controllers do not propagate weaponType to the sound service"
+}
 if ($standard -notmatch 'gigaCannon\s*=\s*\{\s*"xSpinal",\s*1,\s*"sequential"\s*\}' -or
     $standard -match 'gigaCannon\s*=\s*\{\s*"xSpinal",\s*2') {
     Add-Issue "Giga Cannon must use Tachyon hardpoints and fire one barrel at a time"
@@ -293,7 +324,7 @@ foreach ($match in $prefabMatches) {
 }
 
 Write-Host "=== CM2 Weapon System Semantic Checker ===" -ForegroundColor Cyan
-Write-Host "Checked $($expected.Count) standard weapons, two frames, five behaviors, spawn templates, and FX/prefab references."
+Write-Host "Checked $($expected.Count) standard weapons, dedicated sounds, two frames, five behaviors, spawn templates, and FX/prefab references."
 if ($issues -gt 0) {
     Write-Host "Check failed: $issues issue(s)." -ForegroundColor Red
     exit 1

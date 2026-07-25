@@ -84,9 +84,9 @@ function server.guidedProjectileClearAll()
     end
 end
 
-function server.guidedProjectilePlayImpactSound(hitPos)
+function server.guidedProjectilePlayImpactSound(weaponType, hitPos)
     local p = hitPos or Vec(0, 0, 0)
-    ClientCall(0, "client.playMissileImpactSound", p[1], p[2], p[3])
+    ClientCall(0, "client.playMissileImpactSound", weaponType or "", p[1], p[2], p[3])
 end
 
 function server.guidedProjectilePlayImpactFx(hitPos, impactLayer)
@@ -122,7 +122,12 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         startVelocity[1], startVelocity[2], startVelocity[3]
     )
     ClientCall(0, "client.spawnMissileWarpFx", firePosWorld[1], firePosWorld[2], firePosWorld[3])
-    ClientCall(0, "client.playMissileFireSound", firePosWorld[1], firePosWorld[2], firePosWorld[3])
+    ClientCall(
+        0,
+        "client.playMissileFireSound",
+        tostring(cfg.weaponType or ""),
+        firePosWorld[1], firePosWorld[2], firePosWorld[3]
+    )
 
     local probes = server.guidedProjectileGetProbePoints(GetBodyTransform(bodyId))
     local projectile = {

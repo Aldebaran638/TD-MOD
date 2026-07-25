@@ -17,6 +17,7 @@ end
 #include "weapon/client/guided/targeting/guided_targeting.lua"
 #include "weapon/client/common/input/main_weapon_input.lua"
 #include "ship/battlecruiser/client/input/body_move_input.lua"
+#include "weapon/client/common/sound/weapon_sound_catalog.lua"
 #include "weapon/client/common/sound/sound_service.lua"
 #include "ship/battlecruiser/client/camera/ship_camera.lua"
 #include "ship/battlecruiser/client/hud/ship_roll_error.lua"

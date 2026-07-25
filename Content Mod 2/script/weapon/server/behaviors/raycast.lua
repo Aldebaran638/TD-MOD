@@ -19,6 +19,18 @@ local function _fireRaycast(context)
         and server.registryShipExists(hitBody)
     local suppressPhysicalExplosion = definition.suppressShipExplosion == true
         and hitRegisteredShip
+    ClientCall(
+        0, "client.playWeaponSound",
+        context.weaponType, "fire",
+        origin[1], origin[2], origin[3]
+    )
+    if hit then
+        ClientCall(
+            0, "client.playWeaponSound",
+            context.weaponType, "hit",
+            endpoint[1], endpoint[2], endpoint[3]
+        )
+    end
     if hit and not didHitShield and not suppressPhysicalExplosion then
         local explosionSize = math.max(0.0, tonumber(definition.environmentExplosionSize) or 0.0)
         if explosionSize > 0.0 then Explosion(endpoint, explosionSize) end

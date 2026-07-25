@@ -35,6 +35,8 @@ try {
     [IO.Directory]::CreateDirectory((Join-Path $fixtureMod "prefabs")) | Out-Null
     Copy-Item -LiteralPath (Join-Path $sourceMod "prefabs\swarmerMissile.xml") -Destination (Join-Path $fixtureMod "prefabs\swarmerMissile.xml")
     Copy-Item -LiteralPath (Join-Path $sourceMod "prefabs\devastatorTorpedoes.xml") -Destination (Join-Path $fixtureMod "prefabs\devastatorTorpedoes.xml")
+    [IO.Directory]::CreateDirectory((Join-Path $fixtureMod "sound")) | Out-Null
+    Copy-Item -LiteralPath (Join-Path $sourceMod "sound\weapons") -Destination (Join-Path $fixtureMod "sound") -Recurse
 
     $valid = Invoke-Checker
     Assert-True ($valid.ExitCode -eq 0) "accepts the complete weapon system contract"
@@ -66,6 +68,12 @@ try {
     $invalidHold = Invoke-Checker
     Assert-True ($invalidHold.ExitCode -eq 1) "rejects click-only weapon input"
     Assert-True ($invalidHold.Output -match "hold-to-refire") "reports the continuous-fire input contract"
+
+    $missingSound = Join-Path $fixtureMod "sound\weapons\tachyonLance"
+    Remove-Item -LiteralPath $missingSound -Recurse -Force
+    $invalidSound = Invoke-Checker
+    Assert-True ($invalidSound.ExitCode -eq 1) "rejects a weapon without dedicated audio assets"
+    Assert-True ($invalidSound.Output -match "tachyonLance.*dedicated OGG") "reports the missing weapon audio directory"
 }
 finally {
     if ($KeepFixtures) {

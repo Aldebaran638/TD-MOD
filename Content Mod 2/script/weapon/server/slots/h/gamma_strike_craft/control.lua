@@ -557,6 +557,13 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
     ClientCall(0, "client.playHSlotGammaFireSound", origin[1], origin[2], origin[3])
     ClientCall(
         0,
+        "client.playWeaponSound",
+        craft.weaponType or "gammaStrikeCraft",
+        "hit",
+        hitPos[1], hitPos[2], hitPos[3]
+    )
+    ClientCall(
+        0,
         "client.spawnHSlotBeamFx",
         origin[1], origin[2], origin[3],
         hitPos[1], hitPos[2], hitPos[3],
