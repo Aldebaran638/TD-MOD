@@ -20,7 +20,7 @@ local function _drawHudLine(x1, y1, x2, y2, thickness, color)
 
     UiPush()
         UiTranslate(x1, y1)
-        UiRotate(math.deg(math.atan(dy, dx)))
+        UiRotate(math.deg(math.atan2(dy, dx)))
         UiColor(color[1], color[2], color[3], color[4])
         UiRect(len, thickness)
     UiPop()

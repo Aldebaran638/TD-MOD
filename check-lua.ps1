@@ -3,6 +3,8 @@
 param(
     [string]$Path = ".\Content Mod 2\script",
     [string]$LuaExecutable = "",
+    [string]$TeardownDataPath = "",
+    [switch]$SkipSemantic,
     [switch]$Verbose
 )
 
@@ -60,6 +62,32 @@ function Test-EngineInclude {
     return $normalized.StartsWith("script/include/", [System.StringComparison]::OrdinalIgnoreCase)
 }
 
+function Find-TeardownDataPath {
+    param([string]$RequestedPath)
+
+    $candidates = New-Object System.Collections.Generic.List[string]
+    if ($RequestedPath -ne "") {
+        $candidates.Add($RequestedPath)
+    }
+    $candidates.Add("D:\SteamLibrary\steamapps\common\Teardown\data")
+    $candidates.Add("C:\Program Files (x86)\Steam\steamapps\common\Teardown\data")
+    $candidates.Add("C:\Program Files\Steam\steamapps\common\Teardown\data")
+
+    foreach ($candidateValue in $candidates) {
+        $candidate = [System.IO.Path]::GetFullPath($candidateValue)
+        if ((Split-Path -Leaf $candidate) -ne "data") {
+            $candidate = Join-Path $candidate "data"
+        }
+        $defs = Join-Path $candidate "script_defs.lua"
+        $scriptRoot = Join-Path $candidate "script"
+        if ((Test-Path -LiteralPath $defs -PathType Leaf) -and
+            (Test-Path -LiteralPath $scriptRoot -PathType Container)) {
+            return $candidate
+        }
+    }
+    return $null
+}
+
 $root = [System.IO.Path]::GetFullPath((Resolve-Path -LiteralPath $Path).Path).TrimEnd("\", "/")
 $rootPrefix = $root + [System.IO.Path]::DirectorySeparatorChar
 $luaExe = Find-LuaExecutable -RequestedPath $LuaExecutable
@@ -68,11 +96,22 @@ if ($luaExe -eq $null) {
     Write-Host "Install the VS Code Lua extension, install Lua, or pass -LuaExecutable <path>." -ForegroundColor Yellow
     exit 1
 }
+$teardownDataRoot = Find-TeardownDataPath -RequestedPath $TeardownDataPath
+if (-not $SkipSemantic -and $teardownDataRoot -eq $null) {
+    Write-Host "[ERROR] Teardown data directory not found; official API validation is unavailable." -ForegroundColor Red
+    Write-Host "Pass -TeardownDataPath <Teardown install or data directory>." -ForegroundColor Yellow
+    exit 1
+}
+if (-not $SkipSemantic -and [System.IO.Path]::GetFileName($luaExe) -notlike "lua-language-server*") {
+    Write-Host "[ERROR] lua-language-server is required for semantic API validation." -ForegroundColor Red
+    exit 1
+}
 
 $strictUtf8 = New-Object System.Text.UTF8Encoding($false, $true)
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $files = @(Get-ChildItem -LiteralPath $root -Filter *.lua -Recurse -File -ErrorAction Stop)
 $graph = @{}
+$engineIncludesByFile = @{}
 $includeIssueCount = 0
 $readIssueCount = 0
 $externalIncludeCount = 0
@@ -105,6 +144,7 @@ try {
     foreach ($file in $files) {
         $fullPath = [System.IO.Path]::GetFullPath($file.FullName)
         $graph[$fullPath] = @()
+        $engineIncludesByFile[$fullPath] = @()
 
         try {
             $content = Read-StrictUtf8 -FilePath $fullPath
@@ -125,9 +165,31 @@ try {
             if ($line -match $includePattern) {
                 $includePath = $matches[1]
                 if (Test-EngineInclude -IncludePath $includePath) {
-                    $externalIncludeCount++
-                    if ($Verbose) {
-                        Write-Host "[ENGINE INCLUDE] $(Get-RelativeSourcePath $fullPath):$lineNumber -> $includePath" -ForegroundColor DarkCyan
+                    if ($teardownDataRoot -ne $null) {
+                        $engineCandidate = [System.IO.Path]::GetFullPath((Join-Path $teardownDataRoot $includePath))
+                        $engineDataPrefix = [System.IO.Path]::GetFullPath($teardownDataRoot).TrimEnd("\", "/") +
+                            [System.IO.Path]::DirectorySeparatorChar
+                        if (-not $engineCandidate.StartsWith($engineDataPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+                            Write-Host "[INCLUDE ERROR] $(Get-RelativeSourcePath $fullPath):$lineNumber escapes Teardown data root: $includePath" -ForegroundColor Red
+                            $includeIssueCount++
+                        }
+                        elseif (-not (Test-Path -LiteralPath $engineCandidate -PathType Leaf)) {
+                            Write-Host "[INCLUDE ERROR] $(Get-RelativeSourcePath $fullPath):$lineNumber missing engine include: $includePath" -ForegroundColor Red
+                            $includeIssueCount++
+                        }
+                        else {
+                            $externalIncludeCount++
+                            $engineIncludesByFile[$fullPath] += @{
+                                Source = $engineCandidate
+                                Relative = $includePath.Replace("/", [System.IO.Path]::DirectorySeparatorChar)
+                            }
+                            if ($Verbose) {
+                                Write-Host "[ENGINE INCLUDE] $(Get-RelativeSourcePath $fullPath):$lineNumber -> $includePath" -ForegroundColor DarkCyan
+                            }
+                        }
+                    }
+                    else {
+                        $externalIncludeCount++
                     }
                 }
                 else {
@@ -223,15 +285,190 @@ try {
         }
     }
 
-    Write-Host ""
-    Write-Host "Check complete: $($files.Count) Lua files, $externalIncludeCount engine includes" -ForegroundColor Cyan
+    $semanticIssueCount = 0
+    if (-not $SkipSemantic -and $includeIssueCount -eq 0 -and $readIssueCount -eq 0 -and -not $syntaxIssue) {
+        $incomingCount = @{}
+        foreach ($node in @($graph.Keys)) {
+            $incomingCount[$node] = 0
+        }
+        foreach ($node in @($graph.Keys)) {
+            foreach ($target in @($graph[$node])) {
+                $incomingCount[$target] = ([int]$incomingCount[$target]) + 1
+            }
+        }
 
-    if ($includeIssueCount -eq 0 -and $readIssueCount -eq 0 -and -not $syntaxIssue) {
-        Write-Host "OK - Lua syntax and include chains are valid." -ForegroundColor Green
+        $entryFiles = @($graph.Keys | Where-Object { ([int]$incomingCount[$_]) -eq 0 } | Sort-Object)
+        $semanticRoot = Join-Path $tempRoot "_semantic"
+        [System.IO.Directory]::CreateDirectory($semanticRoot) | Out-Null
+        $officialDefs = Join-Path $teardownDataRoot "script_defs.lua"
+        $officialPlugin = Join-Path $teardownDataRoot "td_vscode_plugin.lua"
+        $semanticDiagnosticKeys = New-Object "System.Collections.Generic.HashSet[string]" ([System.StringComparer]::Ordinal)
+        $semanticDiagnostics = New-Object System.Collections.Generic.List[string]
+
+        function Get-IncludeClosure {
+            param([string]$EntryFile)
+            $visited = @{}
+            $stack = New-Object System.Collections.Generic.Stack[string]
+            $stack.Push($EntryFile)
+            while ($stack.Count -gt 0) {
+                $current = $stack.Pop()
+                if ($visited.ContainsKey($current)) {
+                    continue
+                }
+                $visited[$current] = $true
+                foreach ($target in @($graph[$current])) {
+                    $stack.Push($target)
+                }
+            }
+            return @($visited.Keys)
+        }
+
+        for ($entryIndex = 0; $entryIndex -lt $entryFiles.Count; $entryIndex++) {
+            $entryFile = $entryFiles[$entryIndex]
+            $entryWorkspace = Join-Path $semanticRoot ("entry-" + $entryIndex)
+            [System.IO.Directory]::CreateDirectory($entryWorkspace) | Out-Null
+            $closure = @(Get-IncludeClosure -EntryFile $entryFile)
+
+            foreach ($closureFile in $closure) {
+                $relativePath = Get-RelativeSourcePath $closureFile
+                $sanitizedSource = Join-Path $tempRoot $relativePath
+                $destination = Join-Path $entryWorkspace $relativePath
+                [System.IO.Directory]::CreateDirectory((Split-Path -Parent $destination)) | Out-Null
+                [System.IO.File]::Copy($sanitizedSource, $destination, $true)
+
+                foreach ($engineInclude in @($engineIncludesByFile[$closureFile])) {
+                    $engineDestination = Join-Path $entryWorkspace ([string]$engineInclude.Relative)
+                    [System.IO.Directory]::CreateDirectory((Split-Path -Parent $engineDestination)) | Out-Null
+                    [System.IO.File]::Copy([string]$engineInclude.Source, $engineDestination, $true)
+                }
+            }
+
+            $config = @{
+                runtime = @{
+                    version = "Lua 5.1"
+                    plugin = $officialPlugin
+                }
+                workspace = @{
+                    library = @($officialDefs)
+                    checkThirdParty = $false
+                }
+                diagnostics = @{
+                    globals = @("server", "client", "shared")
+                    disable = @(
+                        "ambiguity-1",
+                        "count-down-loop",
+                        "different-requires",
+                        "duplicate-index",
+                        "duplicate-set-field",
+                        "empty-block",
+                        "global-element",
+                        "lowercase-global",
+                        "name-style-check",
+                        "need-check-nil",
+                        "redefined-local",
+                        "trailing-space",
+                        "unbalanced-assignments",
+                        "unused-function",
+                        "unused-label",
+                        "unused-local",
+                        "unused-vararg"
+                    )
+                    neededFileStatus = @{
+                        "undefined-global" = "Any"
+                        "undefined-field" = "Any"
+                        "missing-parameter" = "Any"
+                        "redundant-parameter" = "Any"
+                        "param-type-mismatch" = "Any"
+                    }
+                }
+            }
+            $configPath = Join-Path $entryWorkspace ".luarc.json"
+            [System.IO.File]::WriteAllText(
+                $configPath,
+                ($config | ConvertTo-Json -Depth 8),
+                $utf8NoBom
+            )
+            $apiOverrides = @'
+---@param playerId number
+---@param functionName string
+---@param ... any
+function ClientCall(playerId, functionName, ...) end
+
+---@param functionName string
+---@param ... any
+function ServerCall(functionName, ...) end
+'@
+            [System.IO.File]::WriteAllText(
+                (Join-Path $entryWorkspace "_teardown_api_overrides.lua"),
+                $apiOverrides,
+                $utf8NoBom
+            )
+
+            $entryLog = Join-Path $entryWorkspace ".lls-log"
+            $semanticOutput = & $luaExe `
+                "--check=$entryWorkspace" `
+                "--check_format=pretty" `
+                "--checklevel=Warning" `
+                "--configpath=$configPath" `
+                "--logpath=$entryLog" 2>&1
+
+            $pendingSemanticHeader = $null
+            foreach ($outputLineValue in @($semanticOutput)) {
+                $outputLine = [regex]::Replace(
+                    [string]$outputLineValue,
+                    "$([char]27)\[[0-9;]*m",
+                    ""
+                )
+                if ($outputLine -match "^.+?:\d+:\d+ \[(Error|Warning|Information|Hint)\]") {
+                    $pendingSemanticHeader = $outputLine
+                }
+                if ($outputLine -notmatch "\((undefined-global|undefined-field|missing-parameter|redundant-parameter|param-type-mismatch)\)") {
+                    continue
+                }
+                if ($outputLine.TrimStart().StartsWith("-") -and $pendingSemanticHeader -ne $null) {
+                    $outputLine = "$pendingSemanticHeader $($outputLine.Trim())"
+                }
+                $engineWorkspaceRoot = Join-Path $entryWorkspace "script\include"
+                if ($outputLine.StartsWith($engineWorkspaceRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+                    continue
+                }
+                $mapped = $outputLine.Replace($entryWorkspace, $root)
+                $mapped = $mapped.Replace("/", [System.IO.Path]::DirectorySeparatorChar)
+                $diagnosticKey = $mapped
+                if ($mapped -match "^(.*?):(\d+):\d+ .*\(([a-z0-9-]+)\)$") {
+                    $diagnosticKey = "$($matches[1]):$($matches[2]):$($matches[3])"
+                }
+                $wasAdded = $semanticDiagnosticKeys.Add($diagnosticKey)
+                if ($wasAdded) {
+                    $semanticDiagnostics.Add($mapped)
+                }
+                if ($Verbose -and $wasAdded) {
+                    Write-Host "[SEMANTIC] $mapped" -ForegroundColor Yellow
+                }
+            }
+        }
+
+        $semanticIssueCount = $semanticDiagnostics.Count
+        if ($semanticIssueCount -gt 0) {
+            Write-Host "[SEMANTIC ERROR]" -ForegroundColor Red
+            foreach ($diagnostic in @($semanticDiagnostics | Sort-Object)) {
+                Write-Host $diagnostic -ForegroundColor Red
+            }
+        }
+        elseif ($Verbose) {
+            Write-Host "[SEMANTIC OK] $($entryFiles.Count) include closure(s)" -ForegroundColor Green
+        }
+    }
+
+    Write-Host ""
+    Write-Host "Check complete: $($files.Count) Lua files, $externalIncludeCount engine includes, $semanticIssueCount semantic issues" -ForegroundColor Cyan
+
+    if ($includeIssueCount -eq 0 -and $readIssueCount -eq 0 -and -not $syntaxIssue -and $semanticIssueCount -eq 0) {
+        Write-Host "OK - Lua syntax, include closures, and Teardown API calls are valid." -ForegroundColor Green
         exit 0
     }
 
-    Write-Host "FAILED - include issues: $includeIssueCount, read issues: $readIssueCount, syntax failure: $syntaxIssue" -ForegroundColor Red
+    Write-Host "FAILED - include issues: $includeIssueCount, read issues: $readIssueCount, syntax failure: $syntaxIssue, semantic issues: $semanticIssueCount" -ForegroundColor Red
     exit 1
 }
 finally {
