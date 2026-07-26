@@ -34,7 +34,7 @@ end
 
 function client.shipRollErrorTick(dt)
     local _ = dt
-    if client.shipRequestRollError == nil then
+    if client.shipControlSetRollError == nil then
         return
     end
 
@@ -49,7 +49,7 @@ function client.shipRollErrorTick(dt)
     end
 
     if client.shipCamera ~= nil and (client.shipCamera.rearFreelookActive or client.shipCamera.frontFreelookActive) then
-        client.shipRequestRollError(body, 0.0)
+        client.shipControlSetRollError(0.0)
         return
     end
 
@@ -64,5 +64,5 @@ function client.shipRollErrorTick(dt)
     local camUpOnPlane = _projectOnPlane(camUp, shipForward)
 
     local rollError = _signedAngleOnAxis(shipUpOnPlane, camUpOnPlane, shipForward)
-    client.shipRequestRollError(body, rollError)
+    client.shipControlSetRollError(rollError)
 end

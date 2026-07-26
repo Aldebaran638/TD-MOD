@@ -3,6 +3,33 @@
 
 server = server or {}
 
+server.hSlotNetworkConfig = server.hSlotNetworkConfig or {
+    hudInterval = 0.2,
+    debugInterval = 1.0,
+    debugEnabled = false,
+}
+
+server.hSlotEntityLimits = server.hSlotEntityLimits or {
+    maxPerShip = 4,
+    maxGlobal = 24,
+}
+
+local _hSlotGlobalCountKey =
+    "StellarisShips/server/runtime/activeStrikeCraft"
+
+local function _hSlotGetGlobalCraftCount()
+    return math.max(0, GetInt(_hSlotGlobalCountKey) or 0)
+end
+
+local function _hSlotAdjustGlobalCraftCount(delta)
+    local nextCount = math.max(
+        0,
+        _hSlotGetGlobalCraftCount() + math.floor(delta or 0)
+    )
+    SetInt(_hSlotGlobalCountKey, nextCount)
+    return nextCount
+end
+
 server.hSlotState = server.hSlotState or {
     fireRequested = false,
     launchers = {},
@@ -10,7 +37,7 @@ server.hSlotState = server.hSlotState or {
 }
 
 server.hSlotDebugState = server.hSlotDebugState or {
-    enabled = true,
+    enabled = false,
     lastReason = "none",
     fireFlag = 0,
     requestHas = 0,
@@ -24,9 +51,10 @@ server.hSlotDebugState = server.hSlotDebugState or {
 
 local function _hSlotSetDebugReason(slotIndex, reason, craft)
     local d = server.hSlotDebugState or {}
-    if not d.enabled then
+    if not server.hSlotNetworkConfig.debugEnabled then
         return
     end
+    d.enabled = true
 
     local slot = math.floor(slotIndex or 0)
     local body = craft ~= nil and math.floor(craft.bodyId or 0) or 0
@@ -39,18 +67,21 @@ end
 
 local function _hSlotSetDebugStage(stage)
     local d = server.hSlotDebugState or {}
+    if not server.hSlotNetworkConfig.debugEnabled then return end
     d.stage = tostring(stage or "unknown")
     server.hSlotDebugState = d
 end
 
 local function _hSlotSetCollisionDebug(hitBody, hitDist)
     local d = server.hSlotDebugState or {}
+    if not server.hSlotNetworkConfig.debugEnabled then return end
     d.lastCollisionBody = math.floor(hitBody or 0)
     d.lastCollisionDist = tonumber(hitDist) or -1.0
     server.hSlotDebugState = d
 end
 
 local function _hSlotWriteExplosionDebug(shipBody, pos, size, impulse)
+    if not server.hSlotNetworkConfig.debugEnabled then return end
     local ownerBody = math.floor(shipBody or 0)
     if ownerBody <= 0 or pos == nil then
         return
@@ -70,6 +101,7 @@ local function _hSlotWriteExplosionDebug(shipBody, pos, size, impulse)
 end
 
 local function _hSlotBumpDebugCounter(shipBody, keyName)
+    if not server.hSlotNetworkConfig.debugEnabled then return end
     local ownerBody = math.floor(shipBody or 0)
     if ownerBody <= 0 then
         return
@@ -316,6 +348,7 @@ local function _hSlotPickReadyLauncher(state)
 end
 
 local function _hSlotTryDirection(shipBody, rejectBody, fromPos, dir, dist)
+    server.netDebugCountRaycast(1)
     QueryRequire("physical")
     QueryRejectBody(shipBody)
     if rejectBody ~= nil and rejectBody ~= 0 then
@@ -340,39 +373,101 @@ local function _hSlotResolveAvoidDir(shipBody, rejectBody, pos, desiredDir, forw
     local forward = _hSlotNormalize(desiredDir, forwardDir)
     local worldUp = Vec(0, 1, 0)
     local right = _hSlotNormalize(VecCross(forward, worldUp), Vec(1, 0, 0))
-    local pitchAxis = _hSlotNormalize(VecCross(right, forward), worldUp)
     local nearDist = math.max(1.0, tonumber(probeDistance) or 7.0)
     local farDist = math.max(nearDist, nearDist * 1.6)
 
-    local candidates = {
-        { dir = forward, near = nearDist, far = farDist },
-        { dir = _hSlotRotateToward(forward, worldUp, 35.0, forward), near = nearDist, far = farDist },
-        { dir = _hSlotRotateToward(forward, worldUp, -35.0, forward), near = nearDist, far = farDist },
-        { dir = _hSlotRotateToward(forward, worldUp, 60.0, forward), near = nearDist * 0.9, far = farDist * 0.9 },
-        { dir = _hSlotRotateToward(forward, worldUp, -60.0, forward), near = nearDist * 0.9, far = farDist * 0.9 },
-        { dir = _hSlotRotateToward(forward, right, -25.0, forward), near = nearDist, far = farDist },
-        { dir = _hSlotRotateToward(forward, right, -45.0, forward), near = nearDist * 0.9, far = farDist * 0.9 },
-        { dir = _hSlotRotateToward(forward, right, 20.0, forward), near = nearDist * 0.75, far = farDist * 0.75 },
-        { dir = _hSlotRotateToward(forward, pitchAxis, 30.0, forward), near = nearDist * 0.85, far = farDist * 0.85 },
-        { dir = _hSlotRotateToward(forward, pitchAxis, -30.0, forward), near = nearDist * 0.85, far = farDist * 0.85 },
+    if _hSlotTryDirection(shipBody, rejectBody, pos, forward, farDist) then
+        return forward
+    end
+
+    local preferred = {
+        _hSlotRotateToward(forward, worldUp, 35.0, forward),
+        _hSlotRotateToward(forward, worldUp, -35.0, forward),
+        _hSlotRotateToward(forward, right, -30.0, forward),
+        _hSlotRotateToward(forward, right, 25.0, forward),
     }
-
-    for i = 1, #candidates do
-        local candidate = candidates[i]
-        if _hSlotTryDirection(shipBody, rejectBody, pos, candidate.dir, candidate.near)
-            and _hSlotTryDirection(shipBody, rejectBody, pos, candidate.dir, candidate.far) then
-            return candidate.dir
+    for i = 1, #preferred do
+        if _hSlotTryDirection(
+            shipBody,
+            rejectBody,
+            pos,
+            preferred[i],
+            farDist
+        ) then
+            return preferred[i]
         end
     end
 
-    for i = 1, #candidates do
-        local candidate = candidates[i]
-        if _hSlotTryDirection(shipBody, rejectBody, pos, candidate.dir, candidate.near * 0.55) then
-            return candidate.dir
+    local emergency = {
+        preferred[3],
+        preferred[1],
+        preferred[2],
+    }
+    for i = 1, #emergency do
+        if _hSlotTryDirection(
+            shipBody,
+            rejectBody,
+            pos,
+            emergency[i],
+            nearDist * 0.55
+        ) then
+            return emergency[i]
         end
     end
 
-    return nil
+    return preferred[3]
+end
+
+local function _hSlotDirectionAngleDegrees(a, b)
+    local aNorm = _hSlotNormalize(a, Vec(0, 0, -1))
+    local bNorm = _hSlotNormalize(b, Vec(0, 0, -1))
+    local dot = math.max(-1.0, math.min(1.0, VecDot(aNorm, bNorm)))
+    return math.deg(math.acos(dot))
+end
+
+local function _hSlotResolveAvoidDirCached(
+    shipBody,
+    craft,
+    desiredDir,
+    probeDistance,
+    dt
+)
+    craft.aiAccumulator = (craft.aiAccumulator or 0.0)
+        + math.max(0.0, tonumber(dt) or 0.0)
+    craft.avoidCacheAge = (craft.avoidCacheAge or 1000.0)
+        + math.max(0.0, tonumber(dt) or 0.0)
+    local interval = math.max(0.05, tonumber(craft.aiInterval) or 0.1)
+    if craft.desiredDirection ~= nil and craft.aiAccumulator < interval then
+        return craft.desiredDirection
+    end
+    craft.aiAccumulator = math.max(0.0, craft.aiAccumulator - interval)
+
+    local cachedPos = craft.avoidCachePos
+    local cachedInput = craft.avoidCacheInput
+    local cacheReusable = craft.desiredDirection ~= nil
+        and cachedPos ~= nil
+        and cachedInput ~= nil
+        and craft.avoidCacheAge <= 0.2
+        and VecLength(VecSub(craft.pos, cachedPos)) < 1.0
+        and _hSlotDirectionAngleDegrees(desiredDir, cachedInput) < 5.0
+    if cacheReusable then return craft.desiredDirection end
+
+    craft.desiredDirection = _hSlotResolveAvoidDir(
+        shipBody,
+        craft.bodyId or 0,
+        craft.pos,
+        desiredDir,
+        craft.forward or desiredDir,
+        probeDistance
+    )
+    craft.avoidCachePos = Vec(craft.pos[1], craft.pos[2], craft.pos[3])
+    craft.avoidCacheInput = Vec(
+        desiredDir[1],
+        desiredDir[2],
+        desiredDir[3]
+    )
+    craft.avoidCacheAge = 0.0
+    return craft.desiredDirection
 end
 
 local function _hSlotApplyBeamDamage(hitPos, hitBody, weaponType, environmentExplosionSize)
@@ -504,11 +599,13 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
 
     QueryRequire("physical")
     QueryRejectBody(shipBody)
+    server.netDebugCountRaycast(1)
     local hit, dist, normal, shape = QueryRaycast(origin, dir, maxRange, 0.05)
     if not hit then
         _hSlotBumpDebugCounter(shipBody, "beam_nohit")
         local endPos = VecAdd(origin, VecScale(dir, maxRange))
-        ClientCall(
+        server.netClientCall(
+            "weapon.fireFx",
             0,
             "client.spawnHSlotBeamFx",
             origin[1], origin[2], origin[3],
@@ -548,21 +645,29 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
         else
             Explosion(hitPos, impactExplosionSize)
         end
+        server.netDebugCountExplosion(1)
 
         _hSlotWriteExplosionDebug(shipBody, hitPos, impactExplosionSize, impactExplosionImpulse)
     else
         _hSlotBumpDebugCounter(shipBody, "impact_skipped")
     end
 
-    ClientCall(0, "client.playHSlotGammaFireSound", origin[1], origin[2], origin[3])
-    ClientCall(
+    server.netClientCall(
+        "weapon.fireFx",
+        0,
+        "client.playHSlotGammaFireSound",
+        origin[1], origin[2], origin[3]
+    )
+    server.netClientCall(
+        "weapon.hitFx",
         0,
         "client.playWeaponSound",
         craft.weaponType or "gammaStrikeCraft",
         "hit",
         hitPos[1], hitPos[2], hitPos[3]
     )
-    ClientCall(
+    server.netClientCall(
+        "weapon.fireFx",
         0,
         "client.spawnHSlotBeamFx",
         origin[1], origin[2], origin[3],
@@ -573,7 +678,13 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
     )
 
     if didHitShield and hitBody ~= nil and hitBody ~= 0 then
-        ClientCall(0, "client.playProjectileShieldImpactFx", hitBody, hitPos[1], hitPos[2], hitPos[3])
+        server.netClientCall(
+            "weapon.hitFx",
+            0,
+            "client.playProjectileShieldImpactFx",
+            hitBody,
+            hitPos[1], hitPos[2], hitPos[3]
+        )
     end
 
     if normal ~= nil and normal[2] ~= nil then
@@ -605,6 +716,7 @@ local function _hSlotCraftExplode(shipBody, craft, weaponConfig)
     local size = tonumber(weaponConfig.collisionExplosionSize) or 0.1
     if pos ~= nil then
         Explosion(pos, size)
+        server.netDebugCountExplosion(1)
         _hSlotWriteExplosionDebug(shipBody, pos, size, 0.0)
     end
     _hSlotDeleteCraftBody(craft and craft.bodyId or 0)
@@ -625,9 +737,12 @@ local function _hSlotFinishCraft(state, slotIndex, cooldownMode)
     end
 
     local active = state.activeCrafts or {}
-    _hSlotDeleteCraftBody((active[slotIndex] or {}).bodyId or 0)
+    local finishedCraft = active[slotIndex]
+    _hSlotDeleteCraftBody((finishedCraft or {}).bodyId or 0)
     active[slotIndex] = nil
     state.activeCrafts = active
+    if finishedCraft ~= nil then _hSlotAdjustGlobalCraftCount(-1) end
+    if state.hudSync ~= nil then state.hudSync.dirty = true end
 end
 
 function server.hSlotStateInit(shipType)
@@ -640,6 +755,14 @@ function server.hSlotStateInit(shipType)
         fireRequested = false,
         launchers = {},
         activeCrafts = {},
+        hudSync = {
+            age = 0.0,
+            lastSignature = "",
+            dirty = true,
+        },
+        debugSync = {
+            age = 0.0,
+        },
     }
 
     local slotDefs = shipDef.hSlots or {}
@@ -662,11 +785,16 @@ function server.hSlotStateResetRuntime()
 
     local launchers = state.launchers or {}
     local active = state.activeCrafts or {}
+    local removed = 0
     for slotIndex, craft in pairs(active) do
         local _ = slotIndex
         _hSlotDeleteCraftBody((craft or {}).bodyId or 0)
+        if craft ~= nil then removed = removed + 1 end
     end
+    if removed > 0 then _hSlotAdjustGlobalCraftCount(-removed) end
     state.activeCrafts = {}
+    state.hudSync = state.hudSync or {}
+    state.hudSync.dirty = true
     for i = 1, #launchers do
         local runtime = launchers[i] and launchers[i].runtime or nil
         if runtime ~= nil then
@@ -678,7 +806,77 @@ function server.hSlotStateResetRuntime()
     server.hSlotState = state
 end
 
-function server.hSlotControlSyncHud()
+local function _hSlotResolveHudPlayer(shipBody)
+    local playerId = server.shipRuntimeGetDriverPlayerId ~= nil
+        and math.floor(server.shipRuntimeGetDriverPlayerId(shipBody) or 0)
+        or 0
+    if playerId <= 0 then return 0 end
+    if IsPlayerValid ~= nil and not IsPlayerValid(playerId) then return 0 end
+    local vehicle = GetPlayerVehicle(playerId)
+    if vehicle == nil or vehicle == 0 or GetVehicleBody(vehicle) ~= shipBody then
+        if server.shipRuntimeSetDriverPlayerId ~= nil then
+            server.shipRuntimeSetDriverPlayerId(shipBody, 0)
+        end
+        return 0
+    end
+    return playerId
+end
+
+local function _hSlotBuildHudSignature(state)
+    local launchers = state.launchers or {}
+    local active = state.activeCrafts or {}
+    local currentMode = server.shipRuntimeGetCurrentMainWeapon ~= nil
+        and server.shipRuntimeGetCurrentMainWeapon(server.shipBody)
+        or ""
+    local values = { tostring(currentMode) }
+    for i = 1, 2 do
+        local runtime = ((launchers[i] or {}).runtime or {})
+        values[#values + 1] = active[i] ~= nil and "1" or "0"
+        values[#values + 1] = string.format(
+            "%.1f",
+            server.netSyncQuantize(runtime.cooldownRemain or 0.0, 0.1)
+        )
+    end
+    return table.concat(values, "|")
+end
+
+local function _hSlotWriteDebugSnapshot(
+    shipBody,
+    active1,
+    active2,
+    dbgReason,
+    dbgS1State,
+    dbgS1Attack,
+    dbgS1Life,
+    dbgS1Return,
+    dbgS1Fire,
+    dbgS2State,
+    dbgS2Attack,
+    dbgS2Life,
+    dbgS2Return,
+    dbgS2Fire
+)
+    local dbgRoot = "StellarisShips/debug/hslot"
+    local shipRoot = dbgRoot .. "/byShip/" .. tostring(math.floor(shipBody or 0))
+    local heartbeat = (GetInt(shipRoot .. "/heartbeat") or 0) + 1
+    if heartbeat > 1000000000 then heartbeat = 1 end
+    SetInt(shipRoot .. "/heartbeat", heartbeat)
+    SetInt(shipRoot .. "/active", active1 + active2)
+    SetString(shipRoot .. "/last_reason", dbgReason)
+    SetString(shipRoot .. "/slot1/state", dbgS1State)
+    SetFloat(shipRoot .. "/slot1/attack", dbgS1Attack)
+    SetFloat(shipRoot .. "/slot1/life", dbgS1Life)
+    SetFloat(shipRoot .. "/slot1/return", dbgS1Return)
+    SetFloat(shipRoot .. "/slot1/fire", dbgS1Fire)
+    SetString(shipRoot .. "/slot2/state", dbgS2State)
+    SetFloat(shipRoot .. "/slot2/attack", dbgS2Attack)
+    SetFloat(shipRoot .. "/slot2/life", dbgS2Life)
+    SetFloat(shipRoot .. "/slot2/return", dbgS2Return)
+    SetFloat(shipRoot .. "/slot2/fire", dbgS2Fire)
+    SetInt(dbgRoot .. "/lastShipBody", math.floor(shipBody or 0))
+end
+
+function server.hSlotControlSyncHud(dt, force)
     local shipBody = server.shipBody
     if shipBody == nil or shipBody == 0 then
         return
@@ -687,6 +885,16 @@ function server.hSlotControlSyncHud()
     local state = server.hSlotState or {}
     local launchers = state.launchers or {}
     local activeCrafts = state.activeCrafts or {}
+    state.hudSync = state.hudSync or {
+        age = 0.0,
+        lastSignature = "",
+        dirty = true,
+    }
+    state.debugSync = state.debugSync or { age = 0.0 }
+    state.hudSync.age = (state.hudSync.age or 0.0)
+        + math.max(0.0, tonumber(dt) or 0.0)
+    state.debugSync.age = (state.debugSync.age or 0.0)
+        + math.max(0.0, tonumber(dt) or 0.0)
 
     local cd1 = ((launchers[1] or {}).runtime or {}).cooldownRemain or 0.0
     local cd2 = ((launchers[2] or {}).runtime or {}).cooldownRemain or 0.0
@@ -710,61 +918,71 @@ function server.hSlotControlSyncHud()
     local dbgS2Return = c2 ~= nil and (tonumber(c2.returnRemain) or 0.0) or -1.0
     local dbgS2Fire = c2 ~= nil and (tonumber(c2.fireRemain) or 0.0) or -1.0
 
-    -- 全局调试键：用于绕过 ClientCall 链路，直接验证服务端调度层状态
-    local dbgRoot = "StellarisShips/debug/hslot"
-    local shipKey = tostring(math.floor(shipBody or 0))
-    local shipRoot = dbgRoot .. "/byShip/" .. shipKey
-
-    local heartbeat = (GetInt(shipRoot .. "/heartbeat") or 0) + 1
-    if heartbeat > 1000000000 then heartbeat = 1 end
-    SetInt(shipRoot .. "/heartbeat", heartbeat)
-    SetInt(shipRoot .. "/active", active1 + active2)
-    SetString(shipRoot .. "/last_reason", dbgReason)
-    SetString(shipRoot .. "/slot1/state", dbgS1State)
-    SetFloat(shipRoot .. "/slot1/attack", dbgS1Attack)
-    SetFloat(shipRoot .. "/slot1/life", dbgS1Life)
-    SetFloat(shipRoot .. "/slot1/return", dbgS1Return)
-    SetFloat(shipRoot .. "/slot1/fire", dbgS1Fire)
-    SetString(shipRoot .. "/slot2/state", dbgS2State)
-    SetFloat(shipRoot .. "/slot2/attack", dbgS2Attack)
-    SetFloat(shipRoot .. "/slot2/life", dbgS2Life)
-    SetFloat(shipRoot .. "/slot2/return", dbgS2Return)
-    SetFloat(shipRoot .. "/slot2/fire", dbgS2Fire)
-
-    -- 兼容观察：保留全局最近写入来源，便于确认是否被其他脚本实例覆盖
-    SetInt(dbgRoot .. "/lastShipBody", math.floor(shipBody or 0))
-
-    ClientCall(
-        0,
-        "client.updateHSlotHudState",
-        shipBody,
-        cd1,
-        cd2,
-        max1,
-        max2,
-        active1,
-        active2,
-        dbgReason,
-        dbgS1State,
-        dbgS1Life,
-        dbgS1Return,
-        dbgS2State,
-        dbgS2Life,
-        dbgS2Return
+    local playerId = _hSlotResolveHudPlayer(shipBody)
+    local signature = _hSlotBuildHudSignature(state)
+    local hudInterval = math.max(
+        0.05,
+        tonumber(server.hSlotNetworkConfig.hudInterval) or 0.2
     )
+    local changed = signature ~= tostring(state.hudSync.lastSignature or "")
+    local keepAlive = state.hudSync.age >= 1.0
+    if playerId > 0
+        and (force or state.hudSync.dirty
+            or (changed and state.hudSync.age >= hudInterval)
+            or keepAlive) then
+        server.netClientCall(
+            "hud.hslot",
+            playerId,
+            "client.updateHSlotHudState",
+            shipBody,
+            cd1,
+            cd2,
+            max1,
+            max2,
+            active1,
+            active2,
+            dbgReason,
+            dbgS1State,
+            dbgS1Life,
+            dbgS1Return,
+            dbgS2State,
+            dbgS2Life,
+            dbgS2Return
+        )
+        state.hudSync.lastSignature = signature
+        state.hudSync.age = 0.0
+        state.hudSync.dirty = false
+    end
 
-    ClientCall(
-        0,
-        "client.receiveHSlotDebugState",
-        active1 + active2,
-        dbgReason,
-        dbgS1State,
-        dbgS1Life,
-        dbgS1Return,
-        dbgS2State,
-        dbgS2Life,
-        dbgS2Return
+    local debugInterval = math.max(
+        0.25,
+        tonumber(server.hSlotNetworkConfig.debugInterval) or 1.0
     )
+    if server.hSlotNetworkConfig.debugEnabled
+        and playerId > 0
+        and state.debugSync.age >= debugInterval then
+        _hSlotWriteDebugSnapshot(
+            shipBody,
+            active1, active2,
+            dbgReason,
+            dbgS1State, dbgS1Attack, dbgS1Life, dbgS1Return, dbgS1Fire,
+            dbgS2State, dbgS2Attack, dbgS2Life, dbgS2Return, dbgS2Fire
+        )
+        server.netClientCall(
+            "debug.hslot",
+            playerId,
+            "client.receiveHSlotDebugState",
+            active1 + active2,
+            dbgReason,
+            dbgS1State,
+            dbgS1Life,
+            dbgS1Return,
+            dbgS2State,
+            dbgS2Life,
+            dbgS2Return
+        )
+        state.debugSync.age = 0.0
+    end
 end
 
 function server.hSlotControlTick(dt)
@@ -792,7 +1010,11 @@ function server.hSlotControlTick(dt)
     for i = 1, #launchers do
         local runtime = launchers[i] and launchers[i].runtime or nil
         if runtime ~= nil and (runtime.cooldownRemain or 0.0) > 0.0 then
+            local wasCooling = runtime.cooldownRemain > 0.0
             runtime.cooldownRemain = math.max(0.0, (runtime.cooldownRemain or 0.0) - (dt or 0.0))
+            if wasCooling and runtime.cooldownRemain <= 0.0 then
+                state.hudSync.dirty = true
+            end
         end
     end
 
@@ -936,7 +1158,13 @@ function server.hSlotControlTick(dt)
             end
 
             if keepUpdating then
-                local avoidDir = _hSlotResolveAvoidDir(shipBody, craft.bodyId or 0, craft.pos, desiredDir, craft.forward or desiredDir, weaponConfig.avoidProbeDistance or 7.0)
+                local avoidDir = _hSlotResolveAvoidDirCached(
+                    shipBody,
+                    craft,
+                    desiredDir,
+                    weaponConfig.avoidProbeDistance or 7.0,
+                    dt
+                )
                 if avoidDir == nil then
                     avoidDir = _hSlotNormalize(desiredDir, craft.forward or Vec(0, 0, -1))
                 end
@@ -968,6 +1196,7 @@ function server.hSlotControlTick(dt)
                         QueryRequire("physical")
                         QueryRejectBody(shipBody)
                         QueryRejectBody(craft.bodyId)
+                        server.netDebugCountRaycast(1)
                         local hit, hitDist, hitNormal, hitShape = QueryRaycast(sweepStart, sweepDir, sweepLen, weaponConfig.collisionProbeRadius or 0.2)
                         if hit then
                             local hitBody = hitShape ~= nil and hitShape ~= 0 and GetShapeBody(hitShape) or 0
@@ -1046,7 +1275,12 @@ function server.hSlotControlTick(dt)
         end
     end
 
-    server.hSlotControlSyncHud()
+    local activeCraftCount = 0
+    for _, craft in pairs(state.activeCrafts or {}) do
+        if craft ~= nil then activeCraftCount = activeCraftCount + 1 end
+    end
+    server.netDebugSetEntityCounts(nil, nil, activeCraftCount)
+    server.hSlotControlSyncHud(dt, false)
 
     if not _hSlotConsumeFireRequested() then
         _hSlotSetDebugStage("tick_idle")
@@ -1080,6 +1314,25 @@ function server.hSlotControlTick(dt)
         return
     end
     _hSlotSetDebugStage("launcher_picked_" .. tostring(slotIndex))
+
+    local activeCount = 0
+    for _, craft in pairs(state.activeCrafts or {}) do
+        if craft ~= nil then activeCount = activeCount + 1 end
+    end
+    local maxPerShip = math.max(
+        1,
+        math.floor(server.hSlotEntityLimits.maxPerShip or 4)
+    )
+    local maxGlobal = math.max(
+        maxPerShip,
+        math.floor(server.hSlotEntityLimits.maxGlobal or 24)
+    )
+    if activeCount >= maxPerShip
+        or _hSlotGetGlobalCraftCount() >= maxGlobal then
+        _hSlotSetDebugReason(0, "craft_capacity_full", nil)
+        _hSlotSetDebugStage("capacity_full")
+        return
+    end
 
     local shipT = GetBodyTransform(shipBody)
     local firePos = TransformToParentPoint(shipT, Vec(
@@ -1125,9 +1378,17 @@ function server.hSlotControlTick(dt)
         returnRemain = math.max(0.5, tonumber(launcher.config.returnTimeout) or 6.0),
         fireRemain = 0.0,
         orbitAngle = 0.0,
+        aiInterval = 0.1,
+        aiAccumulator = math.random() * 0.1,
+        desiredDirection = fireDir,
+        avoidCacheAge = 1000.0,
+        avoidCachePos = nil,
+        avoidCacheInput = nil,
     }
+    _hSlotAdjustGlobalCraftCount(1)
+    state.hudSync.dirty = true
 
     _hSlotSetDebugReason(slotIndex, "spawn_success", state.activeCrafts[slotIndex])
     _hSlotSetDebugStage("active_registered")
-    server.hSlotControlSyncHud()
+    server.hSlotControlSyncHud(0.0, true)
 end

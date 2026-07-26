@@ -1,52 +1,6 @@
+你曾经说你阅读了teardown的日志，这个日志是什么机制？仔细讲讲.日志会报什么错误
+
+或许我们可以做一个性能评估器?评估为:client的渲染压力,网络传输压力.client可以对各个函数打一个分.比如渲染一个粒子为1分,渲染一个矩形为2分;然后看巅峰状态下,最大可能渲染多少个粒子,用来评测渲染性能极限.但是更重要的是网络传输压力,server的压力.
 
 
-1.  现在查看CM2下的main.xml的
-```xml
-	<script pos="-15.2 7.9 12.8" file="MOD/script/shipMain.lua">
-		<vehicle name="ship" tags="stellarisShip" pos="0.0 0.0 0.0" driven="true" sound=" " spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
-			<body name="body" tags="stellarisShip" pos="0.0 0.0 0.0" dynamic="true">
-				<vox tags="missileLauncher" pos="0.5 7.0 1.1" file="MOD/vox/missileLauncher.vox"/>
-				<vox tags="missileLauncher" pos="-0.5 -7.0 1.1" rot="0 0 180" file="MOD/vox/missileLauncher.vox"/>
-				<vox tags="missileLauncher" pos="-0.5 7.0 1.1" file="MOD/vox/missileLauncher.vox" mirrorx="true"/>
-				<vox tags="missileLauncher" pos="0.5 -7.0 1.1" rot="0 0 180" file="MOD/vox/missileLauncher.vox" mirrorx="true"/>
-				<vox tags="primaryWeaponLauncher" pos="0.0 0.0 0.0" file="MOD/vox/primaryWeaponLauncher.vox"/>
-				<vox tags="hull" pos="0.0 0.0 0.0" file="MOD/vox/hull.vox"/>
-				<vox tags="thruster" pos="-1.1 0.4 1.3" file="MOD/vox/thruster.vox"/>
-				<vox tags="thruster" pos="1.1 0.4 1.3" file="MOD/vox/thruster.vox"/>
-				<vox tags="thruster" pos="-1.1 -0.5 1.3" file="MOD/vox/thruster.vox"/>
-				<vox tags="thruster" pos="1.1 -0.5 1.3" file="MOD/vox/thruster.vox"/>
-				<vox tags="engine" pos="-0.5 -0.4 0.0" file="MOD/vox/engine.vox"/>
-				<vox tags="engine" pos="-0.2 -0.4 0.0" file="MOD/vox/engine.vox"/>
-				<vox tags="engine" pos="0.1 -0.4 0.0" file="MOD/vox/engine.vox"/>
-				<vox tags="engine" pos="0.4 -0.4 0.0" file="MOD/vox/engine.vox"/>
-				<vox tags="engine" pos="0.7 -0.4 0.0" file="MOD/vox/engine.vox"/>
-				<vox tags="smallThruster" pos="2.1 0.1 0.0" rot="0 0 180" file="MOD/vox/smallThruster.vox"/>
-				<vox tags="smallThruster" pos="-2.1 -0.1 0.0" file="MOD/vox/smallThruster.vox"/>
-				<vox tags="secondaryLightSystem" pos="0.0 0.0 0.0" file="MOD/vox/secondaryLightSystem.vox"/>
-				<vox tags="mainLightSystem" pos="0.0 0.0 0.0" file="MOD/vox/mainLightSystem.vox"/>
-				<vox tags="armor" pos="0.0 0.0 0.0" file="MOD/vox/armor.vox"/>
-			</body>
-			<location name="Player" tags="player" pos="0.0 -0.1 -0.3" rot="0 180 180"/>
-			<location name="exit" tags="exit" pos="0.0 0.2 -2.6"/>
-		</vehicle>
-	</script>
-```
 
-对所有engine的shape都添加特效.冒火的特效(类似引擎燃烧).这需要一个新模块,写在CM2 client下的draw_modules文件夹下
-
-- 现在在前端页面中,TearDown默认摄像机的下方会展示一个"载具状态"血条.我想把它隐藏,应该如何做
-
-- 对于不同武器,命中后产生的护盾特效规模应该是不一样的.比如被x槽武器击中,现在的效果已经可以了,但是如果被那种小炮弹(虽然还没实现)击中,护盾效果就应该再小个两三倍,因为炮弹数量多,飞船一直被命中的话渲染压力太大.这个如果要实现的话要怎么样调整架构?
-
-
-现在炼狱射线蓄力生成的那些光粒是相对于世界坐标生成的吗？有没有什么办法能让这些光粒跟随飞船移动？(不要改代码)
-
-现在将炼狱射线激光代码先全部删除。将其代码改为：
-从发射点到目标点的一条光粒组成的线，仅此而已（就像战巡 快子光矛中心那条白线一样）。
-
-
-很好.现在将这个光粒组成的白线更新为4条,每条效果是一样的
-
-现在在这四条线周围(将这四条线作为圆柱的高),每单位长度内生成一定量的"前冲粒子"(向前冲一段路自动消失),将这四条线紧紧包裹.前冲粒子需要生成3轮.你先生成这3轮的前冲粒子,接下来我会根据效果微调
-
-你先生成

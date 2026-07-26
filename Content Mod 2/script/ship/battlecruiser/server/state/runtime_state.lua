@@ -245,7 +245,22 @@ end
 function _runtimeAPI.setCurrentMainWeapon(shipBodyId, mode, defaultShipType)
     local state = _getOrCreateState(shipBodyId, defaultShipType, defaultShipType)
     if state == nil then return end
-    state.mainWeapon.current = _normalizeMode(mode)
+    local nextMode = _normalizeMode(mode)
+    if state.mainWeapon.current ~= nextMode then
+        state.mainWeapon.current = nextMode
+        if server.guidedSlotGroupMarkAllHudDirty ~= nil then
+            server.guidedSlotGroupMarkAllHudDirty()
+        end
+        if server.hSlotState ~= nil and server.hSlotState.hudSync ~= nil then
+            server.hSlotState.hudSync.dirty = true
+        end
+        if server.xSlotStateMarkHudDirty ~= nil then
+            server.xSlotStateMarkHudDirty()
+        end
+        if server.lSlotStateMarkHudDirty ~= nil then
+            server.lSlotStateMarkHudDirty()
+        end
+    end
 end
 
 function _runtimeAPI.syncMainWeapon(shipBodyId, force, defaultShipType)
@@ -262,7 +277,15 @@ function _runtimeAPI.syncMainWeapon(shipBodyId, force, defaultShipType)
         return
     end
     
-    ClientCall(0, "client.setShipMainWeaponMode", shipBodyId, currentMode)
+    local playerId = server.netResolveShipDriver(shipBodyId)
+    if playerId <= 0 then return end
+    server.netClientCall(
+        "hud.weaponMode",
+        playerId,
+        "client.setShipMainWeaponMode",
+        shipBodyId,
+        currentMode
+    )
     mainWeapon.lastSentMode = currentMode
     mainWeapon.lastSentAt = nowTime
 end

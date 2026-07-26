@@ -72,6 +72,16 @@ $soundService = Read-Required "script\weapon\client\common\sound\sound_service.l
 $missileVisual = Read-Required "script\weapon\client\guided\effects\missile_visual.lua"
 $projectileManager = Read-Required "script\weapon\server\slots\l\kinetic_artillery\projectile_manager.lua"
 $hSlotControl = Read-Required "script\weapon\server\slots\h\gamma_strike_craft\control.lua"
+$networkDebug = Read-Required "script\net\network_debug.lua"
+$syncLimiter = Read-Required "script\net\server_sync_limiter.lua"
+$inputSnapshot = Read-Required "script\net\client_input_snapshot.lua"
+$guidedGroup = Read-Required "script\ship\battlecruiser\server\control\guided_slot_group.lua"
+$runtimeState = Read-Required "script\ship\battlecruiser\server\state\runtime_state.lua"
+$lSlotState = Read-Required "script\weapon\server\slots\l\kinetic_artillery\state.lua"
+$shipCamera = Read-Required "script\ship\battlecruiser\client\camera\ship_camera.lua"
+$shipRoll = Read-Required "script\ship\battlecruiser\client\hud\ship_roll_error.lua"
+$bodyMove = Read-Required "script\ship\battlecruiser\client\input\body_move_input.lua"
+$shipRegistryServer = Read-Required "script\ship\battlecruiser\server\registry\ship_registry.lua"
 
 $expected = [ordered]@{
     tachyonLance = "X"
@@ -486,6 +496,74 @@ if ($loadoutRuntime -notmatch 'weaponMountProfiles' -or
 if ($behaviorCommon -notmatch 'aimControlMode.*forward_converge' -or
     $behaviorCommon -notmatch 'QueryRaycast\(rayOrigin,\s*forward,\s*range\)') {
     Add-Issue "forward weapons do not converge on nearby crosshair obstacles"
+}
+
+if ($entry -notmatch 'net/server_sync_limiter\.lua' -or
+    $entry -notmatch 'net/network_debug\.lua' -or
+    $clientMain -notmatch 'net/client_input_snapshot\.lua' -or
+    $networkDebug -notmatch 'function\s+server\.netClientCall\s*\(' -or
+    $syncLimiter -notmatch 'function\s+server\.netSyncShouldSend\s*\(') {
+    Add-Issue "CM2 unified network synchronization layer is missing"
+}
+if ($guidedGroup -notmatch 'hudSync\s*=\s*\{' -or
+    $guidedGroup -notmatch 'sync\.age\s*>=\s*0\.2' -or
+    $guidedGroup -notmatch '_guidedGroupResolveHudPlayer' -or
+    $guidedGroup -match '(?s)netClientCall\(\s*"hud\.guided",\s*0') {
+    Add-Issue "M/G HUD must be driver-only and throttled to 5 Hz"
+}
+if ($hSlotControl -notmatch 'debugEnabled\s*=\s*false' -or
+    $hSlotControl -notmatch 'hudInterval\s*=\s*0\.2' -or
+    $hSlotControl -notmatch 'debugInterval\s*=\s*1\.0' -or
+    $hSlotControl -match '(?s)netClientCall\(\s*"debug\.hslot",\s*0') {
+    Add-Issue "H-slot HUD/debug synchronization is not safely throttled"
+}
+if ($inputSnapshot -notmatch 'activeInterval\s*=\s*0\.05' -or
+    $inputSnapshot -notmatch 'idleInterval\s*=\s*0\.20' -or
+    $inputSnapshot -notmatch 'server\.shipReceiveControlSnapshot' -or
+    $serverRequests -notmatch 'function\s+server\.shipReceiveControlSnapshot\s*\(' -or
+    $serverRequests -notmatch 'lastSequence' -or
+    $shipCamera -match 'client\.shipRequestRotationError\s*\(' -or
+    $shipCamera -match 'client\.shipRequestWeaponAim\s*\(' -or
+    $shipRoll -match 'client\.shipRequestRollError\s*\(' -or
+    $bodyMove -match 'client\.shipRequestMoveState\s*\(') {
+    Add-Issue "battlecruiser controls must use the validated 20 Hz input snapshot"
+}
+if ($guidedRuntime -notmatch 'syncInterval\s*=\s*0\.1' -or
+    $guidedCollider -notmatch 'client\.correctMissileVisual' -or
+    $guidedCollider -match 'client\.updateMissileVisual' -or
+    $missileVisual -notmatch 'correctionRemain' -or
+    $missileVisual -notmatch 'VecScale\(missile\.velocity') {
+    Add-Issue "guided missiles must use throttled correction and client prediction"
+}
+if ($hSlotControl -notmatch 'aiInterval\s*=\s*0\.1' -or
+    $hSlotControl -notmatch 'math\.random\(\)\s*\*\s*0\.1' -or
+    $hSlotControl -notmatch 'avoidCacheAge\s*<=\s*0\.2' -or
+    $hSlotControl -notmatch 'server\.netDebugCountRaycast') {
+    Add-Issue "strike craft avoidance AI must run at staggered 10 Hz with caching"
+}
+if ($guidedRuntime -notmatch 'maxPerShip\s*=\s*24' -or
+    $guidedRuntime -notmatch 'maxGlobal\s*=\s*96' -or
+    $hSlotControl -notmatch 'maxPerShip\s*=\s*4' -or
+    $hSlotControl -notmatch 'maxGlobal\s*=\s*24') {
+    Add-Issue "missile or strike-craft entity budgets are missing"
+}
+if ($shipRegistryServer -notmatch 'math\.abs\(oldShield\s*-\s*nextShield\)\s*>=\s*threshold' -or
+    $shipRegistryServer -notmatch 'math\.abs\(oldArmor\s*-\s*nextArmor\)\s*>=\s*threshold' -or
+    $shipRegistryServer -notmatch 'math\.abs\(oldBody\s*-\s*nextBody\)\s*>=\s*threshold') {
+    Add-Issue "ship HP registry writes must update only changed fields"
+}
+if ($missileVisual -notmatch 'nearDistance\s*=\s*100\.0' -or
+    $missileVisual -notmatch 'mediumDistance\s*=\s*300\.0' -or
+    $missileVisual -notmatch 'farDistance\s*=\s*600\.0' -or
+    $engineThrusterFx -notmatch 'particleCutoffDistance\s*=\s*600\.0' -or
+    $engineThrusterFx -notmatch 'renderCutoffDistance\s*=\s*1200\.0') {
+    Add-Issue "missile and engine visual distance LOD is missing"
+}
+if ($xSlotState -match 'ClientCall\(0,\s*"client\.updateXSlotHudState"' -or
+    $lSlotState -match 'ClientCall\(0,\s*"client\.(?:init|update|reset)LSlotHudState"' -or
+    $groupRuntime -match '(?s)ClientCall\(\s*0,\s*"client\.updateWeaponGroupHudState"' -or
+    $runtimeState -match '(?s)netClientCall\(\s*"hud\.weaponMode",\s*0') {
+    Add-Issue "private weapon HUD must never broadcast with player id 0"
 }
 
 if ($ship -notmatch 'configurationId\s*=\s*"battleline_2x2l4m"') {

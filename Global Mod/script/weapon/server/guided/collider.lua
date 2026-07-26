@@ -3,6 +3,50 @@
 
 server = server or {}
 
+local function _guidedProjectileVelocityAngleDegrees(a, b)
+    local aLength = VecLength(a)
+    local bLength = VecLength(b)
+    if aLength < 0.0001 or bLength < 0.0001 then return 0.0 end
+    local dot = VecDot(
+        VecScale(a, 1.0 / aLength),
+        VecScale(b, 1.0 / bLength)
+    )
+    dot = math.max(-1.0, math.min(1.0, dot))
+    return math.deg(math.acos(dot))
+end
+
+local function _guidedProjectileMaybeSyncVisual(projectile, currentPos, currentVel)
+    local now = (GetTime ~= nil) and GetTime() or 0.0
+    local elapsed = now - (projectile.lastSyncAt or -1000.0)
+    local interval = math.max(0.1, tonumber(projectile.syncInterval) or 0.1)
+    if elapsed < interval then return end
+
+    local lastPos = projectile.lastSyncPos or currentPos
+    local lastVel = projectile.lastSyncVel or currentVel
+    local positionChanged = VecLength(VecSub(currentPos, lastPos)) >= 1.0
+    local speedChanged = math.abs(VecLength(currentVel) - VecLength(lastVel)) >= 2.0
+    local directionChanged =
+        _guidedProjectileVelocityAngleDegrees(currentVel, lastVel) >= 3.0
+    local keepAlive = elapsed >= 1.0
+    if not positionChanged and not speedChanged
+        and not directionChanged and not keepAlive then
+        return
+    end
+
+    server.netClientCall(
+        "missile.update",
+        0,
+        "client.correctMissileVisual",
+        projectile.id or 0,
+        currentPos[1], currentPos[2], currentPos[3],
+        currentVel[1], currentVel[2], currentVel[3],
+        now
+    )
+    projectile.lastSyncAt = now
+    projectile.lastSyncPos = Vec(currentPos[1], currentPos[2], currentPos[3])
+    projectile.lastSyncVel = Vec(currentVel[1], currentVel[2], currentVel[3])
+end
+
 local _guidedProjectileClosestPointDist = 0.14
 local _guidedProjectileSweepRadius = 0.32
 
@@ -123,13 +167,7 @@ function server.guidedProjectileColliderPostUpdate()
             local currentVel = projectile.ignoreGravity
                 and (projectile.kinematicVelocity or Vec(0, 0, 0))
                 or GetBodyVelocity(bodyId)
-            ClientCall(
-                0,
-                "client.updateMissileVisual",
-                projectile.id or 0,
-                currentPos[1], currentPos[2], currentPos[3],
-                currentVel[1], currentVel[2], currentVel[3]
-            )
+            _guidedProjectileMaybeSyncVisual(projectile, currentPos, currentVel)
 
             local hit = _guidedProjectileResolveHit(projectile, probes)
             if hit ~= nil then
