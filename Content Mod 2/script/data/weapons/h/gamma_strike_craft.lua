@@ -76,7 +76,9 @@ local gammaStrikeCraftData = {
     damagedThreshold = 0.60,
     disabledThreshold = 0.24,
     healthCheckInterval = 0.10,
-    muzzleForwardOffset = 1.35,
+    muzzleForwardOffset = 1.80,
+    fireAlignmentDot = 0.90,
+    beamSelfSafeDistance = 3.0,
 
     fireInterval = 0.24,
     maxRange = 160.0,
