@@ -140,15 +140,28 @@ function server.registryShipSetHP(shipBodyId, shieldHP, armorHP, bodyHP)
     end
 
     local prefix = _shipKeyPrefix(shipBodyId)
+    local threshold = 0.01
     if shieldHP ~= nil then
-        SetFloat(prefix .. "/shieldHP", shieldHP, true)
+        local nextShield = tonumber(shieldHP) or 0.0
+        local oldShield = GetFloat(prefix .. "/shieldHP")
+        if math.abs(oldShield - nextShield) >= threshold then
+            SetFloat(prefix .. "/shieldHP", nextShield, true)
+        end
     end
     if armorHP ~= nil then
-        SetFloat(prefix .. "/armorHP", armorHP, true)
+        local nextArmor = tonumber(armorHP) or 0.0
+        local oldArmor = GetFloat(prefix .. "/armorHP")
+        if math.abs(oldArmor - nextArmor) >= threshold then
+            SetFloat(prefix .. "/armorHP", nextArmor, true)
+        end
     end
     if bodyHP ~= nil then
-        SetFloat(prefix .. "/bodyHP", bodyHP, true)
-        if bodyHP <= 0 then
+        local nextBody = tonumber(bodyHP) or 0.0
+        local oldBody = GetFloat(prefix .. "/bodyHP")
+        if math.abs(oldBody - nextBody) >= threshold then
+            SetFloat(prefix .. "/bodyHP", nextBody, true)
+        end
+        if nextBody <= 0 and not GetBool(prefix .. "/destroyed") then
             SetBool(prefix .. "/destroyed", true, true)
         end
     end
