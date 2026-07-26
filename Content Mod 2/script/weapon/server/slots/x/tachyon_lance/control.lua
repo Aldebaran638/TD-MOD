@@ -254,6 +254,14 @@ end
 -- 返回值：渲染层辅助信息（didHitShield / impactLayer）
 function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBody, weaponType)
 
+    local resolvedWeapon = (weaponData or {})[tostring(weaponType or "")]
+        or (weaponData or {}).tachyonLance
+        or {}
+    local environmentExplosionSize = math.min(
+        4.0,
+        math.max(0.0, tonumber(resolvedWeapon.environmentExplosionSize) or 4.0)
+    )
+
     -- 返回给渲染层的命中补充信息
     local renderResult = {
         didHitShield = false,
@@ -274,7 +282,7 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
         if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(hitTarget) then
             renderResult.impactLayer = "environment"
             if endPos ~= nil then
-                Explosion(endPos, 4.0)
+                Explosion(endPos, environmentExplosionSize)
             end
             return renderResult
         end
@@ -363,7 +371,7 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
 
     -- Teardown API: Explosion(pos, size) 其中 size 范围 0.5 - 4.0
     -- 为了看清客户端渲染特效.暂时屏蔽爆炸效果
-    Explosion(endPos, 4.0)
+    Explosion(endPos, environmentExplosionSize)
     return renderResult
 end
 
