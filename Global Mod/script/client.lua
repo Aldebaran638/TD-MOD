@@ -104,5 +104,7 @@ function client.render()
     client.tachyonMuzzleFxRender()
     client.focusedArcChargingFxRender()
     client.genericRaycastFxRender()
-    client.engineThrusterFxRender()
+    -- Temporary CPU-isolation switch: keep simulation state but disable the
+    -- battlecruiser's world-space engine and thruster rendering.
+    -- client.engineThrusterFxRender()
 end
