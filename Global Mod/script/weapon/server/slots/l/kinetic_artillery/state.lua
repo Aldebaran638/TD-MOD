@@ -150,10 +150,17 @@ function server.lSlotStatePushHudReset(force)
     local nowTime = _lSlotNow()
     local shouldSend = force
         or (not sync.resetActive)
-        or ((nowTime - (sync.lastSendTime or -1000.0)) >= 0.5)
+        or ((nowTime - (sync.lastSendTime or -1000.0)) >= 1.0)
 
     if shouldSend then
-        ClientCall(0, "client.resetLSlotHudState", server.shipBody or 0)
+        local playerId = server.netResolveShipDriver(server.shipBody or 0)
+        if playerId <= 0 then return end
+        server.netClientCall(
+            "hud.lslot",
+            playerId,
+            "client.resetLSlotHudState",
+            server.shipBody or 0
+        )
         sync.lastSendTime = nowTime
     end
 
@@ -173,23 +180,43 @@ function server.lSlotStatePushHud(force)
     end
 
     local sync = server.lSlotHudSyncState or {}
-    local heat = slot1.runtime.heat or 0.0
+    local heat = server.netSyncQuantize(slot1.runtime.heat or 0.0, 0.1)
     local overheated = slot1.runtime.overheated and true or false
     local threshold = math.max(1.0, slot1.config.overheatThreshold or 100.0)
     local nowTime = _lSlotNow()
 
-    if force or sync.lastThreshold == nil or math.abs((sync.lastThreshold or 0.0) - threshold) > 0.0001 then
-        ClientCall(0, "client.initLSlotHudState", server.shipBody or 0, threshold)
+    local playerId = server.netResolveShipDriver(server.shipBody or 0)
+    if playerId <= 0 then return end
+
+    if force or sync.lastThreshold == nil
+        or math.abs((sync.lastThreshold or 0.0) - threshold) > 0.0001 then
+        server.netClientCall(
+            "hud.lslot",
+            playerId,
+            "client.initLSlotHudState",
+            server.shipBody or 0,
+            threshold
+        )
     end
 
     local shouldSendUpdate = force
         or sync.lastHeat == nil
-        or math.abs((sync.lastHeat or 0.0) - heat) > 0.0001
         or sync.lastOverheated ~= overheated
-        or ((nowTime - (sync.lastSendTime or -1000.0)) >= 0.5)
+        or (
+            math.abs((sync.lastHeat or 0.0) - heat) > 0.0001
+            and (nowTime - (sync.lastSendTime or -1000.0)) >= 0.2
+        )
+        or ((nowTime - (sync.lastSendTime or -1000.0)) >= 1.0)
 
     if shouldSendUpdate then
-        ClientCall(0, "client.updateLSlotHudState", server.shipBody or 0, heat, overheated and 1 or 0)
+        server.netClientCall(
+            "hud.lslot",
+            playerId,
+            "client.updateLSlotHudState",
+            server.shipBody or 0,
+            heat,
+            overheated and 1 or 0
+        )
         sync.lastSendTime = nowTime
     end
 

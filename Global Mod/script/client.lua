@@ -6,6 +6,7 @@ client = client or {}
 #include "weapon/client/config_ui/local_weapon_config.lua"
 #include "ship/battlecruiser/client/config/weapon_configuration_binding.lua"
 #include "ship/battlecruiser/client/registry/ship_registry.lua"
+#include "net/client_input_snapshot.lua"
 #include "ship/battlecruiser/client/state/ship_runtime_state.lua"
 #include "ship/battlecruiser/client/state/ship_runtime_state_api.lua"
 #include "weapon/client/common/state/weapon_loadout.lua"
@@ -46,6 +47,7 @@ function client.init()
     client.soundModuleInit()
     client.tachyonBeamFxInit()
     client.shipBody = FindBody("stellarisShip", false)
+    client.shipControlSnapshotInit(client.shipBody)
     client.engineThrusterFxInit()
     client.tachyonMuzzleFxInit()
     client.focusedArcChargingFxInit()
@@ -75,6 +77,7 @@ function client.clientTick(dt)
     client.missileWarpFxTick(dt)
     client.hSlotBeamFxTick(dt)
     client.genericRaycastFxTick(dt)
+    client.shipControlSnapshotTick(dt)
 
     client.shipHealthBarTick(dt)
     client.mainWeaponHudTick(dt)

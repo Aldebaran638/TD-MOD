@@ -9,6 +9,11 @@ client.engineThrusterFxConfig = client.engineThrusterFxConfig or {
     throttleResponse = 5.5,
     particleRate = 28.0,
     maxParticleBurstsPerFrame = 2,
+    particleNearDistance = 250.0,
+    particleCutoffDistance = 600.0,
+    renderCutoffDistance = 1200.0,
+    idleParticleRateScale = 0.20,
+    farParticleRateScale = 0.35,
 }
 
 client.engineThrusterFxState = client.engineThrusterFxState or {
@@ -18,6 +23,7 @@ client.engineThrusterFxState = client.engineThrusterFxState or {
     particleAccumulator = 0.0,
     sprite = 0,
     age = 0.0,
+    cameraDistance = 0.0,
 }
 
 local _engineThrusterProfiles = {
@@ -211,6 +217,11 @@ local function _engineThrusterDrawFlame(sprite, nozzle, rear, up, throttle, age)
     if profile.burnAreaMin ~= nil and profile.burnAreaMax ~= nil then
         local columns = math.max(1, math.floor(profile.burnColumns or 1))
         local rows = math.max(1, math.floor(profile.burnRows or 1))
+        if (client.engineThrusterFxState.cameraDistance or 0.0)
+            > (client.engineThrusterFxConfig.particleCutoffDistance or 600.0) then
+            columns = 1
+            rows = math.min(rows, 2)
+        end
         for row = 1, rows do
             local v = (row - 0.5) / rows
             for column = 1, columns do
@@ -265,6 +276,7 @@ function client.engineThrusterFxInit()
         particleAccumulator = 0.0,
         sprite = LoadSprite("MOD/gfx/weapons/tachyon_lance/beam_soft.png"),
         age = 0.0,
+        cameraDistance = 0.0,
     }
 end
 
@@ -285,6 +297,10 @@ function client.engineThrusterFxTick(dt)
     end
 
     local _, forward, rear = _engineThrusterGetAxes(body)
+    state.cameraDistance = VecLength(VecSub(
+        GetBodyTransform(body).pos,
+        GetCameraTransform().pos
+    ))
     local bodyVelocity = GetBodyVelocity(body)
     local forwardSpeed = math.max(0.0, VecDot(bodyVelocity, forward))
     local fullTrailSpeed = math.max(
@@ -300,11 +316,26 @@ function client.engineThrusterFxTick(dt)
     state.throttle = (state.throttle or 0.0)
         + (targetThrottle - (state.throttle or 0.0)) * blend
 
-    state.particleAccumulator = (state.particleAccumulator or 0.0)
-        + frameDt * math.max(
-            0.0,
-            tonumber(client.engineThrusterFxConfig.particleRate) or 28.0
-        )
+    local cfg = client.engineThrusterFxConfig
+    local distanceScale = 1.0
+    if state.cameraDistance >= (cfg.particleCutoffDistance or 600.0) then
+        distanceScale = 0.0
+    elseif state.cameraDistance >= (cfg.particleNearDistance or 250.0) then
+        distanceScale = cfg.farParticleRateScale or 0.35
+    end
+    local idleScale = cfg.idleParticleRateScale or 0.20
+    local throttleScale = idleScale
+        + (1.0 - idleScale) * (state.throttle or 0.0)
+    local effectiveRate = math.max(
+        0.0,
+        tonumber(cfg.particleRate) or 28.0
+    ) * distanceScale * throttleScale
+    if effectiveRate <= 0.0 then
+        state.particleAccumulator = 0.0
+    else
+        state.particleAccumulator = (state.particleAccumulator or 0.0)
+            + frameDt * effectiveRate
+    end
     local burstCount = math.min(
         math.floor(state.particleAccumulator),
         math.max(
@@ -335,6 +366,10 @@ function client.engineThrusterFxRender()
     local body = math.floor(state.body or 0)
     local sprite = math.floor(state.sprite or 0)
     if body == 0 or sprite == 0 or not IsHandleValid(body) then return end
+    if (state.cameraDistance or 0.0)
+        > (client.engineThrusterFxConfig.renderCutoffDistance or 1200.0) then
+        return
+    end
 
     local _, _, rear, up = _engineThrusterGetAxes(body)
     for i = 1, #(state.nozzles or {}) do

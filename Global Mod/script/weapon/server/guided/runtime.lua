@@ -8,6 +8,27 @@ server.guidedProjectileRuntimeState = server.guidedProjectileRuntimeState or {
     activeProjectiles = {},
 }
 
+server.projectileLimits = server.projectileLimits or {
+    maxPerShip = 24,
+    maxGlobal = 96,
+}
+
+local _guidedProjectileGlobalCountKey =
+    "StellarisShips/server/runtime/activeMissiles"
+
+local function _guidedProjectileGetGlobalCount()
+    return math.max(0, GetInt(_guidedProjectileGlobalCountKey) or 0)
+end
+
+local function _guidedProjectileAdjustGlobalCount(delta)
+    local nextCount = math.max(
+        0,
+        _guidedProjectileGetGlobalCount() + math.floor(delta or 0)
+    )
+    SetInt(_guidedProjectileGlobalCountKey, nextCount)
+    return nextCount
+end
+
 server.guidedProjectileProbeHeadLocal = Vec(0, 0, -3.2)
 server.guidedProjectileProbeMidLocal = Vec(0, 0, -1.0)
 
@@ -66,7 +87,13 @@ function server.guidedProjectileRemoveAt(index)
     local projectile = active[index]
     if projectile ~= nil then
         _guidedProjectileDeleteBody(projectile.bodyId or 0)
-        ClientCall(0, "client.finishMissileVisual", projectile.id or 0)
+        server.netClientCall(
+            "missile.finish",
+            0,
+            "client.finishMissileVisual",
+            projectile.id or 0
+        )
+        _guidedProjectileAdjustGlobalCount(-1)
     end
 
     local last = #active
@@ -78,23 +105,61 @@ end
 
 function server.guidedProjectileClearAll()
     local active = server.guidedProjectileRuntimeState.activeProjectiles or {}
+    local removed = #active
     for i = #active, 1, -1 do
         _guidedProjectileDeleteBody((active[i] or {}).bodyId or 0)
         active[i] = nil
     end
+    if removed > 0 then _guidedProjectileAdjustGlobalCount(-removed) end
 end
 
 function server.guidedProjectilePlayImpactSound(weaponType, hitPos)
     local p = hitPos or Vec(0, 0, 0)
-    ClientCall(0, "client.playMissileImpactSound", weaponType or "", p[1], p[2], p[3])
+    server.netClientCall(
+        "weapon.hitFx",
+        0,
+        "client.playMissileImpactSound",
+        weaponType or "",
+        p[1], p[2], p[3]
+    )
 end
 
 function server.guidedProjectilePlayImpactFx(hitPos, impactLayer)
     local p = hitPos or Vec(0, 0, 0)
-    ClientCall(0, "client.playMissileImpactFx", p[1], p[2], p[3], impactLayer or "body")
+    server.netClientCall(
+        "weapon.hitFx",
+        0,
+        "client.playMissileImpactFx",
+        p[1], p[2], p[3],
+        impactLayer or "body"
+    )
 end
 
 function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosWorld, fireDirWorld, targetBodyId, targetVehicleId)
+    local state = server.guidedProjectileRuntimeState
+    local active = state.activeProjectiles or {}
+    local maxPerShip = math.max(
+        1,
+        math.floor(server.projectileLimits.maxPerShip or 24)
+    )
+    if #active >= maxPerShip then
+        local removeIndex = 1
+        local shortestLife = math.huge
+        for i = 1, #active do
+            local life = tonumber((active[i] or {}).lifeRemain) or 0.0
+            if life < shortestLife then
+                shortestLife = life
+                removeIndex = i
+            end
+        end
+        server.guidedProjectileRemoveAt(removeIndex)
+    end
+    local maxGlobal = math.max(
+        maxPerShip,
+        math.floor(server.projectileLimits.maxGlobal or 96)
+    )
+    if _guidedProjectileGetGlobalCount() >= maxGlobal then return nil end
+
     local cfg = config or {}
     local dir = server.guidedProjectileNormalize(fireDirWorld, Vec(0, 0, -1))
     local bodyId = _guidedProjectileSpawnBody(tostring(cfg.prefabPath or ""), firePosWorld, dir)
@@ -110,19 +175,26 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
     local startVelocity = VecAdd(ownerVelocity, VecScale(dir, tonumber(cfg.muzzleSpeed) or 0.0))
     SetBodyVelocity(bodyId, startVelocity)
 
-    local state = server.guidedProjectileRuntimeState
     local projectileId = state.nextProjectileId or 1
     state.nextProjectileId = projectileId + 1
 
-    ClientCall(
+    server.netClientCall(
+        "missile.spawn",
         0,
         "client.spawnMissileVisual",
         projectileId,
         firePosWorld[1], firePosWorld[2], firePosWorld[3],
-        startVelocity[1], startVelocity[2], startVelocity[3]
+        startVelocity[1], startVelocity[2], startVelocity[3],
+        tonumber(cfg.lifetime) or 10.0
     )
-    ClientCall(0, "client.spawnMissileWarpFx", firePosWorld[1], firePosWorld[2], firePosWorld[3])
-    ClientCall(
+    server.netClientCall(
+        "weapon.fireFx",
+        0,
+        "client.spawnMissileWarpFx",
+        firePosWorld[1], firePosWorld[2], firePosWorld[3]
+    )
+    server.netClientCall(
+        "weapon.fireFx",
         0,
         "client.playMissileFireSound",
         tostring(cfg.weaponType or ""),
@@ -157,8 +229,21 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         desiredRot = QuatLookAt(firePosWorld, VecAdd(firePosWorld, dir)),
         ignoreGravity = ignoreGravity,
         kinematicVelocity = Vec(startVelocity[1], startVelocity[2], startVelocity[3]),
+        syncInterval = 0.1,
+        lastSyncAt = (GetTime ~= nil) and GetTime() or 0.0,
+        lastSyncPos = Vec(
+            firePosWorld[1],
+            firePosWorld[2],
+            firePosWorld[3]
+        ),
+        lastSyncVel = Vec(
+            startVelocity[1],
+            startVelocity[2],
+            startVelocity[3]
+        ),
     }
     table.insert(state.activeProjectiles, projectile)
+    _guidedProjectileAdjustGlobalCount(1)
     return projectile
 end
 
@@ -179,4 +264,5 @@ function server.guidedProjectileRuntimeTick(dt)
             server.guidedProjectileRemoveAt(i)
         end
     end
+    server.netDebugSetEntityCounts(#active, nil, nil)
 end
