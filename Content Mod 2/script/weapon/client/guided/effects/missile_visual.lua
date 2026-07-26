@@ -17,13 +17,17 @@ client.missileVisualState = client.missileVisualState or {
     byId = {},
 }
 
-function client.spawnMissileVisual(missileId, px, py, pz, vx, vy, vz)
+function client.spawnMissileVisual(missileId, px, py, pz, vx, vy, vz, lifetime)
     client.missileVisualState.byId[missileId] = {
         id = missileId,
         position = Vec(px or 0, py or 0, pz or 0),
         velocity = Vec(vx or 0, vy or 0, vz or 0),
         lastCircleTime = 0,
-        lifeRemain = 1.0,
+        lifeRemain = math.max(1.0, tonumber(lifetime) or 10.0) + 2.0,
+        correctionTargetPos = nil,
+        correctionTargetVel = nil,
+        correctionRemain = 0.0,
+        correctionDuration = 0.15,
     }
     client.playMissileLoopSound(px or 0, py or 0, pz or 0)
 end
@@ -32,14 +36,19 @@ function client.finishMissileVisual(missileId)
     client.missileVisualState.byId[missileId] = nil
 end
 
-function client.updateMissileVisual(missileId, px, py, pz, vx, vy, vz)
+function client.correctMissileVisual(missileId, px, py, pz, vx, vy, vz, serverTime)
     local visuals = client.missileVisualState.byId
     local missile = visuals[missileId]
     if missile then
-        missile.position = Vec(px or 0, py or 0, pz or 0)
-        missile.velocity = Vec(vx or 0, vy or 0, vz or 0)
-        missile.lifeRemain = 1.0
+        local _ = serverTime
+        missile.correctionTargetPos = Vec(px or 0, py or 0, pz or 0)
+        missile.correctionTargetVel = Vec(vx or 0, vy or 0, vz or 0)
+        missile.correctionRemain = missile.correctionDuration or 0.15
     end
+end
+
+function client.updateMissileVisual(missileId, px, py, pz, vx, vy, vz)
+    client.correctMissileVisual(missileId, px, py, pz, vx, vy, vz, 0.0)
 end
 
 local function _createCircleParticles(pos, velocity, cfg)
@@ -87,6 +96,35 @@ function client.missileVisualTick(dt)
 
     for missileId, missile in pairs(visuals) do
         missile.lifeRemain = missile.lifeRemain - dt
+        missile.position = VecAdd(
+            missile.position,
+            VecScale(missile.velocity, math.max(0.0, dt or 0.0))
+        )
+
+        if (missile.correctionRemain or 0.0) > 0.0
+            and missile.correctionTargetPos ~= nil
+            and missile.correctionTargetVel ~= nil then
+            local remain = math.max(0.0001, missile.correctionRemain)
+            local alpha = math.min(1.0, math.max(0.0, dt or 0.0) / remain)
+            missile.position = VecAdd(
+                missile.position,
+                VecScale(
+                    VecSub(missile.correctionTargetPos, missile.position),
+                    alpha
+                )
+            )
+            missile.velocity = VecAdd(
+                missile.velocity,
+                VecScale(
+                    VecSub(missile.correctionTargetVel, missile.velocity),
+                    alpha
+                )
+            )
+            missile.correctionRemain = math.max(
+                0.0,
+                missile.correctionRemain - math.max(0.0, dt or 0.0)
+            )
+        end
         
         if currentTime - missile.lastCircleTime >= cfg.circleInterval then
             missile.lastCircleTime = currentTime

@@ -137,7 +137,8 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         "client.spawnMissileVisual",
         projectileId,
         firePosWorld[1], firePosWorld[2], firePosWorld[3],
-        startVelocity[1], startVelocity[2], startVelocity[3]
+        startVelocity[1], startVelocity[2], startVelocity[3],
+        tonumber(cfg.lifetime) or 10.0
     )
     server.netClientCall(
         "weapon.fireFx",
@@ -181,6 +182,18 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         desiredRot = QuatLookAt(firePosWorld, VecAdd(firePosWorld, dir)),
         ignoreGravity = ignoreGravity,
         kinematicVelocity = Vec(startVelocity[1], startVelocity[2], startVelocity[3]),
+        syncInterval = 0.1,
+        lastSyncAt = (GetTime ~= nil) and GetTime() or 0.0,
+        lastSyncPos = Vec(
+            firePosWorld[1],
+            firePosWorld[2],
+            firePosWorld[3]
+        ),
+        lastSyncVel = Vec(
+            startVelocity[1],
+            startVelocity[2],
+            startVelocity[3]
+        ),
     }
     table.insert(state.activeProjectiles, projectile)
     return projectile
@@ -203,4 +216,5 @@ function server.guidedProjectileRuntimeTick(dt)
             server.guidedProjectileRemoveAt(i)
         end
     end
+    server.netDebugSetEntityCounts(#active, nil, nil)
 end
