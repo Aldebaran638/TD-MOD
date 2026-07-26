@@ -92,9 +92,10 @@ local function _removeProjectileAt(index)
     active[last] = nil
 end
 
-local function _finishProjectileVisual(projectileId, mode, hitPos)
+local function _finishProjectileVisual(projectileId, mode, hitPos, hitNormal, impactLayer)
     local p = hitPos or Vec(0, 0, 0)
-    ClientCall(0, "client.finishProjectileVisual", projectileId, mode or "none", p[1], p[2], p[3])
+    local n = hitNormal or Vec(0, 1, 0)
+    ClientCall(0, "client.finishProjectileVisual", projectileId, mode or "none", p[1], p[2], p[3], n[1], n[2], n[3], impactLayer or "none")
 end
 
 function server.projectileManagerReset()
@@ -232,6 +233,7 @@ local function _resolveShieldHit(projectile, startPos, endPos, settings)
                                 t = entryT,
                                 bodyId = bodyId,
                                 hitPos = VecAdd(startPos, VecScale(VecSub(endPos, startPos), entryT)),
+                                normal = _safeNormalizeProjectile(VecSub(VecAdd(startPos, VecScale(VecSub(endPos, startPos), entryT)), centerWorld), Vec(0, 1, 0)),
                             }
                         end
                     end
@@ -326,7 +328,7 @@ function server.projectileManagerTick(dt)
             local shieldHit = _resolveShieldHit(projectile, projectile.lastPosition, projectile.position, settings)
             if shieldHit ~= nil then
                 _applyProjectileShipDamage(shieldHit.bodyId, projectile.weaponType)
-                _finishProjectileVisual(projectile.id, "impact", shieldHit.hitPos)
+                _finishProjectileVisual(projectile.id, "impact", shieldHit.hitPos, shieldHit.normal, "shield")
                 _playProjectileHitSound(projectile.weaponType, shieldHit.hitPos)
                 _playShieldImpactFx(shieldHit.bodyId, shieldHit.hitPos)
                 _removeProjectileAt(i)
@@ -336,6 +338,7 @@ function server.projectileManagerTick(dt)
                 if bodyHit ~= nil then
                     local shouldPlayImpact = false
                     local shouldExplode = false
+                    local impactLayer = "body"
                     local hitBody = bodyHit.hitBody or 0
                     if hitBody ~= 0 and server.registryShipExists(hitBody) then
                         if server.registryShipIsBodyDead(hitBody) then
@@ -343,6 +346,7 @@ function server.projectileManagerTick(dt)
                             shouldExplode = false
                         else
                             local damageResult = _applyProjectileShipDamage(hitBody, projectile.weaponType)
+                            impactLayer = damageResult.impactLayer or impactLayer
                             if damageResult.didDamage then
                                 shouldPlayImpact = true
                             end
@@ -361,7 +365,7 @@ function server.projectileManagerTick(dt)
 
                     if shouldPlayImpact then
                         _playProjectileHitSound(projectile.weaponType, bodyHit.hitPos)
-                        _finishProjectileVisual(projectile.id, "impact", bodyHit.hitPos)
+                        _finishProjectileVisual(projectile.id, "impact", bodyHit.hitPos, bodyHit.normal, impactLayer)
                     else
                         _finishProjectileVisual(projectile.id, "none", bodyHit.hitPos)
                     end

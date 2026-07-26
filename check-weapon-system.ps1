@@ -58,6 +58,10 @@ $mainWeaponInput = Read-Required "script\weapon\client\common\input\main_weapon_
 $behaviorCommon = Read-Required "script\weapon\server\behaviors\common.lua"
 $raycastBehavior = Read-Required "script\weapon\server\behaviors\raycast.lua"
 $genericRaycastFx = Read-Required "script\weapon\client\common\effects\generic_raycast_fx.lua"
+$gammaLaserFx = Read-Required "script\weapon\client\common\effects\gamma_laser_fx.lua"
+$weaponMuzzleFx = Read-Required "script\weapon\client\common\effects\weapon_muzzle_fx.lua"
+$weaponImpactFx = Read-Required "script\weapon\client\common\effects\weapon_impact_fx.lua"
+$weaponFxResources = Read-Required "script\weapon\client\common\effects\weapon_fx_resources.lua"
 $guidedRuntime = Read-Required "script\weapon\server\guided\runtime.lua"
 $guidedMovement = Read-Required "script\weapon\server\guided\movement.lua"
 $guidedCollider = Read-Required "script\weapon\server\guided\collider.lua"
@@ -448,8 +452,11 @@ if ($standard -notmatch '_ray\("focusedArcEmitter".*?"focusedArcBeam",\s*0\.50\)
 if ($standard -notmatch '_ray\("largeGammaLaser".*?"gammaBeam"\)' -or
     $standard -notmatch '_ray\("mediumGammaLaser".*?"gammaBeam"\)' -or
     $genericRaycastFx -notmatch 'gammaBeam\s*=\s*\{(?s:.*?)color\s*=\s*\{\s*1\.0,\s*0\.38,\s*0\.05\s*\}' -or
-    $genericRaycastFx -match 'beam\.profile\s*==\s*"gammaBeam"') {
-    Add-Issue "Gamma Lasers must use a straight orange beam without arc/helix rendering"
+    $gammaLaserFx -notmatch 'gammaLarge\s*=\s*\{' -or
+    $gammaLaserFx -notmatch 'gammaMedium\s*=\s*\{' -or
+    $gammaLaserFx -notmatch 'client\.gammaLaserDrawBeam' -or
+    $gammaLaserFx -match 'helix|spiral') {
+    Add-Issue "Gamma Lasers must use the dedicated straight three-layer orange beam renderer"
 }
 if ($raycastBehavior -notmatch 'client\.playProjectileShieldImpactFx' -or
     $raycastBehavior -notmatch '_resolveShieldEndpoint' -or
@@ -472,11 +479,11 @@ if (-not (Test-Path -LiteralPath $shieldHexAsset -PathType Leaf) -or
     $client -notmatch 'client\.shieldHitFxInit\(\)') {
     Add-Issue "shield impacts must use a fixed five-layer hex sprite with bounded sparks and burst state"
 }
-if ($ship -notmatch '(?s)lLaser\s*=\s*\{.*?x\s*=\s*4\.0.*?x\s*=\s*-4\.0' -or
-    $ship -notmatch '(?s)lEnergy\s*=\s*\{.*?x\s*=\s*4\.2.*?x\s*=\s*-4\.2' -or
-    $ship -notmatch '(?s)lKinetic\s*=\s*\{.*?x\s*=\s*4\.5.*?x\s*=\s*-4\.5' -or
-    $ship -notmatch '(?s)lAutocannon\s*=\s*\{.*?x\s*=\s*4\.0.*?x\s*=\s*-4\.0') {
-    Add-Issue "battlecruiser L-slot hardpoints are not using the tightened spacing"
+if ($ship -notmatch '(?s)lLaser\s*=\s*\{.*?x\s*=\s*3\.3.*?z\s*=\s*-2\.6.*?x\s*=\s*-3\.3' -or
+    $ship -notmatch '(?s)lEnergy\s*=\s*\{.*?x\s*=\s*3\.5.*?z\s*=\s*-3\.2.*?x\s*=\s*-3\.5' -or
+    $ship -notmatch '(?s)lKinetic\s*=\s*\{.*?x\s*=\s*3\.8.*?z\s*=\s*-3\.4.*?x\s*=\s*-3\.8' -or
+    $ship -notmatch '(?s)lAutocannon\s*=\s*\{.*?x\s*=\s*3\.3.*?z\s*=\s*-2\.4.*?x\s*=\s*-3\.3') {
+    Add-Issue "battlecruiser L-slot hardpoints are not centered and retracted consistently"
 }
 if ($ship -notmatch '(?s)mLaser\s*=\s*\{.*?x\s*=\s*2\.8.*?x\s*=\s*-2\.8' -or
     $ship -notmatch '(?s)mEnergy\s*=\s*\{.*?x\s*=\s*3\.2.*?x\s*=\s*-3\.2' -or
@@ -568,12 +575,29 @@ if ($shipRegistryServer -notmatch 'math\.abs\(oldShield\s*-\s*nextShield\)\s*>=\
     $shipRegistryServer -notmatch 'math\.abs\(oldBody\s*-\s*nextBody\)\s*>=\s*threshold') {
     Add-Issue "ship HP registry writes must update only changed fields"
 }
-if ($missileVisual -notmatch 'nearDistance\s*=\s*100\.0' -or
-    $missileVisual -notmatch 'mediumDistance\s*=\s*300\.0' -or
-    $missileVisual -notmatch 'farDistance\s*=\s*600\.0' -or
+if ($missileVisual -notmatch 'client\.missileVisualTick' -or
+    $missileVisual -notmatch 'client\.missileVisualRender' -or
+    $missileVisual -notmatch 'distance\s*<\s*900' -or
+    $missileVisual -notmatch 'distance\s*<\s*420' -or
     $engineThrusterFx -notmatch 'particleCutoffDistance\s*=\s*600\.0' -or
     $engineThrusterFx -notmatch 'renderCutoffDistance\s*=\s*1200\.0') {
-    Add-Issue "missile and engine visual distance LOD is missing"
+    Add-Issue "missile and engine visual distance LOD/split update-render path is missing"
+}
+if ($client -notmatch 'weapon_fx_resources\.lua' -or
+    $client -notmatch 'weapon_muzzle_fx\.lua' -or
+    $client -notmatch 'weapon_impact_fx\.lua' -or
+    $weaponMuzzleFx -notmatch 'function\s+client\.spawnWeaponMuzzleFx' -or
+    $weaponImpactFx -notmatch 'focusedArcImpact' -or
+    $weaponImpactFx -notmatch 'disruptorImplosion' -or
+    $weaponFxResources -notmatch 'function\s+client\.weaponFxResourcesInit') {
+    Add-Issue "V2 shared weapon FX resources, muzzle, or specialized impact contracts are missing"
+}
+if ($projectileManager -notmatch 'n\[1\].*n\[2\].*n\[3\]' -or
+    $projectileManager -notmatch 'impactLayer\s+or\s+"none"' -or
+    $guidedRuntime -notmatch 'client\.spawnMissileVisual' -or
+    $guidedRuntime -match 'spawnMissileWarpFx' -or
+    $missileVisual -notmatch 'function\s+client\.missileVisualRender') {
+    Add-Issue "V2 projectile impact metadata or missile render protocol is incomplete"
 }
 if ($xSlotState -match 'ClientCall\(0,\s*"client\.updateXSlotHudState"' -or
     $lSlotState -match 'ClientCall\(0,\s*"client\.(?:init|update|reset)LSlotHudState"' -or

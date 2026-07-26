@@ -150,6 +150,22 @@ _projectile("neutronLauncher", "中子发射器", "Neutron Launchers", { "G" }, 
 weaponData.neutronLauncher.targetingMode = "forward"
 weaponData.neutronLauncher.projectileProfile.mode = "energy"
 
+local _visualProfiles = {
+    largeGammaLaser = { "gammaLarge", "gammaLarge", "none" }, mediumGammaLaser = { "gammaMedium", "gammaMedium", "none" },
+    largeGaussCannon = { "gaussLarge", "gaussLarge", "gaussLarge" }, mediumGaussCannon = { "gaussMedium", "gaussMedium", "gaussMedium" },
+    kineticArtillery = { "kineticArtillery", "kineticArtillery", "kineticArtillery" },
+    largeStormfireAutocannon = { "autocannonLarge", "autocannonLarge", "autocannonLarge" }, mediumStormfireAutocannon = { "autocannonMedium", "autocannonMedium", "autocannonMedium" },
+    largePlasmaCannon = { "plasmaLarge", "plasmaLarge", "plasmaLarge" }, mediumPlasmaCannon = { "plasmaMedium", "plasmaMedium", "plasmaMedium" },
+    gigaCannon = { "gigaMagneticLaunch", "gigaPenetration", "gigaCannon" }, neutronLauncher = { "neutronCompression", "neutronImpact", "neutron" },
+    focusedArcEmitter = { "focusedArcDischarge", "focusedArcImpact", "none" }, phaseDisruptor = { "disruptor", "disruptorImplosion", "none" },
+    swarmerMissile = { "swarmerLaunch", "swarmerFragmentation", "swarmer" }, devastatorTorpedoes = { "torpedoLaunch", "torpedoHeavy", "torpedo" },
+}
+for weaponType, visual in pairs(_visualProfiles) do
+    weaponData[weaponType].muzzleFxProfile = visual[1]
+    weaponData[weaponType].impactFxProfile = visual[2]
+    weaponData[weaponType].projectileFxVariant = visual[3]
+end
+
 -- H
 _register({
     weaponType = "gammaStrikeCraft", displayName = "先进型舰载机", englishName = "Advanced Strike Craft",

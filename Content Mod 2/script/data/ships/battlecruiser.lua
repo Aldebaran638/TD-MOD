@@ -58,20 +58,20 @@ shipTypeRegistryData.enigmaticCruiser = {
             { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
         },
         lLaser = {
-            { firePosOffset = { x = 4.0, y = 1.4, z = -3.2 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -4.0, y = 1.4, z = -3.2 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = 3.3, y = 1.4, z = -2.6 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -3.3, y = 1.4, z = -2.6 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
         },
         lEnergy = {
-            { firePosOffset = { x = 4.2, y = 0.6, z = -3.8 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -4.2, y = 0.6, z = -3.8 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = 3.5, y = 0.6, z = -3.2 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -3.5, y = 0.6, z = -3.2 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
         },
         lKinetic = {
-            { firePosOffset = { x = 4.5, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 }, fireDeviationAngle = 1, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -4.5, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 }, fireDeviationAngle = 1, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = 3.8, y = 0, z = -3.4 }, fireDirRelative = { x = 0, y = 0, z = -1 }, fireDeviationAngle = 1, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -3.8, y = 0, z = -3.4 }, fireDirRelative = { x = 0, y = 0, z = -1 }, fireDeviationAngle = 1, aimMode = "forwardConvergeByRange" },
         },
         lAutocannon = {
-            { firePosOffset = { x = 4.0, y = -1.5, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -4.0, y = -1.5, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = 3.3, y = -1.5, z = -2.4 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
+            { firePosOffset = { x = -3.3, y = -1.5, z = -2.4 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
         },
         mLaser = {
             { firePosOffset = { x = 2.8, y = 1.2, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },

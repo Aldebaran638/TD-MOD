@@ -57,6 +57,7 @@ local function _resolveSurfaceBasis(normal)
 end
 
 local function _spawnSecondaryWave(impact)
+    if not client.weaponFxTakeParticles(37, "critical") then return end
     local origin = impact.pos
     local normal = impact.normal
     local tangent = impact.tangent
@@ -102,6 +103,7 @@ local function _spawnSecondaryWave(impact)
 end
 
 local function _spawnImpactPlumeBurst(impact)
+    if not client.weaponFxTakeParticles(5, "ambient") then return end
     local primary = impact.color or { 0.78, 0.88, 1.0 }
     local secondary = impact.secondaryColor or { 0.35, 0.48, 0.85 }
 
@@ -153,7 +155,8 @@ local function _spawnTachyonImpact(pos, normal, backDirection, impactLayer)
 
     local tangent, bitangent = _resolveSurfaceBasis(surfaceNormal)
     local origin = VecAdd(pos, VecScale(surfaceNormal, 0.25))
-    PointLight(origin, r1, g1, b1, tonumber(config.lightPeak) or 60.0)
+    client.weaponFxPointLight(origin, r1, g1, b1, tonumber(config.lightPeak) or 60.0)
+    if not client.weaponFxTakeParticles(61, "critical") then return end
 
     -- White-hot contact core.
     ParticleReset()
@@ -279,7 +282,7 @@ function client.tachyonImpactFxTick(dt)
                 local t = impact.age / lightDuration
                 local intensity = (tonumber(config.lightPeak) or 120.0) * (1.0 - t) * (1.0 - t)
                 local color = impact.color or { 0.3, 0.9, 1.0 }
-                PointLight(impact.pos, color[1], color[2], color[3], intensity)
+                client.weaponFxPointLight(impact.pos, color[1], color[2], color[3], intensity)
             end
 
             if (not impact.secondaryWaveSpawned) and impact.age >= secondaryWaveDelay then

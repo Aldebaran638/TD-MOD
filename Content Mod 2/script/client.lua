@@ -31,6 +31,10 @@ client = client or {}
 #include "weapon/client/slots/x/tachyon_lance/effects/beam_fx.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/muzzle_fx.lua"
 #include "weapon/client/common/effects/weapon_fx_budget.lua"
+#include "weapon/client/common/effects/weapon_fx_resources.lua"
+#include "weapon/client/common/effects/gamma_laser_fx.lua"
+#include "weapon/client/common/effects/weapon_muzzle_fx.lua"
+#include "weapon/client/common/effects/weapon_impact_fx.lua"
 #include "weapon/client/common/effects/shield_hit_fx.lua"
 #include "weapon/client/common/effects/generic_raycast_fx.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/impact_fx.lua"
@@ -39,7 +43,6 @@ client = client or {}
 #include "weapon/client/slots/l/kinetic_artillery/effects/projectile_visual.lua"
 #include "weapon/client/guided/effects/missile_impact_fx.lua"
 #include "weapon/client/guided/effects/missile_visual.lua"
-#include "weapon/client/guided/effects/missile_warp_fx.lua"
 #include "weapon/client/slots/h/gamma_strike_craft/effects/beam_fx.lua"
 
 function client.init()
@@ -51,10 +54,15 @@ function client.init()
     client.shipControlSnapshotInit(client.shipBody)
     client.engineThrusterFxInit()
     client.tachyonMuzzleFxInit()
+    client.weaponFxResourcesInit()
+    client.gammaLaserFxInit()
+    client.weaponMuzzleFxInit()
+    client.weaponImpactFxInit()
     client.shieldHitFxInit()
     client.focusedArcChargingFxInit()
     client.genericRaycastFxInit()
     client.projectileVisualInit()
+    client.missileVisualInit()
     client.weaponConfigurationBindingInit("enigmaticCruiser", client.shipBody)
 end
 
@@ -78,9 +86,11 @@ function client.clientTick(dt)
     client.engineThrusterFxTick(dt)
     client.projectileVisualTick(dt)
     client.missileVisualTick(dt)
-    client.missileWarpFxTick(dt)
     client.hSlotBeamFxTick(dt)
     client.genericRaycastFxTick(dt)
+    client.gammaLaserFxTick(dt)
+    client.weaponMuzzleFxTick(dt)
+    client.weaponImpactFxTick(dt)
     client.shipControlSnapshotTick(dt)
 
     client.shipHealthBarTick(dt)
@@ -101,11 +111,14 @@ function client.render()
     client.shipCameraTick(0)
     client.shipRollErrorTick(0)
     -- 更新导弹视觉效果
-    client.missileVisualTick(0)
+    client.missileVisualRender()
     client.hSlotBeamFxRender()
     client.tachyonBeamFxRender()
     client.tachyonMuzzleFxRender()
     client.focusedArcChargingFxRender()
     client.genericRaycastFxRender()
+    client.gammaLaserFxRender()
+    client.weaponMuzzleFxRender()
+    client.weaponImpactFxRender()
     client.engineThrusterFxRender()
 end

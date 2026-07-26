@@ -4,7 +4,8 @@
 client = client or {}
 
 client.weaponFxBudgetState = client.weaponFxBudgetState or {
-    particleTokens = 720.0,
+    particleTokens = 2400.0,
+    particlesThisFrame = 0,
     pointLightsThisFrame = 0,
     spritesThisFrame = 0,
     linesThisFrame = 0,
@@ -14,15 +15,18 @@ client.weaponFxBudgetState = client.weaponFxBudgetState or {
 }
 
 client.weaponFxBudgetConfig = client.weaponFxBudgetConfig or {
-    particleRefillPerSecond = 4800.0,
-    particleCapacity = 720.0,
-    criticalParticleOverdraft = 192.0,
-    maxPointLightsPerFrame = 12,
-    maxSpritesPerFrame = 192,
-    maxLinesPerFrame = 192,
-    maxActiveMuzzles = 48,
-    maxActiveImpacts = 64,
-    maxActiveBeams = 64,
+    particleRefillPerSecond = 2400.0,
+    particleCapacity = 2400.0,
+    ambientReserve = 600.0,
+    normalReserve = 240.0,
+    criticalParticleOverdraft = 240.0,
+    maxParticlesSpawnedPerFrame = 280,
+    maxPointLightsPerFrame = 28,
+    maxSpritesPerFrame = 512,
+    maxLinesPerFrame = 384,
+    maxActiveMuzzles = 128,
+    maxActiveImpacts = 128,
+    maxActiveBeams = 96,
 }
 
 function client.weaponFxBudgetBeginFrame(dt)
@@ -34,6 +38,7 @@ function client.weaponFxBudgetBeginFrame(dt)
             + math.max(0.0, tonumber(dt) or 0.0) * cfg.particleRefillPerSecond
     )
     state.pointLightsThisFrame = 0
+    state.particlesThisFrame = 0
     state.spritesThisFrame = 0
     state.linesThisFrame = 0
 end
@@ -43,9 +48,15 @@ function client.weaponFxTakeParticles(count, priority)
     local cfg = client.weaponFxBudgetConfig
     count = math.max(0.0, tonumber(count) or 0.0)
 
+    if state.particlesThisFrame + count > cfg.maxParticlesSpawnedPerFrame then
+        return false
+    end
+
     local minimumRemain = 0.0
     if priority == "ambient" then
-        minimumRemain = 48.0
+        minimumRemain = cfg.ambientReserve
+    elseif priority == "normal" then
+        minimumRemain = cfg.normalReserve
     elseif priority == "critical" then
         minimumRemain = -cfg.criticalParticleOverdraft
     end
@@ -54,6 +65,7 @@ function client.weaponFxTakeParticles(count, priority)
         return false
     end
     state.particleTokens = state.particleTokens - count
+    state.particlesThisFrame = state.particlesThisFrame + count
     return true
 end
 

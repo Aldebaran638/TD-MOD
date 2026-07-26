@@ -112,19 +112,25 @@ function client.spawnProjectileVisual(projectileId, weaponType, px, py, pz, vx, 
         lifeRemain = tonumber(lifeRemain) or 0.0, age = 0.0, distanceTravelled = 0.0,
         nextTrailDistance = 0.0, nextPulseDistance = 20.0, randomState = numericProjectileId * 977 + 131,
         weaponType = tostring(weaponType or ""), fxProfile = tostring(definition.fxProfile or "kineticProjectile"),
+        fxVariant = tostring(definition.projectileFxVariant or definition.fxProfile or "kineticProjectile"),
     }
+    client.spawnWeaponMuzzleFx(weaponType, px, py, pz, vx, vy, vz)
 end
 
-local function _spawnKineticImpact(position, projectile)
+local function _spawnKineticImpact(position, projectile, impactNormal, impactLayer)
     local direction, right, up = projectile.direction, projectile.rightAxis, projectile.upAxis
+    local gauss = projectile.fxVariant == "gaussLarge" or projectile.fxVariant == "gaussMedium"
+    local autocannon = projectile.fxVariant == "autocannonLarge" or projectile.fxVariant == "autocannonMedium"
+    local r0, g0, b0 = gauss and 0.45 or 1.0, gauss and 0.82 or 0.82, gauss and 1.0 or 0.16
+    if impactLayer == "shield" then r0, g0, b0 = 0.20, 0.85, 1.0 end
     ParticleReset(); ParticleType("plain")
-    ParticleColor(1.0, 1.0, 0.82, 1.0, 0.20, 0.01)
-    ParticleRadius(0.14, 0.01, "easeout"); ParticleAlpha(1.0, 0.0, "easeout")
+    ParticleColor(r0, g0, b0, r0, g0 * 0.25, b0 * 0.08)
+    ParticleRadius(autocannon and 0.08 or 0.14, 0.01, "easeout"); ParticleAlpha(1.0, 0.0, "easeout")
     ParticleGravity(0); ParticleDrag(0.08); ParticleEmissive(10.0, 0.0); ParticleStretch(2.2, 0.4, "easeout"); ParticleCollide(0)
-    for _ = 1, 18 do
+    for _ = 1, autocannon and 8 or 18 do
         if not _takeParticleBudget("impactParticles", 1) then break end
         local spread = VecAdd(VecScale(right, _randomRange(projectile, -0.65, 0.65)), VecScale(up, _randomRange(projectile, -0.65, 0.65)))
-        local out = _safeNormalize(VecAdd(VecScale(direction, -1.0), spread), VecScale(direction, -1.0))
+        local out = _safeNormalize(VecAdd(impactNormal or VecScale(direction, -1.0), spread), VecScale(direction, -1.0))
         SpawnParticle(position, VecScale(out, _randomRange(projectile, 8, 22)), _randomRange(projectile, 0.15, 0.35))
     end
 end
@@ -159,17 +165,21 @@ local function _emitNeutronPulse(projectile, position)
 end
 
 local function _updateKineticProjectile(projectile, previousDistance, moveLength, cameraDistance)
+    local gauss = projectile.fxVariant == "gaussLarge" or projectile.fxVariant == "gaussMedium"
+    local autocannon = projectile.fxVariant == "autocannonLarge" or projectile.fxVariant == "autocannonMedium"
+    local tail = autocannon and 3.5 or (gauss and 9.5 or 7.5)
+    local r, g, b = gauss and 0.35 or 1.0, gauss and 0.78 or 0.45, gauss and 1.0 or 0.08
     if cameraDistance <= 700 then
-        local startPos = VecSub(projectile.position, VecScale(projectile.direction, 7.5))
+        local startPos = VecSub(projectile.position, VecScale(projectile.direction, tail))
         local endPos = VecAdd(projectile.position, VecScale(projectile.direction, 0.4))
-        _drawLine(startPos, endPos, 1.0, 0.45, 0.08, 0.75)
-        _drawLine(VecLerp(startPos, endPos, 0.10), endPos, 1.0, 0.96, 0.78, 1.0)
+        _drawLine(startPos, endPos, r, g, b, autocannon and 0.55 or 0.80)
+        _drawLine(VecLerp(startPos, endPos, 0.10), endPos, 1.0, 1.0, 1.0, 1.0)
     end
     if cameraDistance <= 250 then
-        _emitDistanceEvents(projectile, projectile.lastPosition, projectile.position, "nextTrailDistance", 18.0, 2, function(p, eventPos)
+        _emitDistanceEvents(projectile, projectile.lastPosition, projectile.position, "nextTrailDistance", autocannon and 28.0 or (gauss and 14.0 or 18.0), 2, function(p, eventPos)
             if not _takeParticleBudget("trailParticles", 1) then return end
             ParticleReset(); ParticleType("plain")
-            ParticleColor(1.0, 0.96, 0.76, 1.0, 0.28, 0.02)
+            ParticleColor(r, g, b, r, g * 0.25, b * 0.08)
             ParticleRadius(0.10, 0.01, "easeout"); ParticleAlpha(0.90, 0.0, "easeout")
             ParticleGravity(0); ParticleDrag(0.08); ParticleEmissive(8.0, 0.0); ParticleStretch(2.0, 0.4, "easeout"); ParticleCollide(0)
             local velocity = VecAdd(VecScale(p.direction, -12), VecAdd(VecScale(p.rightAxis, _randomRange(p, -2, 2)), VecScale(p.upAxis, _randomRange(p, -2, 2))))
@@ -220,6 +230,9 @@ local function _updateGigaCannonProjectile(projectile, cameraDistance)
             SpawnParticle(eventPos, VecScale(p.direction, 5.0), 0.38)
         end)
     end
+    local assets = client.projectileVisualState.assets
+    _drawBillboard(assets.impactGlow, projectile.position, 3.6, 3.6, 0.58, 0.10, 1.0, 0.55)
+    _drawBillboard(assets.plasmaCore, projectile.position, 0.72, 0.72, 1.0, 1.0, 1.0, 1.0)
 end
 
 local function _spawnGigaImpact(position, projectile)
@@ -303,12 +316,13 @@ local function _updateProjectileImpacts(dt)
     end
 end
 
-function client.finishProjectileVisual(projectileId, mode, hitX, hitY, hitZ)
+function client.finishProjectileVisual(projectileId, mode, hitX, hitY, hitZ, nx, ny, nz, impactLayer)
     local visuals = client.projectileVisualState.byId
     local projectile = visuals[projectileId]
     visuals[projectileId] = nil
     if mode ~= "impact" or projectile == nil then return end
     local position = Vec(hitX or 0, hitY or 0, hitZ or 0)
+    local impactNormal = _safeNormalize(Vec(nx or 0, ny or 1, nz or 0), Vec(0, 1, 0))
     if projectile.fxProfile == "plasmaProjectile" then
         _queueImpact({ fxProfile = "plasmaProjectile", position = position, direction = projectile.direction, rightAxis = projectile.rightAxis, upAxis = projectile.upAxis, age = 0, lifetime = 0.65, randomState = projectile.randomState, initialParticlesSpawned = false })
     elseif projectile.fxProfile == "neutronProjectile" then
@@ -316,7 +330,7 @@ function client.finishProjectileVisual(projectileId, mode, hitX, hitY, hitZ)
     elseif projectile.fxProfile == "gigaCannonProjectile" then
         _spawnGigaImpact(position, projectile)
     else
-        _spawnKineticImpact(position, projectile)
+        _spawnKineticImpact(position, projectile, impactNormal, impactLayer)
     end
 end
 
