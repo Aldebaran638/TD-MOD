@@ -245,7 +245,13 @@ end
 function _runtimeAPI.setCurrentMainWeapon(shipBodyId, mode, defaultShipType)
     local state = _getOrCreateState(shipBodyId, defaultShipType, defaultShipType)
     if state == nil then return end
-    state.mainWeapon.current = _normalizeMode(mode)
+    local nextMode = _normalizeMode(mode)
+    if state.mainWeapon.current ~= nextMode then
+        state.mainWeapon.current = nextMode
+        if server.guidedSlotGroupMarkAllHudDirty ~= nil then
+            server.guidedSlotGroupMarkAllHudDirty()
+        end
+    end
 end
 
 function _runtimeAPI.syncMainWeapon(shipBodyId, force, defaultShipType)

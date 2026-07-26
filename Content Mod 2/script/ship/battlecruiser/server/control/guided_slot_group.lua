@@ -68,7 +68,44 @@ local function _guidedGroupChooseLauncher(state)
     return nil
 end
 
-local function _guidedGroupPushHud(state)
+local function _guidedGroupBuildHudSignature(state)
+    local parts = {
+        tostring(state.mode or ""),
+        tostring(server.shipRuntimeGetCurrentMainWeapon ~= nil
+            and server.shipRuntimeGetCurrentMainWeapon(server.shipBody)
+            or ""),
+    }
+    for i = 1, 4 do
+        local launcher = (state.launchers or {})[i] or {}
+        local runtime = launcher.runtime or {}
+        parts[#parts + 1] = string.format(
+            "%.1f",
+            server.netSyncQuantize(runtime.cooldownRemain or 0.0, 0.1)
+        )
+    end
+    return table.concat(parts, "|")
+end
+
+local function _guidedGroupResolveHudPlayer(state)
+    local shipBody = math.floor(server.shipBody or 0)
+    local playerId = server.shipRuntimeGetDriverPlayerId ~= nil
+        and math.floor(server.shipRuntimeGetDriverPlayerId(shipBody) or 0)
+        or 0
+    if playerId <= 0 then return 0 end
+    if IsPlayerValid ~= nil and not IsPlayerValid(playerId) then return 0 end
+
+    local vehicle = GetPlayerVehicle(playerId)
+    if vehicle == nil or vehicle == 0 or GetVehicleBody(vehicle) ~= shipBody then
+        if server.shipRuntimeSetDriverPlayerId ~= nil then
+            server.shipRuntimeSetDriverPlayerId(shipBody, 0)
+        end
+        state.hudSync.dirty = true
+        return 0
+    end
+    return playerId
+end
+
+local function _guidedGroupPushHud(state, playerId, signature)
     local launchers = state.launchers or {}
     local values = {}
     for i = 1, 4 do
@@ -80,12 +117,31 @@ local function _guidedGroupPushHud(state)
     end
     server.netClientCall(
         "hud.guided",
-        0,
+        playerId,
         state.hudCallback,
         server.shipBody,
         values[1], values[2], values[3], values[4],
         values[5], values[6], values[7], values[8]
     )
+    state.hudSync.lastSignature = signature
+    state.hudSync.age = 0.0
+    state.hudSync.dirty = false
+end
+
+local function _guidedGroupMaybePushHud(state, dt, force)
+    local sync = state.hudSync
+    sync.age = (sync.age or 0.0) + math.max(0.0, tonumber(dt) or 0.0)
+
+    local playerId = _guidedGroupResolveHudPlayer(state)
+    if playerId <= 0 then return end
+
+    local signature = _guidedGroupBuildHudSignature(state)
+    local changed = signature ~= tostring(sync.lastSignature or "")
+    local periodic = sync.age >= 0.2
+    local keepAlive = sync.age >= 1.0
+    if force or sync.dirty or (changed and periodic) or keepAlive then
+        _guidedGroupPushHud(state, playerId, signature)
+    end
 end
 
 function server.guidedSlotGroupInit(mode, mountCollection, hudCallback, shipType)
@@ -97,6 +153,11 @@ function server.guidedSlotGroupInit(mode, mountCollection, hudCallback, shipType
         nextLauncherIndex = 1,
         request = nil,
         launchers = {},
+        hudSync = {
+            age = 0.0,
+            lastSignature = "",
+            dirty = true,
+        },
     }
     local slotDefs = shipDef[state.mountCollection] or {}
     for i = 1, #slotDefs do
@@ -114,9 +175,23 @@ function server.guidedSlotGroupReset(mode)
     if state == nil then return end
     state.nextLauncherIndex = 1
     state.request = nil
+    state.hudSync.dirty = true
     for i = 1, #(state.launchers or {}) do
         local runtime = ((state.launchers or {})[i] or {}).runtime
         if runtime ~= nil then runtime.cooldownRemain = 0.0 end
+    end
+end
+
+function server.guidedSlotGroupMarkHudDirty(mode)
+    local state = server.guidedSlotGroupStateByMode[tostring(mode or "")]
+    if state ~= nil and state.hudSync ~= nil then
+        state.hudSync.dirty = true
+    end
+end
+
+function server.guidedSlotGroupMarkAllHudDirty()
+    for _, state in pairs(server.guidedSlotGroupStateByMode or {}) do
+        if state.hudSync ~= nil then state.hudSync.dirty = true end
     end
 end
 
@@ -145,10 +220,14 @@ function server.guidedSlotGroupTick(mode, dt)
     for i = 1, #(state.launchers or {}) do
         local runtime = ((state.launchers or {})[i] or {}).runtime
         if runtime ~= nil and (runtime.cooldownRemain or 0.0) > 0.0 then
+            local wasCooling = (runtime.cooldownRemain or 0.0) > 0.0
             runtime.cooldownRemain = math.max(0.0, (runtime.cooldownRemain or 0.0) - (dt or 0.0))
+            if wasCooling and runtime.cooldownRemain <= 0.0 then
+                state.hudSync.dirty = true
+            end
         end
     end
-    _guidedGroupPushHud(state)
+    _guidedGroupMaybePushHud(state, dt, false)
 
     local request = state.request
     state.request = nil
@@ -181,6 +260,7 @@ function server.guidedSlotGroupTick(mode, dt)
     local projectile = server.guidedProjectileSpawn(shipBody, state.mode, config, firePosWorld, fireDirWorld, targetBodyId, targetVehicleId)
     if projectile ~= nil then
         runtime.cooldownRemain = math.max(0.0, tonumber(config.cooldown) or 0.0)
-        _guidedGroupPushHud(state)
+        state.hudSync.dirty = true
+        _guidedGroupMaybePushHud(state, 0.0, true)
     end
 end

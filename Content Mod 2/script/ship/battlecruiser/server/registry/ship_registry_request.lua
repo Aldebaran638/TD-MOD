@@ -39,6 +39,16 @@ local function _canAcceptShipRequest(playerId, shipBodyId)
     if not _isPlayerDrivingShip(playerId, shipBodyId) then
         return false
     end
+    if server.shipRuntimeGetDriverPlayerId ~= nil
+        and server.shipRuntimeSetDriverPlayerId ~= nil then
+        local previousDriver = server.shipRuntimeGetDriverPlayerId(shipBodyId)
+        if previousDriver ~= math.floor(playerId or 0) then
+            server.shipRuntimeSetDriverPlayerId(shipBodyId, playerId)
+            if server.guidedSlotGroupMarkAllHudDirty ~= nil then
+                server.guidedSlotGroupMarkAllHudDirty()
+            end
+        end
+    end
     return true
 end
 
