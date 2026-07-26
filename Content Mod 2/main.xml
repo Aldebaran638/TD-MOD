@@ -5,13 +5,6 @@
 	<!-- weapon-configurator-host: Global Mod/main.lua -->
 	<voxbox pos="-25 0 -25" size="500 1 500"/>
 	<voxbox pos="-1 0.1 -5" size="20 20 2" material="wood" color="0.7 0.5 0.3"/>
-	<!-- Standalone single-VOX strike-craft model used for visual and weapon tests. -->
-	<script file="MOD/script/test/gamma_strike_craft_display_fx.lua">
-		<body name="gamma_strike_craft_display" tags="strikeCraftModelTest" pos="0 12 8" dynamic="false">
-			<vox name="gamma_strike_craft_test" tags="strikeCraftModelTest" pos="-2.25 -0.6 2.55" file="MOD/vox/gammaStrikeCraftTest.vox"/>
-			<location name="gamma_strike_craft_test_muzzle" tags="strikeCraftTestMuzzle" pos="0 0 -3.05"/>
-		</body>
-	</script>
 	<spawnpoint pos="-10.7 1.5 17.6" rot="0 180 0"/>
 	<script pos="0.0 6.5 -22.1" file="MOD/script/shipMain.lua">
 		<vehicle name="ship" tags="stellarisShip" pos="0.0 0.0 0.0" driven="false" sound=" " spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">

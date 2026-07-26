@@ -4,10 +4,12 @@
 .\check-encoding.ps1 -Path ".\Content Mod 2"
 .\check-lua.ps1 -Path ".\Content Mod 2\script"
 .\check-weapon-system.ps1 -Path ".\Content Mod 2"
+.\check-strike-craft-motion.ps1 -Path ".\Content Mod 2"
 .\check-xml.ps1 -Path ".\Content Mod 2"
 .\test-check-encoding.ps1
 .\test-check-lua.ps1
 .\test-check-weapon-system.ps1
+.\test-check-strike-craft-motion.ps1
 .\test-check-xml.ps1
 ```
 

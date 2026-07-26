@@ -77,6 +77,7 @@ $soundService = Read-Required "script\weapon\client\common\sound\sound_service.l
 $missileVisual = Read-Required "script\weapon\client\guided\effects\missile_visual.lua"
 $projectileManager = Read-Required "script\weapon\server\slots\l\kinetic_artillery\projectile_manager.lua"
 $hSlotControl = Read-Required "script\weapon\server\slots\h\gamma_strike_craft\control.lua"
+$hSlotFlight = Read-Required "script\weapon\server\slots\h\gamma_strike_craft\flight_controller.lua"
 $networkDebug = Read-Required "script\net\network_debug.lua"
 $syncLimiter = Read-Required "script\net\server_sync_limiter.lua"
 $inputSnapshot = Read-Required "script\net\client_input_snapshot.lua"
@@ -558,11 +559,14 @@ if ($guidedRuntime -notmatch 'syncInterval\s*=\s*0\.1' -or
     $missileVisual -notmatch 'VecScale\(missile\.velocity') {
     Add-Issue "guided missiles must use throttled correction and client prediction"
 }
-if ($hSlotControl -notmatch 'aiInterval\s*=\s*0\.1' -or
-    $hSlotControl -notmatch 'math\.random\(\)\s*\*\s*0\.1' -or
-    $hSlotControl -notmatch 'avoidCacheAge\s*<=\s*0\.2' -or
-    $hSlotControl -notmatch 'server\.netDebugCountRaycast') {
-    Add-Issue "strike craft avoidance AI must run at staggered 10 Hz with caching"
+if ($hSlotControl -notmatch 'server\.hSlotFlightCreate\s*\(' -or
+    $hSlotControl -notmatch 'server\.hSlotFlightUpdate\s*\(' -or
+    $hSlotFlight -notmatch 'guidanceRemain\s*=\s*1\.0\s*/\s*15\.0' -or
+    $hSlotFlight -notmatch 'nearSweepRemain\s*=\s*1\.0\s*/\s*30\.0' -or
+    $hSlotFlight -notmatch 'farProbeRemain\s*=\s*1\.0\s*/\s*8\.0' -or
+    $hSlotFlight -notmatch 'craft\.plannerRemain\s*=\s*0\.20' -or
+    $hSlotFlight -notmatch 'server\.netDebugCountRaycast') {
+    Add-Issue "strike craft must use the staggered production flight controller"
 }
 if ($guidedRuntime -notmatch 'maxPerShip\s*=\s*24' -or
     $guidedRuntime -notmatch 'maxGlobal\s*=\s*96' -or

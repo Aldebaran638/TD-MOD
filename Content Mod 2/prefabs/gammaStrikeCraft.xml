@@ -1,34 +1,11 @@
 <body name="body" tags="stellarisStrikeCraft" dynamic="false">
   <vox
-    name="fuselage"
-    tags="strikeCraft"
-    pos="0.0 0.0 0.0"
-    file="MOD/prefabs/torpedoeBody.vox"
+    name="gammaStrikeCraft"
+    tags="strikeCraft strikeCraftModel"
+    pos="-2.25 -0.6 2.55"
+    file="MOD/vox/gammaStrikeCraftTest.vox"
   />
-  <vox
-    name="leftWing"
-    tags="strikeCraftWing"
-    pos="-0.9 0.0 0.3"
-    rot="0 0 90"
-    file="MOD/prefabs/missileBody.vox"
-  />
-  <vox
-    name="rightWing"
-    tags="strikeCraftWing"
-    pos="0.9 0.0 0.3"
-    rot="0 0 -90"
-    file="MOD/prefabs/missileBody.vox"
-  />
-  <vox
-    name="engineLeft"
-    tags="strikeCraftEngine"
-    pos="-0.45 0.0 0.95"
-    file="MOD/vox/smallThruster.vox"
-  />
-  <vox
-    name="engineRight"
-    tags="strikeCraftEngine"
-    pos="0.45 0.0 0.95"
-    file="MOD/vox/smallThruster.vox"
-  />
+  <location name="muzzle" tags="strikeCraftMuzzle" pos="0 0 -2.61"/>
+  <location name="engineLeft" tags="strikeCraftEngineLeft" pos="-0.70 -0.15 2.58"/>
+  <location name="engineRight" tags="strikeCraftEngineRight" pos="0.70 -0.15 2.58"/>
 </body>

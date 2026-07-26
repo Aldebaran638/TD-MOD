@@ -122,8 +122,8 @@ shipTypeRegistryData.enigmaticCruiser = {
             { firePosOffset = { x = -5.5, y = -1.2, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
         },
         hHangar = {
-            { firePosOffset = { x = 2.8, y = 1.2, z = -1.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-            { firePosOffset = { x = -2.8, y = 1.2, z = -1.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = 0.8, y = 6.5, z = -1.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+            { firePosOffset = { x = -0.8, y = 6.5, z = -1.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
         },
     },
     defaultSlotConfigurationId = "battleline_2x2l4m",
@@ -189,11 +189,11 @@ shipTypeRegistryData.enigmaticCruiser = {
                 gSlots = {},
                 hSlots = {
                     {
-                        firePosOffset = { x = 2.8, y = 1.2, z = -1.0 },
+                        firePosOffset = { x = 0.8, y = 6.5, z = -1.0 },
                         fireDirRelative = { x = 0, y = 0, z = -1 },
                     },
                     {
-                        firePosOffset = { x = -2.8, y = 1.2, z = -1.0 },
+                        firePosOffset = { x = -0.8, y = 6.5, z = -1.0 },
                         fireDirRelative = { x = 0, y = 0, z = -1 },
                     },
                 },
@@ -265,11 +265,11 @@ shipTypeRegistryData.enigmaticCruiser = {
                 lSlots = {},
                 hSlots = {
                     {
-                        firePosOffset = { x = 2.8, y = 1.2, z = -1.0 },
+                        firePosOffset = { x = 0.8, y = 6.5, z = -1.0 },
                         fireDirRelative = { x = 0, y = 0, z = -1 },
                     },
                     {
-                        firePosOffset = { x = -2.8, y = 1.2, z = -1.0 },
+                        firePosOffset = { x = -0.8, y = 6.5, z = -1.0 },
                         fireDirRelative = { x = 0, y = 0, z = -1 },
                     },
                 },
@@ -330,12 +330,12 @@ shipTypeRegistryData.enigmaticCruiser = {
     hSlots = {
         {
             weaponType = "gammaStrikeCraft",
-            firePosOffset = { x = 2.8, y = 1.2, z = -1.0 },
+            firePosOffset = { x = 0.8, y = 6.5, z = -1.0 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
         },
         {
             weaponType = "gammaStrikeCraft",
-            firePosOffset = { x = -2.8, y = 1.2, z = -1.0 },
+            firePosOffset = { x = -0.8, y = 6.5, z = -1.0 },
             fireDirRelative = { x = 0, y = 0, z = -1 },
         },
     },
