@@ -8,10 +8,12 @@ description: 运行所有代码检查脚本（编码、Lua语法、include链）
 .\check-encoding.ps1 -Path ".\Content Mod 2"
 if ($?) { .\check-lua.ps1 -Path ".\Content Mod 2\script" }
 if ($?) { .\check-weapon-system.ps1 -Path ".\Content Mod 2" }
+if ($?) { .\check-strike-craft-motion.ps1 -Path ".\Content Mod 2" }
 if ($?) { .\check-xml.ps1 -Path ".\Content Mod 2" }
 if ($?) { .\test-check-encoding.ps1 }
 if ($?) { .\test-check-lua.ps1 }
 if ($?) { .\test-check-weapon-system.ps1 }
+if ($?) { .\test-check-strike-craft-motion.ps1 }
 if ($?) { .\test-check-xml.ps1 }
 ```
 

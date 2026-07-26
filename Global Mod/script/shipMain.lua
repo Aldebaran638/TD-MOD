@@ -48,6 +48,7 @@
 #include "ship/battlecruiser/server/control/guided_slot_group.lua"
 #include "ship/battlecruiser/server/control/m_slot_control.lua"
 #include "ship/battlecruiser/server/control/g_slot_control.lua"
+#include "weapon/server/slots/h/gamma_strike_craft/flight_controller.lua"
 #include "weapon/server/slots/h/gamma_strike_craft/control.lua"
 #include "weapon/server/slots/l/kinetic_artillery/projectile_manager.lua"
 -- 移动类模块：根据 body 质量施加竖直向上

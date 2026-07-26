@@ -222,18 +222,21 @@ local function _hSlotGetBodyCenterWorld(bodyId)
 end
 
 local function _hSlotResolveRecoveryPoint(shipBody, launcherConfig)
-    local shipCenter = _hSlotGetBodyCenterWorld(shipBody)
-    if shipCenter ~= nil then
-        return shipCenter
-    end
-
     local shipT = GetBodyTransform(shipBody)
     local localPos = Vec(
         tonumber((launcherConfig.firePosOffset or {}).x) or 0.0,
         tonumber((launcherConfig.firePosOffset or {}).y) or 0.0,
         tonumber((launcherConfig.firePosOffset or {}).z) or 0.0
     )
-    return TransformToParentPoint(shipT, localPos)
+    local direction = _hSlotNormalize(TransformToParentVec(shipT, Vec(
+        tonumber((launcherConfig.fireDirRelative or {}).x) or 0.0,
+        tonumber((launcherConfig.fireDirRelative or {}).y) or 0.0,
+        tonumber((launcherConfig.fireDirRelative or {}).z) or -1.0
+    )), Vec(0, 0, -1))
+    return VecAdd(
+        TransformToParentPoint(shipT, localPos),
+        VecScale(direction, launcherConfig.spawnForwardOffset or 0.0)
+    )
 end
 
 local function _hSlotBuildBodyTransform(spawnPos, forwardDir)
@@ -248,17 +251,31 @@ local function _hSlotSpawnCraftBody(prefabPath, spawnPos, forwardDir)
     end
 
     local entities = Spawn(prefabPath, _hSlotBuildBodyTransform(spawnPos, forwardDir), true, false) or {}
+    local bodyId, muzzle, engineLeft, engineRight = 0, 0, 0, 0
     for i = 1, #entities do
         local entityId = entities[i]
         if entityId ~= nil and entityId ~= 0 and GetEntityType(entityId) == "body" then
-            return entityId
+            bodyId = entityId
+        elseif entityId ~= nil and entityId ~= 0
+            and GetEntityType(entityId) == "location" then
+            if HasTag(entityId, "strikeCraftMuzzle") then muzzle = entityId end
+            if HasTag(entityId, "strikeCraftEngineLeft") then engineLeft = entityId end
+            if HasTag(entityId, "strikeCraftEngineRight") then engineRight = entityId end
         end
     end
-    return 0
+    return bodyId, muzzle, engineLeft, engineRight
 end
 
 local function _hSlotDeleteCraftBody(bodyId)
     if bodyId ~= nil and bodyId ~= 0 and IsHandleValid(bodyId) then
+        if server.netClientCall ~= nil then
+            server.netClientCall(
+                "weapon.fireFx",
+                0,
+                "client.unregisterHSlotCraftFx",
+                bodyId
+            )
+        end
         Delete(bodyId)
     end
 end
@@ -274,20 +291,26 @@ local function _hSlotBuildLauncherConfig(slotDef)
         cooldown = tonumber(weaponDef.cooldown) or 20.0,
         craftLifetime = tonumber(weaponDef.craftLifetime) or 24.0,
         returnTimeout = tonumber(weaponDef.returnTimeout) or 6.0,
-        craftSpeed = tonumber(weaponDef.craftSpeed) or 30.0,
-        turnLerp = tonumber(weaponDef.turnLerp) or 4.0,
-        approachDistance = tonumber(weaponDef.approachDistance) or 14.0,
-        orbitRadius = tonumber(weaponDef.orbitRadius) or 10.0,
-        orbitEntryThreshold = tonumber(weaponDef.orbitEntryThreshold) or 11.0,
-        orbitLeaveThreshold = tonumber(weaponDef.orbitLeaveThreshold) or 18.0,
-        avoidProbeDistance = tonumber(weaponDef.avoidProbeDistance) or 7.0,
-        avoidProbeDistanceFar = tonumber(weaponDef.avoidProbeDistanceFar) or tonumber(weaponDef.avoidProbeDistance) or 7.0,
-        collisionProbeRadius = tonumber(weaponDef.collisionProbeRadius) or 0.2,
-        collisionStartOffset = tonumber(weaponDef.collisionStartOffset) or 1.2,
+        cruiseSpeed = tonumber(weaponDef.cruiseSpeed) or 82.0,
+        attackSpeed = tonumber(weaponDef.attackSpeed) or 102.0,
+        breakSpeed = tonumber(weaponDef.breakSpeed) or 88.0,
+        returnSpeed = tonumber(weaponDef.returnSpeed) or 74.0,
+        dockSpeed = tonumber(weaponDef.dockSpeed) or 18.0,
+        emergencySpeed = tonumber(weaponDef.emergencySpeed) or 30.0,
+        launchSpeedFactor = tonumber(weaponDef.launchSpeedFactor) or 0.86,
+        minimumControlFactor = tonumber(weaponDef.minimumControlFactor) or 0.64,
+        maxAcceleration = tonumber(weaponDef.maxAcceleration) or 310.0,
+        maxDeceleration = tonumber(weaponDef.maxDeceleration) or 390.0,
+        maxAngularVelocity = tonumber(weaponDef.maxAngularVelocity) or 20.0,
+        maxAngularImpulse = tonumber(weaponDef.maxAngularImpulse) or 9000.0,
+        craftRadius = tonumber(weaponDef.craftRadius) or 1.60,
+        farProbeDistance = tonumber(weaponDef.farProbeDistance) or 70.0,
+        nearSweepLookahead = tonumber(weaponDef.nearSweepLookahead) or 0.18,
+        emergencyDuration = tonumber(weaponDef.emergencyDuration) or 0.70,
         recoverRadius = tonumber(weaponDef.recoverRadius) or 10.0,
         fireInterval = tonumber(weaponDef.fireInterval) or 0.25,
         attackDuration = tonumber(weaponDef.attackDuration) or 10.0,
-        maxRange = tonumber(weaponDef.maxRange) or 160.0,
+        maxRange = tonumber(weaponDef.maxRange) or 280.0,
         prefabPath = tostring(weaponDef.prefabPath or ""),
         spawnForwardOffset = tonumber(weaponDef.spawnForwardOffset) or 0.0,
         turnRate = tonumber(weaponDef.turnRate) or 0.0,
@@ -589,16 +612,28 @@ local function _hSlotRaySphereEntryT(origin, dir, center, radius)
     return nil
 end
 
+local function _hSlotResolveCraftMuzzle(craft, fallback)
+    local bodyId = craft and craft.bodyId or 0
+    if bodyId ~= nil and bodyId ~= 0 and IsHandleValid(bodyId) then
+        return TransformToParentPoint(
+            GetBodyTransform(bodyId),
+            Vec(0.0, 0.0, -2.61)
+        )
+    end
+    return fallback
+end
+
 local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
     _hSlotBumpDebugCounter(shipBody, "beam_fire")
 
-    local origin = craft.pos or targetCenter
+    local origin = _hSlotResolveCraftMuzzle(craft, craft.pos or targetCenter)
     local toTarget = VecSub(targetCenter, origin)
     local dir = _hSlotNormalize(toTarget, craft.forward or Vec(0, 0, -1))
-    local maxRange = math.max(1.0, tonumber(weaponConfig.maxRange) or 160.0)
+    local maxRange = math.max(1.0, tonumber(weaponConfig.maxRange) or 280.0)
 
     QueryRequire("physical")
     QueryRejectBody(shipBody)
+    QueryRejectBody(craft.bodyId)
     server.netDebugCountRaycast(1)
     local hit, dist, normal, shape = QueryRaycast(origin, dir, maxRange, 0.05)
     if not hit then
@@ -624,12 +659,26 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
     local hitBody = shape ~= nil and shape ~= 0 and GetShapeBody(shape) or 0
 
     if hitBody ~= 0 and server.registryShipExists(hitBody) then
-        local targetBodyT = GetBodyTransform(hitBody)
-        local targetCenterPos = TransformToParentPoint(targetBodyT, GetBodyCenterOfMass(hitBody))
-        local shieldRadius = _hSlotResolveTargetShieldRadius(hitBody, server.defaultShipType or "enigmaticCruiser")
-        local entryT = _hSlotRaySphereEntryT(origin, dir, targetCenterPos, shieldRadius)
-        if entryT ~= nil and entryT <= maxRange then
-            hitPos = VecAdd(origin, VecScale(dir, entryT))
+        local targetShieldHP = server.registryShipGetHP(hitBody)
+        if targetShieldHP ~= nil and targetShieldHP > 0.0 then
+            local targetBodyT = GetBodyTransform(hitBody)
+            local targetCenterPos = TransformToParentPoint(
+                targetBodyT,
+                GetBodyCenterOfMass(hitBody)
+            )
+            local shieldRadius = _hSlotResolveTargetShieldRadius(
+                hitBody,
+                server.defaultShipType or "enigmaticCruiser"
+            )
+            local entryT = _hSlotRaySphereEntryT(
+                origin,
+                dir,
+                targetCenterPos,
+                shieldRadius
+            )
+            if entryT ~= nil and entryT <= maxRange then
+                hitPos = VecAdd(origin, VecScale(dir, entryT))
+            end
         end
     end
 
@@ -703,7 +752,7 @@ local function _hSlotUpdateBeamFire(shipBody, craft, targetCenter, weaponConfig,
     end
 
     local dist = VecLength(VecSub(targetCenter, craft.pos or targetCenter))
-    local maxRange = math.max(1.0, tonumber(weaponConfig.maxRange) or 160.0)
+    local maxRange = math.max(1.0, tonumber(weaponConfig.maxRange) or 280.0)
     craft.fireRemain = (craft.fireRemain or 0.0) - (dt or 0.0)
     if dist <= maxRange and craft.fireRemain <= 0.0 then
         _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
@@ -987,6 +1036,72 @@ function server.hSlotControlSyncHud(dt, force)
     end
 end
 
+local function _hSlotUpdateReplacementFlight(
+    state,
+    shipBody,
+    slotIndex,
+    craft,
+    weaponConfig,
+    dt
+)
+    if craft.bodyId == nil or craft.bodyId == 0
+        or not IsHandleValid(craft.bodyId) then
+        _hSlotSetDebugReason(slotIndex, "craft_invalid_handle", craft)
+        _hSlotFinishCraft(state, slotIndex)
+        return
+    end
+
+    craft.lifeRemain = (craft.lifeRemain or 0.0) - (dt or 0.0)
+    if craft.lifeRemain <= 0.0 then
+        _hSlotSetDebugReason(slotIndex, "life_timeout_explode", craft)
+        _hSlotCraftExplode(shipBody, craft, weaponConfig)
+        _hSlotFinishCraft(state, slotIndex)
+        return
+    end
+
+    local targetBodyId = math.floor(craft.targetBodyId or 0)
+    local targetCenter = _hSlotGetBodyCenterWorld(targetBodyId)
+    if targetBodyId ~= 0
+        and server.registryShipExists(targetBodyId)
+        and server.registryShipIsBodyDead ~= nil
+        and server.registryShipIsBodyDead(targetBodyId) then
+        targetCenter = nil
+    end
+
+    local shipTransform = GetBodyTransform(shipBody)
+    local carrierUp = _hSlotNormalize(
+        TransformToParentVec(shipTransform, Vec(0, 1, 0)),
+        Vec(0, 1, 0)
+    )
+    local recoveryPoint = _hSlotResolveRecoveryPoint(shipBody, weaponConfig)
+    local flightStatus, allowFire = server.hSlotFlightUpdate(
+        shipBody,
+        craft,
+        weaponConfig,
+        targetCenter,
+        recoveryPoint,
+        carrierUp,
+        dt
+    )
+
+    if flightStatus == "recovered" then
+        _hSlotSetDebugReason(slotIndex, "return_recovered_finish", craft)
+        _hSlotFinishCraft(state, slotIndex, "ready")
+    elseif flightStatus == "timeout" then
+        _hSlotSetDebugReason(slotIndex, "return_timeout_explode", craft)
+        _hSlotCraftExplode(shipBody, craft, weaponConfig)
+        _hSlotFinishCraft(state, slotIndex)
+    elseif allowFire and targetCenter ~= nil then
+        _hSlotUpdateBeamFire(
+            shipBody,
+            craft,
+            targetCenter,
+            weaponConfig,
+            dt
+        )
+    end
+end
+
 function server.hSlotControlTick(dt)
     local shipBody = server.shipBody
     if shipBody == nil or shipBody == 0 then
@@ -1024,6 +1139,21 @@ function server.hSlotControlTick(dt)
     for slotIndex = 1, #launchers do
         local craft = activeCrafts[slotIndex]
         if craft ~= nil then
+            local launcher = launchers[slotIndex]
+            _hSlotUpdateReplacementFlight(
+                state,
+                shipBody,
+                slotIndex,
+                craft,
+                launcher and launcher.config or {},
+                dt
+            )
+        end
+    end
+
+    for slotIndex = 1, #launchers do
+        local craft = activeCrafts[slotIndex]
+        if craft ~= nil and false then
         local launcher = launchers[slotIndex]
         local weaponConfig = launcher and launcher.config or {}
         local keepUpdating = true
@@ -1350,7 +1480,8 @@ function server.hSlotControlTick(dt)
 
     firePos = VecAdd(firePos, VecScale(fireDir, launcher.config.spawnForwardOffset or 0.0))
     _hSlotSetDebugStage("spawn_attempt")
-    local craftBody = _hSlotSpawnCraftBody(launcher.config.prefabPath, firePos, fireDir)
+    local craftBody, muzzleLocation, engineLeft, engineRight =
+        _hSlotSpawnCraftBody(launcher.config.prefabPath, firePos, fireDir)
     if craftBody == nil or craftBody == 0 then
         _hSlotSetDebugReason(slotIndex, "spawn_failed", nil)
         _hSlotSetDebugStage("spawn_failed")
@@ -1365,29 +1496,45 @@ function server.hSlotControlTick(dt)
     end
     SetBodyDynamic(craftBody, true)
     SetBodyActive(craftBody, true)
-    SetBodyVelocity(craftBody, VecScale(fireDir, math.max(4.0, tonumber(launcher.config.craftSpeed) or 30.0)))
+    SetBodyVelocity(
+        craftBody,
+        VecScale(
+            fireDir,
+            math.max(4.0, tonumber(launcher.config.cruiseSpeed) or 82.0)
+                * (tonumber(launcher.config.launchSpeedFactor) or 0.86)
+        )
+    )
     server.netClientCall("weapon.fireFx", 0, "client.spawnHSlotLaunchFx", firePos[1], firePos[2], firePos[3], fireDir[1], fireDir[2], fireDir[3])
+    server.netClientCall(
+        "weapon.fireFx",
+        0,
+        "client.registerHSlotCraftFx",
+        craftBody,
+        engineLeft or 0,
+        engineRight or 0
+    )
 
-    state.activeCrafts[slotIndex] = {
+    local newCraft = {
         slotIndex = slotIndex,
         bodyId = craftBody,
+        muzzleLocation = muzzleLocation or 0,
+        engineLeft = engineLeft or 0,
+        engineRight = engineRight or 0,
         weaponType = tostring(launcher.config.weaponType or "gammaStrikeCraft"),
         targetBodyId = targetBodyId,
         pos = firePos,
         forward = fireDir,
-        state = "approach",
         attackRemain = math.max(0.5, tonumber(launcher.config.attackDuration) or 10.0),
         lifeRemain = math.max(0.5, tonumber(launcher.config.craftLifetime) or 24.0),
         returnRemain = math.max(0.5, tonumber(launcher.config.returnTimeout) or 6.0),
         fireRemain = 0.0,
-        orbitAngle = 0.0,
-        aiInterval = 0.1,
-        aiAccumulator = math.random() * 0.1,
-        desiredDirection = fireDir,
-        avoidCacheAge = 1000.0,
-        avoidCachePos = nil,
-        avoidCacheInput = nil,
     }
+    state.activeCrafts[slotIndex] = server.hSlotFlightCreate(
+        newCraft,
+        slotIndex,
+        firePos,
+        fireDir
+    )
     _hSlotAdjustGlobalCraftCount(1)
     state.hudSync.dirty = true
 

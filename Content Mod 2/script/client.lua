@@ -44,6 +44,7 @@ client = client or {}
 #include "weapon/client/guided/effects/missile_impact_fx.lua"
 #include "weapon/client/guided/effects/missile_visual.lua"
 #include "weapon/client/slots/h/gamma_strike_craft/effects/beam_fx.lua"
+#include "weapon/client/slots/h/gamma_strike_craft/effects/craft_fx.lua"
 
 function client.init()
     client.shipRuntimeStateInit()
@@ -63,6 +64,7 @@ function client.init()
     client.genericRaycastFxInit()
     client.projectileVisualInit()
     client.missileVisualInit()
+    client.hSlotCraftFxInit()
     client.weaponConfigurationBindingInit("enigmaticCruiser", client.shipBody)
 end
 
@@ -87,6 +89,7 @@ function client.clientTick(dt)
     client.projectileVisualTick(dt)
     client.missileVisualTick(dt)
     client.hSlotBeamFxTick(dt)
+    client.hSlotCraftFxTick(dt)
     client.genericRaycastFxTick(dt)
     client.gammaLaserFxTick(dt)
     client.weaponMuzzleFxTick(dt)
@@ -113,6 +116,7 @@ function client.render()
     -- 更新导弹视觉效果
     client.missileVisualRender()
     client.hSlotBeamFxRender()
+    client.hSlotCraftFxRender()
     client.tachyonBeamFxRender()
     client.tachyonMuzzleFxRender()
     client.focusedArcChargingFxRender()
