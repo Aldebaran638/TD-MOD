@@ -124,13 +124,16 @@ function server.guidedProjectilePlayImpactSound(weaponType, hitPos)
     )
 end
 
-function server.guidedProjectilePlayImpactFx(hitPos, impactLayer)
+function server.guidedProjectilePlayImpactFx(weaponType, hitPos, hitNormal, impactLayer)
     local p = hitPos or Vec(0, 0, 0)
+    local normal = hitNormal or Vec(0, 1, 0)
     server.netClientCall(
         "weapon.hitFx",
         0,
         "client.playMissileImpactFx",
+        weaponType or "",
         p[1], p[2], p[3],
+        normal[1], normal[2], normal[3],
         impactLayer or "body"
     )
 end
@@ -183,15 +186,10 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         0,
         "client.spawnMissileVisual",
         projectileId,
+        tostring(cfg.weaponType or ""),
         firePosWorld[1], firePosWorld[2], firePosWorld[3],
         startVelocity[1], startVelocity[2], startVelocity[3],
         tonumber(cfg.lifetime) or 10.0
-    )
-    server.netClientCall(
-        "weapon.fireFx",
-        0,
-        "client.spawnMissileWarpFx",
-        firePosWorld[1], firePosWorld[2], firePosWorld[3]
     )
     server.netClientCall(
         "weapon.fireFx",

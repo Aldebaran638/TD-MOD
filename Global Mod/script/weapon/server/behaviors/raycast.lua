@@ -44,8 +44,16 @@ local function _fireRaycast(context)
     local endpoint = VecAdd(origin, VecScale(direction, hit and distance or range))
     local hitBody = 0
     if shape ~= nil and shape ~= 0 then hitBody = GetShapeBody(shape) or 0 end
+    -- 直射武器绝不可命中发射船自身；QueryRejectBody 是第一层，
+    -- 此处保留命中结算层的兜底，避免异常查询结果造成自伤。
+    if hitBody == context.shipBodyId then
+        hit = false
+        hitBody = 0
+        normal = direction
+        endpoint = VecAdd(origin, VecScale(direction, range))
+    end
 
-    local _, didHitShield = server.weaponDamageApplyToShip(hitBody, context.weaponType)
+    local _, didHitShield, impactLayer = server.weaponDamageApplyToShip(hitBody, context.weaponType)
     local hitRegisteredShip = hitBody ~= 0
         and server.registryShipExists ~= nil
         and server.registryShipExists(hitBody)
@@ -83,7 +91,15 @@ local function _fireRaycast(context)
     end
     if hit and not didHitShield and not suppressPhysicalExplosion then
         local explosionSize = math.max(0.0, tonumber(definition.environmentExplosionSize) or 0.0)
-        if explosionSize > 0.0 then Explosion(endpoint, explosionSize) end
+        local explosionCount = math.max(
+            1,
+            math.min(2, math.floor(tonumber(definition.physicalExplosionCount) or 1))
+        )
+        if explosionSize > 0.0 then
+            for _ = 1, explosionCount do
+                Explosion(endpoint, explosionSize)
+            end
+        end
     end
     ClientCall(
         0, "client.spawnGenericRaycastWeaponFx",
@@ -91,7 +107,8 @@ local function _fireRaycast(context)
         origin[1], origin[2], origin[3],
         endpoint[1], endpoint[2], endpoint[3],
         normal and normal[1] or 0.0, normal and normal[2] or 1.0, normal and normal[3] or 0.0,
-        hit and 1 or 0
+        hit and 1 or 0,
+        impactLayer or "none"
     )
     return true
 end

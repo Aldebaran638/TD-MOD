@@ -7,12 +7,8 @@ client.projectileVisualState = client.projectileVisualState or {
     byId = {},
     impacts = {},
     assets = { plasmaCore = 0, plasmaGlow = 0, neutronNeedle = 0, impactGlow = 0 },
-    frameBudget = { trailParticles = 0, impactParticles = 0, pointLights = 0 },
 }
 
-local TRAIL_BUDGET = 48
-local IMPACT_BUDGET = 96
-local LIGHT_BUDGET = 24
 local IMPACT_LIMIT = 64
 
 local function _safeNormalize(value, fallback)
@@ -44,17 +40,14 @@ local function _cameraDistance(position)
     return VecLength(VecSub(position, GetCameraTransform().pos))
 end
 
-local function _takeBudget(name, amount, limit)
-    local budget = client.projectileVisualState.frameBudget
-    if (budget[name] or 0) + amount > limit then
-        return false
-    end
-    budget[name] = (budget[name] or 0) + amount
-    return true
+local function _takeParticleBudget(kind, amount)
+    local priority = kind == "trailParticles" and "ambient" or "normal"
+    return client.weaponFxTakeParticles(amount, priority)
 end
 
 local function _drawBillboard(sprite, position, width, height, r, g, b, alpha)
     if sprite == nil or sprite == 0 then return end
+    if not client.weaponFxTakeSprite(1) then return end
     DrawSprite(sprite, Transform(position, QuatLookAt(position, GetCameraTransform().pos)), width, height, r, g, b, alpha, true, true, false)
 end
 
@@ -63,10 +56,16 @@ local function _drawDirectionalSprite(sprite, startPos, endPos, thickness, r, g,
     local vector = VecSub(endPos, startPos)
     local length = VecLength(vector)
     if length < 0.001 then return end
+    if not client.weaponFxTakeSprite(1) then return end
     local center = VecLerp(startPos, endPos, 0.5)
     local direction = VecScale(vector, 1.0 / length)
     local toCamera = _safeNormalize(VecSub(GetCameraTransform().pos, center), Vec(0, 1, 0))
     DrawSprite(sprite, Transform(center, QuatAlignXZ(direction, toCamera)), length, thickness, r, g, b, alpha, true, true, false)
+end
+
+local function _drawLine(startPos, endPos, r, g, b, alpha)
+    if not client.weaponFxTakeLine(1) then return end
+    DrawLine(startPos, endPos, r, g, b, alpha)
 end
 
 local function _emitDistanceEvents(projectile, previousPosition, currentPosition, nextField, spacing, maxPerTick, callback)
@@ -87,7 +86,7 @@ local function _emitDistanceEvents(projectile, previousPosition, currentPosition
 end
 
 local function _pointLight(pos, r, g, b, intensity)
-    if _takeBudget("pointLights", 1, LIGHT_BUDGET) then PointLight(pos, r, g, b, intensity) end
+    client.weaponFxPointLight(pos, r, g, b, intensity)
 end
 
 function client.projectileVisualInit()
@@ -113,25 +112,31 @@ function client.spawnProjectileVisual(projectileId, weaponType, px, py, pz, vx, 
         lifeRemain = tonumber(lifeRemain) or 0.0, age = 0.0, distanceTravelled = 0.0,
         nextTrailDistance = 0.0, nextPulseDistance = 20.0, randomState = numericProjectileId * 977 + 131,
         weaponType = tostring(weaponType or ""), fxProfile = tostring(definition.fxProfile or "kineticProjectile"),
+        fxVariant = tostring(definition.projectileFxVariant or definition.fxProfile or "kineticProjectile"),
     }
+    client.spawnWeaponMuzzleFx(weaponType, px, py, pz, vx, vy, vz)
 end
 
-local function _spawnKineticImpact(position, projectile)
+local function _spawnKineticImpact(position, projectile, impactNormal, impactLayer)
     local direction, right, up = projectile.direction, projectile.rightAxis, projectile.upAxis
+    local gauss = projectile.fxVariant == "gaussLarge" or projectile.fxVariant == "gaussMedium"
+    local autocannon = projectile.fxVariant == "autocannonLarge" or projectile.fxVariant == "autocannonMedium"
+    local r0, g0, b0 = gauss and 0.45 or 1.0, gauss and 0.82 or 0.82, gauss and 1.0 or 0.16
+    if impactLayer == "shield" then r0, g0, b0 = 0.20, 0.85, 1.0 end
     ParticleReset(); ParticleType("plain")
-    ParticleColor(1.0, 1.0, 0.82, 1.0, 0.20, 0.01)
-    ParticleRadius(0.14, 0.01, "easeout"); ParticleAlpha(1.0, 0.0, "easeout")
+    ParticleColor(r0, g0, b0, r0, g0 * 0.25, b0 * 0.08)
+    ParticleRadius(autocannon and 0.08 or 0.14, 0.01, "easeout"); ParticleAlpha(1.0, 0.0, "easeout")
     ParticleGravity(0); ParticleDrag(0.08); ParticleEmissive(10.0, 0.0); ParticleStretch(2.2, 0.4, "easeout"); ParticleCollide(0)
-    for _ = 1, 18 do
-        if not _takeBudget("impactParticles", 1, IMPACT_BUDGET) then break end
+    for _ = 1, autocannon and 8 or 18 do
+        if not _takeParticleBudget("impactParticles", 1) then break end
         local spread = VecAdd(VecScale(right, _randomRange(projectile, -0.65, 0.65)), VecScale(up, _randomRange(projectile, -0.65, 0.65)))
-        local out = _safeNormalize(VecAdd(VecScale(direction, -1.0), spread), VecScale(direction, -1.0))
+        local out = _safeNormalize(VecAdd(impactNormal or VecScale(direction, -1.0), spread), VecScale(direction, -1.0))
         SpawnParticle(position, VecScale(out, _randomRange(projectile, 8, 22)), _randomRange(projectile, 0.15, 0.35))
     end
 end
 
 local function _emitPlasmaLeak(projectile, position)
-    if not _takeBudget("trailParticles", 2, TRAIL_BUDGET) then return end
+    if not _takeParticleBudget("trailParticles", 2) then return end
     ParticleReset(); ParticleType("plain")
     ParticleColor(0.45, 1.0, 0.42, 0.01, 0.28, 0.03)
     ParticleRadius(0.32, 0.82, "easeout"); ParticleAlpha(0.82, 0.0, "easeout")
@@ -147,7 +152,7 @@ local function _emitPlasmaLeak(projectile, position)
 end
 
 local function _emitNeutronPulse(projectile, position)
-    if not _takeBudget("trailParticles", 8, TRAIL_BUDGET) then return end
+    if not _takeParticleBudget("trailParticles", 8) then return end
     ParticleReset(); ParticleType("plain")
     ParticleColor(0.65, 0.92, 1.0, 0.02, 0.16, 0.85)
     ParticleRadius(0.15, 0.02, "easeout"); ParticleAlpha(0.90, 0.0, "easeout")
@@ -160,17 +165,21 @@ local function _emitNeutronPulse(projectile, position)
 end
 
 local function _updateKineticProjectile(projectile, previousDistance, moveLength, cameraDistance)
+    local gauss = projectile.fxVariant == "gaussLarge" or projectile.fxVariant == "gaussMedium"
+    local autocannon = projectile.fxVariant == "autocannonLarge" or projectile.fxVariant == "autocannonMedium"
+    local tail = autocannon and 3.5 or (gauss and 9.5 or 7.5)
+    local r, g, b = gauss and 0.35 or 1.0, gauss and 0.78 or 0.45, gauss and 1.0 or 0.08
     if cameraDistance <= 700 then
-        local startPos = VecSub(projectile.position, VecScale(projectile.direction, 7.5))
+        local startPos = VecSub(projectile.position, VecScale(projectile.direction, tail))
         local endPos = VecAdd(projectile.position, VecScale(projectile.direction, 0.4))
-        DrawLine(startPos, endPos, 1.0, 0.45, 0.08, 0.75)
-        DrawLine(VecLerp(startPos, endPos, 0.10), endPos, 1.0, 0.96, 0.78, 1.0)
+        _drawLine(startPos, endPos, r, g, b, autocannon and 0.55 or 0.80)
+        _drawLine(VecLerp(startPos, endPos, 0.10), endPos, 1.0, 1.0, 1.0, 1.0)
     end
     if cameraDistance <= 250 then
-        _emitDistanceEvents(projectile, projectile.lastPosition, projectile.position, "nextTrailDistance", 18.0, 2, function(p, eventPos)
-            if not _takeBudget("trailParticles", 1, TRAIL_BUDGET) then return end
+        _emitDistanceEvents(projectile, projectile.lastPosition, projectile.position, "nextTrailDistance", autocannon and 28.0 or (gauss and 14.0 or 18.0), 2, function(p, eventPos)
+            if not _takeParticleBudget("trailParticles", 1) then return end
             ParticleReset(); ParticleType("plain")
-            ParticleColor(1.0, 0.96, 0.76, 1.0, 0.28, 0.02)
+            ParticleColor(r, g, b, r, g * 0.25, b * 0.08)
             ParticleRadius(0.10, 0.01, "easeout"); ParticleAlpha(0.90, 0.0, "easeout")
             ParticleGravity(0); ParticleDrag(0.08); ParticleEmissive(8.0, 0.0); ParticleStretch(2.0, 0.4, "easeout"); ParticleCollide(0)
             local velocity = VecAdd(VecScale(p.direction, -12), VecAdd(VecScale(p.rightAxis, _randomRange(p, -2, 2)), VecScale(p.upAxis, _randomRange(p, -2, 2))))
@@ -198,7 +207,7 @@ local function _updateNeutronProjectile(projectile, cameraDistance)
         local startPos = VecSub(projectile.position, VecScale(projectile.direction, 5.0))
         local endPos = VecAdd(projectile.position, VecScale(projectile.direction, 0.5))
         _drawDirectionalSprite(client.projectileVisualState.assets.neutronNeedle, startPos, endPos, 0.20, 0.05, 0.35, 1.4, 0.80)
-        DrawLine(VecSub(projectile.position, VecScale(projectile.direction, 3.5)), VecAdd(projectile.position, VecScale(projectile.direction, 0.3)), 0.82, 0.96, 1.0, 1.0)
+        _drawLine(VecSub(projectile.position, VecScale(projectile.direction, 3.5)), VecAdd(projectile.position, VecScale(projectile.direction, 0.3)), 0.82, 0.96, 1.0, 1.0)
     end
     if cameraDistance <= 260 then _pointLight(projectile.position, 0.12, 0.42, 1.0, 9.0) end
     if cameraDistance <= 500 then
@@ -213,7 +222,7 @@ local function _updateGigaCannonProjectile(projectile, cameraDistance)
     if cameraDistance <= 360 then
         _pointLight(projectile.position, 0.50, 0.08, 1.0, 10.0)
         _emitDistanceEvents(projectile, projectile.lastPosition, projectile.position, "nextTrailDistance", 2.0, 6, function(p, eventPos)
-            if not _takeBudget("trailParticles", 1, TRAIL_BUDGET) then return end
+            if not _takeParticleBudget("trailParticles", 1) then return end
             ParticleReset(); ParticleType("plain")
             ParticleColor(0.90, 0.44, 1.0, 0.34, 0.04, 0.78)
             ParticleRadius(0.62, 0.02, "easeout"); ParticleAlpha(0.96, 0.0, "easeout")
@@ -221,6 +230,9 @@ local function _updateGigaCannonProjectile(projectile, cameraDistance)
             SpawnParticle(eventPos, VecScale(p.direction, 5.0), 0.38)
         end)
     end
+    local assets = client.projectileVisualState.assets
+    _drawBillboard(assets.impactGlow, projectile.position, 3.6, 3.6, 0.58, 0.10, 1.0, 0.55)
+    _drawBillboard(assets.plasmaCore, projectile.position, 0.72, 0.72, 1.0, 1.0, 1.0, 1.0)
 end
 
 local function _spawnGigaImpact(position, projectile)
@@ -229,7 +241,7 @@ local function _spawnGigaImpact(position, projectile)
     ParticleRadius(0.68, 0.04, "easeout"); ParticleAlpha(0.96, 0.0, "easeout")
     ParticleGravity(0); ParticleDrag(0.12); ParticleEmissive(36, 0); ParticleCollide(0)
     for _ = 1, 26 do
-        if not _takeBudget("impactParticles", 1, IMPACT_BUDGET) then break end
+        if not _takeParticleBudget("impactParticles", 1) then break end
         local direction = _safeNormalize(Vec(_randomRange(projectile, -1, 1), _randomRange(projectile, -1, 1), _randomRange(projectile, -1, 1)), projectile.direction)
         SpawnParticle(position, VecScale(direction, _randomRange(projectile, 3, 8)), _randomRange(projectile, 0.35, 0.70))
     end
@@ -250,7 +262,7 @@ local function _spawnPlasmaImpactParticles(impact)
     ParticleRadius(0.32, 0.72, "easeout"); ParticleAlpha(1.0, 0.0, "easeout")
     ParticleGravity(0); ParticleDrag(0.30); ParticleEmissive(24.0, 0.0); ParticleRotation(8.0, -3.0, "easeout"); ParticleCollide(0)
     for index = 1, 28 do
-        if not _takeBudget("impactParticles", 1, IMPACT_BUDGET) then break end
+        if not _takeParticleBudget("impactParticles", 1) then break end
         local base = index <= 20 and VecScale(impact.direction, -1) or Vec(0, 0, 0)
         local spread = VecAdd(
             VecScale(impact.rightAxis, _randomRange(impact, -1, 1)),
@@ -262,7 +274,7 @@ local function _spawnPlasmaImpactParticles(impact)
 end
 
 local function _spawnNeutronImpactRing(impact, count, radius, speed, life, r0, g0, b0, r1, g1, b1)
-    if not _takeBudget("impactParticles", count, IMPACT_BUDGET) then return end
+    if not _takeParticleBudget("impactParticles", count) then return end
     ParticleReset(); ParticleType("plain")
     ParticleColor(r0, g0, b0, r1, g1, b1); ParticleRadius(0.15, 0.02, "easeout"); ParticleAlpha(0.95, 0.0, "easeout")
     ParticleGravity(0); ParticleDrag(0.08); ParticleEmissive(16, 0); ParticleCollide(0)
@@ -297,19 +309,20 @@ local function _updateProjectileImpacts(dt)
                 _pointLight(impact.position, 0.82, 0.96, 1.0, 22 * alpha)
             end
             if impact.age <= 0.18 then
-                DrawLine(VecSub(impact.position, VecScale(impact.direction, 12)), VecAdd(impact.position, impact.direction), 0.55, 0.86, 1.0, 1 - impact.age / 0.18)
+                _drawLine(VecSub(impact.position, VecScale(impact.direction, 12)), VecAdd(impact.position, impact.direction), 0.55, 0.86, 1.0, 1 - impact.age / 0.18)
             end
         end
         if impact.age >= impact.lifetime then table.remove(impacts, index) end
     end
 end
 
-function client.finishProjectileVisual(projectileId, mode, hitX, hitY, hitZ)
+function client.finishProjectileVisual(projectileId, mode, hitX, hitY, hitZ, nx, ny, nz, impactLayer)
     local visuals = client.projectileVisualState.byId
     local projectile = visuals[projectileId]
     visuals[projectileId] = nil
     if mode ~= "impact" or projectile == nil then return end
     local position = Vec(hitX or 0, hitY or 0, hitZ or 0)
+    local impactNormal = _safeNormalize(Vec(nx or 0, ny or 1, nz or 0), Vec(0, 1, 0))
     if projectile.fxProfile == "plasmaProjectile" then
         _queueImpact({ fxProfile = "plasmaProjectile", position = position, direction = projectile.direction, rightAxis = projectile.rightAxis, upAxis = projectile.upAxis, age = 0, lifetime = 0.65, randomState = projectile.randomState, initialParticlesSpawned = false })
     elseif projectile.fxProfile == "neutronProjectile" then
@@ -317,13 +330,12 @@ function client.finishProjectileVisual(projectileId, mode, hitX, hitY, hitZ)
     elseif projectile.fxProfile == "gigaCannonProjectile" then
         _spawnGigaImpact(position, projectile)
     else
-        _spawnKineticImpact(position, projectile)
+        _spawnKineticImpact(position, projectile, impactNormal, impactLayer)
     end
 end
 
 function client.projectileVisualTick(dt)
     local state = client.projectileVisualState
-    state.frameBudget.trailParticles, state.frameBudget.impactParticles, state.frameBudget.pointLights = 0, 0, 0
     for projectileId, projectile in pairs(state.byId) do
         local stepDt = math.min(math.max(projectile.lifeRemain or 0, 0), math.max(dt or 0, 0))
         if stepDt <= 0 then

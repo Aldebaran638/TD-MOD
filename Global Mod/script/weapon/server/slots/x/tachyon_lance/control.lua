@@ -92,6 +92,21 @@ local function _xSlotResolveFireDirRelative(shipBodyId, slotConfig)
     )
 end
 
+local function _xSlotApplyCloseRangeFocus(shipBodyId, firePosOffset, localDirection, slotConfig)
+    local config = slotConfig or {}
+    if config.closeRangeFocus ~= true then return localDirection end
+    local shipT = GetBodyTransform(shipBodyId)
+    local origin = TransformToParentPoint(shipT, firePosOffset)
+    local direction = _xSlotSafeNormalize(TransformToParentVec(shipT, localDirection), Vec(0, 0, -1))
+    local focusOrigin = TransformToParentPoint(shipT, Vec(0, 0, -2))
+    QueryRequire("physical")
+    QueryRejectBody(shipBodyId)
+    local hit, distance = QueryRaycast(focusOrigin, direction, math.max(1.0, tonumber(config.closeRangeFocusRange) or 220.0))
+    if not hit then return localDirection end
+    local aimPoint = VecAdd(focusOrigin, VecScale(direction, distance))
+    return _xSlotSafeNormalize(TransformToLocalVec(shipT, VecSub(aimPoint, origin)), localDirection)
+end
+
 -- 读取目标飞船护盾半径（用于护盾球面入射点修正）
 local function _resolveTargetShieldRadius(targetBody, fallbackShipType)
     local radiusFallback = 20
@@ -226,6 +241,13 @@ function server.xSlot_computeHitResult(shipBodyId, firePosOffset, fireDirRelativ
     end
 
     local targetBody = GetShapeBody(shape)
+    if targetBody == shipBodyId then
+        -- 直射 X 槽武器不会把自身的 shape 视为有效命中。
+        local noHitEndPos = VecAdd(origin, VecScale(dir, maxRange))
+        local hitTarget, isHit, isHitStellarisBody = invalidTarget, false, false
+        _xSlot_dbgReturn(noHitEndPos, hitTarget, isHit, isHitStellarisBody)
+        return noHitEndPos, hitTarget, isHit, isHitStellarisBody, dir
+    end
     if targetBody ~= nil and targetBody ~= 0 and server.registryShipExists(targetBody) then
         -- 命中群星飞船：把 endPos 修正为护盾球面入射点
         local bodyT = GetBodyTransform(targetBody)
@@ -261,6 +283,16 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
         4.0,
         math.max(0.0, tonumber(resolvedWeapon.environmentExplosionSize) or 4.0)
     )
+    local physicalExplosionCount = math.max(
+        1,
+        math.min(2, math.floor(tonumber(resolvedWeapon.physicalExplosionCount) or 1))
+    )
+    local function _applyEnvironmentExplosions(pos)
+        if pos == nil then return end
+        for _ = 1, physicalExplosionCount do
+            Explosion(pos, environmentExplosionSize)
+        end
+    end
 
     -- 返回给渲染层的命中补充信息
     local renderResult = {
@@ -282,7 +314,7 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
         if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(hitTarget) then
             renderResult.impactLayer = "environment"
             if endPos ~= nil then
-                Explosion(endPos, environmentExplosionSize)
+                _applyEnvironmentExplosions(endPos)
             end
             return renderResult
         end
@@ -371,7 +403,7 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
 
     -- Teardown API: Explosion(pos, size) 其中 size 范围 0.5 - 4.0
     -- 为了看清客户端渲染特效.暂时屏蔽爆炸效果
-    Explosion(endPos, environmentExplosionSize)
+    _applyEnvironmentExplosions(endPos)
     return renderResult
 end
 
@@ -625,6 +657,7 @@ function server.xSlotControlTick(dt)
 
         local firePosOffset = _vec3TableToVec(mountPos, 0, 0, 4)
         local fireDir = _xSlotResolveFireDirRelative(shipBody, activeConfig)
+        fireDir = _xSlotApplyCloseRangeFocus(shipBody, firePosOffset, fireDir, activeConfig)
         local shipT = GetBodyTransform(shipBody)
         local firePointWorld = TransformToParentPoint(shipT, firePosOffset)
 

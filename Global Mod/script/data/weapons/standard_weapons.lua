@@ -52,8 +52,7 @@ local function _ray(id, name, englishName, slots, damage, cooldown, range, shiel
         damage = damage, damageMin = damage, damageMax = damage,
         cooldown = cooldown, CD = cooldown, maxRange = range,
         shieldFix = shieldFix, armorFix = armorFix, bodyFix = bodyFix,
-        aimControlMode = "camera_limited", aimLimitDeg = 70.0,
-        aimPitchOffsetDeg = 6.0, environmentExplosionSize = 0.35,
+        environmentExplosionSize = 0.35,
     })
 end
 
@@ -78,8 +77,6 @@ local function _projectile(id, name, englishName, slots, damage, cooldown, range
         armorFix = armorFix, bodyFix = bodyFix,
         explosionRadius = fx == "plasmaProjectile" and 1.4 or 0.8,
         explosionStrength = fx == "plasmaProjectile" and 0.8 or 0.35,
-        aimControlMode = "camera_limited", aimLimitDeg = 70.0,
-        aimPitchOffsetDeg = 6.0,
     })
 end
 
@@ -151,9 +148,23 @@ _guided("swarmerMissile", "旋风导弹", "Whirlwind Missiles", { "M" }, 210, 10
 _rocket("devastatorTorpedoes", "毁灭者鱼雷", "Devastator Torpedoes", { "G" }, 700, 18.0, 1200.0, 30.8, 1.0, 1.0, 1.0, "MOD/prefabs/devastatorTorpedoes.xml", "guidedMissile")
 _projectile("neutronLauncher", "中子发射器", "Neutron Launchers", { "G" }, 610, 4.5, 1150.0, 420.0, 0.5, 2.0, 1.75, "neutronProjectile")
 weaponData.neutronLauncher.targetingMode = "forward"
-weaponData.neutronLauncher.aimControlMode = "fixed"
-weaponData.neutronLauncher.forceForward = true
 weaponData.neutronLauncher.projectileProfile.mode = "energy"
+
+local _visualProfiles = {
+    largeGammaLaser = { "gammaLarge", "gammaLarge", "none" }, mediumGammaLaser = { "gammaMedium", "gammaMedium", "none" },
+    largeGaussCannon = { "gaussLarge", "gaussLarge", "gaussLarge" }, mediumGaussCannon = { "gaussMedium", "gaussMedium", "gaussMedium" },
+    kineticArtillery = { "kineticArtillery", "kineticArtillery", "kineticArtillery" },
+    largeStormfireAutocannon = { "autocannonLarge", "autocannonLarge", "autocannonLarge" }, mediumStormfireAutocannon = { "autocannonMedium", "autocannonMedium", "autocannonMedium" },
+    largePlasmaCannon = { "plasmaLarge", "plasmaLarge", "plasmaLarge" }, mediumPlasmaCannon = { "plasmaMedium", "plasmaMedium", "plasmaMedium" },
+    gigaCannon = { "gigaMagneticLaunch", "gigaPenetration", "gigaCannon" }, neutronLauncher = { "neutronCompression", "neutronImpact", "neutron" },
+    focusedArcEmitter = { "focusedArcDischarge", "focusedArcImpact", "none" }, phaseDisruptor = { "disruptor", "disruptorImplosion", "none" },
+    swarmerMissile = { "swarmerLaunch", "swarmerFragmentation", "swarmer" }, devastatorTorpedoes = { "torpedoLaunch", "torpedoHeavy", "torpedo" },
+}
+for weaponType, visual in pairs(_visualProfiles) do
+    weaponData[weaponType].muzzleFxProfile = visual[1]
+    weaponData[weaponType].impactFxProfile = visual[2]
+    weaponData[weaponType].projectileFxVariant = visual[3]
+end
 
 -- H
 _register({
@@ -182,6 +193,11 @@ weaponData.focusedArcEmitter.launchDuration = weaponData.focusedArcEmitter.fireP
 weaponData.tachyonLance.environmentExplosionSize = 4.0
 weaponData.focusedArcEmitter.environmentExplosionSize = 4.0
 weaponData.gigaCannon.explosionRadius = 4.0
+-- X 槽重武器命中普通物理目标时，连续结算两次最大物理爆炸。
+-- 已注册的群星飞船仍只走护盾/装甲/船体伤害路径。
+weaponData.tachyonLance.physicalExplosionCount = 2
+weaponData.focusedArcEmitter.physicalExplosionCount = 2
+weaponData.gigaCannon.physicalExplosionCount = 2
 weaponData.kineticArtillery.legacyController = "lSlot"
 weaponData.swarmerMissile.legacyController = "mSlot"
 weaponData.gammaStrikeCraft.legacyController = "hSlot"
@@ -216,6 +232,34 @@ for weaponType, profile in pairs(_runtimeProfiles) do
         sequence = profile[3],
     }
     definition.continuousFire = true
+end
+
+-- 所有瞄准参数集中在这里。飞船只提交瞄准方向，武器系统按该表执行限制。
+local _aimProfiles = {
+    tachyonLance = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    focusedArcEmitter = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    gigaCannon = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    largeGammaLaser = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    largePlasmaCannon = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    largeGaussCannon = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    kineticArtillery = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    largeStormfireAutocannon = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    mediumGammaLaser = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    mediumPlasmaCannon = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    phaseDisruptor = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    mediumGaussCannon = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    mediumStormfireAutocannon = { mode = "camera_limited", limitDeg = 70.0, pitchOffsetDeg = 6.0 },
+    neutronLauncher = { mode = "camera_limited", limitDeg = 360.0, pitchOffsetDeg = 6.0 },
+    swarmerMissile = { mode = "fixed", limitDeg = 0.0, pitchOffsetDeg = 0.0 },
+    devastatorTorpedoes = { mode = "fixed", limitDeg = 0.0, pitchOffsetDeg = 0.0 },
+    gammaStrikeCraft = { mode = "fixed", limitDeg = 0.0, pitchOffsetDeg = 0.0 },
+}
+
+for weaponType, profile in pairs(_aimProfiles) do
+    local definition = weaponData[weaponType]
+    definition.aimControlMode = profile.mode
+    definition.aimLimitDeg = profile.limitDeg
+    definition.aimPitchOffsetDeg = profile.pitchOffsetDeg
 end
 
 for _, weaponType in ipairs({
@@ -275,8 +319,11 @@ for _, weaponType in ipairs({
     "mediumGaussCannon", "mediumStormfireAutocannon",
 }) do
     weaponData[weaponType].targetingMode = "forward"
-    weaponData[weaponType].aimControlMode = "forward_converge"
+    weaponData[weaponType].closeRangeFocus = true
+    weaponData[weaponType].closeRangeFocusRange = 220.0
 end
+weaponData.neutronLauncher.closeRangeFocus = true
+weaponData.neutronLauncher.closeRangeFocusRange = 220.0
 
 weaponData.devastatorTorpedoes.ignoreGravity = true
 weaponData.devastatorTorpedoes.projectileProfile.ignoreGravity = true

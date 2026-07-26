@@ -4,12 +4,7 @@ client = client or {}
 client.genericRaycastFxState = client.genericRaycastFxState or { beams = {}, sprite = 0 }
 
 local _profiles = {
-    gammaBeam = {
-        color = { 1.0, 0.38, 0.05 },
-        coreColor = { 1.0, 0.78, 0.32 },
-        width = 1.2,
-        life = 0.16,
-    },
+    gammaBeam = { color = { 1.0, 0.38, 0.05 }, coreColor = { 1.0, 0.78, 0.32 }, width = 0.2, life = 0.115 },
     energyBeam = { color = { 0.25, 0.65, 1.0 }, width = 1.2, life = 0.16 },
     focusedArcBeam = { color = { 0.72, 0.22, 1.0 }, width = 1.8, life = 0.22 },
     arcBeam = { color = { 0.18, 1.0, 0.32 }, width = 1.8, life = 0.22 },
@@ -42,7 +37,9 @@ local function _spawnImpactParticles(profile, position, normal)
     ParticleDrag(0.12)
     ParticleEmissive(18.0, 0.0)
     ParticleCollide(0.0)
-    for _ = 1, 18 do
+    local count = profile == _profiles.arcBeam and 12 or 18
+    if not client.weaponFxTakeParticles(count, "normal") then return end
+    for _ = 1, count do
         local scatter = _normalize(
             Vec(
                 math.random() * 2.0 - 1.0,
@@ -69,10 +66,11 @@ end
 function client.spawnGenericRaycastWeaponFx(
     weaponType, fxProfile,
     sx, sy, sz, ex, ey, ez,
-    nx, ny, nz, didHit
+    nx, ny, nz, didHit, impactLayer
 )
     local profileId = tostring(fxProfile or "energyBeam")
     local profile = _profiles[profileId] or _profiles.energyBeam
+    local life = profileId == "gammaBeam" and client.gammaLaserFxProfile(weaponType).life or profile.life
     local endPos = Vec(ex or 0, ey or 0, ez or 0)
     local hitNormal = Vec(nx or 0, ny or 1, nz or 0)
     table.insert(client.genericRaycastFxState.beams, {
@@ -82,11 +80,17 @@ function client.spawnGenericRaycastWeaponFx(
         endPos = endPos,
         hitNormal = hitNormal,
         didHit = math.floor(didHit or 0) ~= 0,
-        life = profile.life,
-        maxLife = profile.life,
+        impactLayer = tostring(impactLayer or "none"),
+        life = life,
+        maxLife = life,
     })
-    if math.floor(didHit or 0) ~= 0 then
-        _spawnImpactParticles(profile, endPos, hitNormal)
+    if profileId == "gammaBeam" then
+        client.spawnGammaLaserMuzzleFx(weaponType, Vec(sx or 0, sy or 0, sz or 0), VecSub(endPos, Vec(sx or 0, sy or 0, sz or 0)))
+        if math.floor(didHit or 0) ~= 0 then client.spawnGammaLaserImpactFx(weaponType, endPos, hitNormal, impactLayer) end
+    elseif math.floor(didHit or 0) ~= 0 then
+        if not client.spawnWeaponImpactFx(weaponType, endPos, hitNormal, impactLayer) then
+            _spawnImpactParticles(profile, endPos, hitNormal)
+        end
     end
 end
 
@@ -112,7 +116,9 @@ function client.genericRaycastFxRender()
             local alpha = math.max(0.0, math.min(1.0, (beam.life or 0.0) / math.max(0.001, beam.maxLife or 0.1)))
             local color = profile.color
             local coreColor = profile.coreColor or { 2.5, 2.5, 2.5 }
-            if beam.profile == "arcBeam" or beam.profile == "focusedArcBeam" then
+            if beam.profile == "gammaBeam" then
+                client.gammaLaserDrawBeam(beam.startPos, beam.endPos, client.gammaLaserFxProfile(beam.weaponType), (beam.maxLife - beam.life), beam.maxLife)
+            elseif beam.profile == "arcBeam" or beam.profile == "focusedArcBeam" then
                 local axisA = _cameraAxis(direction, center)
                 local axisB = _normalize(VecCross(direction, axisA), Vec(0, 1, 0))
                 local previous = beam.startPos
@@ -136,25 +142,33 @@ function client.genericRaycastFxRender()
                             segmentCenter,
                             QuatAlignXZ(segmentDirection, _cameraAxis(segmentDirection, segmentCenter))
                         )
-                        DrawSprite(state.sprite, transform, segmentLength, profile.width * 4.5,
-                            color[1] * 2.2, color[2] * 2.2, color[3] * 2.2, alpha * 0.42,
-                            true, true, false)
-                        DrawSprite(state.sprite, transform, segmentLength, profile.width * 0.72,
-                            2.5, 2.5, 2.5, alpha, true, true, false)
+                        if client.weaponFxTakeSprite(1) then
+                            DrawSprite(state.sprite, transform, segmentLength, profile.width * 4.5,
+                                color[1] * 2.2, color[2] * 2.2, color[3] * 2.2, alpha * 0.42,
+                                true, true, false)
+                        end
+                        if client.weaponFxTakeSprite(1) then
+                            DrawSprite(state.sprite, transform, segmentLength, profile.width * 0.72,
+                                2.5, 2.5, 2.5, alpha, true, true, false)
+                        end
                     end
                     previous = point
                 end
             else
                 local transform = Transform(center, QuatAlignXZ(direction, _cameraAxis(direction, center)))
-                DrawSprite(state.sprite, transform, length, profile.width * 5.0,
-                    color[1] * 2.0, color[2] * 2.0, color[3] * 2.0, alpha * 0.35,
-                    true, true, false)
-                DrawSprite(state.sprite, transform, length, profile.width,
-                    coreColor[1], coreColor[2], coreColor[3], alpha, true, true, false)
+                if client.weaponFxTakeSprite(1) then
+                    DrawSprite(state.sprite, transform, length, profile.width * 5.0,
+                        color[1] * 2.0, color[2] * 2.0, color[3] * 2.0, alpha * 0.35,
+                        true, true, false)
+                end
+                if client.weaponFxTakeSprite(1) then
+                    DrawSprite(state.sprite, transform, length, profile.width,
+                        coreColor[1], coreColor[2], coreColor[3], alpha, true, true, false)
+                end
             end
-            PointLight(beam.startPos, color[1], color[2], color[3], 8.0 * alpha)
-            if beam.didHit then
-                PointLight(beam.endPos, color[1], color[2], color[3], 6.0 * alpha)
+            if beam.profile ~= "gammaBeam" then
+                client.weaponFxPointLight(beam.startPos, color[1], color[2], color[3], 8.0 * alpha)
+                if beam.didHit then client.weaponFxPointLight(beam.endPos, color[1], color[2], color[3], 6.0 * alpha) end
             end
         end
     end
