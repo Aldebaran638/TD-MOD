@@ -38,9 +38,9 @@ local function _register(definition)
     weaponData[id] = _copyMissing(weaponData[id] or {}, definition)
 end
 
-local function _ray(id, name, slots, damage, cooldown, range, shieldFix, armorFix, bodyFix, fx, charge)
+local function _ray(id, name, englishName, slots, damage, cooldown, range, shieldFix, armorFix, bodyFix, fx, charge)
     _register({
-        weaponType = id, displayName = name, slotTypes = slots,
+        weaponType = id, displayName = name, englishName = englishName, slotTypes = slots,
         behaviorType = "raycast", targetingMode = "camera_limited",
         fireProfile = {
             mode = charge and "charged" or "instant",
@@ -57,9 +57,9 @@ local function _ray(id, name, slots, damage, cooldown, range, shieldFix, armorFi
     })
 end
 
-local function _projectile(id, name, slots, damage, cooldown, range, speed, shieldFix, armorFix, bodyFix, fx, burst)
+local function _projectile(id, name, englishName, slots, damage, cooldown, range, speed, shieldFix, armorFix, bodyFix, fx, burst)
     _register({
-        weaponType = id, displayName = name, slotTypes = slots,
+        weaponType = id, displayName = name, englishName = englishName, slotTypes = slots,
         behaviorType = "projectile", targetingMode = "camera_limited",
         fireProfile = {
             mode = burst and "burst" or "single",
@@ -83,9 +83,9 @@ local function _projectile(id, name, slots, damage, cooldown, range, speed, shie
     })
 end
 
-local function _guided(id, name, slots, damage, cooldown, range, speed, shieldFix, armorFix, bodyFix, prefab, fx)
+local function _guided(id, name, englishName, slots, damage, cooldown, range, speed, shieldFix, armorFix, bodyFix, prefab, fx)
     _register({
-        weaponType = id, displayName = name, slotTypes = slots,
+        weaponType = id, displayName = name, englishName = englishName, slotTypes = slots,
         behaviorType = "guidedProjectile", targetingMode = "target_lock",
         fireProfile = { mode = "single" },
         projectileProfile = { mode = "guided", speed = speed }, fxProfile = fx,
@@ -99,9 +99,9 @@ local function _guided(id, name, slots, damage, cooldown, range, speed, shieldFi
     })
 end
 
-local function _rocket(id, name, slots, damage, cooldown, range, speed, shieldFix, armorFix, bodyFix, prefab, fx)
+local function _rocket(id, name, englishName, slots, damage, cooldown, range, speed, shieldFix, armorFix, bodyFix, prefab, fx)
     _register({
-        weaponType = id, displayName = name, slotTypes = slots,
+        weaponType = id, displayName = name, englishName = englishName, slotTypes = slots,
         behaviorType = "rocketProjectile", targetingMode = "forward",
         fireProfile = { mode = "single" },
         projectileProfile = { mode = "unguided_rocket", speed = speed }, fxProfile = fx,
@@ -117,16 +117,16 @@ local function _rocket(id, name, slots, damage, cooldown, range, speed, shieldFi
 end
 
 -- X
-_ray("tachyonLance", "快子光矛", { "X" }, 2115, 6.0, 500.0, 0.5, 2.0, 1.5, "tachyonLance", 0.50)
-_ray("focusedArcEmitter", "聚能电弧发射器", { "X" }, 1680, 6.0, 520.0, 0.0, 0.0, 2.3, "focusedArcBeam", 0.50)
-_projectile("gigaCannon", "千兆级加农炮", { "X" }, 2350, 3.5, 750.0, 560.0, 2.0, 0.5, 1.0, "gigaCannonProjectile")
+_ray("tachyonLance", "快子光矛", "Tachyon Lance", { "X" }, 2115, 6.0, 500.0, 0.5, 2.0, 1.5, "tachyonLance", 0.50)
+_ray("focusedArcEmitter", "聚能电弧发射器", "Focused Arc Emitter", { "X" }, 1680, 6.0, 520.0, 0.0, 0.0, 2.3, "focusedArcBeam", 0.50)
+_projectile("gigaCannon", "千兆级加农炮", "Giga Cannon", { "X" }, 2350, 3.5, 750.0, 560.0, 2.0, 0.5, 1.0, "gigaCannonProjectile")
 
 -- L
-_ray("largeGammaLaser", "伽马激光", { "L" }, 185, 1.45, 560.0, 0.5, 1.5, 1.25, "gammaBeam")
-_projectile("largePlasmaCannon", "等离子加农炮", { "L" }, 235, 2.0, 430.0, 115.0, 0.5, 2.0, 1.5, "plasmaProjectile")
-_projectile("largeGaussCannon", "高斯炮", { "L" }, 205, 1.65, 610.0, 155.0, 1.5, 0.75, 1.0, "kineticProjectile")
-_projectile("kineticArtillery", "先进动能火炮", { "L" }, 200, 0.1, 750.0, 150.0, 2.0, 0.5, 1.0, "kineticProjectile")
-_projectile("largeStormfireAutocannon", "火风暴机关炮", { "L" }, 56, 0.65, 220.0, 235.0, 1.5, 0.75, 1.0, "autocannonProjectile", 5)
+_ray("largeGammaLaser", "伽马激光", "Large Gamma Laser", { "L" }, 185, 1.45, 560.0, 0.5, 1.5, 1.25, "gammaBeam")
+_projectile("largePlasmaCannon", "等离子加农炮", "Large Plasma Cannon", { "L" }, 235, 2.0, 430.0, 115.0, 0.5, 2.0, 1.5, "plasmaProjectile")
+_projectile("largeGaussCannon", "高斯炮", "Large Gauss Cannon", { "L" }, 205, 1.65, 610.0, 155.0, 1.5, 0.75, 1.0, "kineticProjectile")
+_projectile("kineticArtillery", "先进动能火炮", "Kinetic Artillery", { "L" }, 200, 0.1, 750.0, 150.0, 2.0, 0.5, 1.0, "kineticProjectile")
+_projectile("largeStormfireAutocannon", "火风暴机关炮", "Large Stormfire Autocannon", { "L" }, 56, 0.65, 220.0, 235.0, 1.5, 0.75, 1.0, "autocannonProjectile", 5)
 weaponData.largeStormfireAutocannon.fireProfile.mode = "single"
 weaponData.largeStormfireAutocannon.fireProfile.burstCount = 1
 weaponData.largeStormfireAutocannon.fireProfile.burstInterval = 0.0
@@ -134,22 +134,22 @@ weaponData.largeStormfireAutocannon.cooldown = 0.0
 weaponData.largeStormfireAutocannon.CD = 0.0
 
 -- M
-_ray("mediumGammaLaser", "伽马激光", { "M" }, 92, 1.1, 390.0, 0.5, 1.5, 1.25, "gammaBeam")
-_projectile("mediumPlasmaCannon", "等离子加农炮", { "M" }, 118, 1.5, 330.0, 105.0, 0.5, 2.0, 1.5, "plasmaProjectile")
-_ray("phaseDisruptor", "相位裂解炮", { "M" }, 82, 1.25, 340.0, 0.0, 0.0, 2.0, "arcBeam")
+_ray("mediumGammaLaser", "伽马激光", "Medium Gamma Laser", { "M" }, 92, 1.1, 390.0, 0.5, 1.5, 1.25, "gammaBeam")
+_projectile("mediumPlasmaCannon", "等离子加农炮", "Medium Plasma Cannon", { "M" }, 118, 1.5, 330.0, 105.0, 0.5, 2.0, 1.5, "plasmaProjectile")
+_ray("phaseDisruptor", "相位裂解炮", "Phase Disruptor", { "M" }, 82, 1.25, 340.0, 0.0, 0.0, 2.0, "arcBeam")
 weaponData.phaseDisruptor.suppressShipExplosion = true
-_projectile("mediumGaussCannon", "高斯炮", { "M" }, 104, 1.25, 430.0, 145.0, 1.5, 0.75, 1.0, "kineticProjectile")
-_projectile("mediumStormfireAutocannon", "火风暴机关炮", { "M" }, 28, 0.55, 180.0, 225.0, 1.5, 0.75, 1.0, "autocannonProjectile", 4)
+_projectile("mediumGaussCannon", "高斯炮", "Medium Gauss Cannon", { "M" }, 104, 1.25, 430.0, 145.0, 1.5, 0.75, 1.0, "kineticProjectile")
+_projectile("mediumStormfireAutocannon", "火风暴机关炮", "Medium Stormfire Autocannon", { "M" }, 28, 0.55, 180.0, 225.0, 1.5, 0.75, 1.0, "autocannonProjectile", 4)
 weaponData.mediumStormfireAutocannon.fireProfile.mode = "single"
 weaponData.mediumStormfireAutocannon.fireProfile.burstCount = 1
 weaponData.mediumStormfireAutocannon.fireProfile.burstInterval = 0.0
 weaponData.mediumStormfireAutocannon.cooldown = 0.0
 weaponData.mediumStormfireAutocannon.CD = 0.0
-_guided("swarmerMissile", "旋风导弹", { "M" }, 210, 10.0, 975.0, 43.875, 1.0, 1.2, 1.8, "MOD/prefabs/swarmerMissile.xml", "guidedMissile")
+_guided("swarmerMissile", "旋风导弹", "Whirlwind Missiles", { "M" }, 210, 10.0, 975.0, 43.875, 1.0, 1.2, 1.8, "MOD/prefabs/swarmerMissile.xml", "guidedMissile")
 
 -- G
-_rocket("devastatorTorpedoes", "毁灭者鱼雷", { "G" }, 700, 18.0, 1200.0, 30.8, 1.0, 1.0, 1.0, "MOD/prefabs/devastatorTorpedoes.xml", "guidedMissile")
-_projectile("neutronLauncher", "中子发射器", { "G" }, 610, 4.5, 1150.0, 420.0, 0.5, 2.0, 1.75, "neutronProjectile")
+_rocket("devastatorTorpedoes", "毁灭者鱼雷", "Devastator Torpedoes", { "G" }, 700, 18.0, 1200.0, 30.8, 1.0, 1.0, 1.0, "MOD/prefabs/devastatorTorpedoes.xml", "guidedMissile")
+_projectile("neutronLauncher", "中子发射器", "Neutron Launchers", { "G" }, 610, 4.5, 1150.0, 420.0, 0.5, 2.0, 1.75, "neutronProjectile")
 weaponData.neutronLauncher.targetingMode = "forward"
 weaponData.neutronLauncher.aimControlMode = "fixed"
 weaponData.neutronLauncher.forceForward = true
@@ -157,7 +157,7 @@ weaponData.neutronLauncher.projectileProfile.mode = "energy"
 
 -- H
 _register({
-    weaponType = "gammaStrikeCraft", displayName = "先进型舰载机",
+    weaponType = "gammaStrikeCraft", displayName = "先进型舰载机", englishName = "Advanced Strike Craft",
     slotTypes = { "H" }, behaviorType = "strikeCraft",
     targetingMode = "target_lock", fireProfile = { mode = "launch_recover" },
     projectileProfile = { mode = "craft" }, fxProfile = "strikeCraft",

@@ -690,6 +690,7 @@ function client.mainWeaponHudDraw()
     local topFill, topText = _resolveXSlotTopStatus(state)
     local topColor = cfg.xSlotColor
     local titleText = tostring(weaponDefinition.displayName or "Tachyon Lance")
+    local englishNameText = tostring(weaponDefinition.englishName or "")
     local modeText = string.format("Main Weapon: X-Slot [%s]", string.upper(state.xSlotFireMode or "aim"))
 
     if usesGenericRuntime then
@@ -765,14 +766,23 @@ function client.mainWeaponHudDraw()
         _drawWeaponIcon(148, 36, cfg.iconSize, cfg.hSlotColor, "H", currentMode == "hSlot", cfg)
 
         UiPush()
-            UiTranslate(190, 34)
+            UiTranslate(190, 30)
             UiColor(cfg.textColor[1], cfg.textColor[2], cfg.textColor[3], cfg.textColor[4])
             UiFont("regular.ttf", cfg.labelSize)
             UiText(titleText)
         UiPop()
 
+        if englishNameText ~= "" then
+            UiPush()
+                UiTranslate(190, 44)
+                UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4] * 0.8)
+                UiFont("regular.ttf", cfg.valueSize - 2)
+                UiText(englishNameText)
+            UiPop()
+        end
+
         UiPush()
-            UiTranslate(190, 54)
+            UiTranslate(190, 56)
             UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
             UiFont("regular.ttf", cfg.valueSize)
             UiText(modeText)

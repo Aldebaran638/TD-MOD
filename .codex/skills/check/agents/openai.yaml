@@ -1,0 +1,4 @@
+interface:
+  display_name: "项目检查"
+  short_description: "依次运行 CM2 的编码、Lua、武器系统、XML 与全部自测试"
+  default_prompt: "使用 $check 运行本项目的全部验证，并报告任何失败项。"

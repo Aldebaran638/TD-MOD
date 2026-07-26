@@ -215,16 +215,10 @@ foreach ($mapping in $treeMappings) {
         -Name $mapping.Name
 }
 
-$configuratorSource = Join-Path $cmRoot "script\weapon_configurator.lua"
+$configuratorSource = Join-Path $cmRoot "main.lua"
 $gmMain = Join-Path $gmRoot "main.lua"
 $configuratorText = [IO.File]::ReadAllText($configuratorSource)
-# The source file lives below script/, while GM main.lua lives at the mod root.
-# Prefix its relative data/weapon includes so both entry points resolve identically.
-$gmMainText = [Text.RegularExpressions.Regex]::Replace(
-    $configuratorText,
-    '(?m)^(#include\s+")(?=(?:data|weapon)/)',
-    '${1}script/'
-)
+$gmMainText = $configuratorText
 $mainStatus = Set-GeneratedTextFile -Destination $gmMain -Content $gmMainText
 
 $battlecruiserPrefab = Join-Path $cmRoot "prefabs\ships\enigma_battlecruiser.xml"

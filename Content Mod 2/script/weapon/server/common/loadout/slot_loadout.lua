@@ -10,7 +10,6 @@ server = server or {}
 -- 模块内部状态
 local _stateByType = {}
 local _resolvedDefinitionByType = {}
-local _templateRegistryRoot = "StellarisShips/server/spawnTemplates"
 
 -- ============ 内部辅助函数 ============
 
@@ -115,27 +114,6 @@ local function _validateConfigurationShape(configuration)
     return true, nil
 end
 
-local function _templateKey(shipType, field)
-    return _templateRegistryRoot .. "/" .. tostring(shipType or "enigmaticCruiser") .. "/" .. tostring(field or "")
-end
-
-local function _readSpawnTemplate(shipType, definition)
-    local configurationId = GetString(_templateKey(shipType, "configurationId"))
-    if configurationId == nil or configurationId == "" then return nil end
-    local configuration = _findConfiguration(definition, configurationId)
-    if configuration == nil then return nil end
-    local requested = {}
-    for _, slotType in ipairs({ "X", "L", "M", "G", "H" }) do
-        requested[slotType] = GetString(_templateKey(shipType, slotType))
-    end
-    local loadout = _buildResolvedLoadout(definition, configuration, requested)
-    if loadout == nil then return nil end
-    return {
-        configurationId = tostring(configuration.configurationId or configurationId),
-        loadout = loadout,
-    }
-end
-
 local function _configurationGroup(configuration, slotType)
     for _, group in ipairs(configuration.slotGroups or {}) do
         if tostring(group.slotType or "") == tostring(slotType or "") then
@@ -209,8 +187,7 @@ local function _initInternal(shipType)
         return false, "ship type not found: " .. tostring(shipType)
     end
     
-    local template = _readSpawnTemplate(shipType, definition)
-    local defaultConfigId = template and template.configurationId or definition.defaultSlotConfigurationId
+    local defaultConfigId = definition.defaultSlotConfigurationId
     local configuration = _findConfiguration(definition, defaultConfigId)
     
     if configuration == nil then
@@ -231,7 +208,7 @@ local function _initInternal(shipType)
         return false, shapeError
     end
     
-    local requestedLoadout = template and template.loadout or configuration.defaultLoadout or {}
+    local requestedLoadout = configuration.defaultLoadout or {}
     local loadout, loadoutError = _buildResolvedLoadout(definition, configuration, requestedLoadout)
     if loadout == nil then
         return false, loadoutError
@@ -360,40 +337,6 @@ function _loadoutAPI.resolveShipDefinition(shipType)
     return resolved
 end
 
-function _loadoutAPI.getSpawnTemplate(shipType)
-    local resolvedType = shipType or server.defaultShipType or "enigmaticCruiser"
-    local definition = _resolveShipDefinition(resolvedType)
-    local template = _readSpawnTemplate(resolvedType, definition)
-    if template ~= nil then return _cloneTable(template) end
-
-    local configuration = _findConfiguration(definition, definition.defaultSlotConfigurationId)
-    if configuration == nil then return nil end
-    local loadout = _buildResolvedLoadout(definition, configuration, configuration.defaultLoadout or {})
-    if loadout == nil then return nil end
-    return {
-        configurationId = tostring(configuration.configurationId or definition.defaultSlotConfigurationId),
-        loadout = loadout,
-    }
-end
-
-function _loadoutAPI.setSpawnTemplate(shipType, configurationId, requestedLoadout)
-    local resolvedType = shipType or server.defaultShipType or "enigmaticCruiser"
-    local definition = _resolveShipDefinition(resolvedType)
-    local configuration = _findConfiguration(definition, configurationId)
-    if configuration == nil then return false, "configuration not found" end
-
-    local shapeOk, shapeError = _validateConfigurationShape(configuration)
-    if not shapeOk then return false, shapeError end
-    local loadout, loadoutError = _buildResolvedLoadout(definition, configuration, requestedLoadout or {})
-    if loadout == nil then return false, loadoutError end
-
-    SetString(_templateKey(resolvedType, "configurationId"), tostring(configuration.configurationId or configurationId), true)
-    for _, slotType in ipairs({ "X", "L", "M", "G", "H" }) do
-        SetString(_templateKey(resolvedType, slotType), tostring(loadout[slotType] or ""), true)
-    end
-    return true, nil
-end
-
 -- 将API导出到server表，供API文件使用
 server._slotLoadoutAPI = _loadoutAPI
 
@@ -406,6 +349,8 @@ function server.slotLoadoutInit(shipType)
         DebugPrint("[slotLoadout] init failed: " .. tostring(err or "unknown"))
         return false
     end
+    server.weaponLocalConfigurationBound = false
+    server.weaponLocalConfigurationPlayerId = nil
     return true
 end
 

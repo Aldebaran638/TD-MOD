@@ -1,6 +1,8 @@
 
 -- 暂定的默认船类型
-server.defaultShipType = "enigmaticCruiser"
+if server ~= nil then
+    server.defaultShipType = "enigmaticCruiser"
+end
 
 -- 统一飞船数据表
 -- 将多个飞船的参数放在一起，便于维护与扩展
