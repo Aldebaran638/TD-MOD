@@ -66,7 +66,12 @@ function server.guidedProjectileRemoveAt(index)
     local projectile = active[index]
     if projectile ~= nil then
         _guidedProjectileDeleteBody(projectile.bodyId or 0)
-        ClientCall(0, "client.finishMissileVisual", projectile.id or 0)
+        server.netClientCall(
+            "missile.finish",
+            0,
+            "client.finishMissileVisual",
+            projectile.id or 0
+        )
     end
 
     local last = #active
@@ -86,12 +91,24 @@ end
 
 function server.guidedProjectilePlayImpactSound(weaponType, hitPos)
     local p = hitPos or Vec(0, 0, 0)
-    ClientCall(0, "client.playMissileImpactSound", weaponType or "", p[1], p[2], p[3])
+    server.netClientCall(
+        "weapon.hitFx",
+        0,
+        "client.playMissileImpactSound",
+        weaponType or "",
+        p[1], p[2], p[3]
+    )
 end
 
 function server.guidedProjectilePlayImpactFx(hitPos, impactLayer)
     local p = hitPos or Vec(0, 0, 0)
-    ClientCall(0, "client.playMissileImpactFx", p[1], p[2], p[3], impactLayer or "body")
+    server.netClientCall(
+        "weapon.hitFx",
+        0,
+        "client.playMissileImpactFx",
+        p[1], p[2], p[3],
+        impactLayer or "body"
+    )
 end
 
 function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosWorld, fireDirWorld, targetBodyId, targetVehicleId)
@@ -114,15 +131,22 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
     local projectileId = state.nextProjectileId or 1
     state.nextProjectileId = projectileId + 1
 
-    ClientCall(
+    server.netClientCall(
+        "missile.spawn",
         0,
         "client.spawnMissileVisual",
         projectileId,
         firePosWorld[1], firePosWorld[2], firePosWorld[3],
         startVelocity[1], startVelocity[2], startVelocity[3]
     )
-    ClientCall(0, "client.spawnMissileWarpFx", firePosWorld[1], firePosWorld[2], firePosWorld[3])
-    ClientCall(
+    server.netClientCall(
+        "weapon.fireFx",
+        0,
+        "client.spawnMissileWarpFx",
+        firePosWorld[1], firePosWorld[2], firePosWorld[3]
+    )
+    server.netClientCall(
+        "weapon.fireFx",
         0,
         "client.playMissileFireSound",
         tostring(cfg.weaponType or ""),

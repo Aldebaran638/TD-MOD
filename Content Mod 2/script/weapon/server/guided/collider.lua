@@ -123,7 +123,8 @@ function server.guidedProjectileColliderPostUpdate()
             local currentVel = projectile.ignoreGravity
                 and (projectile.kinematicVelocity or Vec(0, 0, 0))
                 or GetBodyVelocity(bodyId)
-            ClientCall(
+            server.netClientCall(
+                "missile.update",
                 0,
                 "client.updateMissileVisual",
                 projectile.id or 0,

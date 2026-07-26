@@ -508,7 +508,8 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
     if not hit then
         _hSlotBumpDebugCounter(shipBody, "beam_nohit")
         local endPos = VecAdd(origin, VecScale(dir, maxRange))
-        ClientCall(
+        server.netClientCall(
+            "weapon.fireFx",
             0,
             "client.spawnHSlotBeamFx",
             origin[1], origin[2], origin[3],
@@ -554,15 +555,22 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
         _hSlotBumpDebugCounter(shipBody, "impact_skipped")
     end
 
-    ClientCall(0, "client.playHSlotGammaFireSound", origin[1], origin[2], origin[3])
-    ClientCall(
+    server.netClientCall(
+        "weapon.fireFx",
+        0,
+        "client.playHSlotGammaFireSound",
+        origin[1], origin[2], origin[3]
+    )
+    server.netClientCall(
+        "weapon.hitFx",
         0,
         "client.playWeaponSound",
         craft.weaponType or "gammaStrikeCraft",
         "hit",
         hitPos[1], hitPos[2], hitPos[3]
     )
-    ClientCall(
+    server.netClientCall(
+        "weapon.fireFx",
         0,
         "client.spawnHSlotBeamFx",
         origin[1], origin[2], origin[3],
@@ -573,7 +581,13 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
     )
 
     if didHitShield and hitBody ~= nil and hitBody ~= 0 then
-        ClientCall(0, "client.playProjectileShieldImpactFx", hitBody, hitPos[1], hitPos[2], hitPos[3])
+        server.netClientCall(
+            "weapon.hitFx",
+            0,
+            "client.playProjectileShieldImpactFx",
+            hitBody,
+            hitPos[1], hitPos[2], hitPos[3]
+        )
     end
 
     if normal ~= nil and normal[2] ~= nil then
@@ -734,7 +748,8 @@ function server.hSlotControlSyncHud()
     -- 兼容观察：保留全局最近写入来源，便于确认是否被其他脚本实例覆盖
     SetInt(dbgRoot .. "/lastShipBody", math.floor(shipBody or 0))
 
-    ClientCall(
+    server.netClientCall(
+        "hud.hslot",
         0,
         "client.updateHSlotHudState",
         shipBody,
@@ -753,7 +768,8 @@ function server.hSlotControlSyncHud()
         dbgS2Return
     )
 
-    ClientCall(
+    server.netClientCall(
+        "debug.hslot",
         0,
         "client.receiveHSlotDebugState",
         active1 + active2,

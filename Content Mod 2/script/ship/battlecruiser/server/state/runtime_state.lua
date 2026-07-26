@@ -262,7 +262,13 @@ function _runtimeAPI.syncMainWeapon(shipBodyId, force, defaultShipType)
         return
     end
     
-    ClientCall(0, "client.setShipMainWeaponMode", shipBodyId, currentMode)
+    server.netClientCall(
+        "hud.weaponMode",
+        0,
+        "client.setShipMainWeaponMode",
+        shipBodyId,
+        currentMode
+    )
     mainWeapon.lastSentMode = currentMode
     mainWeapon.lastSentAt = nowTime
 end

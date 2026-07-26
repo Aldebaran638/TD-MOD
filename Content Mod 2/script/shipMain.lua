@@ -6,6 +6,8 @@
 #include "data/ships/ship_catalog.lua"
 #include "data/weapons/weapon_catalog.lua"
 
+#include "net/server_sync_limiter.lua"
+#include "net/network_debug.lua"
 #include "ship/battlecruiser/server/state/runtime_state.lua"
 #include "ship/battlecruiser/server/state/runtime_state_api.lua"
 #include "weapon/server/common/loadout/slot_loadout.lua"
@@ -104,6 +106,7 @@ end
 -- server.chargeTime 飞船充能所需时间
 -- server.launchTime 飞船发射持续时间
 function server.serverTick(dt)
+    server.networkDebugTick(dt)
     -- server.ensureCurrentShipState(defaultShipType)
     server.mainWeaponControlTick(dt)
     server.weaponGroupTick(dt)

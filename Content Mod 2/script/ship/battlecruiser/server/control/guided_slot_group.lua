@@ -78,7 +78,8 @@ local function _guidedGroupPushHud(state)
         values[i] = math.max(0.0, tonumber(runtime.cooldownRemain) or 0.0)
         values[i + 4] = math.max(0.0, tonumber(config.cooldown) or 0.0)
     end
-    ClientCall(
+    server.netClientCall(
+        "hud.guided",
         0,
         state.hudCallback,
         server.shipBody,

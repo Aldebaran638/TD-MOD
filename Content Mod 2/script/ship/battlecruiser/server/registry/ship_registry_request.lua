@@ -43,6 +43,7 @@ local function _canAcceptShipRequest(playerId, shipBodyId)
 end
 
 function server.shipRequestMainWeaponFire(playerId, shipBodyId, request)
+    server.netDebugCountReceive("input.weapon")
     if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
         return
     end
@@ -57,6 +58,7 @@ function server.shipRequestMainWeaponFire(playerId, shipBodyId, request)
 end
 
 function server.shipRequestWeaponHold(playerId, shipBodyId, groupId, active, targetVehicleId)
+    server.netDebugCountReceive("input.weapon")
     if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
         return false
     end
@@ -104,6 +106,7 @@ function server.shipRequestWeaponHold(playerId, shipBodyId, groupId, active, tar
 end
 
 function server.shipRequestWeaponConfiguration(playerId, shipBodyId)
+    server.netDebugCountReceive("input.configuration")
     if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
         return false
     end
@@ -114,6 +117,7 @@ function server.shipRequestWeaponConfiguration(playerId, shipBodyId)
 end
 
 function server.shipRequestMainWeaponToggle(playerId, shipBodyId, request)
+    server.netDebugCountReceive("input.weapon")
     if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
         return
     end
@@ -128,6 +132,7 @@ function server.shipRequestMainWeaponToggle(playerId, shipBodyId, request)
 end
 
 function server.shipRequestXWeaponHold(playerId, shipBodyId, request)
+    server.netDebugCountReceive("input.weapon")
     if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
         return false
     end
@@ -149,6 +154,7 @@ function server.shipRequestXWeaponHold(playerId, shipBodyId, request)
 end
 
 function server.shipRequestXWeaponRelease(playerId, shipBodyId)
+    server.netDebugCountReceive("input.weapon")
     if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
         return false
     end
@@ -205,6 +211,7 @@ local function _acceptGuidedWeaponFireRequest(playerId, shipBodyId, targetVehicl
 end
 
 function server.shipRequestMWeaponFire(playerId, shipBodyId, targetVehicleId)
+    server.netDebugCountReceive("input.weapon")
     return _acceptGuidedWeaponFireRequest(
         playerId,
         shipBodyId,
@@ -221,6 +228,7 @@ function server.shipRequestMWeaponFire(playerId, shipBodyId, targetVehicleId)
 end
 
 function server.shipRequestGWeaponFire(playerId, shipBodyId, targetVehicleId)
+    server.netDebugCountReceive("input.weapon")
     return _acceptGuidedWeaponFireRequest(
         playerId,
         shipBodyId,
@@ -237,6 +245,7 @@ function server.shipRequestGWeaponFire(playerId, shipBodyId, targetVehicleId)
 end
 
 function server.shipRequestHWeaponFire(playerId, shipBodyId, targetVehicleId)
+    server.netDebugCountReceive("input.weapon")
     if server.shipBody == nil or server.shipBody == 0 or server.shipBody ~= shipBodyId then
         return false
     end
@@ -271,6 +280,7 @@ function server.shipRequestHWeaponFire(playerId, shipBodyId, targetVehicleId)
 end
 
 function server.shipRequestMoveState(playerId, shipBodyId, moveState)
+    server.netDebugCountReceive("input.move")
     if not _canAcceptShipRequest(playerId, shipBodyId) then
         return
     end
@@ -289,6 +299,7 @@ function server.shipRequestMoveState(playerId, shipBodyId, moveState)
 end
 
 function server.shipRequestRotationError(playerId, shipBodyId, pitchError, yawError)
+    server.netDebugCountReceive("input.rotation")
     if not _canAcceptShipRequest(playerId, shipBodyId) then
         return false
     end
@@ -309,6 +320,7 @@ function server.shipRequestRotationError(playerId, shipBodyId, pitchError, yawEr
 end
 
 function server.shipRequestWeaponAim(playerId, shipBodyId, active, localYaw, localPitch)
+    server.netDebugCountReceive("input.aim")
     if not _canAcceptShipRequest(playerId, shipBodyId) then
         return false
     end
@@ -330,6 +342,7 @@ function server.shipRequestWeaponAim(playerId, shipBodyId, active, localYaw, loc
 end
 
 function server.shipRequestRollError(playerId, shipBodyId, rollError)
+    server.netDebugCountReceive("input.roll")
     if not _canAcceptShipRequest(playerId, shipBodyId) then
         return false
     end
