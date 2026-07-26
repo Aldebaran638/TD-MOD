@@ -97,6 +97,24 @@ function server.weaponBehaviorResolveFireTransform(context)
             direction = server.weaponBehaviorNormalize(VecSub(targetCenter, origin), direction)
         end
     end
+    -- Direct-fire weapons use the ship-centre aim ray as a parallax reference.
+    -- When the crosshair ray reaches nearby geometry, every muzzle converges on
+    -- that exact point instead of firing parallel through it. Guided ordnance
+    -- and strike craft simply do not opt into this data-driven flag.
+    if weapon.closeRangeFocus == true then
+        local focusRange = math.min(
+            math.max(1.0, tonumber(weapon.maxRange) or 500.0),
+            math.max(1.0, tonumber(weapon.closeRangeFocusRange) or 220.0)
+        )
+        local focusOrigin = TransformToParentPoint(shipTransform, Vec(0, 0, -2))
+        QueryRequire("physical")
+        QueryRejectBody(context.shipBodyId)
+        local hit, distance = QueryRaycast(focusOrigin, direction, focusRange)
+        if hit then
+            local point = VecAdd(focusOrigin, VecScale(direction, distance))
+            direction = server.weaponBehaviorNormalize(VecSub(point, origin), direction)
+        end
+    end
     return origin, direction
 end
 

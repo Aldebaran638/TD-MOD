@@ -319,7 +319,11 @@ for _, weaponType in ipairs({
     "mediumGaussCannon", "mediumStormfireAutocannon",
 }) do
     weaponData[weaponType].targetingMode = "forward"
+    weaponData[weaponType].closeRangeFocus = true
+    weaponData[weaponType].closeRangeFocusRange = 220.0
 end
+weaponData.neutronLauncher.closeRangeFocus = true
+weaponData.neutronLauncher.closeRangeFocusRange = 220.0
 
 weaponData.devastatorTorpedoes.ignoreGravity = true
 weaponData.devastatorTorpedoes.projectileProfile.ignoreGravity = true

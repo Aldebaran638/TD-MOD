@@ -92,6 +92,21 @@ local function _xSlotResolveFireDirRelative(shipBodyId, slotConfig)
     )
 end
 
+local function _xSlotApplyCloseRangeFocus(shipBodyId, firePosOffset, localDirection, slotConfig)
+    local config = slotConfig or {}
+    if config.closeRangeFocus ~= true then return localDirection end
+    local shipT = GetBodyTransform(shipBodyId)
+    local origin = TransformToParentPoint(shipT, firePosOffset)
+    local direction = _xSlotSafeNormalize(TransformToParentVec(shipT, localDirection), Vec(0, 0, -1))
+    local focusOrigin = TransformToParentPoint(shipT, Vec(0, 0, -2))
+    QueryRequire("physical")
+    QueryRejectBody(shipBodyId)
+    local hit, distance = QueryRaycast(focusOrigin, direction, math.max(1.0, tonumber(config.closeRangeFocusRange) or 220.0))
+    if not hit then return localDirection end
+    local aimPoint = VecAdd(focusOrigin, VecScale(direction, distance))
+    return _xSlotSafeNormalize(TransformToLocalVec(shipT, VecSub(aimPoint, origin)), localDirection)
+end
+
 -- 读取目标飞船护盾半径（用于护盾球面入射点修正）
 local function _resolveTargetShieldRadius(targetBody, fallbackShipType)
     local radiusFallback = 20
@@ -642,6 +657,7 @@ function server.xSlotControlTick(dt)
 
         local firePosOffset = _vec3TableToVec(mountPos, 0, 0, 4)
         local fireDir = _xSlotResolveFireDirRelative(shipBody, activeConfig)
+        fireDir = _xSlotApplyCloseRangeFocus(shipBody, firePosOffset, fireDir, activeConfig)
         local shipT = GetBodyTransform(shipBody)
         local firePointWorld = TransformToParentPoint(shipT, firePosOffset)
 

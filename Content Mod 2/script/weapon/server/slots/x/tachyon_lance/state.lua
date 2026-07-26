@@ -92,6 +92,8 @@ local function _xSlotStateBuildConfig(slotDef)
         aimControlMode = tostring(weaponDef.aimControlMode or "fixed"),
         aimLimitDeg = tonumber(weaponDef.aimLimitDeg) or 0.0,
         aimPitchOffsetDeg = tonumber(weaponDef.aimPitchOffsetDeg) or 0.0,
+        closeRangeFocus = weaponDef.closeRangeFocus == true,
+        closeRangeFocusRange = tonumber(weaponDef.closeRangeFocusRange) or 220.0,
     }
 end
 
