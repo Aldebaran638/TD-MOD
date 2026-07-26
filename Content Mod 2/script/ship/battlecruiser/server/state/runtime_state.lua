@@ -251,6 +251,9 @@ function _runtimeAPI.setCurrentMainWeapon(shipBodyId, mode, defaultShipType)
         if server.guidedSlotGroupMarkAllHudDirty ~= nil then
             server.guidedSlotGroupMarkAllHudDirty()
         end
+        if server.hSlotState ~= nil and server.hSlotState.hudSync ~= nil then
+            server.hSlotState.hudSync.dirty = true
+        end
     end
 end
 
