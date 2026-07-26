@@ -1,34 +1,10 @@
 <body name="body" tags="stellarisShip stellarisStrikeCraft" dynamic="false">
+  <!-- A single connected shape prevents the former wing/engine sub-shapes from
+       detaching as independent bodies during ordinary attack-run manoeuvres. -->
   <vox
-    name="fuselage"
-    tags="strikeCraft"
-    pos="0.0 0.0 0.0"
-    file="MOD/prefabs/torpedoeBody.vox"
-  />
-  <vox
-    name="leftWing"
-    tags="strikeCraftWing"
-    pos="-0.9 0.0 0.3"
-    rot="0 0 90"
-    file="MOD/prefabs/missileBody.vox"
-  />
-  <vox
-    name="rightWing"
-    tags="strikeCraftWing"
-    pos="0.9 0.0 0.3"
-    rot="0 0 -90"
-    file="MOD/prefabs/missileBody.vox"
-  />
-  <vox
-    name="engineLeft"
-    tags="strikeCraftEngine"
-    pos="-0.45 0.0 0.95"
-    file="MOD/vox/smallThruster.vox"
-  />
-  <vox
-    name="engineRight"
-    tags="strikeCraftEngine"
-    pos="0.45 0.0 0.95"
-    file="MOD/vox/smallThruster.vox"
+    name="gammaStrikeCraft"
+    tags="strikeCraft strikeCraftWing strikeCraftEngine"
+    pos="-1.05 -0.45 -1.45"
+    file="MOD/prefabs/gammaStrikeCraft.vox"
   />
 </body>

@@ -6,6 +6,7 @@ server = server or {}
 #include "weapon/server/slots/h/gamma_strike_craft/flight_v2_navigation.lua"
 #include "weapon/server/slots/h/gamma_strike_craft/flight_v2_control.lua"
 #include "weapon/server/slots/h/gamma_strike_craft/flight_v2_fire_guard.lua"
+#include "weapon/server/slots/h/gamma_strike_craft/flight_v2_impact_policy.lua"
 
 local function _fireStrikeCraft(context)
     if server.hSlotControlSetFireRequested == nil then return false end
