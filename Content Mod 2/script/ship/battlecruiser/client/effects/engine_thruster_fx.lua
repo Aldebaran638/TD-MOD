@@ -38,8 +38,11 @@ local _engineThrusterProfiles = {
         particleRadius = 0.075,
     },
     engine = {
-        radius = 0.16,
-        localOffset = Vec(0.0, 0.3, 1.4),
+        radius = 0.11,
+        burnAreaMin = Vec(0.0, 0.3, 0.0),
+        burnAreaMax = Vec(0.2, 0.3, 1.4),
+        burnColumns = 2,
+        burnRows = 6,
         sourceOffset = 0.30,
         idleLength = 0.48,
         trailLength = 2.5,
@@ -77,12 +80,32 @@ local function _engineThrusterGetAxes(body)
     return bodyTransform, forward, rear, up
 end
 
-local function _engineThrusterGetSource(shapeTransform, rear, profile, rearScale)
-    local localOffset = profile.localOffset or Vec(0, 0, 0)
+local function _engineThrusterGetAreaOffset(profile, u, v)
+    if profile.burnAreaMin == nil or profile.burnAreaMax == nil then
+        return profile.localOffset or Vec(0, 0, 0)
+    end
+    return Vec(
+        profile.burnAreaMin[1]
+            + (profile.burnAreaMax[1] - profile.burnAreaMin[1]) * u,
+        profile.burnAreaMin[2]
+            + (profile.burnAreaMax[2] - profile.burnAreaMin[2]) * v,
+        profile.burnAreaMin[3]
+            + (profile.burnAreaMax[3] - profile.burnAreaMin[3]) * v
+    )
+end
+
+local function _engineThrusterGetSource(
+    shapeTransform,
+    rear,
+    profile,
+    rearScale,
+    localOffset
+)
+    local offset = localOffset or profile.localOffset or Vec(0, 0, 0)
     return VecAdd(
         VecAdd(
             shapeTransform.pos,
-            TransformToParentVec(shapeTransform, localOffset)
+            TransformToParentVec(shapeTransform, offset)
         ),
         VecScale(rear, profile.sourceOffset * (rearScale or 1.0))
     )
@@ -92,11 +115,17 @@ local function _engineThrusterSpawnBurnParticle(nozzle, rear, bodyVelocity, thro
     local profile = _engineThrusterProfiles[nozzle.tag] or _engineThrusterProfiles.engine
     local shapeTransform = GetShapeWorldTransform(nozzle.shape)
     local pulse = 0.90 + 0.10 * math.sin(age * 19.0 + nozzle.phase)
+    local localOffset = _engineThrusterGetAreaOffset(
+        profile,
+        math.random(),
+        math.random()
+    )
     local source = _engineThrusterGetSource(
         shapeTransform,
         rear,
         profile,
-        0.82 + 0.18 * pulse
+        0.82 + 0.18 * pulse,
+        localOffset
     )
     local scatter = Vec(
         (math.random() - 0.5) * profile.radius * 0.32,
@@ -122,14 +151,16 @@ local function _engineThrusterSpawnBurnParticle(nozzle, rear, bodyVelocity, thro
     SpawnParticle(source, velocity, 0.16 + throttle * 0.18 + math.random() * 0.08)
 end
 
-local function _engineThrusterDrawFlame(sprite, nozzle, rear, up, throttle, age)
-    local profile = _engineThrusterProfiles[nozzle.tag] or _engineThrusterProfiles.engine
-    local source = _engineThrusterGetSource(
-        GetShapeWorldTransform(nozzle.shape),
-        rear,
-        profile,
-        1.0
-    )
+local function _engineThrusterDrawFlameAtSource(
+    sprite,
+    nozzle,
+    source,
+    rear,
+    up,
+    throttle,
+    age,
+    profile
+)
     local pulse = 0.97
         + 0.025 * math.sin(age * 18.0 + nozzle.phase)
         + 0.015 * math.sin(age * 37.0 + nozzle.phase * 1.9)
@@ -172,6 +203,57 @@ local function _engineThrusterDrawFlame(sprite, nozzle, rear, up, throttle, age)
     if nozzle.tag == "thruster" then
         PointLight(source, 0.18, 0.48, 1.0, 0.32 + throttle * 0.42)
     end
+end
+
+local function _engineThrusterDrawFlame(sprite, nozzle, rear, up, throttle, age)
+    local profile = _engineThrusterProfiles[nozzle.tag] or _engineThrusterProfiles.engine
+    local shapeTransform = GetShapeWorldTransform(nozzle.shape)
+    if profile.burnAreaMin ~= nil and profile.burnAreaMax ~= nil then
+        local columns = math.max(1, math.floor(profile.burnColumns or 1))
+        local rows = math.max(1, math.floor(profile.burnRows or 1))
+        for row = 1, rows do
+            local v = (row - 0.5) / rows
+            for column = 1, columns do
+                local u = (column - 0.5) / columns
+                local source = _engineThrusterGetSource(
+                    shapeTransform,
+                    rear,
+                    profile,
+                    1.0,
+                    _engineThrusterGetAreaOffset(profile, u, v)
+                )
+                _engineThrusterDrawFlameAtSource(
+                    sprite,
+                    nozzle,
+                    source,
+                    rear,
+                    up,
+                    throttle,
+                    age + row * 0.07 + column * 0.11,
+                    profile
+                )
+            end
+        end
+        return
+    end
+
+    local source = _engineThrusterGetSource(
+        shapeTransform,
+        rear,
+        profile,
+        1.0,
+        profile.localOffset
+    )
+    _engineThrusterDrawFlameAtSource(
+        sprite,
+        nozzle,
+        source,
+        rear,
+        up,
+        throttle,
+        age,
+        profile
+    )
 end
 
 function client.engineThrusterFxInit()
