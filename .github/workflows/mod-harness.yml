@@ -1,0 +1,30 @@
+name: Mod Harness
+
+on:
+  pull_request:
+    paths:
+      - "Content Mod 2/**"
+      - "Global Mod/**"
+      - "*.ps1"
+      - ".github/workflows/mod-harness.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run full project harness
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          ./check-encoding.ps1 -Path "./Content Mod 2"
+          ./check-lua.ps1 -Path "./Content Mod 2/script"
+          ./check-weapon-system.ps1 -Path "./Content Mod 2"
+          ./check-xml.ps1 -Path "./Content Mod 2"
+          ./test-check-encoding.ps1
+          ./test-check-lua.ps1
+          ./test-check-weapon-system.ps1
+          ./test-check-xml.ps1
