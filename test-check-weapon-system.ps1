@@ -105,6 +105,21 @@ try {
     Assert-True ($invalidHold.ExitCode -eq 1) "rejects click-only weapon input"
     Assert-True ($invalidHold.Output -match "hold-to-refire") "reports the continuous-fire input contract"
 
+    $snapshotPath = Join-Path $fixtureMod "script\net\client_input_snapshot.lua"
+    $snapshotText = [IO.File]::ReadAllText($snapshotPath)
+    [IO.File]::WriteAllText(
+        $snapshotPath,
+        $snapshotText.Replace(
+            'activeInterval = 0.05',
+            'activeInterval = 0.001'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidSnapshot = Invoke-Checker
+    Assert-True ($invalidSnapshot.ExitCode -eq 1) "rejects frame-rate-driven control snapshots"
+    Assert-True ($invalidSnapshot.Output -match "validated 20 Hz input snapshot") "reports the control snapshot contract"
+    [IO.File]::WriteAllText($snapshotPath, $snapshotText, (New-Object Text.UTF8Encoding($false)))
+
     $missingSound = Join-Path $fixtureMod "sound\weapons\tachyonLance"
     Remove-Item -LiteralPath $missingSound -Recurse -Force
     $invalidSound = Invoke-Checker
