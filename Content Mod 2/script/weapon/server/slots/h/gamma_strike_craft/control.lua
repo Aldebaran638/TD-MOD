@@ -352,39 +352,101 @@ local function _hSlotResolveAvoidDir(shipBody, rejectBody, pos, desiredDir, forw
     local forward = _hSlotNormalize(desiredDir, forwardDir)
     local worldUp = Vec(0, 1, 0)
     local right = _hSlotNormalize(VecCross(forward, worldUp), Vec(1, 0, 0))
-    local pitchAxis = _hSlotNormalize(VecCross(right, forward), worldUp)
     local nearDist = math.max(1.0, tonumber(probeDistance) or 7.0)
     local farDist = math.max(nearDist, nearDist * 1.6)
 
-    local candidates = {
-        { dir = forward, near = nearDist, far = farDist },
-        { dir = _hSlotRotateToward(forward, worldUp, 35.0, forward), near = nearDist, far = farDist },
-        { dir = _hSlotRotateToward(forward, worldUp, -35.0, forward), near = nearDist, far = farDist },
-        { dir = _hSlotRotateToward(forward, worldUp, 60.0, forward), near = nearDist * 0.9, far = farDist * 0.9 },
-        { dir = _hSlotRotateToward(forward, worldUp, -60.0, forward), near = nearDist * 0.9, far = farDist * 0.9 },
-        { dir = _hSlotRotateToward(forward, right, -25.0, forward), near = nearDist, far = farDist },
-        { dir = _hSlotRotateToward(forward, right, -45.0, forward), near = nearDist * 0.9, far = farDist * 0.9 },
-        { dir = _hSlotRotateToward(forward, right, 20.0, forward), near = nearDist * 0.75, far = farDist * 0.75 },
-        { dir = _hSlotRotateToward(forward, pitchAxis, 30.0, forward), near = nearDist * 0.85, far = farDist * 0.85 },
-        { dir = _hSlotRotateToward(forward, pitchAxis, -30.0, forward), near = nearDist * 0.85, far = farDist * 0.85 },
+    if _hSlotTryDirection(shipBody, rejectBody, pos, forward, farDist) then
+        return forward
+    end
+
+    local preferred = {
+        _hSlotRotateToward(forward, worldUp, 35.0, forward),
+        _hSlotRotateToward(forward, worldUp, -35.0, forward),
+        _hSlotRotateToward(forward, right, -30.0, forward),
+        _hSlotRotateToward(forward, right, 25.0, forward),
     }
-
-    for i = 1, #candidates do
-        local candidate = candidates[i]
-        if _hSlotTryDirection(shipBody, rejectBody, pos, candidate.dir, candidate.near)
-            and _hSlotTryDirection(shipBody, rejectBody, pos, candidate.dir, candidate.far) then
-            return candidate.dir
+    for i = 1, #preferred do
+        if _hSlotTryDirection(
+            shipBody,
+            rejectBody,
+            pos,
+            preferred[i],
+            farDist
+        ) then
+            return preferred[i]
         end
     end
 
-    for i = 1, #candidates do
-        local candidate = candidates[i]
-        if _hSlotTryDirection(shipBody, rejectBody, pos, candidate.dir, candidate.near * 0.55) then
-            return candidate.dir
+    local emergency = {
+        preferred[3],
+        preferred[1],
+        preferred[2],
+    }
+    for i = 1, #emergency do
+        if _hSlotTryDirection(
+            shipBody,
+            rejectBody,
+            pos,
+            emergency[i],
+            nearDist * 0.55
+        ) then
+            return emergency[i]
         end
     end
 
-    return nil
+    return preferred[3]
+end
+
+local function _hSlotDirectionAngleDegrees(a, b)
+    local aNorm = _hSlotNormalize(a, Vec(0, 0, -1))
+    local bNorm = _hSlotNormalize(b, Vec(0, 0, -1))
+    local dot = math.max(-1.0, math.min(1.0, VecDot(aNorm, bNorm)))
+    return math.deg(math.acos(dot))
+end
+
+local function _hSlotResolveAvoidDirCached(
+    shipBody,
+    craft,
+    desiredDir,
+    probeDistance,
+    dt
+)
+    craft.aiAccumulator = (craft.aiAccumulator or 0.0)
+        + math.max(0.0, tonumber(dt) or 0.0)
+    craft.avoidCacheAge = (craft.avoidCacheAge or 1000.0)
+        + math.max(0.0, tonumber(dt) or 0.0)
+    local interval = math.max(0.05, tonumber(craft.aiInterval) or 0.1)
+    if craft.desiredDirection ~= nil and craft.aiAccumulator < interval then
+        return craft.desiredDirection
+    end
+    craft.aiAccumulator = math.max(0.0, craft.aiAccumulator - interval)
+
+    local cachedPos = craft.avoidCachePos
+    local cachedInput = craft.avoidCacheInput
+    local cacheReusable = craft.desiredDirection ~= nil
+        and cachedPos ~= nil
+        and cachedInput ~= nil
+        and craft.avoidCacheAge <= 0.2
+        and VecLength(VecSub(craft.pos, cachedPos)) < 1.0
+        and _hSlotDirectionAngleDegrees(desiredDir, cachedInput) < 5.0
+    if cacheReusable then return craft.desiredDirection end
+
+    craft.desiredDirection = _hSlotResolveAvoidDir(
+        shipBody,
+        craft.bodyId or 0,
+        craft.pos,
+        desiredDir,
+        craft.forward or desiredDir,
+        probeDistance
+    )
+    craft.avoidCachePos = Vec(craft.pos[1], craft.pos[2], craft.pos[3])
+    craft.avoidCacheInput = Vec(
+        desiredDir[1],
+        desiredDir[2],
+        desiredDir[3]
+    )
+    craft.avoidCacheAge = 0.0
+    return craft.desiredDirection
 end
 
 local function _hSlotApplyBeamDamage(hitPos, hitBody, weaponType, environmentExplosionSize)
@@ -1070,7 +1132,13 @@ function server.hSlotControlTick(dt)
             end
 
             if keepUpdating then
-                local avoidDir = _hSlotResolveAvoidDir(shipBody, craft.bodyId or 0, craft.pos, desiredDir, craft.forward or desiredDir, weaponConfig.avoidProbeDistance or 7.0)
+                local avoidDir = _hSlotResolveAvoidDirCached(
+                    shipBody,
+                    craft,
+                    desiredDir,
+                    weaponConfig.avoidProbeDistance or 7.0,
+                    dt
+                )
                 if avoidDir == nil then
                     avoidDir = _hSlotNormalize(desiredDir, craft.forward or Vec(0, 0, -1))
                 end
@@ -1265,6 +1333,12 @@ function server.hSlotControlTick(dt)
         returnRemain = math.max(0.5, tonumber(launcher.config.returnTimeout) or 6.0),
         fireRemain = 0.0,
         orbitAngle = 0.0,
+        aiInterval = 0.1,
+        aiAccumulator = math.random() * 0.1,
+        desiredDirection = fireDir,
+        avoidCacheAge = 1000.0,
+        avoidCachePos = nil,
+        avoidCacheInput = nil,
     }
     state.hudSync.dirty = true
 
