@@ -9,6 +9,27 @@ server.hSlotNetworkConfig = server.hSlotNetworkConfig or {
     debugEnabled = false,
 }
 
+server.hSlotEntityLimits = server.hSlotEntityLimits or {
+    maxPerShip = 4,
+    maxGlobal = 24,
+}
+
+local _hSlotGlobalCountKey =
+    "StellarisShips/server/runtime/activeStrikeCraft"
+
+local function _hSlotGetGlobalCraftCount()
+    return math.max(0, GetInt(_hSlotGlobalCountKey) or 0)
+end
+
+local function _hSlotAdjustGlobalCraftCount(delta)
+    local nextCount = math.max(
+        0,
+        _hSlotGetGlobalCraftCount() + math.floor(delta or 0)
+    )
+    SetInt(_hSlotGlobalCountKey, nextCount)
+    return nextCount
+end
+
 server.hSlotState = server.hSlotState or {
     fireRequested = false,
     launchers = {},
@@ -716,9 +737,11 @@ local function _hSlotFinishCraft(state, slotIndex, cooldownMode)
     end
 
     local active = state.activeCrafts or {}
-    _hSlotDeleteCraftBody((active[slotIndex] or {}).bodyId or 0)
+    local finishedCraft = active[slotIndex]
+    _hSlotDeleteCraftBody((finishedCraft or {}).bodyId or 0)
     active[slotIndex] = nil
     state.activeCrafts = active
+    if finishedCraft ~= nil then _hSlotAdjustGlobalCraftCount(-1) end
     if state.hudSync ~= nil then state.hudSync.dirty = true end
 end
 
@@ -762,10 +785,13 @@ function server.hSlotStateResetRuntime()
 
     local launchers = state.launchers or {}
     local active = state.activeCrafts or {}
+    local removed = 0
     for slotIndex, craft in pairs(active) do
         local _ = slotIndex
         _hSlotDeleteCraftBody((craft or {}).bodyId or 0)
+        if craft ~= nil then removed = removed + 1 end
     end
+    if removed > 0 then _hSlotAdjustGlobalCraftCount(-removed) end
     state.activeCrafts = {}
     state.hudSync = state.hudSync or {}
     state.hudSync.dirty = true
@@ -1289,6 +1315,25 @@ function server.hSlotControlTick(dt)
     end
     _hSlotSetDebugStage("launcher_picked_" .. tostring(slotIndex))
 
+    local activeCount = 0
+    for _, craft in pairs(state.activeCrafts or {}) do
+        if craft ~= nil then activeCount = activeCount + 1 end
+    end
+    local maxPerShip = math.max(
+        1,
+        math.floor(server.hSlotEntityLimits.maxPerShip or 4)
+    )
+    local maxGlobal = math.max(
+        maxPerShip,
+        math.floor(server.hSlotEntityLimits.maxGlobal or 24)
+    )
+    if activeCount >= maxPerShip
+        or _hSlotGetGlobalCraftCount() >= maxGlobal then
+        _hSlotSetDebugReason(0, "craft_capacity_full", nil)
+        _hSlotSetDebugStage("capacity_full")
+        return
+    end
+
     local shipT = GetBodyTransform(shipBody)
     local firePos = TransformToParentPoint(shipT, Vec(
         tonumber((launcher.config.firePosOffset or {}).x) or 0.0,
@@ -1340,6 +1385,7 @@ function server.hSlotControlTick(dt)
         avoidCachePos = nil,
         avoidCacheInput = nil,
     }
+    _hSlotAdjustGlobalCraftCount(1)
     state.hudSync.dirty = true
 
     _hSlotSetDebugReason(slotIndex, "spawn_success", state.activeCrafts[slotIndex])
