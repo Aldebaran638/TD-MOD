@@ -1,4 +1,4 @@
-<body name="body" tags="stellarisStrikeCraft" dynamic="false">
+<body name="body" tags="stellarisShip stellarisStrikeCraft" dynamic="false">
   <vox
     name="fuselage"
     tags="strikeCraft"
