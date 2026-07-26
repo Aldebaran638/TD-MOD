@@ -23,6 +23,7 @@ client.engineThrusterFxState = client.engineThrusterFxState or {
 local _engineThrusterProfiles = {
     thruster = {
         radius = 0.34,
+        localOffset = Vec(0.2, 0.5, 0.2),
         sourceOffset = 0.42,
         idleLength = 0.70,
         trailLength = 5.8,
@@ -30,6 +31,7 @@ local _engineThrusterProfiles = {
     },
     smallThruster = {
         radius = 0.20,
+        localOffset = Vec(0.0, 0.3, 0.2),
         sourceOffset = 0.24,
         idleLength = 0.38,
         trailLength = 3.0,
@@ -37,6 +39,7 @@ local _engineThrusterProfiles = {
     },
     engine = {
         radius = 0.16,
+        localOffset = Vec(0.0, 0.3, 1.4),
         sourceOffset = 0.30,
         idleLength = 0.48,
         trailLength = 2.5,
@@ -74,13 +77,26 @@ local function _engineThrusterGetAxes(body)
     return bodyTransform, forward, rear, up
 end
 
+local function _engineThrusterGetSource(shapeTransform, rear, profile, rearScale)
+    local localOffset = profile.localOffset or Vec(0, 0, 0)
+    return VecAdd(
+        VecAdd(
+            shapeTransform.pos,
+            TransformToParentVec(shapeTransform, localOffset)
+        ),
+        VecScale(rear, profile.sourceOffset * (rearScale or 1.0))
+    )
+end
+
 local function _engineThrusterSpawnBurnParticle(nozzle, rear, bodyVelocity, throttle, age)
     local profile = _engineThrusterProfiles[nozzle.tag] or _engineThrusterProfiles.engine
     local shapeTransform = GetShapeWorldTransform(nozzle.shape)
     local pulse = 0.90 + 0.10 * math.sin(age * 19.0 + nozzle.phase)
-    local source = VecAdd(
-        shapeTransform.pos,
-        VecScale(rear, profile.sourceOffset * (0.82 + 0.18 * pulse))
+    local source = _engineThrusterGetSource(
+        shapeTransform,
+        rear,
+        profile,
+        0.82 + 0.18 * pulse
     )
     local scatter = Vec(
         (math.random() - 0.5) * profile.radius * 0.32,
@@ -108,9 +124,11 @@ end
 
 local function _engineThrusterDrawFlame(sprite, nozzle, rear, up, throttle, age)
     local profile = _engineThrusterProfiles[nozzle.tag] or _engineThrusterProfiles.engine
-    local source = VecAdd(
-        GetShapeWorldTransform(nozzle.shape).pos,
-        VecScale(rear, profile.sourceOffset)
+    local source = _engineThrusterGetSource(
+        GetShapeWorldTransform(nozzle.shape),
+        rear,
+        profile,
+        1.0
     )
     local pulse = 0.97
         + 0.025 * math.sin(age * 18.0 + nozzle.phase)
