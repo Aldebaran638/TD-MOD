@@ -66,6 +66,22 @@ function server.netClientCall(channel, playerId, callback, ...)
     ClientCall(playerId, callback, ...)
 end
 
+function server.netResolveShipDriver(shipBody)
+    local body = math.floor(shipBody or 0)
+    if body == 0 or server.shipRuntimeGetDriverPlayerId == nil then return 0 end
+    local playerId = math.floor(server.shipRuntimeGetDriverPlayerId(body) or 0)
+    if playerId <= 0 then return 0 end
+    if IsPlayerValid ~= nil and not IsPlayerValid(playerId) then return 0 end
+    local vehicle = GetPlayerVehicle(playerId)
+    if vehicle == nil or vehicle == 0 or GetVehicleBody(vehicle) ~= body then
+        if server.shipRuntimeSetDriverPlayerId ~= nil then
+            server.shipRuntimeSetDriverPlayerId(body, 0)
+        end
+        return 0
+    end
+    return playerId
+end
+
 local function _netDebugPushRecent(total)
     local recent = server.networkStats.recentTotals
     recent[#recent + 1] = total

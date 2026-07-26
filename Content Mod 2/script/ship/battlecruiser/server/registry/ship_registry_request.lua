@@ -53,6 +53,12 @@ local function _canAcceptShipRequest(playerId, shipBodyId)
             if server.hSlotState ~= nil and server.hSlotState.hudSync ~= nil then
                 server.hSlotState.hudSync.dirty = true
             end
+            if server.xSlotStateMarkHudDirty ~= nil then
+                server.xSlotStateMarkHudDirty()
+            end
+            if server.lSlotStateMarkHudDirty ~= nil then
+                server.lSlotStateMarkHudDirty()
+            end
         end
     end
     return true

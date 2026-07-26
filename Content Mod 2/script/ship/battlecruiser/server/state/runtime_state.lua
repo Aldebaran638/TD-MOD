@@ -254,6 +254,12 @@ function _runtimeAPI.setCurrentMainWeapon(shipBodyId, mode, defaultShipType)
         if server.hSlotState ~= nil and server.hSlotState.hudSync ~= nil then
             server.hSlotState.hudSync.dirty = true
         end
+        if server.xSlotStateMarkHudDirty ~= nil then
+            server.xSlotStateMarkHudDirty()
+        end
+        if server.lSlotStateMarkHudDirty ~= nil then
+            server.lSlotStateMarkHudDirty()
+        end
     end
 end
 
@@ -271,9 +277,11 @@ function _runtimeAPI.syncMainWeapon(shipBodyId, force, defaultShipType)
         return
     end
     
+    local playerId = server.netResolveShipDriver(shipBodyId)
+    if playerId <= 0 then return end
     server.netClientCall(
         "hud.weaponMode",
-        0,
+        playerId,
         "client.setShipMainWeaponMode",
         shipBodyId,
         currentMode

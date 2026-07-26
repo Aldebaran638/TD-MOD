@@ -37,6 +37,8 @@ local function _buildState(groupId, shipType)
         heldRequest = nil,
         fireDelay = 0.0,
         hudSyncAge = 0.0,
+        hudLastSignature = "",
+        hudLastSentAt = -1000.0,
     }
     for i = 1, #mounts do
         state.mounts[i] = {
@@ -88,7 +90,7 @@ local function _resolveWeapon(state)
     return weaponType, (weaponData or {})[weaponType]
 end
 
-local function _pushHud(state)
+local function _pushHud(state, force)
     local weaponType, weaponDef = _resolveWeapon(state)
     if tostring((weaponDef or {}).legacyController or "") ~= "" then return end
     local cooldown = math.max(0.0, tonumber((weaponDef or {}).cooldown) or 0.0)
@@ -121,9 +123,29 @@ local function _pushHud(state)
             maximums[i] = total
             phases[i] = "charging"
         end
+        values[i] = server.netSyncQuantize(values[i], 0.05)
     end
-    ClientCall(
-        0,
+
+    local signatureParts = {
+        tostring(state.groupId or ""),
+        weaponType,
+    }
+    for i = 1, 4 do
+        signatureParts[#signatureParts + 1] = string.format("%.2f", values[i])
+        signatureParts[#signatureParts + 1] = tostring(phases[i] or "")
+    end
+    local signature = table.concat(signatureParts, "|")
+    local now = (GetTime ~= nil) and GetTime() or 0.0
+    local changed = signature ~= tostring(state.hudLastSignature or "")
+    local intervalDue = now - (state.hudLastSentAt or -1000.0) >= 0.2
+    local keepAlive = now - (state.hudLastSentAt or -1000.0) >= 1.0
+    if not force and not (changed and intervalDue) and not keepAlive then return end
+
+    local playerId = server.netResolveShipDriver(server.shipBody or 0)
+    if playerId <= 0 then return end
+    server.netClientCall(
+        "hud.weaponGroup",
+        playerId,
         "client.updateWeaponGroupHudState",
         server.shipBody or 0,
         tostring(state.groupId or ""),
@@ -132,6 +154,8 @@ local function _pushHud(state)
         maximums[1], maximums[2], maximums[3], maximums[4],
         phases[1], phases[2], phases[3], phases[4]
     )
+    state.hudLastSignature = signature
+    state.hudLastSentAt = now
 end
 
 local function _legacyFire(controllerId, groupId, request)
@@ -322,7 +346,7 @@ function server.weaponGroupRequestFire(groupId, request)
             mounts = mounts,
             cooldown = cooldown,
         }
-        _pushHud(state)
+        _pushHud(state, true)
         return true, nil
     end
     local fired = _fireContexts(behavior, contexts, mounts, cooldown)
@@ -332,7 +356,7 @@ function server.weaponGroupRequestFire(groupId, request)
             tonumber((weaponDef.salvoProfile or {}).interval) or 0.0
         )
     end
-    _pushHud(state)
+    _pushHud(state, true)
     return fired, fired and nil or "controller rejected fire"
 end
 
@@ -376,6 +400,7 @@ function server.weaponGroupTick(dt)
                     tonumber(((weaponDef or {}).salvoProfile or {}).interval) or 0.0
                 )
                 state.pending = nil
+                _pushHud(state, true)
             end
         end
         if state.fireHeld and state.pending == nil then
@@ -384,9 +409,9 @@ function server.weaponGroupTick(dt)
         state.hudSyncAge = (tonumber(state.hudSyncAge) or 0.0) + delta
         local currentMode = server.shipRuntimeGetCurrentMainWeapon ~= nil
             and server.shipRuntimeGetCurrentMainWeapon(server.shipBody or 0) or ""
-        if state.hudSyncAge >= 0.10 and currentMode == state.groupId then
+        if state.hudSyncAge >= 0.20 and currentMode == state.groupId then
             state.hudSyncAge = 0.0
-            _pushHud(state)
+            _pushHud(state, false)
         end
     end
     for _, behavior in pairs(server.weaponBehaviorRegistry or {}) do

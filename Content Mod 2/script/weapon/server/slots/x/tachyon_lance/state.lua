@@ -247,8 +247,11 @@ function server.xSlotStatePushHud(force)
 
     local sync = server.xSlotHudSyncState or {}
     local nowTime = _xSlotNow()
-    local shouldSend = force
-        or sync.lastValue1 == nil
+    value1 = server.netSyncQuantize(value1, 0.05)
+    value2 = server.netSyncQuantize(value2, 0.05)
+    local phaseChanged = (sync.lastPhase1 or "") ~= phase1
+        or (sync.lastPhase2 or "") ~= phase2
+    local payloadChanged = sync.lastValue1 == nil
         or sync.lastValue2 == nil
         or sync.lastMax1 == nil
         or sync.lastMax2 == nil
@@ -258,20 +261,36 @@ function server.xSlotStatePushHud(force)
         or math.abs((sync.lastValue2 or 0.0) - value2) > 0.0001
         or math.abs((sync.lastMax1 or 0.0) - max1) > 0.0001
         or math.abs((sync.lastMax2 or 0.0) - max2) > 0.0001
-        or (sync.lastPhase1 or "") ~= phase1
-        or (sync.lastPhase2 or "") ~= phase2
-        or ((nowTime - (sync.lastSendTime or -1000.0)) >= 0.5)
+        or phaseChanged
+    local intervalDue =
+        (nowTime - (sync.lastSendTime or -1000.0)) >= 0.2
+    local keepAliveDue =
+        (nowTime - (sync.lastSendTime or -1000.0)) >= 1.0
+    local shouldSend = force
+        or phaseChanged
+        or (payloadChanged and intervalDue)
+        or keepAliveDue
 
     if shouldSend then
-        ClientCall(0, "client.updateXSlotHudState", shipBodyId, value1, value2, max1, max2, phase1, phase2)
+        local playerId = server.netResolveShipDriver(shipBodyId)
+        if playerId <= 0 then return end
+        server.netClientCall(
+            "hud.xslot",
+            playerId,
+            "client.updateXSlotHudState",
+            shipBodyId,
+            value1, value2,
+            max1, max2,
+            phase1, phase2
+        )
         sync.lastSendTime = nowTime
+        sync.lastValue1 = value1
+        sync.lastValue2 = value2
+        sync.lastMax1 = max1
+        sync.lastMax2 = max2
+        sync.lastPhase1 = phase1
+        sync.lastPhase2 = phase2
     end
 
-    sync.lastValue1 = value1
-    sync.lastValue2 = value2
-    sync.lastMax1 = max1
-    sync.lastMax2 = max2
-    sync.lastPhase1 = phase1
-    sync.lastPhase2 = phase2
     server.xSlotHudSyncState = sync
 end
