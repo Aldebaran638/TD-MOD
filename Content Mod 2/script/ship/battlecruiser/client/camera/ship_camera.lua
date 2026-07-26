@@ -265,27 +265,15 @@ local function _shipCameraPushWeaponAim(cam, shipBodyId, active, localYaw, local
     local aimDir = worldDir or Vec(0, 0, -1)
     state.worldDir = Vec(aimDir[1] or 0.0, aimDir[2] or 0.0, aimDir[3] or -1.0)
 
-    if client.shipRequestWeaponAim == nil or shipBodyId == nil or shipBodyId == 0 then
+    if client.shipControlSetWeaponAim == nil or shipBodyId == nil or shipBodyId == 0 then
         return
     end
 
-    local now = (GetTime ~= nil) and GetTime() or 0.0
-    local changed = state.lastSentActive == nil
-        or state.lastSentActive ~= state.active
-        or math.abs((state.lastSentYaw or 0.0) - state.localYaw) > 0.05
-        or math.abs((state.lastSentPitch or 0.0) - state.localPitch) > 0.05
-        or state.lastSentBody ~= state.shipBody
-    local keepAliveDue = (now - (state.lastSyncAt or -1000.0)) >= (cam.weaponAimSyncKeepAlive or 0.2)
-    if (not changed) and (not keepAliveDue) then
-        return
-    end
-
-    client.shipRequestWeaponAim(shipBodyId, state.active, state.localYaw, state.localPitch)
-    state.lastSentActive = state.active
-    state.lastSentYaw = state.localYaw
-    state.lastSentPitch = state.localPitch
-    state.lastSentBody = state.shipBody
-    state.lastSyncAt = now
+    client.shipControlSetWeaponAim(
+        state.active,
+        state.localYaw,
+        state.localPitch
+    )
 end
 
 local function _shipCameraClearWeaponAim(cam)
@@ -295,8 +283,8 @@ local function _shipCameraClearWeaponAim(cam)
     end
 
     local body = math.floor(state.shipBody or 0)
-    if body > 0 and client.shipRequestWeaponAim ~= nil then
-        client.shipRequestWeaponAim(body, false, 0.0, 0.0)
+    if body > 0 and client.shipControlSetWeaponAim ~= nil then
+        client.shipControlSetWeaponAim(false, 0.0, 0.0)
     end
 
     state.active = false
@@ -704,7 +692,7 @@ function client.shipCameraTick(dt)
     AttachCameraTo(body, false)
     SetCameraOffsetTransform(cameraLocalT)
 
-    if client.shipRequestRotationError == nil then
+    if client.shipControlSetRotationError == nil then
         return
     end
 
@@ -763,5 +751,5 @@ function client.shipCameraTick(dt)
     end
     _shipCameraPushWeaponAim(cam, body, weaponAimActive, weaponAimLocalYaw, weaponAimLocalPitch, weaponAimWorldDir)
 
-    client.shipRequestRotationError(body, pitchError, yawError)
+    client.shipControlSetRotationError(pitchError, yawError)
 end

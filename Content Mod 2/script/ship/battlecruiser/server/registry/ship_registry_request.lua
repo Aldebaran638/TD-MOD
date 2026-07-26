@@ -3,6 +3,9 @@
 
 server = server or {}
 
+server.shipControlSnapshotStateByPlayer =
+    server.shipControlSnapshotStateByPlayer or {}
+
 local function _isPlayerDrivingShip(playerId, shipBodyId)
     if playerId == nil or shipBodyId == nil or shipBodyId == 0 then
         return false
@@ -290,6 +293,84 @@ function server.shipRequestHWeaponFire(playerId, shipBodyId, targetVehicleId)
         targetBodyId = targetBody,
         requestedAt = (GetTime ~= nil) and GetTime() or 0.0,
     })
+end
+
+local function _controlSnapshotFinite(value)
+    local number = tonumber(value)
+    return number ~= nil
+        and number == number
+        and number ~= math.huge
+        and number ~= -math.huge
+end
+
+local function _controlSnapshotClamp(value, minimum, maximum)
+    return math.max(minimum, math.min(maximum, tonumber(value) or 0.0))
+end
+
+function server.shipReceiveControlSnapshot(
+    playerId,
+    shipBodyId,
+    sequence,
+    moveState,
+    pitchError,
+    yawError,
+    rollError,
+    weaponAimActive,
+    weaponAimYaw,
+    weaponAimPitch
+)
+    server.netDebugCountReceive("input.snapshot")
+    local pid = math.floor(tonumber(playerId) or 0)
+    local body = math.floor(tonumber(shipBodyId) or 0)
+    local seq = math.floor(tonumber(sequence) or 0)
+    if body == 0 or body ~= math.floor(server.shipBody or 0) then return false end
+    if not _canAcceptShipRequest(pid, body) then return false end
+    if seq <= 0 then return false end
+
+    local numericValues = {
+        moveState,
+        pitchError,
+        yawError,
+        rollError,
+        weaponAimActive,
+        weaponAimYaw,
+        weaponAimPitch,
+    }
+    for i = 1, #numericValues do
+        if not _controlSnapshotFinite(numericValues[i]) then return false end
+    end
+
+    local playerState = server.shipControlSnapshotStateByPlayer[pid] or {
+        lastSequence = 0,
+        lastAcceptedAt = -1000.0,
+        shipBody = body,
+    }
+    if seq <= math.floor(playerState.lastSequence or 0) then return false end
+
+    local now = (GetTime ~= nil) and GetTime() or 0.0
+    if now - (playerState.lastAcceptedAt or -1000.0) < 0.02 then
+        return false
+    end
+
+    local move = math.floor(tonumber(moveState) or 0)
+    if move < 0 or move > 2 then return false end
+    local pitch = _controlSnapshotClamp(pitchError, -90.0, 90.0)
+    local yaw = _controlSnapshotClamp(yawError, -180.0, 180.0)
+    local roll = _controlSnapshotClamp(rollError, -180.0, 180.0)
+    local aimActive = math.floor(tonumber(weaponAimActive) or 0) ~= 0
+    local aimYaw = _controlSnapshotClamp(weaponAimYaw, -180.0, 180.0)
+    local aimPitch = _controlSnapshotClamp(weaponAimPitch, -90.0, 90.0)
+
+    server.shipRuntimeSetMoveRequestState(body, move)
+    server.shipRuntimeSetRotationError(body, pitch, yaw)
+    server.shipRuntimeSetRollError(body, roll)
+    server.shipRuntimeSetWeaponAim(body, aimActive, aimYaw, aimPitch)
+
+    playerState.lastSequence = seq
+    playerState.lastAcceptedAt = now
+    playerState.shipBody = body
+    server.shipControlSnapshotStateByPlayer[pid] = playerState
+    return true
 end
 
 function server.shipRequestMoveState(playerId, shipBodyId, moveState)
