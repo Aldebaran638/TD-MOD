@@ -11,14 +11,9 @@ client.weaponConfigUiState = client.weaponConfigUiState or {
     loadout = {},
     message = "",
 }
-client.weaponSpawnTemplateState = client.weaponSpawnTemplateState or {
-    received = false,
-    configurationId = "",
-    loadout = {},
-}
 
 local _panelWidth = 1240
-local _panelHeight = 720
+local _panelHeight = 820
 local _sidebarWidth = 266
 local _groupOrder = { "X", "L", "G", "M", "H" }
 local _slotNames = {
@@ -30,7 +25,7 @@ local _slotNames = {
 }
 
 local function _uiRegistryKey()
-    return "StellarisShips/client/weaponConfigUiOpen/" .. tostring(GetLocalPlayer() or 0)
+    return client.weaponLocalConfigUiOpenKey()
 end
 
 local function _shipDefinition()
@@ -90,28 +85,6 @@ local function _ensureDraft()
     return configuration
 end
 
-function client.updateShipWeaponSpawnTemplate(shipType, configurationId, xWeapon, lWeapon, mWeapon, gWeapon, hWeapon)
-    local receivedType = tostring(shipType or "enigmaticCruiser")
-    client.weaponSpawnTemplateState[receivedType] = {
-        received = true,
-        configurationId = tostring(configurationId or ""),
-        loadout = {
-            X = tostring(xWeapon or ""),
-            L = tostring(lWeapon or ""),
-            M = tostring(mWeapon or ""),
-            G = tostring(gWeapon or ""),
-            H = tostring(hWeapon or ""),
-        },
-    }
-    local state = client.weaponConfigUiState
-    if state.open and not state.dirty and state.shipType == receivedType then
-        state.configurationId = tostring(configurationId or "")
-        state.loadout = _copyLoadout(client.weaponSpawnTemplateState[receivedType].loadout)
-        state.message = "SAVED DESIGN LOADED"
-        _ensureDraft()
-    end
-end
-
 local function _selectNextShipType()
     local state = client.weaponConfigUiState
     local available = _configurableShipTypes()
@@ -121,41 +94,27 @@ local function _selectNextShipType()
         if available[i] == state.shipType then index = i break end
     end
     state.shipType = available[(index % #available) + 1]
-    state.configurationId = tostring(_shipDefinition().defaultSlotConfigurationId or "")
-    state.loadout = {}
+    local template = client.weaponConfiguratorRequestTemplate(state.shipType)
+    state.configurationId = tostring(template.configurationId or "")
+    state.loadout = _copyLoadout(template.loadout)
     state.dirty = false
-    state.message = "LOADING SPAWN TEMPLATE..."
+    state.message = "LOCAL DESIGN LOADED"
     _ensureDraft()
-    client.weaponConfiguratorRequestTemplate(state.shipType)
 end
 
 local function _open()
     local state = client.weaponConfigUiState
     local available = _configurableShipTypes()
     if #available > 0 and _shipDefinition().shipType == nil then state.shipType = available[1] end
-    local template = client.weaponSpawnTemplateState[state.shipType] or {}
-    state.configurationId = tostring(
-        (template.received and template.configurationId)
-        or _shipDefinition().defaultSlotConfigurationId
-        or ""
-    )
-    local source = template.received and (template.loadout or {}) or {}
-    state.loadout = {
-        X = tostring(source.X or "tachyonLance"),
-        L = tostring(source.L or "kineticArtillery"),
-        M = tostring(source.M or "swarmerMissile"),
-        G = tostring(source.G or "devastatorTorpedoes"),
-        H = tostring(source.H or "gammaStrikeCraft"),
-    }
+    local template = client.weaponConfiguratorRequestTemplate(state.shipType)
+    state.configurationId = tostring(template.configurationId or "")
+    state.loadout = _copyLoadout(template.loadout)
     state.pending = false
     state.dirty = false
-    state.message = template.received and "SAVED DESIGN LOADED" or "LOADING SPAWN TEMPLATE..."
+    state.message = "LOCAL DESIGN LOADED"
     state.open = true
     SetBool(_uiRegistryKey(), true)
     _ensureDraft()
-    if client.weaponConfiguratorRequestTemplate ~= nil then
-        client.weaponConfiguratorRequestTemplate(state.shipType)
-    end
 end
 
 local function _close()
@@ -172,15 +131,28 @@ function client.weaponConfigUiIsOpen()
     return client.weaponConfigUiState.open and true or false
 end
 
-function client.weaponConfigUiApplyResult(success, message)
+function client.weaponConfiguratorRequestTemplate(shipType)
+    return client.weaponLocalConfigRead(tostring(shipType or ""))
+end
+
+function client.weaponConfiguratorSaveTemplate(shipType, configurationId, loadout)
+    local selected = loadout or {}
+    client.weaponLocalConfigWrite(
+        tostring(shipType or ""),
+        tostring(configurationId or ""),
+        {
+            X = tostring(selected.X or ""),
+            L = tostring(selected.L or ""),
+            M = tostring(selected.M or ""),
+            G = tostring(selected.G or ""),
+            H = tostring(selected.H or ""),
+        }
+    )
     local state = client.weaponConfigUiState
     state.pending = false
-    if math.floor(success or 0) ~= 0 then
-        state.message = "DESIGN SAVED — APPLIES TO THE NEXT SPAWNED " .. string.upper(_shipDisplayName())
-        state.dirty = false
-    else
-        state.message = "SAVE FAILED: " .. tostring(message or "unknown")
-    end
+    state.message = "LOCAL DESIGN SAVED — APPLIES TO THE NEXT SPAWNED " .. string.upper(_shipDisplayName())
+    state.dirty = false
+    return true
 end
 
 function client.weaponConfigUiTick(dt)
@@ -248,9 +220,12 @@ local function _weaponCard(x, y, width, height, slotType, weaponType, selected, 
             UiImageBox(icon, 40, 40, 0, 0)
         end
         UiTranslate(0, 46)
-        _text(tostring(definition.displayName or weaponType), 14, 0.88, 0.95, 0.98, enabled and 1 or 0.45)
-        UiTranslate(0, 18)
-        _text(string.upper(tostring(definition.behaviorType or "")), 10, 0.35, 0.65, 0.76, enabled and 1 or 0.45)
+        _text(tostring(definition.displayName or weaponType), 13, 0.88, 0.95, 0.98, enabled and 1 or 0.45)
+        UiTranslate(0, 15)
+        local _en = tostring(definition.englishName or weaponType)
+        _text(_en, 9, 0.52, 0.74, 0.84, enabled and 0.85 or 0.38)
+        UiTranslate(0, 11)
+        _text(string.upper(tostring(definition.behaviorType or "")), 9, 0.35, 0.65, 0.76, enabled and 1 or 0.45)
         local clicked = enabled and hover and InputPressed("lmb")
     UiPop()
     return clicked
@@ -341,7 +316,7 @@ function client.weaponConfigUiDraw()
         end
 
         UiPush()
-            UiTranslate(0, 590)
+            UiTranslate(0, 732)
             UiColor(0.03, 0.12, 0.16, 1)
             UiRect(_sidebarWidth - 48, 72)
             UiTranslate(12, 12)
@@ -367,13 +342,13 @@ function client.weaponConfigUiDraw()
                 if tostring(group.slotType or "") == slotType then active = true end
             end
             if active then
-                local y = 72 + row * 125
+                local y = 72 + row * 132
                 UiPush()
                     UiTranslate(0, y)
                     UiColor(0.025, 0.075, 0.098, 0.96)
-                    UiRect(900, 110)
+                    UiRect(900, 120)
                     UiColor(0.08, 0.31, 0.40, 1)
-                    UiRectOutline(900, 110, 1)
+                    UiRectOutline(900, 120, 1)
                     UiTranslate(14, 14)
                     _text(slotType, 28, 0.30, 0.82, 1, 1)
                     UiTranslate(0, 32)
@@ -381,7 +356,7 @@ function client.weaponConfigUiDraw()
                     local pool = ((_shipDefinition().slotWeaponPools or {})[slotType]) or {}
                     for index, weaponType in ipairs(pool) do
                         if _weaponCard(
-                            74 + (index - 1) * 134, -38, 124, 92,
+                            74 + (index - 1) * 134, -36, 124, 116,
                             slotType,
                             tostring(weaponType),
                             state.loadout[slotType] == tostring(weaponType),
@@ -397,7 +372,7 @@ function client.weaponConfigUiDraw()
             end
         end
 
-        local footerY = 552
+        local footerY = 732
         UiPush()
             UiTranslate(0, footerY)
             UiColor(0.025, 0.074, 0.095, 1)
@@ -406,13 +381,12 @@ function client.weaponConfigUiDraw()
             _text(state.message or "", 14, 0.52, 0.76, 0.84, 1)
         UiPop()
 
-        if _actionButton(604, footerY + 12, 170, 48, state.pending and "SAVING..." or "SAVE DESIGN", true, not state.pending) then
-            state.pending = client.weaponConfiguratorSaveTemplate(
+        if _actionButton(604, footerY + 12, 170, 48, "SAVE DESIGN", true, not state.pending) then
+            client.weaponConfiguratorSaveTemplate(
                 state.shipType,
                 state.configurationId,
                 _copyLoadout(state.loadout)
             )
-            if not state.pending then state.message = "UNABLE TO SEND REQUEST" end
         end
         if _actionButton(786, footerY + 12, 114, 48, "CLOSE", false, not state.pending) then _close() end
     UiPop()
