@@ -31,6 +31,7 @@ client.shipCamera = client.shipCamera or {
     frontAimPitch = 0.0,
     rearDefaultPitch = 8.0,
     freelookTurnYawError = 16.0,
+    freelookTurnPitchError = 16.0,
     weaponAimSyncKeepAlive = 0.2,
 
     rearFreelookActive = false,
@@ -559,8 +560,14 @@ function client.shipCameraTick(dt)
             else
                 cam.viewMode = "rear"
                 cam.viewBlendTarget = 0.0
-                cam.targetB = cam.rearDefaultPitch or 8.0
-                cam.targetC = shipBackYawWorld
+                -- 从前视返回时，后视目的地必须是当前船体正后方；
+                -- 不能复用切入前视时留下的旧环绕位置。
+                cam.b = cam.rearDefaultPitch or 8.0
+                cam.c = shipBackYawWorld
+                cam.targetB = cam.b
+                cam.targetC = cam.c
+                cam.bVel = 0.0
+                cam.cVel = 0.0
                 _resetFrontFreelookState(cam)
             end
             _resetRearFreelookState(cam)
@@ -699,10 +706,20 @@ function client.shipCameraTick(dt)
     local yawError = 0.0
     local pitchError = 0.0
     local steerYaw = 0.0
+    local steerPitch = 0.0
     if (not inputBlocked) and InputDown("a") and (not InputDown("d")) then
         steerYaw = -(cam.freelookTurnYawError or 16.0)
     elseif (not inputBlocked) and InputDown("d") and (not InputDown("a")) then
         steerYaw = cam.freelookTurnYawError or 16.0
+    end
+    -- While holding RMB, Shift/Ctrl provide direct nose-up/nose-down flight
+    -- control alongside the existing WASD manual steering controls.
+    if (not inputBlocked) and InputDown("rmb") then
+        if InputDown("shift") and not InputDown("ctrl") then
+            steerPitch = cam.freelookTurnPitchError or 16.0
+        elseif InputDown("ctrl") and not InputDown("shift") then
+            steerPitch = -(cam.freelookTurnPitchError or 16.0)
+        end
     end
 
     if cam.viewMode == "front" then
@@ -724,10 +741,12 @@ function client.shipCameraTick(dt)
         pitchError = camZenith
     end
 
+    pitchError = pitchError + steerPitch
+
     local weaponConfig, currentMode = _shipCameraResolveWeaponConfig(body)
     local lockedTargetLocalDir = _shipCameraResolveLockedXTargetLocal(body, shipTransform)
+    -- 武器数据决定能否倾角瞄准及角度上限；飞船不再按槽位筛选。
     local weaponAimActive = (cam.rearFreelookActive or cam.frontFreelookActive or lockedTargetLocalDir ~= nil)
-        and (currentMode == "xSlot" or currentMode == "lSlot")
         and tostring(weaponConfig.aimControlMode or "fixed") == "camera_limited"
     local weaponAimWorldDir = rearForwardWorld
     local weaponAimLocalYaw = 0.0

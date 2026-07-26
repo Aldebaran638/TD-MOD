@@ -612,7 +612,8 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
             endPos[1], endPos[2], endPos[3],
             0,
             weaponConfig.beamLife or 0.08,
-            weaponConfig.beamWidth or 0.16
+            weaponConfig.beamWidth or 0.16,
+            "none"
         )
         return
     end
@@ -632,7 +633,7 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
         end
     end
 
-    local didHitShield = _hSlotApplyBeamDamage(hitPos, hitBody, craft.weaponType, tonumber(weaponConfig.environmentExplosionSize) or 0.1)
+    local didHitShield, _, impactLayer = _hSlotApplyBeamDamage(hitPos, hitBody, craft.weaponType, tonumber(weaponConfig.environmentExplosionSize) or 0.1)
 
     local impactExplosionSize = math.max(0.0, tonumber(weaponConfig.beamImpactExplosionSize) or 0.0)
     local impactExplosionImpulse = math.max(0.0, tonumber(weaponConfig.beamImpactExplosionImpulse) or 0.0)
@@ -674,7 +675,8 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
         hitPos[1], hitPos[2], hitPos[3],
         didHitShield and 1 or 0,
         weaponConfig.beamLife or 0.08,
-        weaponConfig.beamWidth or 0.16
+        weaponConfig.beamWidth or 0.16,
+        impactLayer or "body"
     )
 
     if didHitShield and hitBody ~= nil and hitBody ~= 0 then
@@ -1364,6 +1366,7 @@ function server.hSlotControlTick(dt)
     SetBodyDynamic(craftBody, true)
     SetBodyActive(craftBody, true)
     SetBodyVelocity(craftBody, VecScale(fireDir, math.max(4.0, tonumber(launcher.config.craftSpeed) or 30.0)))
+    server.netClientCall("weapon.fireFx", 0, "client.spawnHSlotLaunchFx", firePos[1], firePos[2], firePos[3], fireDir[1], fireDir[2], fireDir[3])
 
     state.activeCrafts[slotIndex] = {
         slotIndex = slotIndex,

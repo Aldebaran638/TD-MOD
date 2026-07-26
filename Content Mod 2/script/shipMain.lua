@@ -1,4 +1,4 @@
--- 该脚本的body点击左键以后向前方发射快子光�?
+-- 该脚本的body点击左键以后向前方发射快子光
 -- 111
 #version 2
 #include "script/include/common.lua"
@@ -31,7 +31,7 @@
 
 -- server = server or {}
 
--- -- registry 访问�?
+-- -- registry 访问
 
 -- x 槽控制模块位于独立的武器系统目录中。
 #include "weapon/server/slots/l/kinetic_artillery/state.lua"
@@ -50,15 +50,15 @@
 #include "ship/battlecruiser/server/control/g_slot_control.lua"
 #include "weapon/server/slots/h/gamma_strike_craft/control.lua"
 #include "weapon/server/slots/l/kinetic_artillery/projectile_manager.lua"
--- 移动类模块：根据 body 质量施加竖直向上�?
+-- 移动类模块：根据 body 质量施加竖直向上
 #include "ship/battlecruiser/server/movement/body_mass_upward_move.lua"
--- 移动类模块：根据 W/S 输入施加前后推进�?
+-- 移动类模块：根据 W/S 输入施加前后推进
 #include "ship/battlecruiser/server/movement/body_directional_move.lua"
--- 移动类模块：接收客户�?moveState 更新
+-- 移动类模块：接收客户moveState 更新
 #include "ship/battlecruiser/server/movement/body_move_state_receive.lua"
--- 移动类模块：始终施加与速度反向的平方阻�?
+-- 移动类模块：始终施加与速度反向的平方阻
 #include "ship/battlecruiser/server/movement/body_velocity_quadratic_damping.lua"
--- 移动类模�?根据 registry 中的姿态误差施加扭矩进行自动调�?
+-- 移动类模根据 registry 中的姿态误差施加扭矩进行自动调
 #include "ship/battlecruiser/server/movement/ship_attitude_controller.lua"
 #include "ship/battlecruiser/server/movement/ship_roll_stabilizer.lua"
 #include "ship/battlecruiser/server/movement/ship_death_explosion.lua"
@@ -66,13 +66,13 @@
 
 -- 服务端初始化
 function server.init()
-    -- -- 当前武器状�?
+    -- -- 当前武器状
     -- -- "idle"      空闲
-    -- -- "charging"  充能�?
-    -- -- "launching" 发射�?
+    -- -- "charging"  充能
+    -- -- "launching" 发射
     -- server.weaponState = "idle"
 
-    -- -- 上一帧武器状�?用于检测状态变化的第一�?
+    -- -- 上一帧武器状用于检测状态变化的第一
     -- server.weaponStateLastTick = "idle"
 
     -- -- 充能所需时间
@@ -100,9 +100,9 @@ function server.init()
 
 end
 
--- 在tick中使用到的变�?
--- server.weaponState 当前武器状�?"idle"/"charging"/"launching")
--- server.weaponStateLastTick 武器在上一帧的状�?用于检测状态变化的第一�?
+-- 在tick中使用到的变
+-- server.weaponState 当前武器状"idle"/"charging"/"launching")
+-- server.weaponStateLastTick 武器在上一帧的状用于检测状态变化的第一
 -- server.chargeTime 飞船充能所需时间
 -- server.launchTime 飞船发射持续时间
 function server.serverTick(dt)
@@ -140,7 +140,7 @@ end
 #include "client.lua"
 
 
--- 客户�?tick：只调用总控函数
+-- 客户tick：只调用总控函数
 function client.tick(dt)
     client.clientTick(dt)
 end

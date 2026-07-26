@@ -1,60 +1,30 @@
--- Guided missile impact effect.
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
 
 client = client or {}
 
-local function _resolveMissileImpactColors(impactLayer)
-    if impactLayer == "shield" then
-        return 0.25, 0.90, 1.00, 0.08, 0.32, 1.00
-    elseif impactLayer == "armor" then
-        return 0.95, 0.72, 0.22, 1.00, 0.42, 0.08
-    elseif impactLayer == "body" then
-        return 0.95, 0.38, 0.18, 0.85, 0.22, 0.06
-    end
-    return 0.78, 0.88, 1.00, 0.35, 0.48, 0.85
+local function _normalize(value, fallback)
+    local length = VecLength(value)
+    if length < 0.0001 then return fallback or Vec(0, 1, 0) end
+    return VecScale(value, 1.0 / length)
 end
 
-local function _randomMissileImpactDirection()
-    local z = 2.0 * math.random() - 1.0
-    local angle = math.random() * math.pi * 2.0
-    local radius = math.sqrt(math.max(0.0, 1.0 - z * z))
-    return Vec(radius * math.cos(angle), z, radius * math.sin(angle))
-end
-
-function client.playMissileImpactFx(hitX, hitY, hitZ, impactLayer)
-    local pos = Vec(hitX or 0, hitY or 0, hitZ or 0)
-    local r1, g1, b1, r2, g2, b2 = _resolveMissileImpactColors(tostring(impactLayer or "body"))
-
-    PointLight(pos, r1, g1, b1, 6.0)
-
-    ParticleReset()
-    ParticleColor(r1, g1, b1, r2, g2, b2)
-    ParticleRadius(0.35, 0.0, "easeout")
-    ParticleAlpha(0.94, 0.0)
-    ParticleGravity(0.0)
-    ParticleDrag(0.02)
-    ParticleEmissive(25.0, 0.0)
-    ParticleCollide(0.0)
-    for _ = 1, 40 do
-        local direction = _randomMissileImpactDirection()
-        local spawnPos = VecAdd(pos, VecScale(direction, 0.5 * math.random()))
-        local velocity = VecScale(direction, 8.0 + 6.0 * math.random())
-        SpawnParticle(spawnPos, velocity, 0.8 + 0.2 * math.random())
-    end
-
-    ParticleReset()
-    ParticleColor(r1, g1, b1, r2, g2, b2)
-    ParticleRadius(0.5, 0.0, "easeout")
-    ParticleAlpha(0.8, 0.0)
-    ParticleGravity(0.0)
-    ParticleDrag(0.01)
-    ParticleEmissive(20.0, 0.0)
-    ParticleCollide(0.0)
-    for _ = 1, 30 do
-        local direction = _randomMissileImpactDirection()
-        local spawnPos = VecAdd(pos, VecScale(direction, 0.8 + 0.3 * math.random()))
-        local velocity = VecScale(direction, 6.0 + 4.0 * math.random())
-        SpawnParticle(spawnPos, velocity, 1.0 + 0.3 * math.random())
+function client.playMissileImpactFx(weaponType, hitX, hitY, hitZ, nx, ny, nz, impactLayer)
+    local definition = (weaponData or {})[tostring(weaponType or "")] or {}
+    local torpedo = tostring(definition.projectileFxVariant or "") == "devastatorTorpedo"
+    local pos, normal = Vec(hitX or 0, hitY or 0, hitZ or 0), _normalize(Vec(nx or 0, ny or 1, nz or 0))
+    local r, g, b = torpedo and 1.0 or 0.25, torpedo and 0.32 or 0.75, torpedo and 0.06 or 1.0
+    if impactLayer == "shield" then r, g, b = 0.18, 0.88, 1.0 end
+    client.weaponFxPointLight(pos, r, g, b, torpedo and 18 or 8)
+    local count = torpedo and 28 or 14
+    if not client.weaponFxTakeParticles(count, "normal") then return end
+    ParticleReset(); ParticleType("plain")
+    ParticleColor(r, g, b, r * 0.25, g * 0.12, b * 0.08)
+    ParticleRadius(torpedo and 0.48 or 0.22, 0.01, "easeout"); ParticleAlpha(0.95, 0.0, "easeout")
+    ParticleGravity(0); ParticleDrag(0.10); ParticleEmissive(torpedo and 28 or 15, 0); ParticleCollide(0)
+    for _ = 1, count do
+        local scatter = Vec(math.random() - 0.5, math.random() - 0.5, math.random() - 0.5)
+        local out = _normalize(VecAdd(normal, VecScale(scatter, torpedo and 1.5 or 0.8)), normal)
+        SpawnParticle(pos, VecScale(out, torpedo and (8 + math.random() * 10) or (4 + math.random() * 6)), torpedo and 0.65 or 0.38)
     end
 end

@@ -8,6 +8,27 @@ function server.weaponBehaviorNormalize(value, fallback)
     return VecScale(value, 1.0 / length)
 end
 
+function server.weaponBehaviorClampAimLocal(direction, aimLimitDeg)
+    local forward = Vec(0, 0, -1)
+    local desired = server.weaponBehaviorNormalize(direction, forward)
+    local maximum = math.max(0.0, tonumber(aimLimitDeg) or 0.0)
+    if maximum <= 0.0001 then return forward end
+
+    local dot = math.max(-1.0, math.min(1.0, VecDot(desired, forward)))
+    local angle = math.deg(math.acos(dot))
+    if angle <= maximum then return desired end
+
+    local lateral = server.weaponBehaviorNormalize(
+        VecSub(desired, VecScale(forward, dot)),
+        Vec(1, 0, 0)
+    )
+    local radians = math.rad(maximum)
+    return server.weaponBehaviorNormalize(
+        VecAdd(VecScale(forward, math.cos(radians)), VecScale(lateral, math.sin(radians))),
+        forward
+    )
+end
+
 function server.weaponBehaviorResolveFireTransform(context)
     local mount = context.mountDefinition or {}
     local weapon = context.weaponDefinition or {}
@@ -27,7 +48,8 @@ function server.weaponBehaviorResolveFireTransform(context)
         )),
         Vec(0, 0, -1)
     )
-    if weapon.forceForward then
+    local usesCameraAim = tostring(weapon.aimControlMode or "") == "camera_limited"
+    if weapon.forceForward and not usesCameraAim then
         direction = server.weaponBehaviorNormalize(
             TransformToParentVec(shipTransform, Vec(0, 0, -1)),
             direction
@@ -53,20 +75,44 @@ function server.weaponBehaviorResolveFireTransform(context)
         return origin, direction
     end
 
-    if weapon.forceForward then return origin, direction end
+    if weapon.forceForward and not usesCameraAim then return origin, direction end
 
-    local targetBody = math.floor(context.targetBodyId or 0)
-    if targetBody ~= 0 and IsHandleValid(targetBody) then
-        local targetTransform = GetBodyTransform(targetBody)
-        local targetCenter = TransformToParentPoint(targetTransform, GetBodyCenterOfMass(targetBody))
-        direction = server.weaponBehaviorNormalize(VecSub(targetCenter, origin), direction)
-    elseif server.shipRuntimeGetWeaponAim ~= nil then
+    local usedCameraAim = false
+    if server.shipRuntimeGetWeaponAim ~= nil then
         local active, yaw, pitch = server.shipRuntimeGetWeaponAim(context.shipBodyId)
-        if active then
+        if active and usesCameraAim then
             local yr = math.rad(tonumber(yaw) or 0.0)
             local pr = math.rad(tonumber(pitch) or 0.0)
             local localAim = Vec(math.cos(pr) * math.sin(yr), math.sin(pr), -math.cos(pr) * math.cos(yr))
+            localAim = server.weaponBehaviorClampAimLocal(localAim, weapon.aimLimitDeg)
             direction = server.weaponBehaviorNormalize(TransformToParentVec(shipTransform, localAim), direction)
+            usedCameraAim = true
+        end
+    end
+    if not usedCameraAim then
+        local targetBody = math.floor(context.targetBodyId or 0)
+        if targetBody ~= 0 and IsHandleValid(targetBody) then
+            local targetTransform = GetBodyTransform(targetBody)
+            local targetCenter = TransformToParentPoint(targetTransform, GetBodyCenterOfMass(targetBody))
+            direction = server.weaponBehaviorNormalize(VecSub(targetCenter, origin), direction)
+        end
+    end
+    -- Direct-fire weapons use the ship-centre aim ray as a parallax reference.
+    -- When the crosshair ray reaches nearby geometry, every muzzle converges on
+    -- that exact point instead of firing parallel through it. Guided ordnance
+    -- and strike craft simply do not opt into this data-driven flag.
+    if weapon.closeRangeFocus == true then
+        local focusRange = math.min(
+            math.max(1.0, tonumber(weapon.maxRange) or 500.0),
+            math.max(1.0, tonumber(weapon.closeRangeFocusRange) or 220.0)
+        )
+        local focusOrigin = TransformToParentPoint(shipTransform, Vec(0, 0, -2))
+        QueryRequire("physical")
+        QueryRejectBody(context.shipBodyId)
+        local hit, distance = QueryRaycast(focusOrigin, direction, focusRange)
+        if hit then
+            local point = VecAdd(focusOrigin, VecScale(direction, distance))
+            direction = server.weaponBehaviorNormalize(VecSub(point, origin), direction)
         end
     end
     return origin, direction

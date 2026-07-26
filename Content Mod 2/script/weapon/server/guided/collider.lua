@@ -135,13 +135,13 @@ local function _guidedProjectileResolveHit(projectile, currentProbes)
     return _guidedProjectileQuerySweepBody(projectile, previousCenter, currentProbes.center, _guidedProjectileSweepRadius)
 end
 
-local function _guidedProjectileHandleHit(projectile, hitPos, hitBody)
+local function _guidedProjectileHandleHit(projectile, hitPos, hitBody, hitNormal)
     local pos = hitPos or server.guidedProjectileGetBodyCenterWorld(projectile.bodyId) or Vec(0, 0, 0)
     local bodyId = hitBody or 0
     if bodyId ~= 0 and server.registryShipExists(bodyId) and not server.registryShipIsBodyDead(bodyId) then
         local impactLayer = _guidedProjectileApplyShipDamage(bodyId, projectile)
         server.guidedProjectilePlayImpactSound(projectile.weaponType, pos)
-        server.guidedProjectilePlayImpactFx(pos, impactLayer ~= "none" and impactLayer or "body")
+        server.guidedProjectilePlayImpactFx(projectile.weaponType, pos, hitNormal, impactLayer ~= "none" and impactLayer or "body")
         return
     end
     if bodyId ~= 0 then
@@ -171,7 +171,7 @@ function server.guidedProjectileColliderPostUpdate()
 
             local hit = _guidedProjectileResolveHit(projectile, probes)
             if hit ~= nil then
-                _guidedProjectileHandleHit(projectile, hit.hitPos, hit.hitBody or 0)
+                _guidedProjectileHandleHit(projectile, hit.hitPos, hit.hitBody or 0, hit.normal)
                 server.guidedProjectileRemoveAt(i)
             elseif (projectile.lifeRemain or 0.0) <= 0.0 or (projectile.distanceTravelled or 0.0) >= (projectile.maxRange or 0.0) then
                 server.guidedProjectileRemoveAt(i)
