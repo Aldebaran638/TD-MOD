@@ -33,6 +33,8 @@ try {
     Copy-Item -LiteralPath (Join-Path $sourceMod "main.lua") -Destination (Join-Path $fixtureMod "main.lua")
     [IO.Directory]::CreateDirectory((Join-Path $fixtureMod "gfx\ui")) | Out-Null
     Copy-Item -LiteralPath (Join-Path $sourceMod "gfx\ui\weapon_icons") -Destination (Join-Path $fixtureMod "gfx\ui") -Recurse
+    [IO.Directory]::CreateDirectory((Join-Path $fixtureMod "gfx\weapons")) | Out-Null
+    Copy-Item -LiteralPath (Join-Path $sourceMod "gfx\weapons\common") -Destination (Join-Path $fixtureMod "gfx\weapons") -Recurse
     [IO.Directory]::CreateDirectory((Join-Path $fixtureMod "prefabs")) | Out-Null
     Copy-Item -LiteralPath (Join-Path $sourceMod "prefabs\swarmerMissile.xml") -Destination (Join-Path $fixtureMod "prefabs\swarmerMissile.xml")
     Copy-Item -LiteralPath (Join-Path $sourceMod "prefabs\devastatorTorpedoes.xml") -Destination (Join-Path $fixtureMod "prefabs\devastatorTorpedoes.xml")
@@ -98,6 +100,25 @@ try {
     Assert-True ($invalidGiga.Output -match "Giga Cannon") "reports the Giga Cannon salvo contract"
 
     [IO.File]::WriteAllText($standardPath, $text.Replace('_ray("brokenArcEmitter"', '_ray("focusedArcEmitter"'), (New-Object Text.UTF8Encoding($false)))
+    $shieldPath = Join-Path $fixtureMod "script\weapon\client\common\effects\shield_hit_fx.lua"
+    $shieldText = [IO.File]::ReadAllText($shieldPath)
+    [IO.File]::WriteAllText(
+        $shieldPath,
+        $shieldText.Replace('maxRing = 4', 'maxRing = 3'),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidShieldLayers = Invoke-Checker
+    Assert-True ($invalidShieldLayers.ExitCode -eq 1) "rejects an incomplete shield hex expansion"
+    Assert-True ($invalidShieldLayers.Output -match "fixed five-layer hex sprite") "reports the shield visual contract"
+    [IO.File]::WriteAllText($shieldPath, $shieldText, (New-Object Text.UTF8Encoding($false)))
+
+    $shieldAssetPath = Join-Path $fixtureMod "gfx\weapons\common\hex_soft.png"
+    Remove-Item -LiteralPath $shieldAssetPath -Force
+    $invalidShieldAsset = Invoke-Checker
+    Assert-True ($invalidShieldAsset.ExitCode -eq 1) "rejects a missing shield hex sprite"
+    Assert-True ($invalidShieldAsset.Output -match "fixed five-layer hex sprite") "reports the missing shield sprite contract"
+    Copy-Item -LiteralPath (Join-Path $sourceMod "gfx\weapons\common\hex_soft.png") -Destination $shieldAssetPath
+
     $inputPath = Join-Path $fixtureMod "script\weapon\client\common\input\main_weapon_input.lua"
     $inputText = [IO.File]::ReadAllText($inputPath).Replace('InputDown("lmb")', 'InputPressed("lmb")')
     [IO.File]::WriteAllText($inputPath, $inputText, (New-Object Text.UTF8Encoding($false)))

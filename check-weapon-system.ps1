@@ -47,6 +47,7 @@ $configurationBinding = Read-Required "script\ship\battlecruiser\client\config\w
 $mainWeaponHud = Read-Required "script\weapon\client\common\hud\main_weapon_hud.lua"
 $crosshair = Read-Required "script\weapon\client\common\hud\ship_crosshair.lua"
 $projectileVisual = Read-Required "script\weapon\client\slots\l\kinetic_artillery\effects\projectile_visual.lua"
+$shieldHitFx = Read-Required "script\weapon\client\common\effects\shield_hit_fx.lua"
 $clientRegistry = Read-Required "script\ship\battlecruiser\client\registry\ship_registry.lua"
 $engineThrusterFx = Read-Required "script\ship\battlecruiser\client\effects\engine_thruster_fx.lua"
 $serverRequests = Read-Required "script\ship\battlecruiser\server\registry\ship_registry_request.lua"
@@ -455,6 +456,21 @@ if ($raycastBehavior -notmatch 'client\.playProjectileShieldImpactFx' -or
     $genericRaycastFx -notmatch '_spawnImpactParticles\s*\(' -or
     $genericRaycastFx -notmatch 'didHit\s*=\s*math\.floor') {
     Add-Issue "generic raycast weapons do not provide body/shield impact feedback"
+}
+$shieldHexAsset = Join-Path $modRoot "gfx\weapons\common\hex_soft.png"
+$hexBuilder = [Regex]::Match($shieldHitFx, '(?s)local function _buildHexCells.*?(?=local function _hexEnvelope)').Value
+$hexRenderer = [Regex]::Match($shieldHitFx, '(?s)local function _drawShieldBurst.*?(?=function client\.shieldHitFxInit)').Value
+if (-not (Test-Path -LiteralPath $shieldHexAsset -PathType Leaf) -or
+    $shieldHitFx -notmatch 'maxRing\s*=\s*4' -or
+    $hexBuilder -notmatch 'for\s+ring\s*=\s*0,\s*ShieldConfig\.maxRing' -or
+    $hexBuilder -match 'random|noise|probability' -or
+    $hexRenderer -notmatch 'DrawSprite\s*\(' -or
+    $hexRenderer -match 'SpawnParticle\s*\(' -or
+    $shieldHitFx -notmatch 'LoadSprite\("MOD/gfx/weapons/common/hex_soft\.png"\)' -or
+    $shieldHitFx -notmatch 'sparkCount\s*=\s*6' -or
+    $shieldHitFx -notmatch 'maxActiveBursts\s*=\s*3' -or
+    $client -notmatch 'client\.shieldHitFxInit\(\)') {
+    Add-Issue "shield impacts must use a fixed five-layer hex sprite with bounded sparks and burst state"
 }
 if ($ship -notmatch '(?s)lLaser\s*=\s*\{.*?x\s*=\s*4\.0.*?x\s*=\s*-4\.0' -or
     $ship -notmatch '(?s)lEnergy\s*=\s*\{.*?x\s*=\s*4\.2.*?x\s*=\s*-4\.2' -or

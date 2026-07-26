@@ -30,6 +30,7 @@ client = client or {}
 #include "weapon/client/slots/x/focused_arc_emitter/effects/charging_fx.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/beam_fx.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/muzzle_fx.lua"
+#include "weapon/client/common/effects/weapon_fx_budget.lua"
 #include "weapon/client/common/effects/shield_hit_fx.lua"
 #include "weapon/client/common/effects/generic_raycast_fx.lua"
 #include "weapon/client/slots/x/tachyon_lance/effects/impact_fx.lua"
@@ -50,6 +51,7 @@ function client.init()
     client.shipControlSnapshotInit(client.shipBody)
     client.engineThrusterFxInit()
     client.tachyonMuzzleFxInit()
+    client.shieldHitFxInit()
     client.focusedArcChargingFxInit()
     client.genericRaycastFxInit()
     client.projectileVisualInit()
@@ -57,6 +59,7 @@ function client.init()
 end
 
 function client.clientTick(dt)
+    client.weaponFxBudgetBeginFrame(dt)
     client.weaponConfigurationBindingTick(dt)
     client.weaponLoadoutSyncTick(dt)
     client.guidedTargetingTick(dt)
