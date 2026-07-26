@@ -560,8 +560,14 @@ function client.shipCameraTick(dt)
             else
                 cam.viewMode = "rear"
                 cam.viewBlendTarget = 0.0
-                cam.targetB = cam.rearDefaultPitch or 8.0
-                cam.targetC = shipBackYawWorld
+                -- 从前视返回时，后视目的地必须是当前船体正后方；
+                -- 不能复用切入前视时留下的旧环绕位置。
+                cam.b = cam.rearDefaultPitch or 8.0
+                cam.c = shipBackYawWorld
+                cam.targetB = cam.b
+                cam.targetC = cam.c
+                cam.bVel = 0.0
+                cam.cVel = 0.0
                 _resetFrontFreelookState(cam)
             end
             _resetRearFreelookState(cam)
