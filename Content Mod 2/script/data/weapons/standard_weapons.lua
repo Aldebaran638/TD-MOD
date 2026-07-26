@@ -182,6 +182,11 @@ weaponData.focusedArcEmitter.launchDuration = weaponData.focusedArcEmitter.fireP
 weaponData.tachyonLance.environmentExplosionSize = 4.0
 weaponData.focusedArcEmitter.environmentExplosionSize = 4.0
 weaponData.gigaCannon.explosionRadius = 4.0
+-- X 槽重武器命中普通物理目标时，连续结算两次最大物理爆炸。
+-- 已注册的群星飞船仍只走护盾/装甲/船体伤害路径。
+weaponData.tachyonLance.physicalExplosionCount = 2
+weaponData.focusedArcEmitter.physicalExplosionCount = 2
+weaponData.gigaCannon.physicalExplosionCount = 2
 weaponData.kineticArtillery.legacyController = "lSlot"
 weaponData.swarmerMissile.legacyController = "mSlot"
 weaponData.gammaStrikeCraft.legacyController = "hSlot"

@@ -261,6 +261,16 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
         4.0,
         math.max(0.0, tonumber(resolvedWeapon.environmentExplosionSize) or 4.0)
     )
+    local physicalExplosionCount = math.max(
+        1,
+        math.min(2, math.floor(tonumber(resolvedWeapon.physicalExplosionCount) or 1))
+    )
+    local function _applyEnvironmentExplosions(pos)
+        if pos == nil then return end
+        for _ = 1, physicalExplosionCount do
+            Explosion(pos, environmentExplosionSize)
+        end
+    end
 
     -- 返回给渲染层的命中补充信息
     local renderResult = {
@@ -282,7 +292,7 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
         if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(hitTarget) then
             renderResult.impactLayer = "environment"
             if endPos ~= nil then
-                Explosion(endPos, environmentExplosionSize)
+                _applyEnvironmentExplosions(endPos)
             end
             return renderResult
         end
@@ -371,7 +381,7 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
 
     -- Teardown API: Explosion(pos, size) 其中 size 范围 0.5 - 4.0
     -- 为了看清客户端渲染特效.暂时屏蔽爆炸效果
-    Explosion(endPos, environmentExplosionSize)
+    _applyEnvironmentExplosions(endPos)
     return renderResult
 end
 

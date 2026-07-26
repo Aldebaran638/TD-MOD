@@ -83,7 +83,15 @@ local function _fireRaycast(context)
     end
     if hit and not didHitShield and not suppressPhysicalExplosion then
         local explosionSize = math.max(0.0, tonumber(definition.environmentExplosionSize) or 0.0)
-        if explosionSize > 0.0 then Explosion(endpoint, explosionSize) end
+        local explosionCount = math.max(
+            1,
+            math.min(2, math.floor(tonumber(definition.physicalExplosionCount) or 1))
+        )
+        if explosionSize > 0.0 then
+            for _ = 1, explosionCount do
+                Explosion(endpoint, explosionSize)
+            end
+        end
     end
     ClientCall(
         0, "client.spawnGenericRaycastWeaponFx",

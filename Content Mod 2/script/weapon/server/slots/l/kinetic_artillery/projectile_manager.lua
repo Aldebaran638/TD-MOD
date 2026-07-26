@@ -16,6 +16,18 @@ local function _resolveProjectileWeaponSettings(weaponType)
     return defs[resolvedWeaponType] or (lSlotWeaponRegistryData or {})[resolvedWeaponType] or defs.kineticArtillery or {}
 end
 
+local function _applyProjectileEnvironmentExplosions(hitPos, settings)
+    if hitPos == nil then return end
+    local count = math.max(
+        1,
+        math.min(2, math.floor(tonumber((settings or {}).physicalExplosionCount) or 1))
+    )
+    local radius = (settings or {}).explosionRadius or 2.0
+    for _ = 1, count do
+        Explosion(hitPos, radius)
+    end
+end
+
 local function _safeNormalizeProjectile(v, fallback)
     local len = VecLength(v)
     if len < 0.0001 then
@@ -340,7 +352,7 @@ function server.projectileManagerTick(dt)
                     end
 
                     if shouldExplode then
-                        Explosion(bodyHit.hitPos, settings.explosionRadius or 2.0)
+                        _applyProjectileEnvironmentExplosions(bodyHit.hitPos, settings)
                     end
 
                     if shouldPlayImpact then
