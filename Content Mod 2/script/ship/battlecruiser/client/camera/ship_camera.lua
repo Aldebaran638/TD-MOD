@@ -745,8 +745,8 @@ function client.shipCameraTick(dt)
 
     local weaponConfig, currentMode = _shipCameraResolveWeaponConfig(body)
     local lockedTargetLocalDir = _shipCameraResolveLockedXTargetLocal(body, shipTransform)
+    -- 武器数据决定能否倾角瞄准及角度上限；飞船不再按槽位筛选。
     local weaponAimActive = (cam.rearFreelookActive or cam.frontFreelookActive or lockedTargetLocalDir ~= nil)
-        and (currentMode == "xSlot" or currentMode == "lSlot")
         and tostring(weaponConfig.aimControlMode or "fixed") == "camera_limited"
     local weaponAimWorldDir = rearForwardWorld
     local weaponAimLocalYaw = 0.0

@@ -226,6 +226,13 @@ function server.xSlot_computeHitResult(shipBodyId, firePosOffset, fireDirRelativ
     end
 
     local targetBody = GetShapeBody(shape)
+    if targetBody == shipBodyId then
+        -- 直射 X 槽武器不会把自身的 shape 视为有效命中。
+        local noHitEndPos = VecAdd(origin, VecScale(dir, maxRange))
+        local hitTarget, isHit, isHitStellarisBody = invalidTarget, false, false
+        _xSlot_dbgReturn(noHitEndPos, hitTarget, isHit, isHitStellarisBody)
+        return noHitEndPos, hitTarget, isHit, isHitStellarisBody, dir
+    end
     if targetBody ~= nil and targetBody ~= 0 and server.registryShipExists(targetBody) then
         -- 命中群星飞船：把 endPos 修正为护盾球面入射点
         local bodyT = GetBodyTransform(targetBody)

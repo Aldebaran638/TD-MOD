@@ -343,10 +343,10 @@ if ($standard -notmatch '_projectile\("neutronLauncher".*?"neutronProjectile"\)'
     $standard -notmatch 'weaponData\.neutronLauncher\.targetingMode\s*=\s*"forward"') {
     Add-Issue "Neutron Launcher must be a single forward, non-guided projectile"
 }
-if ($projectileVisual -notmatch '(?s)plasmaProjectile.*?\{\s*0\.30,\s*1\.0,\s*0\.34\s*\}' -or
-    $projectileVisual -notmatch 'gigaCannonProjectile' -or
-    $projectileVisual -notmatch 'neutronProjectile') {
-    Add-Issue "official plasma/giga-cannon/neutron projectile colors are missing"
+if ($projectileVisual -notmatch '(?s)local function _updatePlasmaProjectile.*?_drawBillboard.*?0\.10,\s*0\.95,\s*0\.20' -or
+    $projectileVisual -notmatch '(?s)local function _updateGigaCannonProjectile.*?_pointLight.*?0\.50,\s*0\.08,\s*1\.0' -or
+    $projectileVisual -notmatch '(?s)local function _updateNeutronProjectile.*?_drawDirectionalSprite.*?0\.05,\s*0\.35,\s*1\.4') {
+    Add-Issue "plasma/giga-cannon/neutron projectile visuals are missing their dedicated color paths"
 }
 if ($standard -notmatch 'largeStormfireAutocannon".*?0\.65,\s*220\.0' -or
     $standard -notmatch 'mediumStormfireAutocannon".*?0\.55,\s*180\.0') {
@@ -405,14 +405,14 @@ if ($standard -notmatch 'gigaCannon\s*=\s*\{\s*"xSpinal",\s*1,\s*"sequential"\s*
     Add-Issue "Giga Cannon must use Tachyon hardpoints and fire one barrel at a time"
 }
 if ($standard -notmatch '_projectile\("gigaCannon".*?2350,\s*3\.5,\s*750\.0,\s*560\.0' -or
-    $projectileVisual -notmatch '(?s)fxProfile\s*==\s*"gigaCannonProjectile".*?trailSpacing\s*=\s*1\.1') {
-    Add-Issue "Giga Cannon speed, cooldown, and render frequency are not doubled"
+    $projectileVisual -notmatch '(?s)local function _updateGigaCannonProjectile.*?_emitDistanceEvents.*?"nextTrailDistance".*?function\(p, eventPos\)') {
+    Add-Issue "Giga Cannon speed, cooldown, or dedicated trail rendering is missing"
 }
 if ($standard -notmatch 'neutronLauncher\s*=\s*\{\s*"gNeutron",\s*1,\s*"sequential"\s*\}' -or
     $standard -notmatch '_projectile\("neutronLauncher".*?610,\s*4\.5,\s*1150\.0' -or
     $standard -notmatch 'weaponData\.neutronLauncher\.targetingMode\s*=\s*"forward"' -or
-    $standard -notmatch 'weaponData\.neutronLauncher\.forceForward\s*=\s*true') {
-    Add-Issue "Neutron Launcher must rotate through four X-aligned mounts with a 4.5s cooldown"
+    $standard -notmatch 'neutronLauncher\s*=\s*\{\s*mode\s*=\s*"camera_limited"') {
+    Add-Issue "Neutron Launcher must rotate through four X-aligned mounts, support tilt fire, and use a 4.5s cooldown"
 }
 $gRocketBlock = [Regex]::Match($ship, '(?s)gRocket\s*=\s*\{(.*?)\n\s*\},\s*\n\s*gNeutron\s*=').Groups[1].Value
 $gNeutronBlock = [Regex]::Match($ship, '(?s)gNeutron\s*=\s*\{(.*?)\n\s*\},\s*\n\s*gEnergy\s*=').Groups[1].Value

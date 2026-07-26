@@ -262,6 +262,10 @@ local function _resolveBodyHit(projectile, startPos, endPos)
     if shape ~= nil and shape ~= 0 then
         hitBody = GetShapeBody(shape) or 0
     end
+    if hitBody == projectile.ownerShipBody then
+        -- 实体直射炮弹也必须忽略发射船自身。
+        return nil
+    end
 
     return {
         hitPos = hitPos,
