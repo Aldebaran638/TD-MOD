@@ -176,6 +176,12 @@ weaponData.tachyonLance.legacyController = "xSlot"
 weaponData.focusedArcEmitter.legacyController = "xSlot"
 weaponData.focusedArcEmitter.chargeDuration = weaponData.focusedArcEmitter.fireProfile.chargeDuration
 weaponData.focusedArcEmitter.launchDuration = weaponData.focusedArcEmitter.fireProfile.launchDuration
+
+-- X-slot super-weapons use Teardown's maximum physical environment explosion.
+-- Registered ships continue to use the authoritative shield/armor/body damage path.
+weaponData.tachyonLance.environmentExplosionSize = 4.0
+weaponData.focusedArcEmitter.environmentExplosionSize = 4.0
+weaponData.gigaCannon.explosionRadius = 4.0
 weaponData.kineticArtillery.legacyController = "lSlot"
 weaponData.swarmerMissile.legacyController = "mSlot"
 weaponData.gammaStrikeCraft.legacyController = "hSlot"
