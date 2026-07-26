@@ -40,9 +40,10 @@ $mainXml = if (Test-Path -LiteralPath $mainXmlPath -PathType Leaf) {
 $globalMain = if (Test-Path -LiteralPath $globalMainPath -PathType Leaf) {
     [IO.File]::ReadAllText($globalMainPath)
 } else { "" }
-$configurator = Read-Required "script\weapon_configurator.lua"
 $clientLoadout = Read-Required "script\weapon\client\common\state\weapon_loadout.lua"
 $configUi = Read-Required "script\weapon\client\config_ui\weapon_config_ui.lua"
+$localWeaponConfig = Read-Required "script\weapon\client\config_ui\local_weapon_config.lua"
+$configurationBinding = Read-Required "script\ship\battlecruiser\client\config\weapon_configuration_binding.lua"
 $mainWeaponHud = Read-Required "script\weapon\client\common\hud\main_weapon_hud.lua"
 $crosshair = Read-Required "script\weapon\client\common\hud\ship_crosshair.lua"
 $projectileVisual = Read-Required "script\weapon\client\slots\l\kinetic_artillery\effects\projectile_visual.lua"
@@ -92,6 +93,26 @@ $expected = [ordered]@{
     gammaStrikeCraft = "H"
 }
 
+$expectedEnglishNames = [ordered]@{
+    tachyonLance = "Tachyon Lance"
+    focusedArcEmitter = "Focused Arc Emitter"
+    gigaCannon = "Giga Cannon"
+    largeGammaLaser = "Large Gamma Laser"
+    largePlasmaCannon = "Large Plasma Cannon"
+    largeGaussCannon = "Large Gauss Cannon"
+    kineticArtillery = "Kinetic Artillery"
+    largeStormfireAutocannon = "Large Stormfire Autocannon"
+    mediumGammaLaser = "Medium Gamma Laser"
+    mediumPlasmaCannon = "Medium Plasma Cannon"
+    phaseDisruptor = "Phase Disruptor"
+    mediumGaussCannon = "Medium Gauss Cannon"
+    mediumStormfireAutocannon = "Medium Stormfire Autocannon"
+    swarmerMissile = "Whirlwind Missiles"
+    devastatorTorpedoes = "Devastator Torpedoes"
+    neutronLauncher = "Neutron Launchers"
+    gammaStrikeCraft = "Advanced Strike Craft"
+}
+
 foreach ($item in $expected.GetEnumerator()) {
     $id = [Regex]::Escape($item.Key)
     if ($standard -notmatch "(?s)(?:(?:_ray|_projectile|_guided|_rocket)\(`"$id`".*?\{\s*`"$($item.Value)`"\s*\}|weaponType\s*=\s*`"$id`".*?slotTypes\s*=\s*\{\s*`"$($item.Value)`"\s*\})") {
@@ -118,6 +139,14 @@ foreach ($item in $expected.GetEnumerator()) {
     if (-not (Test-Path -LiteralPath $soundDirectory -PathType Container) -or
         @(Get-ChildItem -LiteralPath $soundDirectory -Filter "*.ogg" -File -ErrorAction SilentlyContinue).Count -eq 0) {
         Add-Issue "weapon $($item.Key) has no dedicated OGG assets: $soundRelative"
+    }
+}
+
+foreach ($item in $expectedEnglishNames.GetEnumerator()) {
+    $id = [Regex]::Escape($item.Key)
+    $name = [Regex]::Escape($item.Value)
+    if ($standard -notmatch "(?s)(?:_(?:ray|projectile|guided|rocket)\(`"$id`",.*?,\s*`"$name`"|weaponType\s*=\s*`"$id`".*?englishName\s*=\s*`"$name`")") {
+        Add-Issue "weapon $($item.Key) does not use official English name '$($item.Value)'"
     }
 }
 
@@ -159,13 +188,27 @@ if ($groupRuntime -notmatch 'function\s+server\.weaponGroupSetFireHeld\s*\(' -or
 if ($loadoutApi -notmatch 'function\s+server\.shipWeaponApplyConfiguration\s*\(') {
     Add-Issue "shipWeaponApplyConfiguration API is missing"
 }
-if ($loadoutApi -notmatch 'function\s+server\.shipWeaponSetSpawnTemplate\s*\(' -or
-    $loadoutApi -notmatch 'function\s+server\.shipWeaponSyncSpawnTemplate\s*\(') {
-    Add-Issue "next-spawn weapon template API is missing"
+if ($localWeaponConfig -notmatch 'level\.stellarisships\.weaponconfig' -or
+    $localWeaponConfig -notmatch 'function\s+client\.weaponLocalConfigRead\s*\(' -or
+    $localWeaponConfig -notmatch 'function\s+client\.weaponLocalConfigWrite\s*\(') {
+    Add-Issue "client-local session weapon configuration source is incomplete"
 }
-if ($loadoutRuntime -notmatch '_readSpawnTemplate\s*\(' -or
-    $loadoutRuntime -notmatch 'template\s+and\s+template\.configurationId') {
-    Add-Issue "newly spawned ships do not consume the saved weapon template"
+if ($localWeaponConfig -match 'savegame\.mod|ServerCall|ClientCall') {
+    Add-Issue "local UI configuration source must remain session-only and client-only"
+}
+if ($configurationBinding -notmatch 'function\s+client\.weaponConfigurationBindingInit\s*\(' -or
+    $configurationBinding -notmatch 'state\.snapshot\s*=\s*client\.weaponLocalConfigRead' -or
+    $configurationBinding -notmatch 'ServerCall\(\s*"server\.shipWeaponBindLocalConfiguration"') {
+    Add-Issue "new ships do not snapshot and submit the local configuration on first drive"
+}
+if ($loadoutApi -notmatch 'function\s+server\.shipWeaponBindLocalConfiguration\s*\(' -or
+    $loadoutApi -notmatch 'server\.weaponLocalConfigurationBound' -or
+    $loadoutApi -notmatch 'IsPlayerVehicleDriver') {
+    Add-Issue "server does not validate and lock the first-driver configuration binding"
+}
+if ($loadoutRuntime -match '_spawnTemplates|_readSpawnTemplate' -or
+    $loadoutApi -match 'shipWeaponSetSpawnTemplate|shipWeaponSyncSpawnTemplate') {
+    Add-Issue "server-side UI spawn-template storage was not removed"
 }
 if ($loadoutApi -notmatch 'function\s+server\.shipWeaponSyncConfiguration\s*\(') {
     Add-Issue "server-to-client loadout synchronization is missing"
@@ -215,36 +258,59 @@ if ($arcChargingFx -notmatch 'focusedArcChargingFxRender' -or
     $xSlotMuzzleLight -notmatch '_tachyonLightOverloadWave') {
     Add-Issue "Focused Arc Emitter charging FX is not isolated into three unstable light nodes"
 }
-$sceneConfiguratorMounted = $mainXml -match 'MOD/script/weapon_configurator\.lua'
-$externalConfiguratorDeclared =
-    $mainXml -match 'weapon-configurator-host:\s*Global Mod/main\.lua'
-$globalConfiguratorMounted =
-    $globalMain -match '#include\s+"script/weapon/client/config_ui/weapon_config_ui\.lua"' -and
-    $globalMain -match 'function\s+server\.weaponConfiguratorSaveTemplate\s*\('
-if ((-not $sceneConfiguratorMounted -and
-        -not $externalConfiguratorDeclared -and
-        -not $globalConfiguratorMounted) -or
-    $configurator -notmatch 'config_ui/weapon_config_ui\.lua') {
-    Add-Issue "independent weapon configurator is not mounted by main.xml or GM main.lua"
+if (Test-Path -LiteralPath (Join-Path $modRoot "script\weapon_configurator.lua") -PathType Leaf) {
+    Add-Issue "standalone weapon_configurator.lua must be deleted; config UI is now in main.lua"
 }
-if ($sceneConfiguratorMounted -and $externalConfiguratorDeclared) {
-    Add-Issue "weapon configurator is mounted by both CM2 and GM, causing duplicate UI panels"
+if ($client -match 'config_ui/weapon_config_ui\.lua') {
+    Add-Issue "client.lua must not include the config UI; it is hosted by main.lua"
+}
+if ($globalMain -notmatch '(?m)^#version\s+2\s*$' -or
+    $globalMain -notmatch '#include\s+"script/weapon/client/config_ui/weapon_config_ui\.lua"') {
+    Add-Issue "main.lua does not host the weapon configuration UI"
+}
+if ($globalMain -notmatch 'function\s+client\.init\(\)[\s\S]*weaponConfigUiSetOpen\(false\)') {
+    Add-Issue "main.lua must call weaponConfigUiSetOpen(false) during init"
+}
+if ($globalMain -notmatch 'function\s+client\.tick\s*\(dt\)[\s\S]*weaponConfigUiTick\(dt\)') {
+    Add-Issue "main.lua must call weaponConfigUiTick(dt) on each frame"
+}
+if ($globalMain -notmatch 'function\s+client\.draw\s*\(\)[\s\S]*weaponConfigUiDraw\(\)') {
+    Add-Issue "main.lua must call weaponConfigUiDraw() on each frame"
+}
+if ($mainXml -match 'weapon_configurator\.lua') {
+    Add-Issue "main.xml must not reference the deleted weapon_configurator.lua"
 }
 if ($configUi -notmatch 'InputPressed\("t"\)' -or
     $configUi -notmatch 'weaponConfiguratorSaveTemplate') {
     Add-Issue "weapon configuration UI toggle/apply flow is incomplete"
 }
-if ($configUi -match 'GetPlayerVehicle|client\.shipBody' -or
-    $configurator -notmatch 'function\s+server\.weaponConfiguratorSaveTemplate\s*\(') {
+if ($configUi -match 'GetPlayerVehicle|client\.shipBody') {
     Add-Issue "weapon configuration UI is still coupled to a spawned ship"
+}
+if ($configUi -notmatch 'function\s+client\.weaponConfiguratorSaveTemplate\s*\(') {
+    Add-Issue "weapon configuration UI does not define the local save template function"
+}
+if ($configUi -notmatch 'client\.weaponLocalConfigRead' -or
+    $configUi -notmatch 'client\.weaponLocalConfigWrite') {
+    Add-Issue "weapon configuration UI does not use the single local registry source"
 }
 if ($groupRuntime -notmatch 'client\.updateWeaponGroupHudState' -or
     $mainWeaponHud -notmatch 'function\s+client\.updateWeaponGroupHudState\s*\(') {
     Add-Issue "generic weapon charge/cooldown HUD synchronization is missing"
 }
-if ($configurator -notmatch 'shipWeaponSetSpawnTemplate' -or
-    $configurator -match 'shipWeaponApplyConfiguration') {
-    Add-Issue "independent configurator does not save a spawn-only template"
+if ($configUi -match 'shipWeaponApplyConfiguration') {
+    Add-Issue "config UI must not directly apply configuration to a spawned ship"
+}
+if ($configUi -match 'ServerCall|ClientCall') {
+    Add-Issue "config UI must not communicate with the server"
+}
+if ($client -notmatch 'config/weapon_configuration_binding\.lua' -or
+    $client -notmatch 'weaponConfigurationBindingInit\("enigmaticCruiser",\s*client\.shipBody\)' -or
+    $client -notmatch 'weaponConfigurationBindingTick\(dt\)') {
+    Add-Issue "battlecruiser client does not run the local configuration binding"
+}
+if ($configUi -notmatch 'definition\.englishName\s+or\s+weaponType') {
+    Add-Issue "weapon configuration UI has no English-name fallback"
 }
 if ($standard -notmatch '(?s)_rocket\("devastatorTorpedoes".*?behaviorType\s*=\s*"rocketProjectile"' -and
     $standard -notmatch '_rocket\("devastatorTorpedoes"') {
@@ -445,7 +511,7 @@ foreach ($match in $prefabMatches) {
 }
 
 Write-Host "=== CM2 Weapon System Semantic Checker ===" -ForegroundColor Cyan
-Write-Host "Checked $($expected.Count) standard weapons, dedicated sounds, two frames, five behaviors, spawn templates, and FX/prefab references."
+Write-Host "Checked $($expected.Count) standard weapons, official English names, local UI configuration binding, two frames, five behaviors, and FX/prefab references."
 if ($issues -gt 0) {
     Write-Host "Check failed: $issues issue(s)." -ForegroundColor Red
     exit 1

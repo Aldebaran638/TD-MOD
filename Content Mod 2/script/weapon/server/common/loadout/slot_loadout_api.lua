@@ -31,31 +31,6 @@ function server.shipSlotLoadoutResolveShipDefinition(shipType)
     return _api.resolveShipDefinition(shipType)
 end
 
-function server.shipWeaponGetSpawnTemplate(shipType)
-    return _api.getSpawnTemplate(shipType)
-end
-
-function server.shipWeaponSetSpawnTemplate(shipType, configurationId, requestedLoadout)
-    return _api.setSpawnTemplate(shipType, configurationId, requestedLoadout)
-end
-
-function server.shipWeaponSyncSpawnTemplate(shipType, recipientPlayerId)
-    local resolvedType = tostring(shipType or server.defaultShipType or "enigmaticCruiser")
-    local template = server.shipWeaponGetSpawnTemplate(resolvedType) or {}
-    local loadout = template.loadout or {}
-    ClientCall(
-        math.floor(recipientPlayerId or 0),
-        "client.updateShipWeaponSpawnTemplate",
-        resolvedType,
-        tostring(template.configurationId or ""),
-        tostring(loadout.X or ""),
-        tostring(loadout.L or ""),
-        tostring(loadout.M or ""),
-        tostring(loadout.G or ""),
-        tostring(loadout.H or "")
-    )
-end
-
 function server.shipWeaponSyncConfiguration(shipType, recipientPlayerId)
     local resolvedType = tostring(shipType or server.defaultShipType or "enigmaticCruiser")
     local state = server.shipSlotLoadoutGetState(resolvedType) or {}
@@ -126,4 +101,73 @@ function server.shipWeaponApplyConfiguration(shipType, configurationId, requeste
     _rebuildWeaponRuntime(resolvedType)
     server.shipWeaponSyncConfiguration(resolvedType)
     return true, nil
+end
+
+local function _shipWeaponBindingResult(playerId, shipBody, resultCode)
+    ClientCall(
+        math.floor(playerId or 0),
+        "client.weaponConfigurationBindingResult",
+        math.floor(shipBody or 0),
+        math.floor(resultCode or 0)
+    )
+end
+
+function server.shipWeaponBindLocalConfiguration(
+    playerId,
+    shipBody,
+    shipType,
+    configurationId,
+    xWeapon,
+    lWeapon,
+    mWeapon,
+    gWeapon,
+    hWeapon
+)
+    local pid = math.floor(playerId or 0)
+    local body = math.floor(shipBody or 0)
+    if IsPlayerValid ~= nil and not IsPlayerValid(pid) then return false end
+    if body == 0 or body ~= math.floor(server.shipBody or 0) then
+        _shipWeaponBindingResult(pid, body, 0)
+        return false
+    end
+
+    local vehicle = GetPlayerVehicle(pid)
+    if vehicle == nil or vehicle == 0 or GetVehicleBody(vehicle) ~= body then
+        _shipWeaponBindingResult(pid, body, 0)
+        return false
+    end
+    if IsPlayerVehicleDriver ~= nil and not IsPlayerVehicleDriver(vehicle, pid) then
+        _shipWeaponBindingResult(pid, body, 0)
+        return false
+    end
+    if tostring(shipType or "") ~= tostring(server.defaultShipType or "enigmaticCruiser") then
+        _shipWeaponBindingResult(pid, body, 0)
+        return false
+    end
+
+    if server.weaponLocalConfigurationBound then
+        _shipWeaponBindingResult(pid, body, -1)
+        return true
+    end
+
+    local ok = server.shipWeaponApplyConfiguration(
+        tostring(shipType or "enigmaticCruiser"),
+        tostring(configurationId or ""),
+        {
+            X = tostring(xWeapon or ""),
+            L = tostring(lWeapon or ""),
+            M = tostring(mWeapon or ""),
+            G = tostring(gWeapon or ""),
+            H = tostring(hWeapon or ""),
+        }
+    )
+    if not ok then
+        _shipWeaponBindingResult(pid, body, 0)
+        return false
+    end
+
+    server.weaponLocalConfigurationBound = true
+    server.weaponLocalConfigurationPlayerId = pid
+    _shipWeaponBindingResult(pid, body, 1)
+    return true
 end

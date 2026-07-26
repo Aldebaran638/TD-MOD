@@ -30,6 +30,7 @@ try {
     [IO.Directory]::CreateDirectory($fixtureMod) | Out-Null
     Copy-Item -LiteralPath (Join-Path $sourceMod "script") -Destination $fixtureMod -Recurse
     Copy-Item -LiteralPath (Join-Path $sourceMod "main.xml") -Destination (Join-Path $fixtureMod "main.xml")
+    Copy-Item -LiteralPath (Join-Path $sourceMod "main.lua") -Destination (Join-Path $fixtureMod "main.lua")
     [IO.Directory]::CreateDirectory((Join-Path $fixtureMod "gfx\ui")) | Out-Null
     Copy-Item -LiteralPath (Join-Path $sourceMod "gfx\ui\weapon_icons") -Destination (Join-Path $fixtureMod "gfx\ui") -Recurse
     [IO.Directory]::CreateDirectory((Join-Path $fixtureMod "prefabs")) | Out-Null
@@ -43,6 +44,33 @@ try {
 
     $standardPath = Join-Path $fixtureMod "script\data\weapons\standard_weapons.lua"
     $text = [IO.File]::ReadAllText($standardPath)
+
+    $configUiPath = Join-Path $fixtureMod "script\weapon\client\config_ui\weapon_config_ui.lua"
+    $configUiText = [IO.File]::ReadAllText($configUiPath)
+    [IO.File]::WriteAllText(
+        $configUiPath,
+        ($configUiText + "`r`nServerCall(`"server.invalidUiDependency`")`r`n"),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidUiServerCall = Invoke-Checker
+    Assert-True ($invalidUiServerCall.ExitCode -eq 1) "rejects server-coupled configuration UI"
+    Assert-True ($invalidUiServerCall.Output -match "must not communicate with the server") "reports the local-only UI contract"
+    [IO.File]::WriteAllText($configUiPath, $configUiText, (New-Object Text.UTF8Encoding($false)))
+
+    $bindingPath = Join-Path $fixtureMod "script\ship\battlecruiser\client\config\weapon_configuration_binding.lua"
+    $bindingText = [IO.File]::ReadAllText($bindingPath)
+    [IO.File]::WriteAllText(
+        $bindingPath,
+        $bindingText.Replace(
+            'ServerCall(',
+            'ClientCall('
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidBinding = Invoke-Checker
+    Assert-True ($invalidBinding.ExitCode -eq 1) "rejects a missing first-driver server handoff"
+    Assert-True ($invalidBinding.Output -match "snapshot and submit") "reports the ship snapshot binding contract"
+    [IO.File]::WriteAllText($bindingPath, $bindingText, (New-Object Text.UTF8Encoding($false)))
 
     $heatText = $text.Replace('definition.heatPerShot = 4.0', 'definition.heatPerShot = 5.0')
     [IO.File]::WriteAllText($standardPath, $heatText, (New-Object Text.UTF8Encoding($false)))

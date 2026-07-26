@@ -63,9 +63,11 @@ function client.init()
 end
 
 function client.tick(dt)
+    if GetBool("level.stellarisships.weaponconfig.contenthost") then return end
     client.weaponConfigUiTick(dt)
 end
 
 function client.draw()
+    if GetBool("level.stellarisships.weaponconfig.contenthost") then return end
     client.weaponConfigUiDraw()
 end

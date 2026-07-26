@@ -3,10 +3,8 @@
 
 client = client or {}
 
-function client.weaponConfigUiIsOpen()
-    return GetBool("StellarisShips/client/weaponConfigUiOpen/" .. tostring(GetLocalPlayer() or 0))
-end
-
+#include "weapon/client/config_ui/local_weapon_config.lua"
+#include "ship/battlecruiser/client/config/weapon_configuration_binding.lua"
 #include "ship/battlecruiser/client/registry/ship_registry.lua"
 #include "ship/battlecruiser/client/state/ship_runtime_state.lua"
 #include "ship/battlecruiser/client/state/ship_runtime_state_api.lua"
@@ -52,9 +50,11 @@ function client.init()
     client.tachyonMuzzleFxInit()
     client.focusedArcChargingFxInit()
     client.genericRaycastFxInit()
+    client.weaponConfigurationBindingInit("enigmaticCruiser", client.shipBody)
 end
 
 function client.clientTick(dt)
+    client.weaponConfigurationBindingTick(dt)
     client.weaponLoadoutSyncTick(dt)
     client.guidedTargetingTick(dt)
     client.xSlotTargetingTick(dt)
