@@ -52,6 +52,7 @@ function client.init()
     client.tachyonMuzzleFxInit()
     client.focusedArcChargingFxInit()
     client.genericRaycastFxInit()
+    client.projectileVisualInit()
     client.weaponConfigurationBindingInit("enigmaticCruiser", client.shipBody)
 end
 
