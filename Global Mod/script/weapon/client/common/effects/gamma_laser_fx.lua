@@ -8,16 +8,23 @@ local GammaProfiles = {
         life = 0.26, outerWidth = 1.15, middleWidth = 0.32, coreWidth = 0.095,
         outerColor = { 1.00, 0.12, 0.005 }, middleColor = { 1.60, 0.52, 0.035 }, coreColor = { 3.20, 2.60, 1.05 },
         muzzleSize = 2.10, muzzleLife = 0.16, impactSize = 2.10, impactLife = 0.30, impactParticles = 14, light = 14.0, lightDistance = 420,
+        muzzleColor = { 1.4, 0.72, 0.12 }, muzzleLightColor = { 1.0, 0.38, 0.05 },
+        impactColor = { 1.6, 1.2, 0.5 }, impactColor2 = { 1.4, 0.18, 0.01 },
     },
     gammaMedium = {
         life = 0.20, outerWidth = 0.78, middleWidth = 0.23, coreWidth = 0.068,
         outerColor = { 1.00, 0.12, 0.005 }, middleColor = { 1.50, 0.48, 0.030 }, coreColor = { 3.00, 2.35, 0.95 },
         muzzleSize = 1.40, muzzleLife = 0.13, impactSize = 1.35, impactLife = 0.24, impactParticles = 9, light = 8.0, lightDistance = 320,
+        muzzleColor = { 1.4, 0.72, 0.12 }, muzzleLightColor = { 1.0, 0.38, 0.05 },
+        impactColor = { 1.6, 1.2, 0.5 }, impactColor2 = { 1.4, 0.18, 0.01 },
     },
+    -- Tachyon Lance palette (outer glow / inner glow / core), scaled to 75% intensity for a fighter-scale weapon
     strikeGamma = {
-        life = 0.045, outerWidth = 0.15, middleWidth = 0.052, coreWidth = 0.017,
-        outerColor = { 0.95, 0.16, 0.01 }, middleColor = { 1.35, 0.48, 0.04 }, coreColor = { 2.50, 2.00, 0.72 },
-        muzzleSize = 0.32, muzzleLife = 0.04, impactSize = 0.34, impactLife = 0.08, impactParticles = 4, light = 0.0, lightDistance = 0,
+        life = 0.22, outerWidth = 1.10, middleWidth = 0.42, coreWidth = 0.14,
+        outerColor = { 0.06, 0.26, 0.75 }, middleColor = { 0.23, 0.83, 1.35 }, coreColor = { 1.88, 1.88, 1.88 },
+        muzzleSize = 1.20, muzzleLife = 0.12, impactSize = 1.20, impactLife = 0.22, impactParticles = 8, light = 9.0, lightDistance = 280,
+        muzzleColor = { 0.85, 1.35, 1.95 }, muzzleLightColor = { 0.30, 0.65, 1.40 },
+        impactColor = { 0.55, 1.30, 1.90 }, impactColor2 = { 0.20, 0.55, 1.40 },
     },
 }
 
@@ -110,15 +117,19 @@ function client.gammaLaserFxRender()
     local state = client.gammaLaserFxState
     for _, muzzle in ipairs(state.muzzles) do
         local p, profile = muzzle.position, muzzle.profile; local alpha = (1 - muzzle.age / profile.muzzleLife) ^ 2
-        if client.weaponFxTakeSprite(1) then DrawSprite(state.glowSprite, Transform(p, QuatLookAt(p, GetCameraTransform().pos)), profile.muzzleSize, profile.muzzleSize, 1.4, 0.72, 0.12, alpha, true, true, false) end
-        if profile.light > 0 then client.weaponFxPointLight(p, 1, 0.38, 0.05, profile.light * alpha, profile.lightDistance) end
+        local mc = profile.muzzleColor or { 1.4, 0.72, 0.12 }
+        local mlc = profile.muzzleLightColor or { 1, 0.38, 0.05 }
+        if client.weaponFxTakeSprite(1) then DrawSprite(state.glowSprite, Transform(p, QuatLookAt(p, GetCameraTransform().pos)), profile.muzzleSize, profile.muzzleSize, mc[1], mc[2], mc[3], alpha, true, true, false) end
+        if profile.light > 0 then client.weaponFxPointLight(p, mlc[1], mlc[2], mlc[3], profile.light * alpha, profile.lightDistance) end
     end
     for _, impact in ipairs(state.impacts) do
         local profile = impact.profile; local t = impact.age / profile.impactLife; local alpha = (1 - t) ^ 2
+        local ic = profile.impactColor or { 1.6, 1.2, 0.5 }
+        local ic2 = profile.impactColor2 or { 1.4, 0.18, 0.01 }
         if client.weaponFxTakeSprite(impact.layer == "shield" and 1 or 2) then
             local transform = Transform(impact.position, QuatLookAt(impact.position, GetCameraTransform().pos))
-            DrawSprite(state.glowSprite, transform, profile.impactSize * (0.35 + t * 0.55), profile.impactSize * (0.35 + t * 0.55), 1.6, 1.2, 0.5, alpha, true, true, false)
-            if impact.layer ~= "shield" then DrawSprite(state.glowSprite, transform, profile.impactSize * (0.55 + t), profile.impactSize * (0.55 + t), 1.4, 0.18, 0.01, alpha * 0.45, true, true, false) end
+            DrawSprite(state.glowSprite, transform, profile.impactSize * (0.35 + t * 0.55), profile.impactSize * (0.35 + t * 0.55), ic[1], ic[2], ic[3], alpha, true, true, false)
+            if impact.layer ~= "shield" then DrawSprite(state.glowSprite, transform, profile.impactSize * (0.55 + t), profile.impactSize * (0.55 + t), ic2[1], ic2[2], ic2[3], alpha * 0.45, true, true, false) end
         end
     end
 end

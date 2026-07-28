@@ -20,6 +20,7 @@ function client.hSlotCraftFxInit()
     local state = client.hSlotCraftFxState
     state.crafts = {}
     state.sprite = LoadSprite("MOD/gfx/weapons/tachyon_lance/beam_soft.png")
+    state.engineLoop = LoadLoop("MOD/sound/missile_loop.ogg")
     state.particleAccumulator = 0.0
     state.age = 0.0
 end
@@ -87,16 +88,21 @@ function client.hSlotCraftFxTick(dt)
     for bodyId, craft in pairs(state.crafts) do
         if not IsHandleValid(bodyId) then
             state.crafts[bodyId] = nil
-        elseif spawnParticles then
+        else
             local bodyTransform = GetBodyTransform(bodyId)
-            for index = 1, #craft.engines do
-                _hSlotCraftFxSpawnParticle(Transform(
-                    TransformToParentPoint(
-                        bodyTransform,
-                        craft.engines[index]
-                    ),
-                    bodyTransform.rot
-                ))
+            if state.engineLoop ~= nil and state.engineLoop ~= 0 then
+                PlayLoop(state.engineLoop, bodyTransform.pos, 0.7)
+            end
+            if spawnParticles then
+                for index = 1, #craft.engines do
+                    _hSlotCraftFxSpawnParticle(Transform(
+                        TransformToParentPoint(
+                            bodyTransform,
+                            craft.engines[index]
+                        ),
+                        bodyTransform.rot
+                    ))
+                end
             end
         end
     end

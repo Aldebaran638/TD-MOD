@@ -16,6 +16,7 @@ local swarmerMissileData = {
     turnBlendRate = 1.95,
     turnRate = 10.5,
     turnImpulse = 210.0,
+    muzzleFxProfile = "swarmerLaunch",
     damage = 210.0,
     armorFix = 1.2,
     bodyFix = 1.8,

@@ -6,9 +6,12 @@ server = server or {}
 local FlightCandidates = {
     { yaw = -28.0, pitch = 0.0 },
     { yaw = 28.0, pitch = 0.0 },
-    { yaw = 0.0, pitch = 24.0 },
-    { yaw = -42.0, pitch = 24.0 },
-    { yaw = 42.0, pitch = 24.0 },
+    { yaw = 0.0, pitch = 28.0 },
+    { yaw = -42.0, pitch = 18.0 },
+    { yaw = 42.0, pitch = 18.0 },
+    { yaw = 0.0, pitch = 52.0 },
+    { yaw = -60.0, pitch = 8.0 },
+    { yaw = 60.0, pitch = 8.0 },
 }
 
 local function _flightClamp(value, minimum, maximum)
@@ -25,17 +28,21 @@ local function _flightCopy(value)
     return Vec(value[1] or 0.0, value[2] or 0.0, value[3] or 0.0)
 end
 
-local function _flightLimit(value, maximumLength)
-    local length = VecLength(value)
-    if length <= maximumLength or length < 0.0001 then return value end
-    return VecScale(value, maximumLength / length)
-end
-
 local function _flightBasis(direction)
     local forward = _flightNormalize(direction, Vec(0, 0, -1))
     local right = _flightNormalize(VecCross(forward, Vec(0, 1, 0)), Vec(1, 0, 0))
     local up = _flightNormalize(VecCross(right, forward), Vec(0, 1, 0))
     return forward, right, up
+end
+
+-- Rotates `current` toward `target` exponentially, same lerp-based steering model
+-- used by the guided missiles (movement.lua): faster when far off-target, easing in
+-- as it aligns — this reads as smooth banking instead of a constant-rate turn.
+local function _flightTurnToward(current, target, blendAlpha)
+    local currentDir = _flightNormalize(current, Vec(0, 0, -1))
+    local targetDir = _flightNormalize(target, currentDir)
+    local alpha = _flightClamp(blendAlpha, 0.0, 1.0)
+    return _flightNormalize(VecLerp(currentDir, targetDir, alpha), targetDir)
 end
 
 local function _flightRotateAroundUp(direction, degrees)
@@ -112,8 +119,8 @@ local function _flightEnterEmergency(craft, normal)
     _flightSetState(craft, "EMERGENCY", craft.state)
 end
 
-local function _flightMissionUpdate(craft, predictedTarget, recoveryPoint, returnGate, config)
-    if craft.state ~= "RETURN" and craft.state ~= "DOCK"
+local function _flightMissionUpdate(craft, predictedTarget, recoveryPoint, config)
+    if craft.state ~= "RETURN"
         and craft.missionTime >= _flightConfig(config, "attackDuration", 10.0) then
         _flightSetState(craft, "RETURN")
     end
@@ -121,7 +128,6 @@ local function _flightMissionUpdate(craft, predictedTarget, recoveryPoint, retur
     if predictedTarget == nil
         and craft.state ~= "LAUNCH"
         and craft.state ~= "RETURN"
-        and craft.state ~= "DOCK"
         and craft.state ~= "EMERGENCY" then
         _flightSetState(craft, "RETURN")
     end
@@ -183,11 +189,7 @@ local function _flightMissionUpdate(craft, predictedTarget, recoveryPoint, retur
             _flightChooseAttackDirection(craft, predictedTarget, true)
             _flightSetState(craft, "INTERCEPT")
         end
-    elseif craft.state == "RETURN" and returnGate ~= nil then
-        if VecLength(VecSub(returnGate, craft.pos)) <= 5.0 then
-            _flightSetState(craft, "DOCK")
-        end
-    elseif craft.state == "DOCK" and recoveryPoint ~= nil then
+    elseif craft.state == "RETURN" and recoveryPoint ~= nil then
         if VecLength(VecSub(recoveryPoint, craft.pos))
             <= math.max(1.0, _flightConfig(config, "recoverRadius", 10.0)) then
             return "recovered"
@@ -205,7 +207,6 @@ local function _flightGuidanceUpdate(
     craft,
     predictedTarget,
     recoveryPoint,
-    returnGate,
     carrierUp,
     config
 )
@@ -237,9 +238,7 @@ local function _flightGuidanceUpdate(
             craft.sideBias * 45.0
         )
         craft.missionPoint = VecSub(predictedTarget, VecScale(direction, 64.0))
-    elseif craft.state == "RETURN" and returnGate ~= nil then
-        craft.missionPoint = returnGate
-    elseif craft.state == "DOCK" and recoveryPoint ~= nil then
+    elseif craft.state == "RETURN" and recoveryPoint ~= nil then
         craft.missionPoint = recoveryPoint
     elseif craft.state == "EMERGENCY" then
         local escape = _flightNormalize(VecAdd(
@@ -320,7 +319,7 @@ local function _flightFarAvoidance(craft, ownerBody, config)
             VecAdd(VecScale(normal, 0.8), Vec(0, 0.35, 0)),
             normal
         )
-        craft.avoidRemain = 0.12
+        craft.avoidRemain = 0.22
         return
     end
 
@@ -338,9 +337,10 @@ local function _flightFarAvoidance(craft, ownerBody, config)
             true
         )
         local clearance = candidateHit and candidateDistance or farDistance
-        local score = (clearance / farDistance) * 4.0
-            + VecDot(candidate, desired) * 1.8
-            + VecDot(candidate, craft.forward) * 1.2
+        local score = (clearance / farDistance) * 5.5
+            + VecDot(candidate, desired) * 1.2
+            + VecDot(candidate, craft.forward) * 0.8
+            + candidate[2] * 0.6
         if clearance > radius * 2.0 and score > bestScore then
             bestDirection, bestScore, bestClearance =
                 candidate, score, clearance
@@ -350,7 +350,7 @@ local function _flightFarAvoidance(craft, ownerBody, config)
         _flightEnterEmergency(craft, normal)
     else
         craft.avoidDirection = bestDirection
-        craft.avoidRemain = 0.34
+        craft.avoidRemain = 0.60
         craft.obstacleClearance = bestClearance
     end
 end
@@ -389,6 +389,7 @@ function server.hSlotFlightCreate(craft, slotIndex, startPosition, forward)
     craft.attackDirection = _flightCopy(forward)
     craft.breakDirection = _flightCopy(forward)
     craft.desiredDirection = _flightCopy(forward)
+    craft.heading = _flightCopy(forward)
     craft.velocity = VecScale(forward, 20.0)
     craft.sideBias = (slotIndex or 1) % 2 == 0 and -1 or 1
     craft.entryReached = false
@@ -418,12 +419,13 @@ function server.hSlotFlightUpdate(
     local bodyTransform = GetBodyTransform(craft.bodyId)
     craft.pos = bodyTransform.pos
     craft.velocity = GetBodyVelocity(craft.bodyId)
-    craft.forward = _flightNormalize(
-        craft.velocity,
+    craft.heading = _flightNormalize(
+        craft.heading,
         TransformToParentVec(bodyTransform, Vec(0, 0, -1))
     )
+    craft.forward = craft.heading
     craft.stateTime = (craft.stateTime or 0.0) + frameDt
-    if craft.state ~= "RETURN" and craft.state ~= "DOCK" then
+    if craft.state ~= "RETURN" then
         craft.missionTime = (craft.missionTime or 0.0) + frameDt
     else
         craft.returnRemain = (craft.returnRemain or 0.0) - frameDt
@@ -436,10 +438,6 @@ function server.hSlotFlightUpdate(
     craft.avoidRemain = math.max(0.0, (craft.avoidRemain or 0.0) - frameDt)
     craft.plannerRemain = math.max(0.0, (craft.plannerRemain or 0.0) - frameDt)
 
-    local returnGate = recoveryPoint ~= nil and VecAdd(
-        recoveryPoint,
-        VecScale(carrierUp or Vec(0, 1, 0), 25.0)
-    ) or nil
     local predictedTarget = _flightPredictTarget(
         craft,
         targetCenter,
@@ -455,7 +453,6 @@ function server.hSlotFlightUpdate(
             craft,
             predictedTarget,
             recoveryPoint,
-            returnGate,
             config
         )
         if status ~= "active" then return status, false end
@@ -468,7 +465,6 @@ function server.hSlotFlightUpdate(
             craft,
             predictedTarget,
             recoveryPoint,
-            returnGate,
             carrierUp,
             config
         )
@@ -505,34 +501,36 @@ function server.hSlotFlightUpdate(
             2.0 * deceleration
                 * math.max(0.0, craft.obstacleClearance - radius)
         ))
-        desiredSpeed = math.min(desiredSpeed, safeSpeed * 0.92)
-    end
-    if craft.state == "DOCK" and recoveryPoint ~= nil then
-        desiredSpeed = math.min(
-            desiredSpeed,
-            math.max(2.0, VecLength(VecSub(recoveryPoint, craft.pos)) * 1.5)
-        )
+        desiredSpeed = math.min(desiredSpeed, safeSpeed * 0.70)
     end
 
-    local desiredVelocity = VecScale(craft.desiredDirection, desiredSpeed)
-    local velocityDelta = VecSub(desiredVelocity, craft.velocity)
     local acceleration = desiredSpeed < VecLength(craft.velocity)
         and _flightConfig(config, "maxDeceleration", 390.0)
         or _flightConfig(config, "maxAcceleration", 310.0)
-    local nextVelocity = VecAdd(
-        craft.velocity,
-        _flightLimit(velocityDelta, acceleration * frameDt)
+
+    local turnBlendRate = _flightConfig(config, "turnBlendRate", 1.5)
+    local blendAlpha = 1.0 - math.exp(-turnBlendRate * frameDt)
+    local nextHeading = _flightTurnToward(craft.heading, craft.desiredDirection, blendAlpha)
+    craft.heading = nextHeading
+
+    local currentSpeed = VecLength(craft.velocity)
+    local speedStep = _flightClamp(
+        desiredSpeed - currentSpeed,
+        -acceleration * frameDt,
+        acceleration * frameDt
     )
+    local nextSpeed = math.max(0.0, currentSpeed + speedStep)
+    local nextVelocity = VecScale(nextHeading, nextSpeed)
+
     SetBodyActive(craft.bodyId, true)
     SetBodyVelocity(craft.bodyId, nextVelocity)
-    local lookDirection = _flightNormalize(nextVelocity, craft.desiredDirection)
     ConstrainOrientation(
         craft.bodyId,
         0,
         bodyTransform.rot,
-        QuatLookAt(craft.pos, VecAdd(craft.pos, lookDirection)),
+        QuatLookAt(craft.pos, VecAdd(craft.pos, nextHeading)),
         _flightConfig(config, "maxAngularVelocity", 20.0),
         _flightConfig(config, "maxAngularImpulse", 9000.0)
     )
-    return "active", craft.state == "ATTACK_RUN"
+    return "active", craft.state ~= "RETURN" and craft.state ~= "LAUNCH"
 end

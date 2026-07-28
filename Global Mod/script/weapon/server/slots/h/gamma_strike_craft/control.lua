@@ -303,6 +303,7 @@ local function _hSlotBuildLauncherConfig(slotDef)
         maxDeceleration = tonumber(weaponDef.maxDeceleration) or 390.0,
         maxAngularVelocity = tonumber(weaponDef.maxAngularVelocity) or 20.0,
         maxAngularImpulse = tonumber(weaponDef.maxAngularImpulse) or 9000.0,
+        turnBlendRate = tonumber(weaponDef.turnBlendRate) or 1.5,
         craftRadius = tonumber(weaponDef.craftRadius) or 1.60,
         farProbeDistance = tonumber(weaponDef.farProbeDistance) or 70.0,
         nearSweepLookahead = tonumber(weaponDef.nearSweepLookahead) or 0.18,
@@ -688,7 +689,8 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
     local impactExplosionImpulse = math.max(0.0, tonumber(weaponConfig.beamImpactExplosionImpulse) or 0.0)
     local impactMinDistance = math.max(0.0, tonumber(weaponConfig.beamImpactExplosionMinDistance) or 0.0)
     local impactDistance = VecLength(VecSub(hitPos, origin))
-    if impactExplosionSize > 0.0 and impactDistance >= impactMinDistance then
+    local hitIsShip = hitBody ~= nil and hitBody ~= 0 and server.registryShipExists(hitBody)
+    if not hitIsShip and impactExplosionSize > 0.0 and impactDistance >= impactMinDistance then
         _hSlotBumpDebugCounter(shipBody, "impact_explosion")
         if impactExplosionImpulse > 0.0 then
             Explosion(hitPos, impactExplosionSize, impactExplosionImpulse)
@@ -753,8 +755,12 @@ local function _hSlotUpdateBeamFire(shipBody, craft, targetCenter, weaponConfig,
 
     local dist = VecLength(VecSub(targetCenter, craft.pos or targetCenter))
     local maxRange = math.max(1.0, tonumber(weaponConfig.maxRange) or 280.0)
+    local toTargetDir = dist > 0.001
+        and VecScale(VecSub(targetCenter, craft.pos or targetCenter), 1.0 / dist)
+        or Vec(0, 0, -1)
     craft.fireRemain = (craft.fireRemain or 0.0) - (dt or 0.0)
-    if dist <= maxRange and craft.fireRemain <= 0.0 then
+    if dist <= maxRange and craft.fireRemain <= 0.0
+        and VecDot(craft.forward or Vec(0, 0, -1), toTargetDir) > 0.0 then
         _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
         craft.fireRemain = math.max(0.02, tonumber(weaponConfig.fireInterval) or 0.22)
     end
@@ -1086,6 +1092,8 @@ local function _hSlotUpdateReplacementFlight(
 
     if flightStatus == "recovered" then
         _hSlotSetDebugReason(slotIndex, "return_recovered_finish", craft)
+        server.netClientCall("weapon.fireFx", 0, "client.spawnHSlotRecoverFx",
+            craft.pos[1], craft.pos[2], craft.pos[3])
         _hSlotFinishCraft(state, slotIndex, "ready")
     elseif flightStatus == "timeout" then
         _hSlotSetDebugReason(slotIndex, "return_timeout_explode", craft)

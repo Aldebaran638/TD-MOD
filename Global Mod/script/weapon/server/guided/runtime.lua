@@ -198,6 +198,14 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         tostring(cfg.weaponType or ""),
         firePosWorld[1], firePosWorld[2], firePosWorld[3]
     )
+    server.netClientCall(
+        "weapon.fireFx",
+        0,
+        "client.spawnWeaponMuzzleFx",
+        tostring(cfg.weaponType or ""),
+        firePosWorld[1], firePosWorld[2], firePosWorld[3],
+        dir[1], dir[2], dir[3]
+    )
 
     local probes = server.guidedProjectileGetProbePoints(GetBodyTransform(bodyId))
     local projectile = {

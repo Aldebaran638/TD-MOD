@@ -13,11 +13,11 @@ local Profiles = {
     plasmaMedium = { life = 0.12, size = 0.70, particles = 8, color = { 0.18, 1.0, 0.30 }, light = 5, distance = 190, lines = 0 },
     gigaMagneticLaunch = { life = 0.16, size = 1.25, particles = 18, color = { 0.68, 0.16, 1.0 }, light = 16, distance = 500, lines = 0 },
     neutronCompression = { life = 0.13, size = 0.80, particles = 6, color = { 0.18, 0.58, 1.0 }, light = 12, distance = 340, lines = 0 },
-    swarmerLaunch = { life = 0.15, size = 0.50, particles = 14, color = { 0.25, 0.72, 1.0 }, light = 5, distance = 220, lines = 0 },
+    swarmerLaunch = { life = 0.15, size = 0.50, particles = 6, color = { 0.25, 0.72, 1.0 }, light = 5, distance = 220, lines = 0, portalFx = true, portalLife = 0.40 },
     torpedoLaunch = { life = 0.20, size = 0.90, particles = 24, color = { 1.0, 0.28, 0.06 }, light = 14, distance = 360, lines = 0 },
 }
 
-client.weaponMuzzleFxState = client.weaponMuzzleFxState or { active = {}, sprite = 0 }
+client.weaponMuzzleFxState = client.weaponMuzzleFxState or { active = {}, portals = {}, sprite = 0 }
 
 local function _normalize(v)
     local length = VecLength(v)
@@ -25,7 +25,7 @@ local function _normalize(v)
 end
 
 function client.weaponMuzzleFxInit()
-    client.weaponMuzzleFxState = { active = {}, sprite = LoadSprite("MOD/gfx/weapons/projectiles/impact_glow.png") }
+    client.weaponMuzzleFxState = { active = {}, portals = {}, sprite = LoadSprite("MOD/gfx/weapons/projectiles/impact_glow.png") }
 end
 
 function client.spawnWeaponMuzzleFx(weaponType, px, py, pz, dx, dy, dz)
@@ -41,16 +41,23 @@ function client.spawnWeaponMuzzleFx(weaponType, px, py, pz, dx, dy, dz)
     end
     if #state.active >= (client.weaponFxBudgetConfig.maxActiveMuzzles or 128) then table.remove(state.active, 1) end
     table.insert(state.active, { key = key, position = position, direction = direction, profile = profile, age = 0, intensity = 1.0 })
+    if profile.portalFx then
+        table.insert(state.portals, { pos = position, age = 0, life = profile.portalLife or 0.40 })
+    end
     if not client.weaponFxTakeParticles(profile.particles, "normal") then return end
     ParticleReset(); ParticleType("plain"); ParticleColor(profile.color[1], profile.color[2], profile.color[3], profile.color[1] * 0.25, profile.color[2] * 0.12, profile.color[3] * 0.08); ParticleRadius(0.09, 0.01, "easeout"); ParticleAlpha(0.95, 0, "easeout"); ParticleGravity(0); ParticleDrag(0.14); ParticleEmissive(16, 0); ParticleCollide(0)
     for _ = 1, profile.particles do SpawnParticle(position, VecAdd(VecScale(direction, -3 - math.random() * 5), Vec(math.random() - 0.5, math.random() - 0.5, math.random() - 0.5)), 0.10 + math.random() * 0.10) end
 end
 
 function client.weaponMuzzleFxTick(dt)
-    local active = client.weaponMuzzleFxState.active
-    for index = #active, 1, -1 do
-        local effect = active[index]; effect.age = effect.age + math.max(0, dt or 0)
-        if effect.age >= effect.profile.life then table.remove(active, index) end
+    local state = client.weaponMuzzleFxState
+    for index = #state.active, 1, -1 do
+        local effect = state.active[index]; effect.age = effect.age + math.max(0, dt or 0)
+        if effect.age >= effect.profile.life then table.remove(state.active, index) end
+    end
+    for index = #state.portals, 1, -1 do
+        local p = state.portals[index]; p.age = p.age + math.max(0, dt or 0)
+        if p.age >= p.life then table.remove(state.portals, index) end
     end
 end
 
@@ -69,5 +76,31 @@ function client.weaponMuzzleFxRender()
             end
         end
         if profile.light > 0 then client.weaponFxPointLight(effect.position, profile.color[1], profile.color[2], profile.color[3], profile.light * alpha, profile.distance) end
+    end
+    local cam = GetCameraTransform()
+    for _, portal in ipairs(state.portals) do
+        local t = portal.age / portal.life
+        local sizeBase
+        if t < 0.20 then
+            sizeBase = 1 - (1 - t / 0.20) ^ 3
+        elseif t < 0.40 then
+            sizeBase = 1.0
+        else
+            sizeBase = math.max(0, 1 - ((t - 0.40) / 0.60) ^ 1.6)
+        end
+        local env
+        if t < 0.08 then env = t / 0.08
+        elseif t < 0.45 then env = 1.0
+        else env = math.max(0, 1 - ((t - 0.45) / 0.55) ^ 0.7) end
+        local shockR = (math.min(t, 0.50) / 0.50) * 5.5
+        local shockA = math.max(0, 1 - t / 0.50) * 0.42 * (t < 0.05 and t / 0.05 or 1.0)
+        local xf = Transform(portal.pos, QuatLookAt(portal.pos, cam.pos))
+        if client.weaponFxTakeSprite(4) then
+            if shockA > 0.005 then DrawSprite(state.sprite, xf, shockR, shockR, 0.20, 0.30, 0.90, shockA, true, true, false) end
+            DrawSprite(state.sprite, xf, sizeBase * 3.4, sizeBase * 3.4, 0.30, 0.20, 1.00, env * 0.52, true, true, false)
+            DrawSprite(state.sprite, xf, sizeBase * 2.2, sizeBase * 2.2, 0.25, 0.55, 1.60, env * 0.82, true, true, false)
+            DrawSprite(state.sprite, xf, sizeBase * 0.85, sizeBase * 0.85, 2.00, 2.10, 3.50, env * 0.95, true, true, false)
+        end
+        client.weaponFxPointLight(portal.pos, 0.30, 0.50, 1.40, env * (t < 0.20 and 28 or 20), 420)
     end
 end

@@ -189,12 +189,12 @@ shipTypeRegistryData.enigmaticCruiser = {
                 gSlots = {},
                 hSlots = {
                     {
-                        firePosOffset = { x = 0.8, y = 6.5, z = -1.0 },
-                        fireDirRelative = { x = 0, y = 0, z = -1 },
+                        firePosOffset = { x = 0.8, y = 5, z = 3 },
+                        fireDirRelative = { x = 0, y = 0, z = 1 },
                     },
                     {
-                        firePosOffset = { x = -0.8, y = 6.5, z = -1.0 },
-                        fireDirRelative = { x = 0, y = 0, z = -1 },
+                        firePosOffset = { x = -0.8, y = 5, z = 3 },
+                        fireDirRelative = { x = 0, y = 0, z = 1 },
                     },
                 },
             },
@@ -265,12 +265,12 @@ shipTypeRegistryData.enigmaticCruiser = {
                 lSlots = {},
                 hSlots = {
                     {
-                        firePosOffset = { x = 0.8, y = 6.5, z = -1.0 },
-                        fireDirRelative = { x = 0, y = 0, z = -1 },
+                        firePosOffset = { x = 0.8, y = 5, z = 3 },
+                        fireDirRelative = { x = 0, y = 0, z = 1 },
                     },
                     {
-                        firePosOffset = { x = -0.8, y = 6.5, z = -1.0 },
-                        fireDirRelative = { x = 0, y = 0, z = -1 },
+                        firePosOffset = { x = -0.8, y = 5, z = 3 },
+                        fireDirRelative = { x = 0, y = 0, z = 1 },
                     },
                 },
             },
@@ -330,13 +330,13 @@ shipTypeRegistryData.enigmaticCruiser = {
     hSlots = {
         {
             weaponType = "gammaStrikeCraft",
-            firePosOffset = { x = 0.8, y = 6.5, z = -1.0 },
-            fireDirRelative = { x = 0, y = 0, z = -1 },
+            firePosOffset = { x = 3.8, y = 8, z = 5 },
+            fireDirRelative = { x = 0, y = 0, z = 1 },
         },
         {
             weaponType = "gammaStrikeCraft",
-            firePosOffset = { x = -0.8, y = 6.5, z = -1.0 },
-            fireDirRelative = { x = 0, y = 0, z = -1 },
+            firePosOffset = { x = -3.8, y = 8, z = 5 },
+            fireDirRelative = { x = 0, y = 0, z = 1 },
         },
     },
 }
