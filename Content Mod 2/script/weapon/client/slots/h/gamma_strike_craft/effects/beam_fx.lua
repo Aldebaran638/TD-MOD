@@ -10,8 +10,8 @@ local _recoverSfx = 0
 local _portalGlowSprite = 0
 
 local function _ensureStrikeSounds()
-    if _launchSfx == 0 then _launchSfx = LoadSound("MOD/sound/strike_craft_launch_portal.wav") end
-    if _recoverSfx == 0 then _recoverSfx = LoadSound("MOD/sound/strike_craft_recover_portal.wav") end
+    if _launchSfx == 0 then _launchSfx = LoadSound("MOD/sound/strike_craft_launch_portal.ogg") end
+    if _recoverSfx == 0 then _recoverSfx = LoadSound("MOD/sound/strike_craft_recover_portal.ogg") end
 end
 
 local function _ensurePortalSprite()
