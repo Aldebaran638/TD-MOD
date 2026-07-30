@@ -22,7 +22,7 @@ local function _resolveShieldEndpoint(origin, direction, bodyId, maximumDistance
         0.0,
         tonumber(server.registryShipGetShieldRadius(
             bodyId,
-            server.defaultShipType or "enigmaticCruiser"
+            server.shipContextGetType()
         )) or 0.0
     )
     if radius <= 0.0 then return nil, nil end

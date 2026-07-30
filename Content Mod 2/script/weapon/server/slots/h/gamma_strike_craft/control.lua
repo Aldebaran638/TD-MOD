@@ -201,13 +201,12 @@ local function _hSlotComputeOptimalEntryPoint(planePos, planeForward, targetCent
 end
 
 local function _hSlotResolveShipDefinition(shipType)
-    local defs = shipTypeRegistryData or {}
-    local requested = shipType or server.defaultShipType or "enigmaticCruiser"
-    return defs[requested] or defs[server.defaultShipType] or defs.enigmaticCruiser or {}
+    local contextType = server.shipContextGetType()
+    return shipDefinitionGet(shipType or contextType, contextType)
 end
 
 local function _hSlotResolveWeaponDefinition(weaponType)
-    local defs = hSlotWeaponRegistryData or {}
+    local defs = weaponData or {}
     local requested = weaponType or "gammaStrikeCraft"
     return defs[requested] or defs.gammaStrikeCraft or {}
 end
@@ -499,7 +498,7 @@ local function _hSlotApplyBeamDamage(hitPos, hitBody, weaponType, environmentExp
     local impactLayer = "none"
 
     if hitBody ~= nil and hitBody ~= 0 and server.registryShipExists(hitBody) then
-        local resolvedDefaultShipType = server.defaultShipType or "enigmaticCruiser"
+        local resolvedDefaultShipType = server.shipContextGetType()
         if not server.registryShipEnsure(hitBody, resolvedDefaultShipType, resolvedDefaultShipType) then
             return false, hitPos, "none"
         end
@@ -514,7 +513,7 @@ local function _hSlotApplyBeamDamage(hitPos, hitBody, weaponType, environmentExp
             return
         end
 
-        local targetShipData = (shipData and shipData[targetShipType]) or (shipData and shipData[resolvedDefaultShipType]) or {}
+        local targetShipData = shipDefinitionGet(targetShipType, resolvedDefaultShipType)
         local weapon = (weaponData and weaponData[weaponType]) or (weaponData and weaponData.gammaStrikeCraft) or {}
         local damageMin = tonumber(weapon.damageMin) or 0.0
         local damageMax = tonumber(weapon.damageMax) or damageMin
@@ -586,9 +585,9 @@ local function _hSlotResolveTargetShieldRadius(targetBody, defaultShipType)
         return 5.0
     end
 
-    local resolvedDefaultShipType = defaultShipType or server.defaultShipType or "enigmaticCruiser"
+    local resolvedDefaultShipType = defaultShipType or server.shipContextGetType()
     local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(targetBody) or resolvedDefaultShipType
-    local targetShipData = (shipData and shipData[targetShipType]) or (shipData and shipData[resolvedDefaultShipType]) or {}
+    local targetShipData = shipDefinitionGet(targetShipType, resolvedDefaultShipType)
     return math.max(0.1, tonumber(targetShipData.shieldRadius) or 5.0)
 end
 
@@ -669,7 +668,7 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
             )
             local shieldRadius = _hSlotResolveTargetShieldRadius(
                 hitBody,
-                server.defaultShipType or "enigmaticCruiser"
+                server.shipContextGetType()
             )
             local entryT = _hSlotRaySphereEntryT(
                 origin,
@@ -863,6 +862,22 @@ function server.hSlotStateResetRuntime()
     server.hSlotState = state
 end
 
+function server.hSlotStateNeedsTick()
+    local state = server.hSlotState or {}
+    if state.fireRequested or next(state.activeCrafts or {}) ~= nil then
+        return true
+    end
+    for _, launcher in ipairs(state.launchers or {}) do
+        if (tonumber((launcher.runtime or {}).cooldownRemain) or 0.0) > 0.0 then
+            return true
+        end
+    end
+    local body = server.shipContextGetBody()
+    return body ~= 0
+        and server.shipRuntimeGetDriverPlayerId(body) > 0
+        and server.shipRuntimeGetCurrentMainWeapon(body) == "hSlot"
+end
+
 local function _hSlotResolveHudPlayer(shipBody)
     local playerId = server.shipRuntimeGetDriverPlayerId ~= nil
         and math.floor(server.shipRuntimeGetDriverPlayerId(shipBody) or 0)
@@ -883,7 +898,7 @@ local function _hSlotBuildHudSignature(state)
     local launchers = state.launchers or {}
     local active = state.activeCrafts or {}
     local currentMode = server.shipRuntimeGetCurrentMainWeapon ~= nil
-        and server.shipRuntimeGetCurrentMainWeapon(server.shipBody)
+        and server.shipRuntimeGetCurrentMainWeapon(server.shipContextGetBody())
         or ""
     local values = { tostring(currentMode) }
     for i = 1, 2 do
@@ -934,7 +949,7 @@ local function _hSlotWriteDebugSnapshot(
 end
 
 function server.hSlotControlSyncHud(dt, force)
-    local shipBody = server.shipBody
+    local shipBody = server.shipContextGetBody()
     if shipBody == nil or shipBody == 0 then
         return
     end
@@ -1111,12 +1126,13 @@ local function _hSlotUpdateReplacementFlight(
 end
 
 function server.hSlotControlTick(dt)
-    local shipBody = server.shipBody
+    local shipBody = server.shipContextGetBody()
     if shipBody == nil or shipBody == 0 then
         return
     end
 
-    if not server.registryShipEnsure(shipBody, server.defaultShipType, server.defaultShipType) then
+    local shipType = server.shipContextGetType()
+    if not server.registryShipEnsure(shipBody, shipType, shipType) then
         return
     end
 
@@ -1353,7 +1369,7 @@ function server.hSlotControlTick(dt)
                             local ignoreTargetSweep = false
                             if hitBody ~= 0 and hitBody == math.floor(craft.targetBodyId or 0) then
                                 local targetCenter = _hSlotGetBodyCenterWorld(hitBody)
-                                local targetShieldRadius = _hSlotResolveTargetShieldRadius(hitBody, server.defaultShipType or "enigmaticCruiser")
+                                local targetShieldRadius = _hSlotResolveTargetShieldRadius(hitBody, server.shipContextGetType())
                                 local targetContactRadius = math.max(2.0, targetShieldRadius + 1.0)
                                 if targetCenter ~= nil then
                                     local distToCenter = VecLength(VecSub(craft.pos, targetCenter))

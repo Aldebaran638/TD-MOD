@@ -23,14 +23,20 @@ function client.getShipWeaponType(shipBodyId, groupId)
     local configured = tostring(state[mode] or "")
     if configured ~= "" then return configured end
 
-    local defaultByMode = {
-        xSlot = "tachyonLance",
-        lSlot = "kineticArtillery",
-        mSlot = "swarmerMissile",
-        gSlot = "devastatorTorpedoes",
-        hSlot = "gammaStrikeCraft",
-    }
-    return defaultByMode[mode] or ""
+    local shipType = client.registryShipGetShipType(shipBodyId)
+    if shipType == "" then shipType = client.shipContextGetType() end
+    local definition = shipDefinitionGet(shipType, shipType)
+    local configuration = shipDefinitionFindConfiguration(
+        definition,
+        state.configurationId or definition.defaultSlotConfigurationId
+    )
+    for _, group in ipairs((configuration or {}).slotGroups or {}) do
+        if tostring(group.groupId or "") == mode then
+            return tostring(((configuration or {}).defaultLoadout or {})
+                [tostring(group.slotType or "")] or "")
+        end
+    end
+    return ""
 end
 
 function client.getShipWeaponDefinition(shipBodyId, groupId)
@@ -38,8 +44,22 @@ function client.getShipWeaponDefinition(shipBodyId, groupId)
     return (weaponData or {})[weaponType] or {}
 end
 
+function client.getShipWeaponMounts(shipBodyId, groupId)
+    local body = math.floor(shipBodyId or 0)
+    local state = client.weaponLoadoutStateByShip[body] or {}
+    local shipType = client.registryShipGetShipType(body)
+    if shipType == "" then shipType = client.shipContextGetType() end
+    local definition = shipDefinitionGet(shipType, shipType)
+    return shipDefinitionResolveMounts(
+        shipType,
+        state.configurationId or definition.defaultSlotConfigurationId,
+        groupId,
+        client.getShipWeaponType(body, groupId)
+    )
+end
+
 function client.weaponLoadoutSyncTick(dt)
-    local body = math.floor(client.shipBody or 0)
+    local body = client.shipContextGetBody()
     if body == 0 or client.weaponLoadoutStateByShip[body] ~= nil then return end
     local sync = client.weaponLoadoutSyncState
     sync.age = (tonumber(sync.age) or 0.0) + math.max(0.0, tonumber(dt) or 0.0)

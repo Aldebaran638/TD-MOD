@@ -73,7 +73,7 @@ function client.mainWeaponInputTick(dt)
     end
 
     local body = GetVehicleBody(vehicle)
-    local shipBody = client.shipBody
+    local shipBody = client.shipContextGetBody()
     if body == nil or body == 0 or shipBody == nil or shipBody == 0
         or body ~= shipBody or not client.registryShipExists(shipBody) then
         _releaseHeldWeapon(state)

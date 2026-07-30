@@ -121,7 +121,7 @@ local function _resolveControlledShipBody()
     end
 
     local playerBody = GetVehicleBody(veh)
-    local scriptBody = client.shipBody or 0
+    local scriptBody = client.shipContextGetBody()
     if scriptBody == 0 or playerBody == nil or playerBody == 0 or playerBody ~= scriptBody then
         return 0
     end
@@ -685,7 +685,7 @@ function client.mainWeaponHudDraw()
     local currentMode = state.currentMainWeapon or "xSlot"
     local weaponDefinition = client.getShipWeaponDefinition ~= nil
         and client.getShipWeaponDefinition(state.shipBody, currentMode) or {}
-    local usesGenericRuntime = tostring(weaponDefinition.legacyController or "") == ""
+    local usesGenericRuntime = tostring(weaponDefinition.controllerType or "") == ""
 
     local topFill, topText = _resolveXSlotTopStatus(state)
     local topColor = cfg.xSlotColor

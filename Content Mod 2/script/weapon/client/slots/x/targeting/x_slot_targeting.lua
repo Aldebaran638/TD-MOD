@@ -78,7 +78,7 @@ local function _resolveControlledShipBody()
     end
 
     local body = GetVehicleBody(veh)
-    local scriptBody = client.shipBody or 0
+    local scriptBody = client.shipContextGetBody()
     if body == nil or body == 0 or scriptBody == 0 or body ~= scriptBody then
         return 0
     end
@@ -136,17 +136,7 @@ local function _safeNormalize(v, fallback)
 end
 
 local function _resolveXSlotFireOriginLocal(shipBody)
-    local shipType = "enigmaticCruiser"
-    if client.registryShipGetShipType ~= nil then
-        local resolvedType = tostring(client.registryShipGetShipType(shipBody) or "")
-        if resolvedType ~= "" then
-            shipType = resolvedType
-        end
-    end
-
-    local defs = shipTypeRegistryData or {}
-    local shipDef = defs[shipType] or defs.enigmaticCruiser or {}
-    local xSlots = shipDef.xSlots or {}
+    local xSlots = client.getShipWeaponMounts(shipBody, "xSlot")
     local sx, sy, sz = 0.0, 0.0, 0.0
     local count = 0
 

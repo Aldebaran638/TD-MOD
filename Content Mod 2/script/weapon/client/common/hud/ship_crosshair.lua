@@ -34,7 +34,7 @@ local function _resolveCrosshairRangeByMode(mode)
         end
     elseif mode == "xSlot" then
         local xWeapon = client.getShipWeaponDefinition ~= nil
-            and client.getShipWeaponDefinition(client.shipBody or 0, "xSlot")
+            and client.getShipWeaponDefinition(client.shipContextGetBody(), "xSlot")
             or (defs.tachyonLance or {})
         local maxRange = tonumber(xWeapon.maxRange) or 0.0
         if maxRange > 0.0 then

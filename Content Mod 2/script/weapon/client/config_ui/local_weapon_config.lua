@@ -73,6 +73,10 @@ function client.weaponLocalConfigUiOpenKey()
     return _weaponConfigRegistryRoot .. ".uiopen"
 end
 
-function client.weaponConfigUiIsOpen()
+function client.weaponConfigRegistryIsOpen()
     return GetBool(client.weaponLocalConfigUiOpenKey())
+end
+
+function client.weaponConfigUiIsOpen()
+    return client.weaponConfigRegistryIsOpen()
 end

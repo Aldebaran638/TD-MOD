@@ -87,7 +87,7 @@ local function _resolveCurrentMode()
         body = client.shipCameraGetControlledBody() or 0
     end
     if body == 0 then
-        body = client.shipBody or 0
+        body = client.shipContextGetBody()
     end
     if body == 0 or client.getShipMainWeaponMode == nil then
         return "xSlot"

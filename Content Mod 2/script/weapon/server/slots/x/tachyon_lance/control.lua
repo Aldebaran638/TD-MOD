@@ -110,8 +110,8 @@ end
 -- 读取目标飞船护盾半径（用于护盾球面入射点修正）
 local function _resolveTargetShieldRadius(targetBody, fallbackShipType)
     local radiusFallback = 20
-    local fallbackType = fallbackShipType or "enigmaticCruiser"
-    local fallbackShipData = (shipData and shipData[fallbackType]) or (shipData and shipData.enigmaticCruiser) or {}
+    local fallbackType = fallbackShipType or server.shipContextGetType()
+    local fallbackShipData = shipDefinitionGet(fallbackType, fallbackType)
     if fallbackShipData.shieldRadius ~= nil then
         radiusFallback = fallbackShipData.shieldRadius
     end
@@ -129,7 +129,7 @@ local function _resolveTargetShieldRadius(targetBody, fallbackShipType)
     end
 
     local targetType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(targetBody) or fallbackType
-    local targetTypeData = (shipData and shipData[targetType]) or (shipData and shipData[fallbackType]) or {}
+    local targetTypeData = shipDefinitionGet(targetType, fallbackType)
     return targetTypeData.shieldRadius or radiusFallback
 end
 
@@ -137,11 +137,12 @@ end
 -- 服务端函数：接收客户端开火输入并写入统一 request 键
 -- 说明：这里只写请求，不在这里推进 charging/launching
 function server_xSlot_handleFireRequest()
-    local shipBody = server.shipBody
+    local shipBody = server.shipContextGetBody()
     if shipBody == nil or shipBody == 0 then
         return
     end
-    server.registryShipEnsure(shipBody, server.defaultShipType, server.defaultShipType)
+    local shipType = server.shipContextGetType()
+    server.registryShipEnsure(shipBody, shipType, shipType)
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
         return
     end
@@ -253,7 +254,7 @@ function server.xSlot_computeHitResult(shipBodyId, firePosOffset, fireDirRelativ
         local bodyT = GetBodyTransform(targetBody)
         local comLocal = GetBodyCenterOfMass(targetBody)
         local center = TransformToParentPoint(bodyT, comLocal)
-        local shieldRadius = _resolveTargetShieldRadius(targetBody, server.defaultShipType or "enigmaticCruiser")
+        local shieldRadius = _resolveTargetShieldRadius(targetBody, server.shipContextGetType())
         local entryT = _raySphereEntryT(origin, dir, center, shieldRadius)
         if entryT ~= nil and entryT <= maxRange then
             endPos = VecAdd(origin, VecScale(dir, entryT))
@@ -305,7 +306,7 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
     end
 
     if isHitStellarisBody then
-        local resolvedDefaultShipType = server.defaultShipType or "enigmaticCruiser"
+        local resolvedDefaultShipType = server.shipContextGetType()
         if not server.registryShipEnsure(hitTarget, resolvedDefaultShipType, resolvedDefaultShipType) then
             return renderResult
         end
@@ -325,7 +326,7 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
             return renderResult
         end
 
-        local targetShipData = (shipData and shipData[targetShipType]) or (shipData and shipData[resolvedDefaultShipType]) or {}
+        local targetShipData = shipDefinitionGet(targetShipType, resolvedDefaultShipType)
         local targetWeaponData = (weaponData and weaponData[weaponType]) or (weaponData and weaponData.tachyonLance) or {}
         local damageMin = targetWeaponData.damageMin or 0
         local damageMax = targetWeaponData.damageMax or damageMin
@@ -483,12 +484,13 @@ end
 -- 3) 全流程由 Registry 驱动（state/chargeRemain/launchRemain）
 function server.xSlotControlTick(dt)
 
-    local shipBody = server.shipBody
+    local shipBody = server.shipContextGetBody()
     if shipBody == nil or shipBody == 0 then
         return
     end
 
-    if not server.registryShipEnsure(shipBody, server.defaultShipType, server.defaultShipType) then
+    local shipType = server.shipContextGetType()
+    if not server.registryShipEnsure(shipBody, shipType, shipType) then
         return
     end
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then

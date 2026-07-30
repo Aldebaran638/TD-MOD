@@ -1,10 +1,8 @@
 ---@diagnostic disable: undefined-global
 
-shipTypeRegistryData = shipTypeRegistryData or {}
+#include "battlecruiser_mounts.lua"
 
--- 飞船类型定义：enigmaticCruiser
--- 说明：这里是“类型定义层”，用于注册到 Registry 的 definitions 区域。
-shipTypeRegistryData.enigmaticCruiser = {
+local battlecruiserDefinition = {
     shipType = "enigmaticCruiser",
     displayName = "Enigma Battlecruiser",
     maxShieldHP = 5000,
@@ -12,14 +10,108 @@ shipTypeRegistryData.enigmaticCruiser = {
     maxBodyHP = 2000,
     shieldRadius = 7,
     xSlotCount = 2,
+    flightProfile = {
+        gravityCompensation = 10.0,
+        disableLiftVoxelRatio = 0.6,
+        forwardAcceleration = 50.0,
+        backwardAcceleration = 50.0,
+        quadraticDamping = 5000.0,
+        dampingMinSpeed = 0.01,
+        attitude = {
+            yawDeadzone = 0.5,
+            pitchDeadzone = 0.5,
+            yawSoftZone = 3.0,
+            pitchSoftZone = 3.0,
+            yawForceGain = 40000.0,
+            pitchForceGain = 180000.0,
+            yawForceMax = 12000.0,
+            pitchForceMax = 12000.0,
+            yawDamping = 900000.0,
+            pitchDamping = 5000000.0,
+            yawRateDeadzone = 0.01,
+            pitchRateDeadzone = 0.01,
+            yawLeverArm = 8.0,
+            pitchLeverArm = 8.0,
+        },
+        roll = {
+            deadzone = 0.3,
+            forceGain = 5000.0,
+            forceMax = 50000.0,
+            damping = 200000.0,
+            rateDeadzone = 0.02,
+            leverArm = 8.0,
+            sign = 1.0,
+        },
+    },
+    engineFx = {
+        speedForFullTrail = 18.0,
+        throttleResponse = 5.5,
+        particleRate = 28.0,
+        maxParticleBurstsPerFrame = 2,
+        particleNearDistance = 250.0,
+        particleCutoffDistance = 600.0,
+        renderCutoffDistance = 1200.0,
+        idleParticleRateScale = 0.20,
+        farParticleRateScale = 0.35,
+        profiles = {
+            thruster = {
+                radius = 0.34,
+                localOffset = { 0.2, 0.5, 0.2 },
+                sourceOffset = 0.42,
+                idleLength = 0.70,
+                trailLength = 5.8,
+                particleRadius = 0.12,
+            },
+            smallThruster = {
+                radius = 0.20,
+                localOffset = { 0.0, 0.3, 0.2 },
+                sourceOffset = 0.24,
+                idleLength = 0.38,
+                trailLength = 3.0,
+                particleRadius = 0.075,
+            },
+            engine = {
+                radius = 0.11,
+                burnAreaMin = { 0.0, 0.3, 0.0 },
+                burnAreaMax = { 0.2, 0.3, 1.4 },
+                burnColumns = 2,
+                burnRows = 6,
+                sourceOffset = 0.30,
+                idleLength = 0.48,
+                trailLength = 2.5,
+                particleRadius = 0.065,
+            },
+        },
+    },
+    cameraProfile = {
+        distance = 14.0,
+        distanceMin = 10.0,
+        distanceMax = 20.0,
+        pitchLimit = 85.0,
+        rearYawMin = -90.0,
+        rearYawMax = 90.0,
+        mouseSensitivity = 0.05,
+        glideStrength = 0.55,
+        zoomSpeed = 0.5,
+        switchDuration = 0.30,
+        frontOffset = { x = 0.0, y = 1.5, z = -3.0 },
+        frontPitchLimit = 90.0,
+        frontYawMin = -90.0,
+        frontYawMax = 90.0,
+        rearDefaultPitch = 8.0,
+        freelookTurnYawError = 16.0,
+        freelookTurnPitchError = 16.0,
+        rmbLongPressSeconds = 0.22,
+        fov = 70.0,
+    },
     regen = {
-        tickInterval = 0.1,        -- 固定恢复步长（秒）
-        shieldPerSecond = 70.0,    -- 护盾每秒恢复
-        armorPerSecond = 50.0,      -- 装甲每秒恢复
-        bodyPerSecond = 10.0,       -- 船体每秒恢复
-        shieldNoDamageDelay = 2.0, -- 护盾脱战恢复等待时间（秒）
-        armorNoDamageDelay = 4.0,  -- 装甲脱战恢复等待时间（秒）
-        bodyNoDamageDelay = 6.0,   -- 船体脱战恢复等待时间（秒）
+        tickInterval = 0.1,
+        shieldPerSecond = 70.0,
+        armorPerSecond = 50.0,
+        bodyPerSecond = 10.0,
+        shieldNoDamageDelay = 2.0,
+        armorNoDamageDelay = 4.0,
+        bodyNoDamageDelay = 6.0,
     },
     fx = {
         shieldHit = {
@@ -52,90 +144,17 @@ shipTypeRegistryData.enigmaticCruiser = {
         G = { "devastatorTorpedoes", "neutronLauncher" },
         H = { "gammaStrikeCraft" },
     },
-    weaponMountProfiles = {
-        xSpinal = {
-            { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-            { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        },
-        lLaser = {
-            { firePosOffset = { x = 3.3, y = 1.4, z = -2.6 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -3.3, y = 1.4, z = -2.6 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-        },
-        lEnergy = {
-            { firePosOffset = { x = 3.5, y = 0.6, z = -3.2 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -3.5, y = 0.6, z = -3.2 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-        },
-        lKinetic = {
-            { firePosOffset = { x = 3.8, y = 0, z = -3.4 }, fireDirRelative = { x = 0, y = 0, z = -1 }, fireDeviationAngle = 1, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -3.8, y = 0, z = -3.4 }, fireDirRelative = { x = 0, y = 0, z = -1 }, fireDeviationAngle = 1, aimMode = "forwardConvergeByRange" },
-        },
-        lAutocannon = {
-            { firePosOffset = { x = 3.3, y = -1.5, z = -2.4 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -3.3, y = -1.5, z = -2.4 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-        },
-        mLaser = {
-            { firePosOffset = { x = 2.8, y = 1.2, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -2.8, y = 1.2, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = 2.8, y = -1.2, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -2.8, y = -1.2, z = -3.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-        },
-        mEnergy = {
-            { firePosOffset = { x = 3.2, y = 0.8, z = -3.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -3.2, y = 0.8, z = -3.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = 3.2, y = -0.8, z = -3.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -3.2, y = -0.8, z = -3.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-        },
-        mKinetic = {
-            { firePosOffset = { x = 3.8, y = 1.0, z = -4.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -3.8, y = 1.0, z = -4.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = 3.8, y = -1.0, z = -4.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -3.8, y = -1.0, z = -4.0 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-        },
-        mAutocannon = {
-            { firePosOffset = { x = 3.5, y = 1.8, z = -2.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -3.5, y = 1.8, z = -2.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = 3.5, y = -1.8, z = -2.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-            { firePosOffset = { x = -3.5, y = -1.8, z = -2.5 }, fireDirRelative = { x = 0, y = 0, z = -1 }, aimMode = "forwardConvergeByRange" },
-        },
-        mSwarmer = {
-            { firePosOffset = { x = 0.3, y = 5, z = 2 }, fireDirRelative = { x = 600, y = 300, z = 0 } },
-            { firePosOffset = { x = -0.3, y = 5, z = 2 }, fireDirRelative = { x = -600, y = 300, z = 0 } },
-            { firePosOffset = { x = 0.3, y = -5, z = 2 }, fireDirRelative = { x = 600, y = -300, z = 0 } },
-            { firePosOffset = { x = -0.3, y = -5, z = 2 }, fireDirRelative = { x = -600, y = -300, z = 0 } },
-        },
-        gRocket = {
-            { firePosOffset = { x = 0, y = 0, z = -4.8 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-            { firePosOffset = { x = 0, y = 0, z = -4.8 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-            { firePosOffset = { x = 0, y = 0, z = -4.8 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-            { firePosOffset = { x = 0, y = 0, z = -4.8 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        },
-        gNeutron = {
-            { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-            { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-            { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-            { firePosOffset = { x = 0, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        },
-        gEnergy = {
-            { firePosOffset = { x = 5.5, y = 1.2, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-            { firePosOffset = { x = -5.5, y = 1.2, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-            { firePosOffset = { x = 5.5, y = -1.2, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-            { firePosOffset = { x = -5.5, y = -1.2, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        },
-        hHangar = {
-            { firePosOffset = { x = 0.8, y = 6.5, z = -1.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-            { firePosOffset = { x = -0.8, y = 6.5, z = -1.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        },
-    },
+    weaponMountProfiles = shipMountProfileData.enigmaticCruiser,
     defaultSlotConfigurationId = "battleline_2x2l4m",
     slotConfigurations = {
         {
             configurationId = "battleline_2x2l4m",
             label = "2X 2L 4M",
             slotGroups = {
-                { slotType = "X", count = 2, mountCollection = "xSlots" },
-                { slotType = "L", count = 2, mountCollection = "lSlots" },
-                { slotType = "M", count = 4, mountCollection = "mSlots" },
-                { slotType = "H", count = 2, mountCollection = "hSlots" },
+                { groupId = "xSlot", slotType = "X", count = 2 },
+                { groupId = "lSlot", slotType = "L", count = 2 },
+                { groupId = "mSlot", slotType = "M", count = 4 },
+                { groupId = "hSlot", slotType = "H", count = 2 },
             },
             defaultLoadout = {
                 X = "tachyonLance",
@@ -143,71 +162,16 @@ shipTypeRegistryData.enigmaticCruiser = {
                 M = "swarmerMissile",
                 H = "gammaStrikeCraft",
             },
-            mounts = {
-                xSlots = {
-                    {
-                        firePosOffset = { x = 0, y = 0, z = -4 },
-                        fireDirRelative = { x = 0, y = 0, z = -1 },
-                    },
-                    {
-                        firePosOffset = { x = 0, y = 0, z = -4 },
-                        fireDirRelative = { x = 0, y = 0, z = -1 },
-                    },
-                },
-                lSlots = {
-                    {
-                        firePosOffset = { x = 6, y = 0, z = -4 },
-                        fireDirRelative = { x = 0, y = 0, z = -1 },
-                        fireDeviationAngle = 1,
-                        aimMode = "forwardConvergeByRange",
-                    },
-                    {
-                        firePosOffset = { x = -6, y = 0, z = -4 },
-                        fireDirRelative = { x = 0, y = 0, z = -1 },
-                        fireDeviationAngle = 1,
-                        aimMode = "forwardConvergeByRange",
-                    },
-                },
-                mSlots = {
-                    {
-                        firePosOffset = { x = 0.3, y = 5, z = 2 },
-                        fireDirRelative = { x = 600, y = 300, z = 0 },
-                    },
-                    {
-                        firePosOffset = { x = -0.3, y = 5, z = 2 },
-                        fireDirRelative = { x = -600, y = 300, z = 0 },
-                    },
-                    {
-                        firePosOffset = { x = 0.3, y = -5, z = 2 },
-                        fireDirRelative = { x = 600, y = -300, z = 0 },
-                    },
-                    {
-                        firePosOffset = { x = -0.3, y = -5, z = 2 },
-                        fireDirRelative = { x = -600, y = -300, z = 0 },
-                    },
-                },
-                gSlots = {},
-                hSlots = {
-                    {
-                        firePosOffset = { x = 0.8, y = 5, z = 3 },
-                        fireDirRelative = { x = 0, y = 0, z = 1 },
-                    },
-                    {
-                        firePosOffset = { x = -0.8, y = 5, z = 3 },
-                        fireDirRelative = { x = 0, y = 0, z = 1 },
-                    },
-                },
-            },
         },
         {
             configurationId = "torpedo_2x4g4m",
             legacyConfigurationIds = { "siege_2x4g2m" },
             label = "2H 2X 4G 4M",
             slotGroups = {
-                { slotType = "X", count = 2, mountCollection = "xSlots" },
-                { slotType = "G", count = 4, mountCollection = "gSlots" },
-                { slotType = "M", count = 4, mountCollection = "mSlots" },
-                { slotType = "H", count = 2, mountCollection = "hSlots" },
+                { groupId = "xSlot", slotType = "X", count = 2 },
+                { groupId = "gSlot", slotType = "G", count = 4 },
+                { groupId = "mSlot", slotType = "M", count = 4 },
+                { groupId = "hSlot", slotType = "H", count = 2 },
             },
             defaultLoadout = {
                 X = "tachyonLance",
@@ -215,128 +179,8 @@ shipTypeRegistryData.enigmaticCruiser = {
                 M = "swarmerMissile",
                 H = "gammaStrikeCraft",
             },
-            mounts = {
-                xSlots = {
-                    {
-                        firePosOffset = { x = 0, y = 0, z = -4 },
-                        fireDirRelative = { x = 0, y = 0, z = -1 },
-                    },
-                    {
-                        firePosOffset = { x = 0, y = 0, z = -4 },
-                        fireDirRelative = { x = 0, y = 0, z = -1 },
-                    },
-                },
-                mSlots = {
-                    {
-                        firePosOffset = { x = 0.3, y = 5, z = 2 },
-                        fireDirRelative = { x = 600, y = 300, z = 0 },
-                    },
-                    {
-                        firePosOffset = { x = -0.3, y = 5, z = 2 },
-                        fireDirRelative = { x = -600, y = 300, z = 0 },
-                    },
-                    {
-                        firePosOffset = { x = 0.3, y = -5, z = 2 },
-                        fireDirRelative = { x = 600, y = -300, z = 0 },
-                    },
-                    {
-                        firePosOffset = { x = -0.3, y = -5, z = 2 },
-                        fireDirRelative = { x = -600, y = -300, z = 0 },
-                    },
-                },
-                gSlots = {
-                    {
-                        firePosOffset = { x = 6, y = 0, z = -4 },
-                        fireDirRelative = { x = 0, y = 0, z = -1 },
-                    },
-                    {
-                        firePosOffset = { x = -6, y = 0, z = -4 },
-                        fireDirRelative = { x = 0, y = 0, z = -1 },
-                    },
-                    {
-                        firePosOffset = { x = 0.3, y = -5, z = 2 },
-                        fireDirRelative = { x = 600, y = -300, z = 0 },
-                    },
-                    {
-                        firePosOffset = { x = -0.3, y = -5, z = 2 },
-                        fireDirRelative = { x = -600, y = -300, z = 0 },
-                    },
-                },
-                lSlots = {},
-                hSlots = {
-                    {
-                        firePosOffset = { x = 0.8, y = 5, z = 3 },
-                        fireDirRelative = { x = 0, y = 0, z = 1 },
-                    },
-                    {
-                        firePosOffset = { x = -0.8, y = 5, z = 3 },
-                        fireDirRelative = { x = 0, y = 0, z = 1 },
-                    },
-                },
-            },
-        },
-    },
-    xSlots = {
-        {
-            weaponType = "tachyonLance",
-            firePosOffset = { x = 0, y = 0, z = -4 },
-            fireDirRelative = { x = 0, y = 0, z = -1 },
-        },
-        {
-            weaponType = "tachyonLance",
-            firePosOffset = { x = 0, y = 0, z = -4 },
-            fireDirRelative = { x = 0, y = 0, z = -1 },
-        },
-        
-    },
-    lSlots = {
-        {
-            weaponType = "kineticArtillery",
-            firePosOffset = { x = 6, y = 0, z = -4 },
-            fireDirRelative = { x = 0, y = 0, z = -1 },
-            fireDeviationAngle = 1,
-            aimMode = "forwardConvergeByRange",
-        },
-        {
-            weaponType = "kineticArtillery",
-            firePosOffset = { x = -6, y = 0, z = -4 },
-            fireDirRelative = { x = 0, y = 0, z = -1 },
-            fireDeviationAngle = 1,
-            aimMode = "forwardConvergeByRange",
-        },
-    },
-    mSlots = {
-        {
-            weaponType = "swarmerMissile",
-            firePosOffset = { x = 0.3, y = 5, z = 2 },
-            fireDirRelative = { x = 600, y = 300, z = 0 },
-        },
-        {
-            weaponType = "swarmerMissile",
-            firePosOffset = { x = -0.3, y = 5, z = 2 },
-            fireDirRelative = { x = -600, y = 300, z = 0 },
-        },
-        {
-            weaponType = "swarmerMissile",
-            firePosOffset = { x = 0.3, y = -5, z = 2 },
-            fireDirRelative = { x = 600, y = -300, z = 0 },
-        },
-        {
-            weaponType = "swarmerMissile",
-            firePosOffset = { x = -0.3, y = -5, z = 2 },
-            fireDirRelative = { x = -600, y = -300, z = 0 },
-        },
-    },
-    hSlots = {
-        {
-            weaponType = "gammaStrikeCraft",
-            firePosOffset = { x = 3.8, y = 8, z = 5 },
-            fireDirRelative = { x = 0, y = 0, z = 1 },
-        },
-        {
-            weaponType = "gammaStrikeCraft",
-            firePosOffset = { x = -3.8, y = 8, z = 5 },
-            fireDirRelative = { x = 0, y = 0, z = 1 },
         },
     },
 }
+
+shipDefinitionRegister(battlecruiserDefinition)

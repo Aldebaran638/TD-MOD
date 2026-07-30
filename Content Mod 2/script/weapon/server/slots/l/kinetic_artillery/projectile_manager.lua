@@ -13,7 +13,7 @@ local registryShipIndexRoot = "StellarisShips/server/ships/index"
 local function _resolveProjectileWeaponSettings(weaponType)
     local defs = weaponData or {}
     local resolvedWeaponType = weaponType or "kineticArtillery"
-    return defs[resolvedWeaponType] or (lSlotWeaponRegistryData or {})[resolvedWeaponType] or defs.kineticArtillery or {}
+    return defs[resolvedWeaponType] or defs.kineticArtillery or {}
 end
 
 local function _applyProjectileEnvironmentExplosions(hitPos, settings)
@@ -138,7 +138,7 @@ local function _applyProjectileShipDamage(hitBody, weaponType)
         }
     end
 
-    local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitBody) or (server.defaultShipType or "enigmaticCruiser")
+    local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitBody) or server.shipContextGetType()
     local targetShieldHP, targetArmorHP, targetBodyHP = server.registryShipGetHP(hitBody)
     if targetShieldHP == nil or targetArmorHP == nil or targetBodyHP == nil then
         return {
@@ -148,8 +148,8 @@ local function _applyProjectileShipDamage(hitBody, weaponType)
         }
     end
 
-    local resolvedDefaultShipType = server.defaultShipType or "enigmaticCruiser"
-    local targetShipData = (shipData and shipData[targetShipType]) or (shipData and shipData[resolvedDefaultShipType]) or {}
+    local resolvedDefaultShipType = server.shipContextGetType()
+    local targetShipData = shipDefinitionGet(targetShipType, resolvedDefaultShipType)
     local weaponData = _resolveProjectileWeaponSettings(weaponType)
     local rawRemain = weaponData.damage or 0.0
     local result = {
@@ -219,7 +219,7 @@ local function _resolveShieldHit(projectile, startPos, endPos, settings)
             if shieldHP ~= nil and bodyHP ~= nil and bodyHP > 0 and shieldHP > 0 then
                 local shieldRadius = 0.0
                 if server.registryShipGetShieldRadius ~= nil then
-                    shieldRadius = server.registryShipGetShieldRadius(bodyId, server.defaultShipType or "enigmaticCruiser") or 0.0
+                    shieldRadius = server.registryShipGetShieldRadius(bodyId, server.shipContextGetType()) or 0.0
                 end
                 if shieldRadius > 0.0 then
                     local bodyT = GetBodyTransform(bodyId)

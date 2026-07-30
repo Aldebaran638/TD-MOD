@@ -110,6 +110,16 @@ foreach ($candidate in @($scenePath, $prefabPath)) {
     }
 }
 
+foreach ($xmlFile in Get-ChildItem -LiteralPath $modRoot -Recurse -Filter "*.xml" -File) {
+    $xmlText = [IO.File]::ReadAllText($xmlFile.FullName)
+    foreach ($vehicleTag in [Regex]::Matches($xmlText, '<vehicle\b[^>]*>', [Text.RegularExpressions.RegexOptions]::IgnoreCase)) {
+        $sound = [Regex]::Match($vehicleTag.Value, '\bsound\s*=\s*"([^"]*)"', [Text.RegularExpressions.RegexOptions]::IgnoreCase)
+        if (-not $sound.Success -or [string]::IsNullOrWhiteSpace($sound.Groups[1].Value)) {
+            Add-Issue "$($xmlFile.FullName) has a missing or blank vehicle sound attribute; use a valid silent preset"
+        }
+    }
+}
+
 foreach ($entry in @($documents.GetEnumerator())) {
     $document = $entry.Value
     if ($null -eq $document) {

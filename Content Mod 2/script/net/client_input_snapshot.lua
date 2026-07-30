@@ -47,7 +47,10 @@ local function _shipControlResolveDrivenBody()
     local vehicle = GetPlayerVehicle(playerId)
     if vehicle == nil or vehicle == 0 then return 0 end
     local body = math.floor(GetVehicleBody(vehicle) or 0)
-    local configuredBody = math.floor(client.shipBody or 0)
+    local configuredBody = math.floor(
+        (client.shipControlSnapshot or {}).shipBody
+            or client.shipContextGetBody()
+    )
     if body == 0 or configuredBody == 0 or body ~= configuredBody then return 0 end
     if client.registryShipExists ~= nil and not client.registryShipExists(body) then
         return 0

@@ -2,7 +2,6 @@
 #include "script/include/common.lua"
 
 #include "script/data/ships/ship_catalog.lua"
-#include "script/data/ships/battlecruiser.lua"
 #include "script/data/weapons/weapon_catalog.lua"
 #include "script/weapon/client/config_ui/local_weapon_config.lua"
 #include "script/weapon/client/config_ui/weapon_config_ui.lua"

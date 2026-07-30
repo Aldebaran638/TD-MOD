@@ -82,7 +82,7 @@ local function _resolveControlledShipBody()
     end
 
     local body = GetVehicleBody(veh)
-    local scriptBody = client.shipBody or 0
+    local scriptBody = client.shipContextGetBody()
     if body == nil or body == 0 or scriptBody == 0 or body ~= scriptBody then
         return 0
     end

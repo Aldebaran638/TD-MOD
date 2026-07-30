@@ -1,25 +1,31 @@
 ---@diagnostic disable: undefined-global
 
-xSlotWeaponRegistryData = xSlotWeaponRegistryData or {}
-weaponData = weaponData or {}
-
-local tachyonLanceData = {
+weaponDefineRay({
     weaponType = "tachyonLance",
-    maxRange = 500,
+    displayName = "快子光矛",
+    englishName = "Tachyon Lance",
+    slotTypes = { "X" },
+    fxProfile = "tachyonLance",
+    damage = 2115,
     damageMin = 1580,
     damageMax = 2650,
-    shieldFix = 0.5,
-    armorFix = 2,
-    bodyFix = 1.5,
     cooldown = 6.0,
     CD = 6.0,
-    chargeDuration = 0.5,
-    launchDuration = 0.2,
-    randomTrajectoryAngle = 0,
+    maxRange = 500.0,
+    shieldFix = 0.5,
+    armorFix = 2.0,
+    bodyFix = 1.5,
+    chargeDuration = 0.50,
+    launchDuration = 0.20,
+    controllerType = "chargedSpinal",
+    environmentExplosionSize = 4.0,
+    physicalExplosionCount = 2,
+    randomTrajectoryAngle = 0.0,
+    mountProfile = "xSpinal",
+    salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.05 },
     aimControlMode = "camera_limited",
     aimLimitDeg = 70.0,
     aimPitchOffsetDeg = 6.0,
-}
-
-xSlotWeaponRegistryData.tachyonLance = tachyonLanceData
-weaponData.tachyonLance = tachyonLanceData
+    officialComponentId = "ENERGY_LANCE_2",
+    family = "energy_lance",
+})

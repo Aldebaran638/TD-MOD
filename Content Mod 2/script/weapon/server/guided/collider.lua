@@ -55,13 +55,16 @@ local function _guidedProjectileApplyShipDamage(hitBody, projectile)
         return "none"
     end
 
-    local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitBody) or (server.defaultShipType or "enigmaticCruiser")
+    local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitBody) or server.shipContextGetType()
     local targetShieldHP, targetArmorHP, targetBodyHP = server.registryShipGetHP(hitBody)
     if targetShieldHP == nil or targetArmorHP == nil or targetBodyHP == nil then
         return "none"
     end
 
-    local targetShipData = (shipData and shipData[targetShipType]) or (shipData and shipData[server.defaultShipType or "enigmaticCruiser"]) or {}
+    local targetShipData = shipDefinitionGet(
+        targetShipType,
+        server.shipContextGetType()
+    )
     local rawRemain = tonumber(projectile.damage) or 0.0
     local impactLayer = "none"
 

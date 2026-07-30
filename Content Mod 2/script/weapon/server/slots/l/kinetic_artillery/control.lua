@@ -187,12 +187,13 @@ local function _updateSlotRuntime(slot, dt)
 end
 
 function server.lSlotControlTick(dt)
-    local shipBody = server.shipBody
+    local shipBody = server.shipContextGetBody()
     if shipBody == nil or shipBody == 0 then
         server.lSlotStatePushHudReset(false)
         return
     end
-    if not server.registryShipEnsure(shipBody, server.defaultShipType, server.defaultShipType) then
+    local shipType = server.shipContextGetType()
+    if not server.registryShipEnsure(shipBody, shipType, shipType) then
         server.lSlotStatePushHudReset(false)
         return
     end

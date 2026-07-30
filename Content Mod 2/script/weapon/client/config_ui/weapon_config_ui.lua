@@ -127,7 +127,7 @@ function client.weaponConfigUiSetOpen(open)
     if open then _open() else _close() end
 end
 
-function client.weaponConfigUiIsOpen()
+function client.weaponConfigPanelIsOpen()
     return client.weaponConfigUiState.open and true or false
 end
 

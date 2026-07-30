@@ -60,16 +60,14 @@ local function _xSlotStateCloneVec3(v, defaultX, defaultY, defaultZ)
 end
 
 local function _xSlotStateResolveShipDefinition(shipType)
-    local defs = shipTypeRegistryData or {}
-    local requested = shipType or server.defaultShipType or "enigmaticCruiser"
-    return defs[requested] or defs[server.defaultShipType] or defs.enigmaticCruiser or {}
+    local contextType = server.shipContextGetType()
+    return shipDefinitionGet(shipType or contextType, contextType)
 end
 
 local function _xSlotStateResolveWeaponDefinition(weaponType)
     local requested = weaponType or "tachyonLance"
-    local registryDefs = xSlotWeaponRegistryData or {}
     local runtimeDefs = weaponData or {}
-    return registryDefs[requested] or registryDefs.tachyonLance or runtimeDefs[requested] or runtimeDefs.tachyonLance or {}
+    return runtimeDefs[requested] or runtimeDefs.tachyonLance or {}
 end
 
 local function _xSlotStateBuildConfig(slotDef)
@@ -183,6 +181,25 @@ function server.xSlotStateGetHoldRequested()
     return state.holdRequested and true or false
 end
 
+function server.xSlotStateNeedsTick()
+    local state = server.xSlotState or {}
+    local body = server.shipContextGetBody()
+    if body ~= 0 and server.shipRuntimeGetDriverPlayerId(body) > 0 then
+        return true
+    end
+    if state.requestFire or state.holdRequested or state.releaseRequested then
+        return true
+    end
+    for _, slot in ipairs(state.slots or {}) do
+        local runtime = slot.runtime or {}
+        if tostring(runtime.state or "idle") ~= "idle"
+            or (tonumber(runtime.cd) or 0.0) > 0.0 then
+            return true
+        end
+    end
+    return false
+end
+
 function server.xSlotStateSetReleaseRequested(active)
     local state = server.xSlotState
     if state == nil then
@@ -238,7 +255,7 @@ function server.xSlotStateResetRuntime()
 end
 
 function server.xSlotStatePushHud(force)
-    local shipBodyId = server.shipBody or 0
+    local shipBodyId = server.shipContextGetBody()
     if shipBodyId == 0 then
         return
     end

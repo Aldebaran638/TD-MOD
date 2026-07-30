@@ -32,13 +32,13 @@ function server.shipSlotLoadoutResolveShipDefinition(shipType)
 end
 
 function server.shipWeaponSyncConfiguration(shipType, recipientPlayerId)
-    local resolvedType = tostring(shipType or server.defaultShipType or "enigmaticCruiser")
+    local resolvedType = tostring(shipType or server.shipContextGetType())
     local state = server.shipSlotLoadoutGetState(resolvedType) or {}
     local loadout = state.loadout or {}
     ClientCall(
         math.floor(recipientPlayerId or 0),
         "client.updateShipWeaponConfiguration",
-        server.shipBody or 0,
+        server.shipContextGetBody(),
         tostring(state.configurationId or ""),
         tostring(loadout.X or ""),
         tostring(loadout.L or ""),
@@ -49,40 +49,32 @@ function server.shipWeaponSyncConfiguration(shipType, recipientPlayerId)
 end
 
 local function _rebuildWeaponRuntime(shipType)
-    if server.xSlotStateResetRuntime ~= nil then server.xSlotStateResetRuntime() end
-    if server.lSlotStateResetRuntime ~= nil then server.lSlotStateResetRuntime() end
-    if server.mSlotControlResetRuntime ~= nil then server.mSlotControlResetRuntime() end
-    if server.gSlotControlResetRuntime ~= nil then server.gSlotControlResetRuntime() end
-    if server.hSlotStateResetRuntime ~= nil then server.hSlotStateResetRuntime() end
-    if server.guidedProjectileRuntimeInit ~= nil then server.guidedProjectileRuntimeInit() end
-    if server.projectileManagerReset ~= nil then server.projectileManagerReset() end
-    if server.tachyonMuzzleLightStop ~= nil then server.tachyonMuzzleLightStop("tachyonLance") end
+    server.weaponRuntimeRebuild(shipType)
 
-    if server.xSlotStateInit ~= nil then server.xSlotStateInit(shipType) end
-    if server.lSlotStateInit ~= nil then server.lSlotStateInit(shipType) end
-    if server.mSlotControlInit ~= nil then server.mSlotControlInit(shipType) end
-    if server.gSlotControlInit ~= nil then server.gSlotControlInit(shipType) end
-    if server.hSlotStateInit ~= nil then server.hSlotStateInit(shipType) end
-    if server.weaponGroupInit ~= nil then server.weaponGroupInit(shipType) end
-
-    local shipBody = math.floor(server.shipBody or 0)
+    local shipBody = server.shipContextGetBody()
     if shipBody ~= 0 and server.shipRuntimeGetCurrentMainWeapon ~= nil then
         local mode = server.shipRuntimeGetCurrentMainWeapon(shipBody)
-        local collectionByMode = {
-            xSlot = "xSlots", lSlot = "lSlots", mSlot = "mSlots",
-            gSlot = "gSlots", hSlot = "hSlots",
-        }
         local definition = server.shipSlotLoadoutResolveShipDefinition(shipType) or {}
-        local collection = collectionByMode[mode]
+        local collection = nil
+        for _, group in ipairs(definition.weaponGroups or {}) do
+            if tostring(group.groupId or "") == tostring(mode or "") then
+                collection = tostring(group.mountCollection or "")
+                break
+            end
+        end
         if collection == nil or #((definition or {})[collection] or {}) == 0 then
-            server.shipRuntimeSetCurrentMainWeapon(shipBody, "xSlot")
+            local firstGroup = (definition.weaponGroups or {})[1] or {}
+            server.shipRuntimeSetCurrentMainWeapon(
+                shipBody,
+                tostring(firstGroup.groupId or "")
+            )
             server.shipRuntimeSyncMainWeapon(shipBody, true)
         end
     end
 end
 
 function server.shipWeaponApplyConfiguration(shipType, configurationId, requestedLoadout)
-    local resolvedType = tostring(shipType or server.defaultShipType or "enigmaticCruiser")
+    local resolvedType = tostring(shipType or server.shipContextGetType())
     local previous = server.shipSlotLoadoutGetState(resolvedType)
     local ok, err = server.shipSlotLoadoutSetConfiguration(resolvedType, configurationId)
     if not ok then return false, err end
@@ -126,7 +118,7 @@ function server.shipWeaponBindLocalConfiguration(
     local pid = math.floor(playerId or 0)
     local body = math.floor(shipBody or 0)
     if IsPlayerValid ~= nil and not IsPlayerValid(pid) then return false end
-    if body == 0 or body ~= math.floor(server.shipBody or 0) then
+    if body == 0 or body ~= server.shipContextGetBody() then
         _shipWeaponBindingResult(pid, body, 0)
         return false
     end
@@ -140,7 +132,7 @@ function server.shipWeaponBindLocalConfiguration(
         _shipWeaponBindingResult(pid, body, 0)
         return false
     end
-    if tostring(shipType or "") ~= tostring(server.defaultShipType or "enigmaticCruiser") then
+    if tostring(shipType or "") ~= server.shipContextGetType() then
         _shipWeaponBindingResult(pid, body, 0)
         return false
     end
@@ -151,7 +143,7 @@ function server.shipWeaponBindLocalConfiguration(
     end
 
     local ok = server.shipWeaponApplyConfiguration(
-        tostring(shipType or "enigmaticCruiser"),
+        tostring(shipType or server.shipContextGetType()),
         tostring(configurationId or ""),
         {
             X = tostring(xWeapon or ""),

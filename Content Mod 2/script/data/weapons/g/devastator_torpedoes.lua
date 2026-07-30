@@ -1,10 +1,17 @@
 ---@diagnostic disable: undefined-global
 
-weaponData = weaponData or {}
-
-local devastatorTorpedoesData = {
+weaponDefineRocket({
     weaponType = "devastatorTorpedoes",
+    displayName = "毁灭者鱼雷",
+    englishName = "Devastator Torpedoes",
+    slotTypes = { "G" },
+    fxProfile = "guidedMissile",
+    muzzleFxProfile = "torpedoLaunch",
+    impactFxProfile = "torpedoHeavy",
+    projectileFxVariant = "torpedo",
+    damage = 700.0,
     cooldown = 18.0,
+    maxRange = 1200.0,
     prefabPath = "MOD/prefabs/devastatorTorpedoes.xml",
     spawnForwardOffset = 2.0,
     muzzleSpeed = 8.5,
@@ -12,13 +19,22 @@ local devastatorTorpedoesData = {
     maxSpeed = 34.0,
     acceleration = 6.8,
     lifetime = 22.0,
-    maxRange = 1200.0,
     turnBlendRate = 0.85,
     turnRate = 4.2,
     turnImpulse = 120.0,
-    damage = 700.0,
+    shieldFix = 1.0,
     armorFix = 1.0,
     bodyFix = 1.0,
-}
-
-weaponData.devastatorTorpedoes = devastatorTorpedoesData
+    ignoreGravity = true,
+    projectileProfile = {
+        mode = "unguided_rocket",
+        speed = 30.8,
+        ignoreGravity = true,
+    },
+    mountProfile = "gRocket",
+    salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.20 },
+    aimLimitDeg = 0.0,
+    aimPitchOffsetDeg = 0.0,
+    officialComponentId = "TORPEDO_3",
+    family = "torpedo",
+})
