@@ -24,6 +24,8 @@ weaponDefineRocket({
     turnImpulse = 120.0,
     shieldFix = 1.0,
     armorFix = 1.0,
+    shieldPenetration = 1.0,
+    armorPenetration = 0.0,
     bodyFix = 1.0,
     ignoreGravity = true,
     projectileProfile = {

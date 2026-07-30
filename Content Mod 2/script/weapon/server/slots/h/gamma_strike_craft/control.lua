@@ -320,6 +320,8 @@ local function _hSlotBuildLauncherConfig(slotDef)
         shieldFix = tonumber(weaponDef.shieldFix) or 1.0,
         armorFix = tonumber(weaponDef.armorFix) or 1.0,
         bodyFix = tonumber(weaponDef.bodyFix) or 1.0,
+        shieldPenetration = tonumber(weaponDef.shieldPenetration) or 0.0,
+        armorPenetration = tonumber(weaponDef.armorPenetration) or 0.0,
         collisionExplosionSize = tonumber(weaponDef.collisionExplosionSize) or 0.1,
         environmentExplosionSize = tonumber(weaponDef.environmentExplosionSize) or 0.1,
         beamImpactExplosionSize = tonumber(weaponDef.beamImpactExplosionSize) or 0.0,
@@ -494,9 +496,6 @@ local function _hSlotResolveAvoidDirCached(
 end
 
 local function _hSlotApplyBeamDamage(hitPos, hitBody, weaponType, environmentExplosionSize)
-    local didHitShield = false
-    local impactLayer = "none"
-
     if hitBody ~= nil and hitBody ~= 0 and server.registryShipExists(hitBody) then
         local resolvedDefaultShipType = server.shipContextGetType()
         if not server.registryShipEnsure(hitBody, resolvedDefaultShipType, resolvedDefaultShipType) then
@@ -507,13 +506,6 @@ local function _hSlotApplyBeamDamage(hitPos, hitBody, weaponType, environmentExp
             return false, hitPos, "environment"
         end
 
-        local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitBody) or resolvedDefaultShipType
-        local targetShieldHP, targetArmorHP, targetBodyHP = server.registryShipGetHP(hitBody)
-        if targetShieldHP == nil or targetArmorHP == nil or targetBodyHP == nil then
-            return
-        end
-
-        local targetShipData = shipDefinitionGet(targetShipType, resolvedDefaultShipType)
         local weapon = (weaponData and weaponData[weaponType]) or (weaponData and weaponData.gammaStrikeCraft) or {}
         local damageMin = tonumber(weapon.damageMin) or 0.0
         local damageMax = tonumber(weapon.damageMax) or damageMin
@@ -526,55 +518,12 @@ local function _hSlotApplyBeamDamage(hitPos, hitBody, weaponType, environmentExp
             rolledDamage = damageMin + (damageMax - damageMin) * math.random()
         end
 
-        local rawRemain = rolledDamage
-        local function _applyLayer(layerName, currentHp, damageFix)
-            local hp = currentHp or 0.0
-            local fix = tonumber(damageFix) or 1.0
-            if hp <= 0.0 or rawRemain <= 0.0 or fix <= 0.0 then
-                return hp
-            end
-
-            local potential = rawRemain * fix
-            if potential < hp then
-                hp = hp - potential
-                rawRemain = 0.0
-            else
-                rawRemain = rawRemain - (hp / fix)
-                hp = 0.0
-            end
-
-            if rawRemain < 0.0 then
-                rawRemain = 0.0
-            end
-
-            if impactLayer == "none" then
-                impactLayer = layerName
-            end
-            return hp
-        end
-
-        local function _applyShieldLayer(currentHp, damageFix)
-            local before = currentHp or 0.0
-            local after = _applyLayer("shield", before, damageFix)
-            if after < before then
-                didHitShield = true
-            end
-            return after
-        end
-
-        targetShieldHP = _applyShieldLayer(targetShieldHP, weapon.shieldFix)
-        targetArmorHP = _applyLayer("armor", targetArmorHP, weapon.armorFix)
-        targetBodyHP = _applyLayer("body", targetBodyHP, weapon.bodyFix)
-
-        local maxShield = tonumber(targetShipData.maxShieldHP) or targetShieldHP or 0.0
-        local maxArmor = tonumber(targetShipData.maxArmorHP) or targetArmorHP or 0.0
-        local maxBody = tonumber(targetShipData.maxBodyHP) or targetBodyHP or 0.0
-        if targetShieldHP > maxShield then targetShieldHP = maxShield end
-        if targetArmorHP > maxArmor then targetArmorHP = maxArmor end
-        if targetBodyHP > maxBody then targetBodyHP = maxBody end
-
-        server.registryShipSetHP(hitBody, targetShieldHP, targetArmorHP, targetBodyHP)
-        return didHitShield, hitPos, impactLayer
+        local result = server.shipDamageApplyWeaponDefinition(
+            hitBody,
+            weapon,
+            rolledDamage
+        )
+        return result.didHitShield, hitPos, result.impactLayer
     end
 
     return false, hitPos, "environment"

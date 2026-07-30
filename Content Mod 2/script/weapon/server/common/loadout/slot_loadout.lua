@@ -295,6 +295,39 @@ function _loadoutAPI.setLoadout(shipType, requestedLoadout)
     return true, nil
 end
 
+function _loadoutAPI.validateSnapshot(shipType, configurationId, requestedLoadout)
+    local resolvedType = shipType or server.shipContextGetType()
+    local definition = _resolveShipDefinition(resolvedType)
+    if definition.shipType == nil then
+        return nil, "ship type not found: " .. tostring(resolvedType)
+    end
+    local configuration = _findConfiguration(definition, configurationId)
+    if configuration == nil then return nil, "configuration not found" end
+    local loadout, loadoutError =
+        _buildResolvedLoadout(definition, configuration, requestedLoadout or {})
+    if loadout == nil then return nil, loadoutError end
+    local shapeOk, shapeError =
+        _validateConfigurationShape(definition, configuration, loadout)
+    if not shapeOk then return nil, shapeError end
+    return {
+        shipType = resolvedType,
+        configurationId =
+            tostring(configuration.configurationId or configurationId or ""),
+        loadout = loadout,
+    }, nil
+end
+
+function _loadoutAPI.applySnapshot(snapshot)
+    local resolved = snapshot or {}
+    local shipType = tostring(resolved.shipType or server.shipContextGetType())
+    _stateByType[shipType] = {
+        shipType = shipType,
+        configurationId = tostring(resolved.configurationId or ""),
+        loadout = _cloneTable(resolved.loadout or {}),
+    }
+    return _rebuildResolvedDefinition(shipType) ~= nil
+end
+
 function _loadoutAPI.resolveShipDefinition(shipType)
     local resolvedType = shipType or server.shipContextGetType()
     if not _ensureInitialized(resolvedType) then

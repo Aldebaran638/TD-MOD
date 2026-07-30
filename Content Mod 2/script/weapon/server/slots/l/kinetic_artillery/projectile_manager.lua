@@ -144,75 +144,12 @@ local function _applyProjectileShipDamage(hitBody, weaponType)
         }
     end
 
-    local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitBody) or server.shipContextGetType()
-    local targetShieldHP, targetArmorHP, targetBodyHP = server.registryShipGetHP(hitBody)
-    if targetShieldHP == nil or targetArmorHP == nil or targetBodyHP == nil then
-        return {
-            didDamage = false,
-            didHitShield = false,
-            impactLayer = "none",
-        }
-    end
-
-    local resolvedDefaultShipType = server.shipContextGetType()
-    local targetShipData = shipDefinitionGet(targetShipType, resolvedDefaultShipType)
-    local weaponData = _resolveProjectileWeaponSettings(weaponType)
-    local rawRemain = weaponData.damage or 0.0
-    local result = {
-        didDamage = false,
-        didHitShield = false,
-        impactLayer = "none",
-    }
-
-    local function _applyLayer(layerName, currentHp, damageFix)
-        local hp = currentHp or 0.0
-        local fix = damageFix or 1.0
-        if hp <= 0 or rawRemain <= 0 or fix <= 0 then
-            return hp
-        end
-
-        local potential = rawRemain * fix
-        if potential <= 0 then
-            return hp
-        end
-
-        local consumedRaw = 0.0
-        if potential < hp then
-            hp = hp - potential
-            consumedRaw = rawRemain
-        else
-            consumedRaw = hp / fix
-            hp = 0.0
-        end
-
-        rawRemain = rawRemain - consumedRaw
-        if rawRemain < 0 then
-            rawRemain = 0
-        end
-
-        if result.impactLayer == "none" then
-            result.impactLayer = layerName
-        end
-        if layerName == "shield" then
-            result.didHitShield = true
-        end
-        result.didDamage = true
-        return hp
-    end
-
-    targetShieldHP = _applyLayer("shield", targetShieldHP or 0.0, weaponData.shieldFix)
-    targetArmorHP = _applyLayer("armor", targetArmorHP or 0.0, weaponData.armorFix)
-    targetBodyHP = _applyLayer("body", targetBodyHP or 0.0, weaponData.bodyFix)
-
-    local maxShield = targetShipData.maxShieldHP or targetShieldHP or 0
-    local maxArmor = targetShipData.maxArmorHP or targetArmorHP or 0
-    local maxBody = targetShipData.maxBodyHP or targetBodyHP or 0
-    if targetShieldHP > maxShield then targetShieldHP = maxShield end
-    if targetArmorHP > maxArmor then targetArmorHP = maxArmor end
-    if targetBodyHP > maxBody then targetBodyHP = maxBody end
-
-    server.registryShipSetHP(hitBody, targetShieldHP, targetArmorHP, targetBodyHP)
-    return result
+    local settings = _resolveProjectileWeaponSettings(weaponType)
+    return server.shipDamageApplyWeaponDefinition(
+        hitBody,
+        settings,
+        tonumber(settings.damage) or 0.0
+    )
 end
 
 local function _resolveShieldHit(projectile, startPos, endPos, settings)

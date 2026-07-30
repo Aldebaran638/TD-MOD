@@ -96,6 +96,15 @@ local function _getOrCreateState(shipBodyId, shipType, defaultShipType)
     state = {
         shipType = resolvedShipType,
         maxHP = { shield = maxShield, armor = maxArmor, body = maxBody },
+        protection = {
+            shieldHardening = 0.0,
+            armorHardening = 0.0,
+        },
+        mobility = {
+            speedMultiplier = 0.0,
+            turnResponseMultiplier = 0.0,
+            turnForceMultiplier = 0.0,
+        },
         regen = {
             config = _cloneRegenConfig(definition),
             lastDamageTimes = { shield = nowTime, armor = nowTime, body = nowTime },
@@ -133,6 +142,63 @@ function _runtimeAPI.getMaxHP(shipBodyId, defaultShipType)
     if state == nil then return 0.0, 0.0, 0.0 end
     local maxHP = state.maxHP or {}
     return maxHP.shield or 0.0, maxHP.armor or 0.0, maxHP.body or 0.0
+end
+
+function _runtimeAPI.setComponentProfile(shipBodyId, profile, defaultShipType)
+    local state = _getOrCreateState(shipBodyId, defaultShipType, defaultShipType)
+    if state == nil then return false end
+    local resolved = (profile or {}).protection or {}
+    local mobility = (profile or {}).mobility or {}
+    state.maxHP = {
+        shield = math.max(0.0, _safeNumber(resolved.maxShieldHP, 0.0)),
+        armor = math.max(0.0, _safeNumber(resolved.maxArmorHP, 0.0)),
+        body = math.max(0.0, _safeNumber(resolved.maxBodyHP, 0.0)),
+    }
+    state.protection = {
+        shieldHardening = math.max(0.0, math.min(1.0,
+            _safeNumber(resolved.shieldHardening, 0.0))),
+        armorHardening = math.max(0.0, math.min(1.0,
+            _safeNumber(resolved.armorHardening, 0.0))),
+    }
+    state.mobility = {
+        speedMultiplier = math.max(-0.95,
+            _safeNumber(mobility.speedMultiplier, 0.0)),
+        turnResponseMultiplier = math.max(-0.95,
+            _safeNumber(mobility.turnResponseMultiplier, 0.0)),
+        turnForceMultiplier = math.max(-0.95,
+            _safeNumber(mobility.turnForceMultiplier, 0.0)),
+    }
+    local config = state.regen.config or {}
+    config.shieldPerSecond = math.max(0.0,
+        _safeNumber(resolved.shieldRegenPerSecond, 0.0))
+    config.armorPerSecond = math.max(0.0,
+        _safeNumber(resolved.armorRegenPerSecond, 0.0))
+    config.bodyPerSecond = math.max(0.0,
+        _safeNumber(resolved.hullRegenPerSecond, 0.0))
+    state.regen.config = config
+    state.regen.lastObservedHP = {
+        shield = state.maxHP.shield,
+        armor = state.maxHP.armor,
+        body = state.maxHP.body,
+    }
+    return true
+end
+
+function _runtimeAPI.getHardening(shipBodyId, defaultShipType)
+    local state = _getOrCreateState(shipBodyId, defaultShipType, defaultShipType)
+    if state == nil then return 0.0, 0.0 end
+    local protection = state.protection or {}
+    return protection.shieldHardening or 0.0,
+        protection.armorHardening or 0.0
+end
+
+function _runtimeAPI.getMobilityModifiers(shipBodyId, defaultShipType)
+    local state = _getOrCreateState(shipBodyId, defaultShipType, defaultShipType)
+    if state == nil then return 0.0, 0.0, 0.0 end
+    local mobility = state.mobility or {}
+    return tonumber(mobility.speedMultiplier) or 0.0,
+        tonumber(mobility.turnResponseMultiplier) or 0.0,
+        tonumber(mobility.turnForceMultiplier) or 0.0
 end
 
 function _runtimeAPI.getRegenConfig(shipBodyId, defaultShipType)

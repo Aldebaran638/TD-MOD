@@ -320,13 +320,6 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
             return renderResult
         end
 
-        local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitTarget) or resolvedDefaultShipType
-        local targetShieldHP, targetArmorHP, targetBodyHP = server.registryShipGetHP(hitTarget)
-        if targetShieldHP == nil or targetArmorHP == nil or targetBodyHP == nil then
-            return renderResult
-        end
-
-        local targetShipData = shipDefinitionGet(targetShipType, resolvedDefaultShipType)
         local targetWeaponData = (weaponData and weaponData[weaponType]) or (weaponData and weaponData.tachyonLance) or {}
         local damageMin = targetWeaponData.damageMin or 0
         local damageMax = targetWeaponData.damageMax or damageMin
@@ -339,60 +332,13 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
             rolledDamage = math.random(damageMin, damageMax)
         end
 
-        -- 伤害跨层溢出模型：
-        -- rawDamage 按层系数转换为当前层有效伤害；若本层被打穿，剩余“原始伤害”继续传给下一层
-        local rawRemain = rolledDamage
-
-        local function _applyLayerOverflow(layerName, currentHp, damageFix)
-            local hp = currentHp or 0
-            local fix = damageFix or 1
-            if hp <= 0 or rawRemain <= 0 or fix <= 0 then
-                return hp
-            end
-
-            local potential = rawRemain * fix
-            if potential <= 0 then
-                return hp
-            end
-
-            local consumedRaw = 0
-            if potential < hp then
-                hp = hp - potential
-                consumedRaw = rawRemain
-            else
-                consumedRaw = hp / fix
-                hp = 0
-            end
-
-            rawRemain = rawRemain - consumedRaw
-            if rawRemain < 0 then
-                rawRemain = 0
-            end
-
-            -- 记录第一命中层：用于客户端特效分层
-            if renderResult.impactLayer == "none" then
-                renderResult.impactLayer = layerName
-            end
-            if layerName == "shield" then
-                renderResult.didHitShield = true
-            end
-
-            return hp
-        end
-
-        targetShieldHP = _applyLayerOverflow("shield", targetShieldHP or 0, targetWeaponData.shieldFix)
-        targetArmorHP = _applyLayerOverflow("armor", targetArmorHP or 0, targetWeaponData.armorFix)
-        targetBodyHP = _applyLayerOverflow("body", targetBodyHP or 0, targetWeaponData.bodyFix)
-
-        -- 上限钳制，避免异常数值超过类型定义的最大值
-        local maxShield = targetShipData.maxShieldHP or targetShieldHP or 0
-        local maxArmor = targetShipData.maxArmorHP or targetArmorHP or 0
-        local maxBody = targetShipData.maxBodyHP or targetBodyHP or 0
-        if targetShieldHP > maxShield then targetShieldHP = maxShield end
-        if targetArmorHP > maxArmor then targetArmorHP = maxArmor end
-        if targetBodyHP > maxBody then targetBodyHP = maxBody end
-
-        server.registryShipSetHP(hitTarget, targetShieldHP, targetArmorHP, targetBodyHP)
+        local damageResult = server.shipDamageApplyWeaponDefinition(
+            hitTarget,
+            targetWeaponData,
+            rolledDamage
+        )
+        renderResult.didHitShield = damageResult.didHitShield
+        renderResult.impactLayer = damageResult.impactLayer
 
         return renderResult
     end

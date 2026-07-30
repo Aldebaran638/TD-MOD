@@ -55,50 +55,12 @@ local function _guidedProjectileApplyShipDamage(hitBody, projectile)
         return "none"
     end
 
-    local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitBody) or server.shipContextGetType()
-    local targetShieldHP, targetArmorHP, targetBodyHP = server.registryShipGetHP(hitBody)
-    if targetShieldHP == nil or targetArmorHP == nil or targetBodyHP == nil then
-        return "none"
-    end
-
-    local targetShipData = shipDefinitionGet(
-        targetShipType,
-        server.shipContextGetType()
+    local result = server.shipDamageApplyWeaponDefinition(
+        hitBody,
+        projectile,
+        tonumber(projectile.damage) or 0.0
     )
-    local rawRemain = tonumber(projectile.damage) or 0.0
-    local impactLayer = "none"
-
-    local function _applyLayer(layerName, currentHp, damageFix)
-        local hp = currentHp or 0.0
-        local fix = tonumber(damageFix) or 1.0
-        if hp <= 0.0 or rawRemain <= 0.0 or fix <= 0.0 then
-            return hp
-        end
-        local potential = rawRemain * fix
-        if potential < hp then
-            hp = hp - potential
-            rawRemain = 0.0
-        else
-            rawRemain = rawRemain - (hp / fix)
-            hp = 0.0
-        end
-        if rawRemain < 0.0 then rawRemain = 0.0 end
-        if impactLayer == "none" then impactLayer = layerName end
-        return hp
-    end
-
-    targetShieldHP = _applyLayer("shield", targetShieldHP, projectile.shieldFix)
-    targetArmorHP = _applyLayer("armor", targetArmorHP, projectile.armorFix)
-    targetBodyHP = _applyLayer("body", targetBodyHP, projectile.bodyFix)
-
-    local maxShield = tonumber(targetShipData.maxShieldHP) or targetShieldHP or 0.0
-    local maxArmor = tonumber(targetShipData.maxArmorHP) or targetArmorHP or 0.0
-    local maxBody = tonumber(targetShipData.maxBodyHP) or targetBodyHP or 0.0
-    if targetShieldHP > maxShield then targetShieldHP = maxShield end
-    if targetArmorHP > maxArmor then targetArmorHP = maxArmor end
-    if targetBodyHP > maxBody then targetBodyHP = maxBody end
-    server.registryShipSetHP(hitBody, targetShieldHP, targetArmorHP, targetBodyHP)
-    return impactLayer
+    return result.impactLayer
 end
 
 local function _guidedProjectileQueryClosestBody(projectile, probePos, maxDist)

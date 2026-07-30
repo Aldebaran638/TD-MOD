@@ -47,6 +47,8 @@ local function _guidedGroupBuildLauncherConfig(slotDef)
         shieldFix = tonumber(weaponDef.shieldFix) or 1.0,
         armorFix = tonumber(weaponDef.armorFix) or 1.0,
         bodyFix = tonumber(weaponDef.bodyFix) or 1.0,
+        shieldPenetration = tonumber(weaponDef.shieldPenetration) or 0.0,
+        armorPenetration = tonumber(weaponDef.armorPenetration) or 0.0,
     }
 end
 

@@ -59,8 +59,10 @@ local function _finish(definition)
         catalogTier = "highest",
         runtimeReady = true,
         iconPath = "MOD/gfx/ui/weapon_icons/" .. id .. ".png",
-        officialSourceVersion = "4.2.4",
+        officialSourceVersion = "4.4.6",
         continuousFire = true,
+        shieldPenetration = 0.0,
+        armorPenetration = 0.0,
     })
     definition.salvoProfile = definition.salvoProfile or {
         groupSize = 1,

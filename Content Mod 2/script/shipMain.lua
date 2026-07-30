@@ -3,6 +3,7 @@
 #version 2
 #include "script/include/common.lua"
 
+#include "data/components/component_catalog.lua"
 #include "data/ships/ship_catalog.lua"
 #include "data/weapons/weapon_catalog.lua"
 

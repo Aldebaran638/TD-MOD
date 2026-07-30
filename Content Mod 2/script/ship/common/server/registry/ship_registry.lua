@@ -75,7 +75,43 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
     SetFloat(prefix .. "/shieldHP", tonumber(definition.maxShieldHP) or 0.0, true)
     SetFloat(prefix .. "/armorHP", tonumber(definition.maxArmorHP) or 0.0, true)
     SetFloat(prefix .. "/bodyHP", tonumber(definition.maxBodyHP) or 0.0, true)
+    SetFloat(prefix .. "/maxShieldHP", tonumber(definition.maxShieldHP) or 0.0, true)
+    SetFloat(prefix .. "/maxArmorHP", tonumber(definition.maxArmorHP) or 0.0, true)
+    SetFloat(prefix .. "/maxBodyHP", tonumber(definition.maxBodyHP) or 0.0, true)
+    SetFloat(prefix .. "/shieldHardening", 0.0, true)
+    SetFloat(prefix .. "/armorHardening", 0.0, true)
     SetBool(prefix .. "/destroyed", false, true)
+end
+
+function server.registryShipSetProtectionProfile(shipBodyId, profile, restoreFull)
+    if not server.registryShipExists(shipBodyId) then return false end
+    local prefix = _shipKeyPrefix(shipBodyId)
+    local resolved = profile or {}
+    local maxShield = math.max(0.0, tonumber(resolved.maxShieldHP) or 0.0)
+    local maxArmor = math.max(0.0, tonumber(resolved.maxArmorHP) or 0.0)
+    local maxBody = math.max(0.0, tonumber(resolved.maxBodyHP) or 0.0)
+    SetFloat(prefix .. "/maxShieldHP", maxShield, true)
+    SetFloat(prefix .. "/maxArmorHP", maxArmor, true)
+    SetFloat(prefix .. "/maxBodyHP", maxBody, true)
+    SetFloat(prefix .. "/shieldHardening",
+        math.max(0.0, math.min(1.0, tonumber(resolved.shieldHardening) or 0.0)), true)
+    SetFloat(prefix .. "/armorHardening",
+        math.max(0.0, math.min(1.0, tonumber(resolved.armorHardening) or 0.0)), true)
+    if restoreFull then
+        SetFloat(prefix .. "/shieldHP", maxShield, true)
+        SetFloat(prefix .. "/armorHP", maxArmor, true)
+        SetFloat(prefix .. "/bodyHP", maxBody, true)
+        SetBool(prefix .. "/destroyed", false, true)
+    end
+    return true
+end
+
+function server.registryShipGetMaxHP(shipBodyId)
+    if not server.registryShipExists(shipBodyId) then return nil, nil, nil end
+    local prefix = _shipKeyPrefix(shipBodyId)
+    return GetFloat(prefix .. "/maxShieldHP"),
+        GetFloat(prefix .. "/maxArmorHP"),
+        GetFloat(prefix .. "/maxBodyHP")
 end
 
 function server.registryShipEnsure(shipBodyId, shipType, defaultShipType)

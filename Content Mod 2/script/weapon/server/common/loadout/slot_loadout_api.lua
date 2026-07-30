@@ -27,6 +27,18 @@ function server.shipSlotLoadoutSetLoadout(shipType, requestedLoadout)
     return _api.setLoadout(shipType, requestedLoadout)
 end
 
+function server.shipSlotLoadoutValidateSnapshot(
+    shipType,
+    configurationId,
+    requestedLoadout
+)
+    return _api.validateSnapshot(shipType, configurationId, requestedLoadout)
+end
+
+function server.shipSlotLoadoutApplySnapshot(snapshot)
+    return _api.applySnapshot(snapshot)
+end
+
 function server.shipSlotLoadoutResolveShipDefinition(shipType)
     return _api.resolveShipDefinition(shipType)
 end
@@ -75,19 +87,18 @@ end
 
 function server.shipWeaponApplyConfiguration(shipType, configurationId, requestedLoadout)
     local resolvedType = tostring(shipType or server.shipContextGetType())
-    local previous = server.shipSlotLoadoutGetState(resolvedType)
-    local ok, err = server.shipSlotLoadoutSetConfiguration(resolvedType, configurationId)
-    if not ok then return false, err end
-
-    if requestedLoadout ~= nil then
-        ok, err = server.shipSlotLoadoutSetLoadout(resolvedType, requestedLoadout)
-        if not ok then
-            if previous ~= nil then
-                server.shipSlotLoadoutSetConfiguration(resolvedType, previous.configurationId)
-                server.shipSlotLoadoutSetLoadout(resolvedType, previous.loadout)
-            end
-            return false, err
-        end
+    local requested = requestedLoadout
+    if requested == nil then
+        requested = (server.shipSlotLoadoutGetState(resolvedType) or {}).loadout
+    end
+    local snapshot, err = server.shipSlotLoadoutValidateSnapshot(
+        resolvedType,
+        configurationId,
+        requested
+    )
+    if snapshot == nil then return false, err end
+    if not server.shipSlotLoadoutApplySnapshot(snapshot) then
+        return false, "failed to apply validated weapon configuration"
     end
 
     _rebuildWeaponRuntime(resolvedType)
@@ -113,7 +124,8 @@ function server.shipWeaponBindLocalConfiguration(
     lWeapon,
     mWeapon,
     gWeapon,
-    hWeapon
+    hWeapon,
+    componentPayload
 )
     local pid = math.floor(playerId or 0)
     local body = math.floor(shipBody or 0)
@@ -142,8 +154,25 @@ function server.shipWeaponBindLocalConfiguration(
         return true
     end
 
-    local ok = server.shipWeaponApplyConfiguration(
-        tostring(shipType or server.shipContextGetType()),
+    local resolvedType = tostring(shipType or server.shipContextGetType())
+    local requestedComponents = nil
+    requestedComponents = shipComponentDecodeLoadout(componentPayload)
+    if requestedComponents == nil then
+        _shipWeaponBindingResult(pid, body, 0)
+        return false
+    end
+    local componentLoadout, componentProfile =
+        server.shipComponentPrepareLoadout(
+            resolvedType,
+            tostring(configurationId or ""),
+            requestedComponents
+        )
+    if componentLoadout == nil then
+        _shipWeaponBindingResult(pid, body, 0)
+        return false
+    end
+    local weaponSnapshot = server.shipSlotLoadoutValidateSnapshot(
+        resolvedType,
         tostring(configurationId or ""),
         {
             X = tostring(xWeapon or ""),
@@ -153,10 +182,26 @@ function server.shipWeaponBindLocalConfiguration(
             H = tostring(hWeapon or ""),
         }
     )
+    if weaponSnapshot == nil then
+        _shipWeaponBindingResult(pid, body, 0)
+        return false
+    end
+
+    if not server.shipSlotLoadoutApplySnapshot(weaponSnapshot) then
+        _shipWeaponBindingResult(pid, body, 0)
+        return false
+    end
+    local ok = server.shipComponentApplyPrepared(
+        componentLoadout,
+        componentProfile,
+        true
+    )
     if not ok then
         _shipWeaponBindingResult(pid, body, 0)
         return false
     end
+    _rebuildWeaponRuntime(resolvedType)
+    server.shipWeaponSyncConfiguration(resolvedType)
 
     server.weaponLocalConfigurationBound = true
     server.weaponLocalConfigurationPlayerId = pid

@@ -72,8 +72,14 @@ function client.registryShipGetMaxHP(shipBodyId)
         return nil, nil, nil
     end
 
-    local shipType = client.registryShipGetShipType(shipBodyId)
-    local maxShield, maxArmor, maxBody = _readShipTypeMaxHp(shipType)
+    local prefix = client.registryShipKeyPrefix(shipBodyId)
+    local maxShield = GetFloat(prefix .. "/maxShieldHP")
+    local maxArmor = GetFloat(prefix .. "/maxArmorHP")
+    local maxBody = GetFloat(prefix .. "/maxBodyHP")
+    if maxBody <= 0 then
+        local shipType = client.registryShipGetShipType(shipBodyId)
+        maxShield, maxArmor, maxBody = _readShipTypeMaxHp(shipType)
+    end
     local shieldHP, armorHP, bodyHP = client.registryShipGetHP(shipBodyId)
 
     if maxShield <= 0 then

@@ -134,7 +134,13 @@ local function _applyAxisControlImpulsePair(
     return signedForce, signedImpulse, true, frontPos, rearPos, forceDirWorld
 end
 
-local function _applyYawControlImpulsePair(shipBodyId, yawError, dt)
+local function _applyYawControlImpulsePair(
+    shipBodyId,
+    yawError,
+    responseMultiplier,
+    forceMultiplier,
+    dt
+)
     local cfg =
         ((server.shipContextGetDefinition().flightProfile or {}).attitude or {})
     local yawControlError = -(yawError or 0.0)
@@ -143,8 +149,10 @@ local function _applyYawControlImpulsePair(shipBodyId, yawError, dt)
         yawControlError,
         _safeNumber(cfg.yawDeadzone, 1.0),
         _safeNumber(cfg.yawSoftZone, 3.0),
-        _safeNumber(cfg.yawForceGain, 2.2),
-        _safeNumber(cfg.yawForceMax, 1.5),
+        _safeNumber(cfg.yawForceGain, 2.2)
+            * math.max(0.05, 1.0 + responseMultiplier),
+        _safeNumber(cfg.yawForceMax, 1.5)
+            * math.max(0.05, 1.0 + forceMultiplier),
         _safeNumber(cfg.yawDamping, 0.0),
         _safeNumber(cfg.yawRateDeadzone, 0.05),
         _safeNumber(cfg.yawLeverArm, 8.0),
@@ -154,7 +162,13 @@ local function _applyYawControlImpulsePair(shipBodyId, yawError, dt)
     )
 end
 
-local function _applyPitchControlImpulsePair(shipBodyId, pitchError, dt)
+local function _applyPitchControlImpulsePair(
+    shipBodyId,
+    pitchError,
+    responseMultiplier,
+    forceMultiplier,
+    dt
+)
     local cfg =
         ((server.shipContextGetDefinition().flightProfile or {}).attitude or {})
     -- Positive pitchError => nose up.
@@ -164,8 +178,10 @@ local function _applyPitchControlImpulsePair(shipBodyId, pitchError, dt)
         pitchError,
         _safeNumber(cfg.pitchDeadzone, 1.0),
         _safeNumber(cfg.pitchSoftZone, 3.0),
-        _safeNumber(cfg.pitchForceGain, 2.2),
-        _safeNumber(cfg.pitchForceMax, 1.5),
+        _safeNumber(cfg.pitchForceGain, 2.2)
+            * math.max(0.05, 1.0 + responseMultiplier),
+        _safeNumber(cfg.pitchForceMax, 1.5)
+            * math.max(0.05, 1.0 + forceMultiplier),
         _safeNumber(cfg.pitchDamping, 0.0),
         _safeNumber(cfg.pitchRateDeadzone, 0.05),
         _safeNumber(cfg.pitchLeverArm, 8.0),
@@ -203,10 +219,28 @@ function server.shipAttitudeControllerUpdate(dt)
         return
     end
 
+    local responseMultiplier, forceMultiplier = 0.0, 0.0
+    if server.shipRuntimeGetMobilityModifiers ~= nil then
+        local _
+        _, responseMultiplier, forceMultiplier =
+            server.shipRuntimeGetMobilityModifiers(shipBodyId)
+    end
     local yawForce, yawImpulse, yawApplied =
-        _applyYawControlImpulsePair(shipBodyId, yawError, dt)
+        _applyYawControlImpulsePair(
+            shipBodyId,
+            yawError,
+            responseMultiplier,
+            forceMultiplier,
+            dt
+        )
     local pitchForce, pitchImpulse, pitchApplied =
-        _applyPitchControlImpulsePair(shipBodyId, pitchError, dt)
+        _applyPitchControlImpulsePair(
+            shipBodyId,
+            pitchError,
+            responseMultiplier,
+            forceMultiplier,
+            dt
+        )
 
     state.yawForceApplied = yawForce
     state.yawImpulseApplied = yawImpulse

@@ -56,6 +56,8 @@ function client.weaponConfigurationBindingTick(dt)
 
     local snapshot = state.snapshot or {}
     local loadout = snapshot.loadout or {}
+    local componentPayload =
+        shipComponentEncodeLoadout(snapshot.componentLoadout or {})
     state.requestPending = true
     state.retryRemain = 1.0
     ServerCall(
@@ -68,6 +70,7 @@ function client.weaponConfigurationBindingTick(dt)
         tostring(loadout.L or ""),
         tostring(loadout.M or ""),
         tostring(loadout.G or ""),
-        tostring(loadout.H or "")
+        tostring(loadout.H or ""),
+        componentPayload
     )
 end

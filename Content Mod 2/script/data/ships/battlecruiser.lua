@@ -5,9 +5,9 @@
 local battlecruiserDefinition = {
     shipType = "enigmaticCruiser",
     displayName = "Enigma Battlecruiser",
-    maxShieldHP = 5000,
-    maxArmorHP = 3000,
-    maxBodyHP = 2000,
+    maxShieldHP = 0,
+    maxArmorHP = 0,
+    maxBodyHP = 10000,
     shieldRadius = 7,
     xSlotCount = 2,
     flightProfile = {
@@ -106,12 +106,29 @@ local battlecruiserDefinition = {
     },
     regen = {
         tickInterval = 0.1,
-        shieldPerSecond = 70.0,
-        armorPerSecond = 50.0,
-        bodyPerSecond = 10.0,
+        shieldPerSecond = 0.0,
+        armorPerSecond = 0.0,
+        bodyPerSecond = 0.0,
         shieldNoDamageDelay = 2.0,
         armorNoDamageDelay = 4.0,
         bodyNoDamageDelay = 6.0,
+    },
+    componentProfile = {
+        baseShieldHP = 0.0,
+        baseArmorHP = 0.0,
+        baseHullHP = 10000.0,
+        baseArmorRegenPercent = 0.001,
+        baseHullRegenPercent = 0.001,
+    },
+    componentPools = {
+        largeUtility = { "dragonScaleArmor", "darkMatterDeflector" },
+        auxiliary = {
+            "advancedAfterburners",
+            "shieldCapacitor",
+            "naniteRepairSystem",
+            "advancedShieldHardener",
+            "livingReactiveArmor",
+        },
     },
     externalDamage = {
         bulletDamage = 20.0,
@@ -168,6 +185,23 @@ local battlecruiserDefinition = {
                 M = "swarmerMissile",
                 H = "gammaStrikeCraft",
             },
+            componentSlots = {
+                { slotType = "largeUtility", count = 8 },
+                { slotType = "auxiliary", count = 3 },
+            },
+            defaultComponentLoadout = {
+                largeUtility = {
+                    "dragonScaleArmor", "darkMatterDeflector",
+                    "dragonScaleArmor", "darkMatterDeflector",
+                    "dragonScaleArmor", "darkMatterDeflector",
+                    "dragonScaleArmor", "darkMatterDeflector",
+                },
+                auxiliary = {
+                    "advancedAfterburners",
+                    "advancedShieldHardener",
+                    "naniteRepairSystem",
+                },
+            },
         },
         {
             configurationId = "torpedo_2x4g4m",
@@ -184,6 +218,23 @@ local battlecruiserDefinition = {
                 G = "devastatorTorpedoes",
                 M = "swarmerMissile",
                 H = "gammaStrikeCraft",
+            },
+            componentSlots = {
+                { slotType = "largeUtility", count = 8 },
+                { slotType = "auxiliary", count = 3 },
+            },
+            defaultComponentLoadout = {
+                largeUtility = {
+                    "dragonScaleArmor", "darkMatterDeflector",
+                    "dragonScaleArmor", "darkMatterDeflector",
+                    "dragonScaleArmor", "darkMatterDeflector",
+                    "dragonScaleArmor", "darkMatterDeflector",
+                },
+                auxiliary = {
+                    "advancedAfterburners",
+                    "advancedShieldHardener",
+                    "naniteRepairSystem",
+                },
             },
         },
     },

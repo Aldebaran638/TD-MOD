@@ -21,6 +21,13 @@ function server.bodyDirectionalMoveTick(dt)
         local cfg = server.shipContextGetDefinition().flightProfile or {}
         local forwardAcceleration = tonumber(cfg.forwardAcceleration) or 10.0
         local backwardAcceleration = tonumber(cfg.backwardAcceleration) or 10.0
+        local speedMultiplier = 0.0
+        if server.shipRuntimeGetMobilityModifiers ~= nil then
+            speedMultiplier = server.shipRuntimeGetMobilityModifiers(body)
+        end
+        local accelerationScale = math.max(0.01, (1.0 + speedMultiplier) ^ 2)
+        forwardAcceleration = forwardAcceleration * accelerationScale
+        backwardAcceleration = backwardAcceleration * accelerationScale
         local mass = GetBodyMass(body)
         if mass ~= nil and mass > 0 then
             local t = GetBodyTransform(body)

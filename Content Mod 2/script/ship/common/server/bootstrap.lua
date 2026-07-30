@@ -4,6 +4,7 @@
 #include "state/runtime_state.lua"
 #include "state/runtime_state_api.lua"
 #include "registry/ship_registry.lua"
+#include "components/ship_components.lua"
 #include "network/request_authorizer.lua"
 #include "network/control_snapshot_endpoint.lua"
 #include "lifecycle/ship_destructibility.lua"
@@ -25,6 +26,7 @@ function server.shipServerInit(shipType)
     server.shipInitInit(shipType)
     local body = server.shipContextGetBody()
     server.runtimeStateInit(body, shipType, shipType)
+    server.shipComponentApplyDefault(shipType)
     return body
 end
 

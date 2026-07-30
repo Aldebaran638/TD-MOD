@@ -20,6 +20,25 @@ function server.shipRuntimeGetMaxHP(shipBodyId)
     return _api.getMaxHP(shipBodyId, server.shipContextGetType())
 end
 
+function server.shipRuntimeSetComponentProfile(shipBodyId, profile)
+    return _api.setComponentProfile(
+        shipBodyId,
+        profile,
+        server.shipContextGetType()
+    )
+end
+
+function server.shipRuntimeGetHardening(shipBodyId)
+    return _api.getHardening(shipBodyId, server.shipContextGetType())
+end
+
+function server.shipRuntimeGetMobilityModifiers(shipBodyId)
+    return _api.getMobilityModifiers(
+        shipBodyId,
+        server.shipContextGetType()
+    )
+end
+
 -- ============ Regen ============
 function server.shipRuntimeGetRegenConfig(shipBodyId)
     return _api.getRegenConfig(shipBodyId, server.shipContextGetType())

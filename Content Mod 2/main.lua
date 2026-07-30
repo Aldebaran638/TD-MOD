@@ -1,6 +1,7 @@
 #version 2
 #include "script/include/common.lua"
 
+#include "script/data/components/component_catalog.lua"
 #include "script/data/ships/ship_catalog.lua"
 #include "script/data/weapons/weapon_catalog.lua"
 #include "script/weapon/client/config_ui/local_weapon_config.lua"

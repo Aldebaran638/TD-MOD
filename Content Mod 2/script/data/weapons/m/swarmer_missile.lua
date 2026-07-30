@@ -24,6 +24,8 @@ weaponDefineGuided({
     turnImpulse = 210.0,
     shieldFix = 1.0,
     armorFix = 1.2,
+    shieldPenetration = 1.0,
+    armorPenetration = 0.0,
     bodyFix = 1.8,
     controllerType = "guidedSalvo",
     mountProfile = "mSwarmer",
