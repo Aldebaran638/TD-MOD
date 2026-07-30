@@ -234,6 +234,40 @@ try {
         (New-Object Text.UTF8Encoding($false))
     )
 
+    [IO.File]::WriteAllText(
+        $runtimeStatePath,
+        $runtimeStateText.Replace(
+            'server.shipSlotLoadoutResolveShipDefinition(requestedShipType)',
+            'shipDefinitionGet(requestedShipType)'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidActiveFrameSync = Invoke-Checker
+    Assert-True ($invalidActiveFrameSync.ExitCode -eq 1) "rejects Q-toggle normalization against the default frame"
+    Assert-True ($invalidActiveFrameSync.Output -match "normalize against the active ship definition") "reports the active frame Q-toggle contract"
+    [IO.File]::WriteAllText(
+        $runtimeStatePath,
+        $runtimeStateText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    [IO.File]::WriteAllText(
+        $runtimeStatePath,
+        $runtimeStateText.Replace(
+            'local activeGroups = (definition or {}).weaponGroups or {}',
+            'local activeGroups = {}'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidResolvedGroups = Invoke-Checker
+    Assert-True ($invalidResolvedGroups.ExitCode -eq 1) "rejects Q-toggle normalization that ignores resolved weapon groups"
+    Assert-True ($invalidResolvedGroups.Output -match "normalize against the active ship definition") "reports the resolved weapon group contract"
+    [IO.File]::WriteAllText(
+        $runtimeStatePath,
+        $runtimeStateText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
     $entryWithMissingSound = $entryText + "`r`nLoadSound(`"MOD/sound/missing_runtime_asset.ogg`")`r`n"
     [IO.File]::WriteAllText(
         $entryPath,

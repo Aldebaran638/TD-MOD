@@ -722,7 +722,9 @@ if ($shipRegistryServer -notmatch 'math\.abs\(oldShield\s*-\s*nextShield\)\s*>=\
     $shipRegistryServer -notmatch 'math\.abs\(oldBody\s*-\s*nextBody\)\s*>=\s*threshold') {
     Add-Issue "ship HP registry writes must update only changed fields"
 }
-if ($runtimeState -notmatch '_normalizeMode\(\s*mainWeapon\.current,\s*definition\s*\)') {
+if ($runtimeState -notmatch 'server\.shipSlotLoadoutResolveShipDefinition\(\s*requestedShipType\s*\)' -or
+    $runtimeState -notmatch 'activeGroups\s*=\s*\(definition\s+or\s+\{\}\)\.weaponGroups' -or
+    $runtimeState -notmatch '_normalizeMode\(\s*mainWeapon\.current,\s*definition\s*\)') {
     Add-Issue "main weapon mode sync must normalize against the active ship definition"
 }
 if ($missileVisual -notmatch 'client\.missileVisualTick' -or

@@ -19,6 +19,13 @@ local _runtimeState = {
 local function _resolveShipDefinition(shipType, defaultShipType)
     local requestedShipType = shipType or defaultShipType
     local definition = shipDefinitionGet(requestedShipType, defaultShipType)
+    if server.shipSlotLoadoutResolveShipDefinition ~= nil then
+        local activeDefinition =
+            server.shipSlotLoadoutResolveShipDefinition(requestedShipType)
+        if activeDefinition ~= nil then
+            definition = activeDefinition
+        end
+    end
     local resolvedShipType = definition.shipType or requestedShipType
     return resolvedShipType, definition
 end
@@ -44,6 +51,10 @@ local function _clampMoveState(moveState)
 end
 
 local function _definitionWeaponGroups(definition)
+    local activeGroups = (definition or {}).weaponGroups or {}
+    if #activeGroups > 0 then
+        return activeGroups
+    end
     local defaultId = tostring((definition or {}).defaultSlotConfigurationId or "")
     local fallback = nil
     for _, configuration in ipairs((definition or {}).slotConfigurations or {}) do
