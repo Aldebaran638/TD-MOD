@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 #include "common/state/weapon_loadout.lua"
+#include "common/targeting/target_catalog.lua"
 #include "slots/x/state/render_state.lua"
 #include "slots/x/state/render_state_api.lua"
 #include "slots/x/targeting/x_slot_targeting.lua"
@@ -8,6 +9,7 @@
 #include "common/input/main_weapon_input.lua"
 #include "common/sound/weapon_sound_catalog.lua"
 #include "common/sound/sound_service.lua"
+#include "common/hud/target_lock_reticle.lua"
 #include "common/hud/main_weapon_hud.lua"
 #include "common/hud/ship_crosshair.lua"
 #include "guided/hud/guided_targeting_hud.lua"

@@ -5,6 +5,7 @@
 #include "common/loadout/slot_loadout.lua"
 #include "common/loadout/slot_loadout_api.lua"
 #include "common/runtime/damage.lua"
+#include "common/targeting/target_catalog.lua"
 #include "common/runtime/behavior_registry.lua"
 #include "common/runtime/controller_registry.lua"
 

@@ -6,20 +6,38 @@ local function _count()
     server.netDebugCountReceive("input.weapon")
 end
 
-local function _requestContext(shipBodyId, targetVehicleId)
+local function _requestContext(shipBodyId, targetVehicleId, targetBodyId)
     local vehicleId = math.floor(tonumber(targetVehicleId) or 0)
-    local targetBodyId = 0
+    local bodyId = 0
     if vehicleId ~= 0 then
-        targetBodyId = math.floor(GetVehicleBody(vehicleId) or 0)
+        bodyId = math.floor(GetVehicleBody(vehicleId) or 0)
+    else
+        local requestedBody = math.floor(tonumber(targetBodyId) or 0)
+        if server.weaponTargetIsExternalBody ~= nil
+            and server.weaponTargetIsExternalBody(requestedBody) then
+            bodyId = requestedBody
+        end
+    end
+    local ownerBody = math.floor(tonumber(shipBodyId) or 0)
+    if bodyId == ownerBody then
+        vehicleId = 0
+        bodyId = 0
     end
     return {
-        shipBodyId = math.floor(tonumber(shipBodyId) or 0),
+        shipBodyId = ownerBody,
         targetVehicleId = vehicleId,
-        targetBodyId = targetBodyId,
+        targetBodyId = bodyId,
     }
 end
 
-function server.shipRequestWeaponHold(playerId, shipBodyId, groupId, active, targetVehicleId)
+function server.shipRequestWeaponHold(
+    playerId,
+    shipBodyId,
+    groupId,
+    active,
+    targetVehicleId,
+    targetBodyId
+)
     _count()
     local id = tostring(groupId or "")
     local held = math.floor(tonumber(active) or 0) ~= 0
@@ -32,7 +50,7 @@ function server.shipRequestWeaponHold(playerId, shipBodyId, groupId, active, tar
     return server.weaponGroupSetFireHeld(
         id,
         held,
-        _requestContext(shipBodyId, targetVehicleId)
+        _requestContext(shipBodyId, targetVehicleId, targetBodyId)
     )
 end
 
@@ -56,27 +74,52 @@ function server.shipRequestXWeaponRelease(playerId, shipBodyId)
     return server.shipRequestWeaponHold(playerId, shipBodyId, "xSlot", 0, 0)
 end
 
-local function _requestLockedGroup(playerId, shipBodyId, targetVehicleId, groupId)
+local function _requestLockedGroup(
+    playerId,
+    shipBodyId,
+    targetVehicleId,
+    targetBodyId,
+    groupId
+)
     if not server.shipRequestAuthorize(playerId, shipBodyId) then return false end
     if server.shipRuntimeGetCurrentMainWeapon(shipBodyId) ~= groupId then return false end
-    local request = _requestContext(shipBodyId, targetVehicleId)
-    if request.targetVehicleId <= 0 or request.targetBodyId <= 0 then return false end
+    local request =
+        _requestContext(shipBodyId, targetVehicleId, targetBodyId)
+    if request.targetBodyId <= 0 then return false end
     return server.weaponGroupRequestFire(groupId, request)
 end
 
-function server.shipRequestMWeaponFire(playerId, shipBodyId, targetVehicleId)
+function server.shipRequestMWeaponFire(
+    playerId,
+    shipBodyId,
+    targetVehicleId,
+    targetBodyId
+)
     _count()
-    return _requestLockedGroup(playerId, shipBodyId, targetVehicleId, "mSlot")
+    return _requestLockedGroup(
+        playerId, shipBodyId, targetVehicleId, targetBodyId, "mSlot")
 end
 
-function server.shipRequestGWeaponFire(playerId, shipBodyId, targetVehicleId)
+function server.shipRequestGWeaponFire(
+    playerId,
+    shipBodyId,
+    targetVehicleId,
+    targetBodyId
+)
     _count()
-    return _requestLockedGroup(playerId, shipBodyId, targetVehicleId, "gSlot")
+    return _requestLockedGroup(
+        playerId, shipBodyId, targetVehicleId, targetBodyId, "gSlot")
 end
 
-function server.shipRequestHWeaponFire(playerId, shipBodyId, targetVehicleId)
+function server.shipRequestHWeaponFire(
+    playerId,
+    shipBodyId,
+    targetVehicleId,
+    targetBodyId
+)
     _count()
-    local fired = _requestLockedGroup(playerId, shipBodyId, targetVehicleId, "hSlot")
+    local fired = _requestLockedGroup(
+        playerId, shipBodyId, targetVehicleId, targetBodyId, "hSlot")
     if fired and server.hSlotLastFireRequest ~= nil then
         server.hSlotLastFireRequest.requestedAt =
             (GetTime ~= nil) and GetTime() or 0.0

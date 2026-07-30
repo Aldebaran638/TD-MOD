@@ -26,6 +26,7 @@ function client.clientDraw()
     client.shipCrosshairDraw()
     client.guidedTargetingHudDraw()
     client.xSlotLockHudDraw()
+    client.shipClientSuppressNativeHud()
 end
 
 function client.render()

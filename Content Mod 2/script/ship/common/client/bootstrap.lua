@@ -12,6 +12,7 @@
 #include "hud/ship_roll_error.lua"
 #include "hud/ship_health_bar.lua"
 #include "hud/ship_help_overlay.lua"
+#include "hud/native_vehicle_hud.lua"
 #include "effects/ship_destroyed_fx.lua"
 #include "effects/engine_thruster_fx.lua"
 
@@ -54,4 +55,8 @@ end
 
 function client.shipClientDrawHelp()
     client.shipHelpOverlayDraw()
+end
+
+function client.shipClientSuppressNativeHud()
+    client.nativeVehicleHudSuppressDraw()
 end

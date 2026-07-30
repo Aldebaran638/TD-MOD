@@ -9,6 +9,7 @@ client.mainWeaponInputState = client.mainWeaponInputState or {
     holdShipBody = 0,
     holdMode = "",
     holdTargetVehicleId = 0,
+    holdTargetBodyId = 0,
 }
 
 local function _resolveMainWeaponLocalPlayerId()
@@ -31,23 +32,30 @@ local function _releaseHeldWeapon(state)
             state.holdShipBody,
             state.holdMode,
             false,
-            state.holdTargetVehicleId
+            state.holdTargetVehicleId,
+            state.holdTargetBodyId
         )
     end
     state.holdActive = false
     state.holdShipBody = 0
     state.holdMode = ""
     state.holdTargetVehicleId = 0
+    state.holdTargetBodyId = 0
 end
 
 local function _lockedTargetForWeapon(shipBody, definition)
-    if tostring((definition or {}).targetingMode or "") ~= "target_lock" then return 0 end
+    if tostring((definition or {}).targetingMode or "") ~= "target_lock" then
+        return 0, 0
+    end
     if client.guidedTargetingCanFire == nil
         or not client.guidedTargetingCanFire(shipBody) then
-        return 0
+        return 0, 0
     end
-    if client.guidedTargetingGetLockedVehicleId == nil then return 0 end
-    return math.floor(client.guidedTargetingGetLockedVehicleId(shipBody) or 0)
+    local vehicleId = client.guidedTargetingGetLockedVehicleId ~= nil
+        and client.guidedTargetingGetLockedVehicleId(shipBody) or 0
+    local bodyId = client.guidedTargetingGetLockedBodyId ~= nil
+        and client.guidedTargetingGetLockedBodyId(shipBody) or 0
+    return math.floor(vehicleId or 0), math.floor(bodyId or 0)
 end
 
 -- The server owns charge, cooldown and automatic refire. The client only sends
@@ -95,21 +103,30 @@ function client.mainWeaponInputTick(dt)
 
     local definition = client.getShipWeaponDefinition ~= nil
         and client.getShipWeaponDefinition(shipBody, currentMode) or {}
-    local targetVehicleId = _lockedTargetForWeapon(shipBody, definition)
+    local targetVehicleId, targetBodyId =
+        _lockedTargetForWeapon(shipBody, definition)
     local wantsFire = InputDown("lmb")
     local changed = state.holdShipBody ~= shipBody
         or state.holdMode ~= currentMode
         or state.holdTargetVehicleId ~= targetVehicleId
+        or state.holdTargetBodyId ~= targetBodyId
 
     if state.holdActive and ((not wantsFire) or changed) then
         _releaseHeldWeapon(state)
     end
 
     if wantsFire and not state.holdActive and client.shipRequestWeaponHold ~= nil then
-        client.shipRequestWeaponHold(shipBody, currentMode, true, targetVehicleId)
+        client.shipRequestWeaponHold(
+            shipBody,
+            currentMode,
+            true,
+            targetVehicleId,
+            targetBodyId
+        )
         state.holdActive = true
         state.holdShipBody = shipBody
         state.holdMode = currentMode
         state.holdTargetVehicleId = targetVehicleId
+        state.holdTargetBodyId = targetBodyId
     end
 end

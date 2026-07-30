@@ -4,6 +4,7 @@
 #include "script/include/common.lua"
 
 #include "data/components/component_catalog.lua"
+#include "data/targets/external_targets.lua"
 #include "data/ships/ship_catalog.lua"
 #include "data/weapons/weapon_catalog.lua"
 
@@ -74,6 +75,7 @@ end
 
 function server.postUpdate()
     server.weaponRuntimePostUpdate()
+    server.shipServerPostUpdate()
 end
 
 #include "client.lua"

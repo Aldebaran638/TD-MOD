@@ -6,8 +6,9 @@ client = client or {}
 client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
     panelWidth = 350,
     panelHeight = 118,
-    rightOffset = 270,
-    bottomOffset = 34,
+    rightOffset = 24,
+    topOffset = 566,
+    helpPanelGap = 14,
     topBarWidth = 240,
     topBarHeight = 12,
     topBarOffsetY = 12,
@@ -681,7 +682,10 @@ function client.mainWeaponHudDraw()
     local panelW = cfg.panelWidth
     local panelH = cfg.panelHeight
     local x = UiWidth() - panelW - cfg.rightOffset
-    local y = UiHeight() - panelH - cfg.bottomOffset
+    local y = cfg.topOffset
+    if client.shipHelpOverlayGetBottom ~= nil then
+        y = client.shipHelpOverlayGetBottom() + cfg.helpPanelGap
+    end
     local currentMode = state.currentMainWeapon or "xSlot"
     local weaponDefinition = client.getShipWeaponDefinition ~= nil
         and client.getShipWeaponDefinition(state.shipBody, currentMode) or {}

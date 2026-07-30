@@ -147,6 +147,11 @@ local function _shipHelpComputePanelHeight(cfg)
     return height + 14
 end
 
+function client.shipHelpOverlayGetBottom()
+    local cfg = client.shipHelpOverlayConfig
+    return cfg.topOffset + _shipHelpComputePanelHeight(cfg)
+end
+
 function client.shipHelpOverlayTick(dt)
     local _ = dt
     if InputPressed("u") then

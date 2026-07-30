@@ -105,7 +105,13 @@ function client.shipRequestMainWeaponFire(shipBodyId, request)
     return true
 end
 
-function client.shipRequestWeaponHold(shipBodyId, groupId, active, targetVehicleId)
+function client.shipRequestWeaponHold(
+    shipBodyId,
+    groupId,
+    active,
+    targetVehicleId,
+    targetBodyId
+)
     if not client.registryShipExists(shipBodyId) then return false end
     ServerCall(
         "server.shipRequestWeaponHold",
@@ -113,7 +119,8 @@ function client.shipRequestWeaponHold(shipBodyId, groupId, active, targetVehicle
         shipBodyId,
         tostring(groupId or ""),
         active and 1 or 0,
-        math.floor(targetVehicleId or 0)
+        math.floor(targetVehicleId or 0),
+        math.floor(targetBodyId or 0)
     )
     return true
 end
@@ -145,48 +152,69 @@ function client.shipRequestXWeaponRelease(shipBodyId)
     return true
 end
 
-function client.shipRequestMWeaponFire(shipBodyId, targetVehicleId)
+function client.shipRequestMWeaponFire(shipBodyId, targetVehicleId, targetBodyId)
     if not client.registryShipExists(shipBodyId) then
         return false
     end
 
     local vehicleId = math.floor(targetVehicleId or 0)
-    if vehicleId <= 0 then
+    local bodyId = math.floor(targetBodyId or 0)
+    if vehicleId <= 0 and bodyId <= 0 then
         return false
     end
 
     local localPlayerId = GetLocalPlayer()
-    ServerCall("server.shipRequestMWeaponFire", localPlayerId, shipBodyId, vehicleId)
+    ServerCall(
+        "server.shipRequestMWeaponFire",
+        localPlayerId,
+        shipBodyId,
+        vehicleId,
+        bodyId
+    )
     return true
 end
 
-function client.shipRequestGWeaponFire(shipBodyId, targetVehicleId)
+function client.shipRequestGWeaponFire(shipBodyId, targetVehicleId, targetBodyId)
     if not client.registryShipExists(shipBodyId) then
         return false
     end
 
     local vehicleId = math.floor(targetVehicleId or 0)
-    if vehicleId <= 0 then
+    local bodyId = math.floor(targetBodyId or 0)
+    if vehicleId <= 0 and bodyId <= 0 then
         return false
     end
 
     local localPlayerId = GetLocalPlayer()
-    ServerCall("server.shipRequestGWeaponFire", localPlayerId, shipBodyId, vehicleId)
+    ServerCall(
+        "server.shipRequestGWeaponFire",
+        localPlayerId,
+        shipBodyId,
+        vehicleId,
+        bodyId
+    )
     return true
 end
 
-function client.shipRequestHWeaponFire(shipBodyId, targetVehicleId)
+function client.shipRequestHWeaponFire(shipBodyId, targetVehicleId, targetBodyId)
     if not client.registryShipExists(shipBodyId) then
         return false
     end
 
     local vehicleId = math.floor(targetVehicleId or 0)
-    if vehicleId <= 0 then
+    local bodyId = math.floor(targetBodyId or 0)
+    if vehicleId <= 0 and bodyId <= 0 then
         return false
     end
 
     local localPlayerId = GetLocalPlayer()
-    ServerCall("server.shipRequestHWeaponFire", localPlayerId, shipBodyId, vehicleId)
+    ServerCall(
+        "server.shipRequestHWeaponFire",
+        localPlayerId,
+        shipBodyId,
+        vehicleId,
+        bodyId
+    )
     return true
 end
 

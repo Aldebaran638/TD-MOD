@@ -8,6 +8,7 @@
 #include "network/request_authorizer.lua"
 #include "network/control_snapshot_endpoint.lua"
 #include "lifecycle/ship_destructibility.lua"
+#include "lifecycle/player_protection.lua"
 #include "bootstrap/ship_init.lua"
 #include "damage/ship_damage.lua"
 #include "damage/external_damage.lua"
@@ -32,6 +33,7 @@ end
 
 function server.shipServerTick(dt)
     server.runtimeStateTick(dt)
+    server.shipPlayerProtectionTick()
     server.shipExternalDamageTick(dt)
     server.shipHpRecoveryTick(dt)
     server.shipDeathExplosionTick(dt)
@@ -44,4 +46,8 @@ end
 function server.shipServerUpdate(dt)
     server.shipAttitudeControllerUpdate(dt)
     server.shipRollStabilizerUpdate(dt)
+end
+
+function server.shipServerPostUpdate()
+    server.shipPlayerProtectionPostUpdate()
 end
