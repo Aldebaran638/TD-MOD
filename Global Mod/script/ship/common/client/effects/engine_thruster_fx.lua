@@ -265,14 +265,16 @@ function client.engineThrusterFxTick(dt)
         return
     end
 
-    -- 优化：检测本地玩家是否在驾驶这艘飞船
+    -- 优化：检测是否有任何玩家在驾驶这艘飞船
     local hasDriver = false
-    local playerId = GetLocalPlayer()
-    if playerId ~= nil and playerId > 0 then
+    for _, playerId in ipairs(GetAllPlayers() or {}) do
         local vehicle = GetPlayerVehicle(playerId)
         if vehicle ~= nil and vehicle ~= 0 then
             local vehicleBody = GetVehicleBody(vehicle)
-            hasDriver = (vehicleBody == body)
+            if vehicleBody == body then
+                hasDriver = true
+                break
+            end
         end
     end
 
