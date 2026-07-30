@@ -60,7 +60,7 @@ function client.updateMissileVisual(missileId, px, py, pz, vx, vy, vz)
     client.correctMissileVisual(missileId, px, py, pz, vx, vy, vz, 0.0)
 end
 
-local function _createCircleParticles(pos, velocity, cfg)
+local function _createCircleParticles(pos, velocity, cfg, countScale)
     local normal = VecNormalize(velocity)
     local up = Vec(0, 1, 0)
     if math.abs(VecDot(normal, up)) > 0.9 then up = Vec(1, 0, 0) end
@@ -76,7 +76,7 @@ local function _createCircleParticles(pos, velocity, cfg)
     ParticleEmissive(cfg.emissive, 0.0)
     ParticleCollide(0.0)
 
-    local count = cfg.circleParticleCount
+    local count = math.max(4, math.floor(cfg.circleParticleCount * (countScale or 1.0)))
     local radius = cfg.circleRadius
     for i = 0, count - 1 do
         local angle = (i / count) * math.pi * 2
@@ -101,12 +101,15 @@ function client.missileVisualTick(dt)
             missile.correctionRemain = math.max(0.0, missile.correctionRemain - step)
         end
         local cfg = _configFor(missile.weaponType)
-        if currentTime - (missile.lastCircleTime or 0) >= cfg.circleInterval
+        local distance = VecLength(VecSub(missile.position, GetCameraTransform().pos))
+        local particleScale = distance < 420 and 1.0 or 0.5
+        if distance < 900
+            and currentTime - (missile.lastCircleTime or 0) >= cfg.circleInterval
             and VecLength(missile.velocity) > 0.1 then
             missile.lastCircleTime = currentTime
-            _createCircleParticles(missile.position, missile.velocity, cfg)
+            _createCircleParticles(missile.position, missile.velocity, cfg, particleScale)
         end
-        if VecLength(VecSub(missile.position, GetCameraTransform().pos)) < 600 then
+        if distance < 600 then
             client.playMissileLoopSound(missile.position[1], missile.position[2], missile.position[3])
         end
         if missile.lifeRemain <= 0.0 then client.missileVisualState.byId[missileId] = nil end

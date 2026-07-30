@@ -9,12 +9,19 @@ local function _normalize(value, fallback)
     return VecScale(value, 1.0 / length)
 end
 
-function client.playMissileImpactFx(weaponType, hitX, hitY, hitZ, nx, ny, nz, impactLayer)
+function client.playMissileImpactFx(weaponType, hitX, hitY, hitZ, nx, ny, nz, impactLayer, hitTargetBodyId)
     local definition = (weaponData or {})[tostring(weaponType or "")] or {}
     local torpedo = tostring(definition.projectileFxVariant or "") == "devastatorTorpedo"
     local pos, normal = Vec(hitX or 0, hitY or 0, hitZ or 0), _normalize(Vec(nx or 0, ny or 1, nz or 0))
     local r, g, b = torpedo and 1.0 or 0.25, torpedo and 0.32 or 0.75, torpedo and 0.06 or 1.0
     if impactLayer == "shield" then r, g, b = 0.18, 0.88, 1.0 end
+    if impactLayer == "shield" and math.floor(hitTargetBodyId or 0) ~= 0 then
+        client.playProjectileShieldImpactFx(
+            hitTargetBodyId,
+            pos[1], pos[2], pos[3],
+            weaponType
+        )
+    end
     client.weaponFxPointLight(pos, r, g, b, torpedo and 18 or 8)
     local count = torpedo and 28 or 14
     if not client.weaponFxTakeParticles(count, "normal") then return end

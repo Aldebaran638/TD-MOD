@@ -5,6 +5,7 @@ client = client or {}
 
 local ShieldConfig = {
     maxRing = 4,
+    maxImpactRing = 7,
     hexEdgeLength = 0.92,
     sphereRadius = 0.0,
     sphereRadiusScale = 1.0,
@@ -82,26 +83,60 @@ local function _ringCells(ring)
         for _ = 1, ring do
             q = q + direction[1]
             r = r + direction[2]
-            cells[#cells + 1] = { q = q, r = r, ring = ring }
+            cells[#cells + 1] = { q = q, r = r, ring = ring, side = side }
         end
     end
     return cells
 end
 
-local function _buildHexCells(startTime)
+local function _weaponTypeSeed(weaponType)
+    local value = tostring(weaponType or "")
+    local seed = 0
+    for index = 1, #value do
+        seed = (seed * 31 + string.byte(value, index)) % 104729
+    end
+    return seed
+end
+
+local function _resolveImpactRingCount(weaponType)
+    local definition = (weaponData or {})[tostring(weaponType or "")] or {}
+    local strength = tonumber(definition.shieldImpactStrength)
+    if strength == nil then strength = ShieldConfig.maxRing end
+    return math.max(
+        1,
+        math.min(ShieldConfig.maxImpactRing, math.floor(strength))
+    )
+end
+
+local function _buildDirectionalRingCaps(maxRing, seed)
+    local deficits = { 0, 1, 2, 1, 0, 2 }
+    local caps = {}
+    local rotation = math.floor(math.abs(seed or 0)) % 6
+    local reverse = math.floor(math.abs(seed or 0) / 6) % 2 == 1
+    for side = 1, 6 do
+        local source = reverse and (7 - side) or side
+        local patternIndex = ((source + rotation - 2) % 6) + 1
+        caps[side] = math.max(0, maxRing - deficits[patternIndex])
+    end
+    return caps
+end
+
+local function _buildHexCells(startTime, maxRing, directionalCaps)
     local cells = {}
-    for ring = 0, ShieldConfig.maxRing do
+    for ring = 0, ShieldConfig.maxRing + math.max(0, maxRing - ShieldConfig.maxRing) do
         local ringCells = _ringCells(ring)
         local spawnTime = startTime + ring * ShieldConfig.ringSpreadInterval
         for index = 1, #ringCells do
             local cell = ringCells[index]
-            cells[#cells + 1] = {
-                q = cell.q,
-                r = cell.r,
-                ring = ring,
-                spawnTime = spawnTime,
-                endTime = spawnTime + ShieldConfig.hexLifetime,
-            }
+            if ring == 0 or ring <= (directionalCaps[cell.side] or 0) then
+                cells[#cells + 1] = {
+                    q = cell.q,
+                    r = cell.r,
+                    ring = ring,
+                    spawnTime = spawnTime,
+                    endTime = spawnTime + ShieldConfig.hexLifetime,
+                }
+            end
         end
     end
     return cells
@@ -184,7 +219,7 @@ local function _trimBurstLimit()
     while #bursts >= ShieldConfig.maxActiveBursts do table.remove(bursts, 1) end
 end
 
-local function _startShieldBurst(shipBodyId, hitTargetBodyId, hitPointWorld, shotId)
+local function _startShieldBurst(shipBodyId, hitTargetBodyId, hitPointWorld, shotId, weaponType, explicitStrength)
     local _ = shipBodyId
     if hitTargetBodyId == nil or hitTargetBodyId == 0 then return end
     if IsHandleValid ~= nil and not IsHandleValid(hitTargetBodyId) then return end
@@ -195,6 +230,20 @@ local function _startShieldBurst(shipBodyId, hitTargetBodyId, hitPointWorld, sho
     local hitNormalWorld = _safeNormalize(VecSub(hitPointWorld, centerWorld), Vec(0, 1, 0))
     local rightWorld = _buildPerpBasis(hitNormalWorld)
     local now = GetTime()
+    local maxRing = tonumber(explicitStrength)
+        or _resolveImpactRingCount(weaponType)
+    maxRing = math.max(
+        1,
+        math.min(ShieldConfig.maxImpactRing, math.floor(maxRing))
+    )
+    local localHit = TransformToLocalPoint(bodyTransform, hitPointWorld)
+    local seed = _weaponTypeSeed(weaponType)
+        + (tonumber(shotId) or 0) * 97
+        + (tonumber(hitTargetBodyId) or 0) * 13
+        + math.floor((localHit[1] or 0.0) * 17.0)
+        + math.floor((localHit[2] or 0.0) * 31.0)
+        + math.floor((localHit[3] or 0.0) * 47.0)
+    local directionalCaps = _buildDirectionalRingCaps(maxRing, seed)
 
     _trimBurstLimit()
     _spawnImpactSparks(hitPointWorld, hitNormalWorld)
@@ -205,9 +254,12 @@ local function _startShieldBurst(shipBodyId, hitTargetBodyId, hitPointWorld, sho
         t1Local = TransformToLocalVec(bodyTransform, rightWorld),
         centerLocal = centerLocal,
         startTime = now,
-        endTime = now + ShieldConfig.maxRing * ShieldConfig.ringSpreadInterval + ShieldConfig.hexLifetime,
+        endTime = now + maxRing * ShieldConfig.ringSpreadInterval + ShieldConfig.hexLifetime,
         shotId = tonumber(shotId) or 0,
-        hexes = _buildHexCells(now),
+        weaponType = tostring(weaponType or ""),
+        maxRing = maxRing,
+        directionalCaps = directionalCaps,
+        hexes = _buildHexCells(now, maxRing, directionalCaps),
     })
 end
 
@@ -287,8 +339,25 @@ function client.shieldHitFxInit()
     state.assets.glow = LoadSprite("MOD/gfx/weapons/projectiles/impact_glow.png")
 end
 
-function client.playProjectileShieldImpactFx(hitTargetBodyId, hitX, hitY, hitZ)
-    _startShieldBurst(0, hitTargetBodyId, Vec(hitX or 0, hitY or 0, hitZ or 0), 0)
+function client.playProjectileShieldImpactFx(hitTargetBodyId, hitX, hitY, hitZ, weaponType)
+    _startShieldBurst(
+        0,
+        hitTargetBodyId,
+        Vec(hitX or 0, hitY or 0, hitZ or 0),
+        0,
+        weaponType
+    )
+end
+
+function client.playExternalShieldImpactFx(hitTargetBodyId, hitX, hitY, hitZ, impactStrength)
+    _startShieldBurst(
+        0,
+        hitTargetBodyId,
+        Vec(hitX or 0, hitY or 0, hitZ or 0),
+        0,
+        "",
+        impactStrength
+    )
 end
 
 function client.shieldHitFxTick(dt)
@@ -308,7 +377,8 @@ function client.shieldHitFxTick(dt)
                             shipBodyId,
                             render.hitTargetBodyId or 0,
                             _tableToVec(render.hitPoint),
-                            shotId
+                            shotId,
+                            render.weaponType
                         )
                     end
                     state.lastRenderSeqByShip[shipBodyId] = seq

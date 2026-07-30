@@ -1,20 +1,27 @@
 ---@diagnostic disable: undefined-global
 
-lSlotWeaponRegistryData = lSlotWeaponRegistryData or {}
-weaponData = weaponData or {}
-
-local kineticArtilleryMaxRange = 750.0
-local kineticArtilleryProjectileSpeed = 150.0
-
-lSlotWeaponRegistryData.kineticArtillery = {
+weaponDefineProjectile({
     weaponType = "kineticArtillery",
+    displayName = "先进动能火炮",
+    englishName = "Kinetic Artillery",
+    slotTypes = { "L" },
+    fxProfile = "kineticProjectile",
+    muzzleFxProfile = "kineticArtillery",
+    impactFxProfile = "kineticArtillery",
+    projectileFxVariant = "kineticArtillery",
+    damage = 200.0,
     cooldown = 0.1,
-    maxRange = kineticArtilleryMaxRange,
-    projectileSpeed = kineticArtilleryProjectileSpeed,
-    projectileLifetime = kineticArtilleryMaxRange / kineticArtilleryProjectileSpeed,
+    CD = 0.1,
+    maxRange = 750.0,
+    projectileSpeed = 150.0,
     projectileRadius = 1.0,
     projectileGravityScale = 0.0,
-    damage = 200.0,
+    projectileProfile = {
+        mode = "ballistic",
+        speed = 150.0,
+        radius = 0.35,
+        gravityScale = 0.0,
+    },
     shieldFix = 2.0,
     armorFix = 0.5,
     bodyFix = 1.0,
@@ -24,9 +31,15 @@ lSlotWeaponRegistryData.kineticArtillery = {
     heatDissipationPerSecond = 10.0,
     overheatThreshold = 100.0,
     recoverThreshold = 60.0,
+    controllerType = "kineticArtillery",
+    targetingMode = "forward",
+    closeRangeFocus = true,
+    closeRangeFocusRange = 220.0,
+    mountProfile = "lKinetic",
+    salvoProfile = { groupSize = 2, sequence = "grouped", interval = 0.05 },
     aimControlMode = "camera_limited",
     aimLimitDeg = 70.0,
     aimPitchOffsetDeg = 6.0,
-}
-
-weaponData.kineticArtillery = lSlotWeaponRegistryData.kineticArtillery
+    officialComponentId = "KINETIC_ARTILLERY_2",
+    family = "kinetic_artillery",
+})

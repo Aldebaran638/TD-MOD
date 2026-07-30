@@ -1,0 +1,52 @@
+---@diagnostic disable: undefined-global
+---@diagnostic disable: duplicate-set-field
+
+server = server or {}
+
+function server.bodyDirectionalMoveTick(dt)
+    dt = dt or 0
+    if dt <= 0 then
+        return
+    end
+
+    local body = server.shipContextGetBody()
+    if body == nil or body == 0 then
+        return
+    end
+
+    local shipType = server.shipContextGetType()
+    server.registryShipEnsure(body, shipType, shipType)
+    local moveState = server.shipRuntimeGetMoveState(body)
+    if moveState ~= 0 then
+        local cfg = server.shipContextGetDefinition().flightProfile or {}
+        local forwardAcceleration = tonumber(cfg.forwardAcceleration) or 10.0
+        local backwardAcceleration = tonumber(cfg.backwardAcceleration) or 10.0
+        local speedMultiplier = 0.0
+        if server.shipRuntimeGetMobilityModifiers ~= nil then
+            speedMultiplier = server.shipRuntimeGetMobilityModifiers(body)
+        end
+        local accelerationScale = math.max(0.01, (1.0 + speedMultiplier) ^ 2)
+        forwardAcceleration = forwardAcceleration * accelerationScale
+        backwardAcceleration = backwardAcceleration * accelerationScale
+        local mass = GetBodyMass(body)
+        if mass ~= nil and mass > 0 then
+            local t = GetBodyTransform(body)
+            local comLocal = GetBodyCenterOfMass(body)
+            local comWorld = TransformToParentPoint(t, comLocal)
+
+            local totalForce = Vec(0, 0, 0)
+            if moveState == 1 then
+                -- W：向前（0,0,1）
+                local forward = TransformToParentVec(t, Vec(0, 0, -1))
+                totalForce = VecAdd(totalForce, VecScale(forward, mass * forwardAcceleration))
+            elseif moveState == 2 then
+                -- S：向后（0,0,-1）
+                local backward = TransformToParentVec(t, Vec(0, 0, 1))
+                totalForce = VecAdd(totalForce, VecScale(backward, mass * backwardAcceleration))
+            end
+
+            local impulse = VecScale(totalForce, dt)
+            ApplyBodyImpulse(body, comWorld, impulse)
+        end
+    end
+end

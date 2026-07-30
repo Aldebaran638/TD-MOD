@@ -26,13 +26,12 @@ local function _lSlotCloneVec3(v, defaultX, defaultY, defaultZ)
 end
 
 local function _lSlotResolveShipDefinition(shipType)
-    local defs = shipTypeRegistryData or {}
-    local requested = shipType or server.defaultShipType or "enigmaticCruiser"
-    return defs[requested] or defs[server.defaultShipType] or defs.enigmaticCruiser or {}
+    local contextType = server.shipContextGetType()
+    return shipDefinitionGet(shipType or contextType, contextType)
 end
 
 local function _lSlotResolveWeaponDefinition(weaponType)
-    local defs = lSlotWeaponRegistryData or {}
+    local defs = weaponData or {}
     local requested = weaponType or "kineticArtillery"
     return defs[requested] or defs.kineticArtillery or {}
 end
@@ -126,6 +125,24 @@ function server.lSlotStateConsumeRequestFire()
     return requested
 end
 
+function server.lSlotStateNeedsTick()
+    local state = server.lSlotState or {}
+    local body = server.shipContextGetBody()
+    if body ~= 0 and server.shipRuntimeGetDriverPlayerId(body) > 0 then
+        return true
+    end
+    if state.requestFire then return true end
+    for _, slot in ipairs(state.slots or {}) do
+        local runtime = slot.runtime or {}
+        if (tonumber(runtime.heat) or 0.0) > 0.0
+            or (tonumber(runtime.cooldownRemain) or 0.0) > 0.0
+            or runtime.overheated then
+            return true
+        end
+    end
+    return false
+end
+
 function server.lSlotStateResetRuntime()
     local state = server.lSlotState
     if state == nil then
@@ -153,13 +170,14 @@ function server.lSlotStatePushHudReset(force)
         or ((nowTime - (sync.lastSendTime or -1000.0)) >= 1.0)
 
     if shouldSend then
-        local playerId = server.netResolveShipDriver(server.shipBody or 0)
+        local shipBody = server.shipContextGetBody()
+        local playerId = server.netResolveShipDriver(shipBody)
         if playerId <= 0 then return end
         server.netClientCall(
             "hud.lslot",
             playerId,
             "client.resetLSlotHudState",
-            server.shipBody or 0
+            shipBody
         )
         sync.lastSendTime = nowTime
     end
@@ -174,7 +192,8 @@ end
 function server.lSlotStatePushHud(force)
     local state = server.lSlotState
     local slot1 = (state and state.slots and state.slots[1]) or nil
-    if slot1 == nil or slot1.config == nil or slot1.runtime == nil or server.shipBody == nil or server.shipBody == 0 then
+    local shipBody = server.shipContextGetBody()
+    if slot1 == nil or slot1.config == nil or slot1.runtime == nil or shipBody == 0 then
         server.lSlotStatePushHudReset(force)
         return
     end
@@ -185,7 +204,7 @@ function server.lSlotStatePushHud(force)
     local threshold = math.max(1.0, slot1.config.overheatThreshold or 100.0)
     local nowTime = _lSlotNow()
 
-    local playerId = server.netResolveShipDriver(server.shipBody or 0)
+    local playerId = server.netResolveShipDriver(shipBody)
     if playerId <= 0 then return end
 
     if force or sync.lastThreshold == nil
@@ -194,7 +213,7 @@ function server.lSlotStatePushHud(force)
             "hud.lslot",
             playerId,
             "client.initLSlotHudState",
-            server.shipBody or 0,
+            shipBody,
             threshold
         )
     end
@@ -213,7 +232,7 @@ function server.lSlotStatePushHud(force)
             "hud.lslot",
             playerId,
             "client.updateLSlotHudState",
-            server.shipBody or 0,
+            shipBody,
             heat,
             overheated and 1 or 0
         )

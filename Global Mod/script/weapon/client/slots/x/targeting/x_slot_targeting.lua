@@ -78,7 +78,7 @@ local function _resolveControlledShipBody()
     end
 
     local body = GetVehicleBody(veh)
-    local scriptBody = client.shipBody or 0
+    local scriptBody = client.shipContextGetBody()
     if body == nil or body == 0 or scriptBody == 0 or body ~= scriptBody then
         return 0
     end
@@ -136,17 +136,7 @@ local function _safeNormalize(v, fallback)
 end
 
 local function _resolveXSlotFireOriginLocal(shipBody)
-    local shipType = "enigmaticCruiser"
-    if client.registryShipGetShipType ~= nil then
-        local resolvedType = tostring(client.registryShipGetShipType(shipBody) or "")
-        if resolvedType ~= "" then
-            shipType = resolvedType
-        end
-    end
-
-    local defs = shipTypeRegistryData or {}
-    local shipDef = defs[shipType] or defs.enigmaticCruiser or {}
-    local xSlots = shipDef.xSlots or {}
+    local xSlots = client.getShipWeaponMounts(shipBody, "xSlot")
     local sx, sy, sz = 0.0, 0.0, 0.0
     local count = 0
 
@@ -236,6 +226,46 @@ local function _evaluateVehicleTarget(vehicleId, shipBody, aimOrigin, aimForward
     }
 end
 
+local function _evaluateExternalBodyTarget(
+    bodyId,
+    shipBody,
+    aimOrigin,
+    aimForward,
+    centerLocal,
+    camT,
+    cfg,
+    aimLimitDeg
+)
+    local targetBody = math.floor(bodyId or 0)
+    if targetBody == 0 or targetBody == shipBody
+        or client.weaponTargetIsExternalBody == nil
+        or not client.weaponTargetIsExternalBody(targetBody) then
+        return nil
+    end
+    local targetPos = _getBodyCenterWorld(targetBody)
+    if targetPos == nil then return nil end
+    local toTarget = VecSub(targetPos, aimOrigin)
+    local distance = VecLength(toTarget)
+    if distance <= 0.001 or distance > (cfg.lockDistance or 0.0) then
+        return nil
+    end
+    local dir = VecScale(toTarget, 1.0 / distance)
+    local minCos = math.cos(math.rad(cfg.lockHalfAngleDeg or 0.0))
+    if VecDot(aimForward, dir) < minCos then return nil end
+    if not _shipForwardAngleAllows(shipBody, targetPos, aimLimitDeg) then
+        return nil
+    end
+    local offsetSq = _getProjectedOffsetSq(targetPos, centerLocal, camT)
+    if offsetSq == nil then return nil end
+    return {
+        vehicleId = 0,
+        bodyId = targetBody,
+        targetPos = targetPos,
+        distance = distance,
+        score = offsetSq,
+    }
+end
+
 local function _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg)
     local vehicles = FindVehicles("", true) or {}
     local best = nil
@@ -243,6 +273,23 @@ local function _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLoc
         local entry = _evaluateVehicleTarget(vehicles[i], shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg)
         if entry ~= nil and (best == nil or entry.score < best.score) then
             best = entry
+        end
+    end
+    if client.weaponTargetFindExternalBodies ~= nil then
+        for _, bodyId in ipairs(client.weaponTargetFindExternalBodies()) do
+            local entry = _evaluateExternalBodyTarget(
+                bodyId,
+                shipBody,
+                aimOrigin,
+                aimForward,
+                centerLocal,
+                camT,
+                cfg,
+                aimLimitDeg
+            )
+            if entry ~= nil and (best == nil or entry.score < best.score) then
+                best = entry
+            end
         end
     end
     return best
@@ -261,6 +308,20 @@ local function _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, cent
         if sticky ~= nil then
             return sticky
         end
+    elseif state.candidateBodyId ~= 0 or state.lockedBodyId ~= 0 then
+        local stickyBodyId = state.state == "locked"
+            and state.lockedBodyId or state.candidateBodyId
+        local sticky = _evaluateExternalBodyTarget(
+            stickyBodyId,
+            shipBody,
+            aimOrigin,
+            aimForward,
+            centerLocal,
+            camT,
+            cfg,
+            aimLimitDeg
+        )
+        if sticky ~= nil then return sticky end
     end
     return _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg)
 end
@@ -313,7 +374,8 @@ function client.xSlotTargetingTick(dt)
     local aimLimitDeg = _resolveXSlotAimLimit(shipBody)
     local target = _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg)
     if target == nil then
-        if state.candidateVehicleId ~= 0 or state.lockedVehicleId ~= 0 then
+        if state.candidateVehicleId ~= 0 or state.lockedVehicleId ~= 0
+            or state.candidateBodyId ~= 0 or state.lockedBodyId ~= 0 then
             state.loseTimer = state.loseTimer + (dt or 0.0)
             if state.loseTimer > (cfg.lockLoseGraceTime or 0.0) then
                 _xSlotClearTarget(state)
@@ -330,6 +392,7 @@ function client.xSlotTargetingTick(dt)
     state.isProjectedVisible = true
 
     local changedTarget = target.vehicleId ~= state.candidateVehicleId
+        or target.bodyId ~= state.candidateBodyId
     if changedTarget then
         state.candidateVehicleId = target.vehicleId
         state.candidateBodyId = target.bodyId
@@ -368,7 +431,10 @@ end
 
 function client.xSlotTargetingHasLockedTarget(shipBodyId)
     local state = client.xSlotTargetingState
-    return state.active and state.shipBody == math.floor(shipBodyId or 0) and state.state == "locked" and state.lockedVehicleId ~= 0
+    return state.active
+        and state.shipBody == math.floor(shipBodyId or 0)
+        and state.state == "locked"
+        and state.lockedBodyId ~= 0
 end
 
 function client.xSlotTargetingGetLockedTargetWorld(shipBodyId)

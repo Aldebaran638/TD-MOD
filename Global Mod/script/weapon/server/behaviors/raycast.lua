@@ -22,7 +22,7 @@ local function _resolveShieldEndpoint(origin, direction, bodyId, maximumDistance
         0.0,
         tonumber(server.registryShipGetShieldRadius(
             bodyId,
-            server.defaultShipType or "enigmaticCruiser"
+            server.shipContextGetType()
         )) or 0.0
     )
     if radius <= 0.0 then return nil, nil end
@@ -74,7 +74,8 @@ local function _fireRaycast(context)
             0,
             "client.playProjectileShieldImpactFx",
             hitBody,
-            endpoint[1], endpoint[2], endpoint[3]
+            endpoint[1], endpoint[2], endpoint[3],
+            context.weaponType
         )
     end
     ClientCall(

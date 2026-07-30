@@ -6,8 +6,9 @@ client = client or {}
 client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
     panelWidth = 350,
     panelHeight = 118,
-    rightOffset = 270,
-    bottomOffset = 34,
+    rightOffset = 24,
+    topOffset = 566,
+    helpPanelGap = 14,
     topBarWidth = 240,
     topBarHeight = 12,
     topBarOffsetY = 12,
@@ -24,11 +25,11 @@ client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
     textColor = { 0.95, 0.96, 0.98, 1.0 },
     subTextColor = { 0.78, 0.82, 0.86, 0.92 },
     inactiveColor = { 0.22, 0.25, 0.30, 0.95 },
-    xSlotColor = { 0.18, 0.82, 1.0, 0.95 },
+    xSlotColor = { 0.62, 0.28, 0.96, 0.95 },
     lSlotColor = { 1.0, 0.42, 0.12, 0.95 },
     mSlotColor = { 1.0, 0.84, 0.18, 0.95 },
-    gSlotColor = { 1.0, 0.30, 0.22, 0.95 },
-    hSlotColor = { 0.86, 0.36, 1.0, 0.95 },
+    gSlotColor = { 0.08, 0.25, 0.72, 0.95 },
+    hSlotColor = { 0.95, 0.78, 0.18, 0.95 },
     heatBgColor = { 0.14, 0.16, 0.18, 0.95 },
     heatFillColor = { 1.0, 0.72, 0.18, 0.96 },
     heatOverColor = { 1.0, 0.22, 0.10, 0.98 },
@@ -121,7 +122,7 @@ local function _resolveControlledShipBody()
     end
 
     local playerBody = GetVehicleBody(veh)
-    local scriptBody = client.shipBody or 0
+    local scriptBody = client.shipContextGetBody()
     if scriptBody == 0 or playerBody == nil or playerBody == 0 or playerBody ~= scriptBody then
         return 0
     end
@@ -681,11 +682,14 @@ function client.mainWeaponHudDraw()
     local panelW = cfg.panelWidth
     local panelH = cfg.panelHeight
     local x = UiWidth() - panelW - cfg.rightOffset
-    local y = UiHeight() - panelH - cfg.bottomOffset
+    local y = cfg.topOffset
+    if client.shipHelpOverlayGetBottom ~= nil then
+        y = client.shipHelpOverlayGetBottom() + cfg.helpPanelGap
+    end
     local currentMode = state.currentMainWeapon or "xSlot"
     local weaponDefinition = client.getShipWeaponDefinition ~= nil
         and client.getShipWeaponDefinition(state.shipBody, currentMode) or {}
-    local usesGenericRuntime = tostring(weaponDefinition.legacyController or "") == ""
+    local usesGenericRuntime = tostring(weaponDefinition.controllerType or "") == ""
 
     local topFill, topText = _resolveXSlotTopStatus(state)
     local topColor = cfg.xSlotColor

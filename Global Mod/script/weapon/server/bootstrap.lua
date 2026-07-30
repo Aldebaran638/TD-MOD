@@ -1,0 +1,40 @@
+---@diagnostic disable: undefined-global
+
+-- 服务端武器组合根。飞船入口只加载本文件，不直接认识任何具体武器。
+#include "common/runtime/weapon_runtime.lua"
+#include "common/loadout/slot_loadout.lua"
+#include "common/loadout/slot_loadout_api.lua"
+#include "common/runtime/damage.lua"
+#include "common/targeting/target_catalog.lua"
+#include "common/runtime/behavior_registry.lua"
+#include "common/runtime/controller_registry.lua"
+
+#include "behaviors/common.lua"
+#include "behaviors/raycast.lua"
+#include "behaviors/projectile.lua"
+#include "behaviors/rocket_projectile.lua"
+#include "behaviors/guided_projectile.lua"
+#include "behaviors/strike_craft.lua"
+#include "common/runtime/weapon_group.lua"
+
+#include "slots/l/kinetic_artillery/state.lua"
+#include "common/runtime/main_weapon_control.lua"
+#include "common/runtime/main_weapon_control_api.lua"
+#include "slots/x/tachyon_lance/state.lua"
+#include "slots/x/tachyon_lance/render_state.lua"
+#include "slots/x/tachyon_lance/muzzle_light.lua"
+#include "slots/x/tachyon_lance/control.lua"
+#include "slots/l/kinetic_artillery/control.lua"
+#include "guided/runtime.lua"
+#include "guided/movement.lua"
+#include "guided/collider.lua"
+#include "guided/slot_group.lua"
+#include "guided/m_slot_control.lua"
+#include "guided/g_slot_control.lua"
+#include "slots/h/gamma_strike_craft/flight_controller.lua"
+#include "slots/h/gamma_strike_craft/control.lua"
+#include "slots/l/kinetic_artillery/projectile_manager.lua"
+
+-- 适配器必须最后加载，确保它引用的旧控制器均已定义。
+#include "common/runtime/specialized_controller_adapters.lua"
+#include "network/weapon_command_endpoint.lua"
