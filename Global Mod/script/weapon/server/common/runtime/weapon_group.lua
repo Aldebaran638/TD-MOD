@@ -4,6 +4,11 @@
 server = server or {}
 server.weaponGroupStateById = server.weaponGroupStateById or {}
 
+-- 空闲批量更新优化：无人驾驶时降低tick频率
+local _idleTickCounter = 0
+local _idleTickInterval = 25  -- 每25帧tick一次（60fps下约0.42秒），节省96% CPU
+local _idleAccumulatedDelta = 0.0
+
 local function _resolveShipDefinition(shipType)
     if server.shipSlotLoadoutResolveShipDefinition ~= nil then
         local resolved = server.shipSlotLoadoutResolveShipDefinition(shipType)
@@ -411,6 +416,29 @@ end
 
 function server.weaponGroupTick(dt)
     local delta = math.max(0.0, tonumber(dt) or 0.0)
+
+    -- 批量更新优化：无人驾驶时降低tick频率
+    local body = server.shipContextGetBody()
+    local hasDriver = body ~= 0 and server.shipRuntimeGetDriverPlayerId(body) > 0
+
+    if not hasDriver then
+        _idleAccumulatedDelta = _idleAccumulatedDelta + delta
+        _idleTickCounter = _idleTickCounter + 1
+
+        if _idleTickCounter < _idleTickInterval then
+            return  -- 跳过这一帧，节省CPU
+        end
+
+        -- 达到间隔，使用累积的delta执行一次完整更新
+        delta = _idleAccumulatedDelta
+        _idleTickCounter = 0
+        _idleAccumulatedDelta = 0.0
+    else
+        -- 有驾驶员时重置计数器，恢复正常每帧tick
+        _idleTickCounter = 0
+        _idleAccumulatedDelta = 0.0
+    end
+
     for _, state in pairs(server.weaponGroupStateById or {}) do
         state.fireDelay = math.max(0.0, (tonumber(state.fireDelay) or 0.0) - delta)
         local _, weaponDef = _resolveWeapon(state)
