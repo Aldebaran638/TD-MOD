@@ -4,31 +4,23 @@
 server = server or {}
 server.weaponGroupStateById = server.weaponGroupStateById or {}
 
-local _groupDefinitions = {
-    xSlot = { slotType = "X", mountCollection = "xSlots" },
-    lSlot = { slotType = "L", mountCollection = "lSlots" },
-    mSlot = { slotType = "M", mountCollection = "mSlots" },
-    gSlot = { slotType = "G", mountCollection = "gSlots" },
-    hSlot = { slotType = "H", mountCollection = "hSlots" },
-}
-
 local function _resolveShipDefinition(shipType)
     if server.shipSlotLoadoutResolveShipDefinition ~= nil then
         local resolved = server.shipSlotLoadoutResolveShipDefinition(shipType)
         if resolved ~= nil then return resolved end
     end
-    local defs = shipTypeRegistryData or {}
-    return defs[shipType] or defs[server.defaultShipType] or defs.enigmaticCruiser or {}
+    return shipDefinitionGet(shipType, server.shipContextGetType())
 end
 
-local function _buildState(groupId, shipType)
-    local group = _groupDefinitions[groupId]
+local function _buildState(group, shipType)
+    local groupId = tostring((group or {}).groupId or "")
     local shipDef = _resolveShipDefinition(shipType)
-    local mounts = shipDef[group.mountCollection] or {}
+    local mountCollection = tostring((group or {}).mountCollection or "")
+    local mounts = shipDef[mountCollection] or {}
     local state = {
         groupId = groupId,
-        slotType = group.slotType,
-        mountCollection = group.mountCollection,
+        slotType = tostring((group or {}).slotType or ""),
+        mountCollection = mountCollection,
         shipType = shipType,
         nextMountIndex = 1,
         mounts = {},
@@ -92,7 +84,8 @@ end
 
 local function _pushHud(state, force)
     local weaponType, weaponDef = _resolveWeapon(state)
-    if tostring((weaponDef or {}).legacyController or "") ~= "" then return end
+    local controller = server.weaponControllerResolve(weaponDef)
+    if controller ~= nil and controller.ownsHud then return end
     local cooldown = math.max(0.0, tonumber((weaponDef or {}).cooldown) or 0.0)
     local overheatThreshold = math.max(0.0, tonumber((weaponDef or {}).overheatThreshold) or 0.0)
     local usesHeat = overheatThreshold > 0.0
@@ -141,13 +134,14 @@ local function _pushHud(state, force)
     local keepAlive = now - (state.hudLastSentAt or -1000.0) >= 1.0
     if not force and not (changed and intervalDue) and not keepAlive then return end
 
-    local playerId = server.netResolveShipDriver(server.shipBody or 0)
+    local shipBody = server.shipContextGetBody()
+    local playerId = server.netResolveShipDriver(shipBody)
     if playerId <= 0 then return end
     server.netClientCall(
         "hud.weaponGroup",
         playerId,
         "client.updateWeaponGroupHudState",
-        server.shipBody or 0,
+        shipBody,
         tostring(state.groupId or ""),
         weaponType,
         values[1], values[2], values[3], values[4],
@@ -158,42 +152,26 @@ local function _pushHud(state, force)
     state.hudLastSentAt = now
 end
 
-local function _legacyFire(controllerId, groupId, request)
-    if controllerId == "xSlot" and server.xSlotStateSetRequestFire ~= nil then
-        server.xSlotStateSetRequestFire(true)
-        return true
-    end
-    if controllerId == "lSlot" and server.lSlotStateSetRequestFire ~= nil then
-        server.lSlotStateSetRequestFire(true)
-        return true
-    end
-    if controllerId == "mSlot" and server.mSlotControlSetFireRequest ~= nil then
-        return server.mSlotControlSetFireRequest(request.shipBodyId, request.targetVehicleId, request.targetBodyId)
-    end
-    if controllerId == "gSlot" and server.gSlotControlSetFireRequest ~= nil then
-        return server.gSlotControlSetFireRequest(request.shipBodyId, request.targetVehicleId, request.targetBodyId)
-    end
-    if controllerId == "hSlot" and server.hSlotControlSetFireRequested ~= nil then
-        server.hSlotLastFireRequest = request
-        server.hSlotControlSetFireRequested(true)
-        return true
-    end
-    return false
-end
-
 function server.weaponGroupInit(shipType)
-    local resolvedType = tostring(shipType or server.defaultShipType or "enigmaticCruiser")
+    local resolvedType = tostring(shipType or server.shipContextGetType())
     server.weaponGroupStateById = {}
     for _, behavior in pairs(server.weaponBehaviorRegistry or {}) do
         if type(behavior.reset) == "function" then behavior.reset() end
     end
     local valid = true
-    for groupId, _ in pairs(_groupDefinitions) do
-        local state = _buildState(groupId, resolvedType)
+    local definition = _resolveShipDefinition(resolvedType)
+    for _, group in ipairs(definition.weaponGroups or {}) do
+        local groupId = tostring(group.groupId or "")
+        local state = _buildState(group, resolvedType)
         server.weaponGroupStateById[groupId] = state
         local weaponType, definition = _resolveWeapon(state)
         if weaponType ~= "none" and definition ~= nil then
             local ok, err = server.weaponBehaviorValidateDefinition(definition)
+            if not ok then
+                valid = false
+                DebugPrint("[weaponGroup] " .. groupId .. ": " .. tostring(err))
+            end
+            ok, err = server.weaponControllerValidateDefinition(definition)
             if not ok then
                 valid = false
                 DebugPrint("[weaponGroup] " .. groupId .. ": " .. tostring(err))
@@ -224,11 +202,24 @@ end
 function server.weaponGroupSetFireHeld(groupId, active, request)
     local state = server.weaponGroupStateById[tostring(groupId or "")]
     if state == nil then return false, "unknown weapon group" end
+    local weaponType, weaponDef = _resolveWeapon(state)
+    local controller = server.weaponControllerResolve(weaponDef)
+    if controller ~= nil and controller.ownsHold and type(controller.setHeld) == "function" then
+        state.fireHeld = false
+        state.heldRequest = nil
+        return controller.setHeld({
+            groupId = state.groupId,
+            state = state,
+            weaponType = weaponType,
+            weaponDefinition = weaponDef,
+            request = request or {},
+        }, active and true or false)
+    end
     state.fireHeld = active and true or false
     if state.fireHeld then
         local source = request or {}
         state.heldRequest = {
-            shipBodyId = math.floor(source.shipBodyId or server.shipBody or 0),
+            shipBodyId = math.floor(source.shipBodyId or server.shipContextGetBody()),
             targetVehicleId = math.floor(source.targetVehicleId or 0),
             targetBodyId = math.floor(source.targetBodyId or 0),
         }
@@ -246,6 +237,56 @@ function server.weaponGroupClearFireHeld()
         state.fireHeld = false
         state.heldRequest = nil
     end
+    server.weaponControllerClearHeld()
+end
+
+function server.weaponGroupUsesController(controllerType)
+    local requested = tostring(controllerType or "")
+    for _, state in pairs(server.weaponGroupStateById or {}) do
+        local _, definition = _resolveWeapon(state)
+        if tostring((definition or {}).controllerType or "") == requested then
+            return true
+        end
+    end
+    return false
+end
+
+function server.weaponGroupNeedsTick()
+    local body = server.shipContextGetBody()
+    if body ~= 0 and server.shipRuntimeGetDriverPlayerId(body) > 0 then
+        return true
+    end
+    for _, state in pairs(server.weaponGroupStateById or {}) do
+        if state.fireHeld or state.pending ~= nil
+            or (tonumber(state.fireDelay) or 0.0) > 0.0 then
+            return true
+        end
+        for _, mount in ipairs(state.mounts or {}) do
+            if (tonumber(mount.cooldownRemain) or 0.0) > 0.0
+                or (tonumber(mount.heat) or 0.0) > 0.0 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function server.weaponGroupSyncHud(groupId, force)
+    local state = server.weaponGroupStateById[tostring(groupId or "")]
+    if state == nil then return false end
+    local weaponType, weaponDef = _resolveWeapon(state)
+    local controller = server.weaponControllerResolve(weaponDef)
+    if controller ~= nil and type(controller.onSelected) == "function" then
+        controller.onSelected({
+            groupId = state.groupId,
+            state = state,
+            weaponType = weaponType,
+            weaponDefinition = weaponDef,
+        })
+        return true
+    end
+    _pushHud(state, force and true or false)
+    return true
 end
 
 local function _requestHasTarget(request)
@@ -292,7 +333,9 @@ function server.weaponGroupRequestFire(groupId, request)
     if (tonumber(state.fireDelay) or 0.0) > 0.0 then return false, "weapon group pacing" end
 
     local normalizedRequest = request or {}
-    normalizedRequest.shipBodyId = math.floor(normalizedRequest.shipBodyId or server.shipBody or 0)
+    normalizedRequest.shipBodyId = math.floor(
+        normalizedRequest.shipBodyId or server.shipContextGetBody()
+    )
     normalizedRequest.targetVehicleId = math.floor(normalizedRequest.targetVehicleId or 0)
     normalizedRequest.targetBodyId = math.floor(normalizedRequest.targetBodyId or 0)
     normalizedRequest.groupId = id
@@ -303,9 +346,15 @@ function server.weaponGroupRequestFire(groupId, request)
         return false, "target lock required"
     end
 
-    local legacy = tostring(weaponDef.legacyController or "")
-    if legacy ~= "" then
-        local fired = _legacyFire(legacy, id, normalizedRequest)
+    local controller = server.weaponControllerResolve(weaponDef)
+    if controller ~= nil then
+        local fired = controller.requestFire({
+            groupId = id,
+            state = state,
+            weaponType = weaponType,
+            weaponDefinition = weaponDef,
+            request = normalizedRequest,
+        })
         if fired then
             state.fireDelay = math.max(
                 0.0,
@@ -408,7 +457,7 @@ function server.weaponGroupTick(dt)
         end
         state.hudSyncAge = (tonumber(state.hudSyncAge) or 0.0) + delta
         local currentMode = server.shipRuntimeGetCurrentMainWeapon ~= nil
-            and server.shipRuntimeGetCurrentMainWeapon(server.shipBody or 0) or ""
+            and server.shipRuntimeGetCurrentMainWeapon(server.shipContextGetBody()) or ""
         if state.hudSyncAge >= 0.20 and currentMode == state.groupId then
             state.hudSyncAge = 0.0
             _pushHud(state, false)

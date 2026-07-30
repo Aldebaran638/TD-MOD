@@ -25,9 +25,8 @@ local function _cloneTable(value)
 end
 
 local function _resolveShipDefinition(shipType)
-    local defs = shipTypeRegistryData or {}
-    local requested = shipType or server.defaultShipType or "enigmaticCruiser"
-    return defs[requested] or defs[server.defaultShipType] or defs.enigmaticCruiser or {}
+    local requested = shipType or server.shipContextGetType()
+    return shipDefinitionGet(requested, server.shipContextGetType())
 end
 
 local function _findConfiguration(definition, configurationId)
@@ -93,51 +92,29 @@ local function _buildResolvedLoadout(definition, configuration, requestedLoadout
     return result, nil
 end
 
-local function _validateConfigurationShape(configuration)
+local function _validateConfigurationShape(definition, configuration, loadout)
     local groups = configuration.slotGroups or {}
-    local mounts = configuration.mounts or {}
-    
     for i = 1, #groups do
         local group = groups[i] or {}
         local slotType = tostring(group.slotType or "")
         local count = tonumber(group.count) or 0
-        local collectionName = tostring(group.mountCollection or "")
-        
-        if slotType ~= "" and collectionName ~= "" and count > 0 then
-            local collection = mounts[collectionName] or {}
-            if #collection < count then
-                return false, "mount collection " .. collectionName .. " has " .. tostring(#collection) .. " mounts, expected " .. tostring(count)
-            end
+        local weaponType = tostring((loadout or {})[slotType] or "")
+        local weaponDefinition = (weaponData or {})[weaponType] or {}
+        local profileName = tostring(weaponDefinition.mountProfile or "")
+        local profile = ((definition.weaponMountProfiles or {})[profileName]) or {}
+        if slotType == "" or count <= 0 then
+            return false, "invalid slot group"
+        end
+        if tostring(group.groupId or "") == "" then
+            return false, "slot group " .. slotType .. " is missing groupId"
+        end
+        if profileName == "" or #profile < count then
+            return false, "mount profile " .. profileName .. " has "
+                .. tostring(#profile) .. " mounts, expected " .. tostring(count)
         end
     end
     
     return true, nil
-end
-
-local function _configurationGroup(configuration, slotType)
-    for _, group in ipairs(configuration.slotGroups or {}) do
-        if tostring(group.slotType or "") == tostring(slotType or "") then
-            return group
-        end
-    end
-    return nil
-end
-
-local function _resolvedMountsForWeapon(definition, configuration, slotType, weaponType)
-    local group = _configurationGroup(configuration, slotType)
-    if group == nil then return {} end
-
-    local count = math.max(0, math.floor(tonumber(group.count) or 0))
-    local collectionName = tostring(group.mountCollection or "")
-    local fallback = ((configuration.mounts or {})[collectionName]) or {}
-    local weaponDefinition = (weaponData or {})[tostring(weaponType or "")] or {}
-    local profileName = tostring(weaponDefinition.mountProfile or "")
-    local profile = ((definition.weaponMountProfiles or {})[profileName]) or fallback
-    local mounts = {}
-    for i = 1, math.min(count, #profile) do
-        mounts[i] = _cloneTable(profile[i])
-    end
-    return mounts
 end
 
 local function _rebuildResolvedDefinition(shipType)
@@ -152,28 +129,28 @@ local function _rebuildResolvedDefinition(shipType)
         return nil
     end
     
-    local resolved = _cloneTable(definition)
+    local resolved = {}
+    for key, value in pairs(definition) do
+        resolved[key] = value
+    end
     local loadout = state.loadout or {}
-    resolved.xSlots = _resolvedMountsForWeapon(definition, configuration, "X", loadout.X)
-    resolved.lSlots = _resolvedMountsForWeapon(definition, configuration, "L", loadout.L)
-    resolved.mSlots = _resolvedMountsForWeapon(definition, configuration, "M", loadout.M)
-    resolved.gSlots = _resolvedMountsForWeapon(definition, configuration, "G", loadout.G)
-    resolved.hSlots = _resolvedMountsForWeapon(definition, configuration, "H", loadout.H)
-    
-    for i = 1, #resolved.xSlots do
-        resolved.xSlots[i].weaponType = loadout.X or resolved.xSlots[i].weaponType
-    end
-    for i = 1, #resolved.lSlots do
-        resolved.lSlots[i].weaponType = loadout.L or resolved.lSlots[i].weaponType
-    end
-    for i = 1, #resolved.mSlots do
-        resolved.mSlots[i].weaponType = loadout.M or resolved.mSlots[i].weaponType
-    end
-    for i = 1, #resolved.gSlots do
-        resolved.gSlots[i].weaponType = loadout.G or resolved.gSlots[i].weaponType
-    end
-    for i = 1, #resolved.hSlots do
-        resolved.hSlots[i].weaponType = loadout.H or resolved.hSlots[i].weaponType
+    resolved.weaponGroups = {}
+    for _, group in ipairs(configuration.slotGroups or {}) do
+        local slotType = tostring(group.slotType or "")
+        local collectionName = string.lower(slotType) .. "Slots"
+        resolved.weaponGroups[#resolved.weaponGroups + 1] = {
+            groupId = tostring(group.groupId or ""),
+            slotType = slotType,
+            count = math.max(0, math.floor(tonumber(group.count) or 0)),
+            mountCollection = collectionName,
+        }
+        local mounts = shipDefinitionResolveMounts(
+            shipType,
+            configuration.configurationId,
+            group.groupId,
+            loadout[slotType]
+        )
+        resolved[collectionName] = mounts
     end
     
     _resolvedDefinitionByType[shipType] = resolved
@@ -203,15 +180,14 @@ local function _initInternal(shipType)
         return false, "no slot configuration found"
     end
     
-    local shapeOk, shapeError = _validateConfigurationShape(configuration)
-    if not shapeOk then
-        return false, shapeError
-    end
-    
     local requestedLoadout = configuration.defaultLoadout or {}
     local loadout, loadoutError = _buildResolvedLoadout(definition, configuration, requestedLoadout)
     if loadout == nil then
         return false, loadoutError
+    end
+    local shapeOk, shapeError = _validateConfigurationShape(definition, configuration, loadout)
+    if not shapeOk then
+        return false, shapeError
     end
     
     _stateByType[shipType] = {
@@ -237,7 +213,7 @@ end
 local _loadoutAPI = {}
 
 function _loadoutAPI.getState(shipType)
-    local resolvedType = shipType or server.defaultShipType or "enigmaticCruiser"
+    local resolvedType = shipType or server.shipContextGetType()
     if not _ensureInitialized(resolvedType) then
         return nil
     end
@@ -255,7 +231,7 @@ function _loadoutAPI.getState(shipType)
 end
 
 function _loadoutAPI.setConfiguration(shipType, configurationId)
-    local resolvedType = shipType or server.defaultShipType or "enigmaticCruiser"
+    local resolvedType = shipType or server.shipContextGetType()
     if not _ensureInitialized(resolvedType) then
         return false, "state init failed"
     end
@@ -266,17 +242,16 @@ function _loadoutAPI.setConfiguration(shipType, configurationId)
         return false, "configuration not found"
     end
     
-    local shapeOk, shapeError = _validateConfigurationShape(configuration)
-    if not shapeOk then
-        return false, shapeError
-    end
-    
     local previous = _stateByType[resolvedType] or {}
     local requestedLoadout = _cloneTable(previous.loadout or {})
     
     local loadout, loadoutError = _buildResolvedLoadout(definition, configuration, requestedLoadout)
     if loadout == nil then
         return false, loadoutError
+    end
+    local shapeOk, shapeError = _validateConfigurationShape(definition, configuration, loadout)
+    if not shapeOk then
+        return false, shapeError
     end
     
     _stateByType[resolvedType] = {
@@ -290,7 +265,7 @@ function _loadoutAPI.setConfiguration(shipType, configurationId)
 end
 
 function _loadoutAPI.setLoadout(shipType, requestedLoadout)
-    local resolvedType = shipType or server.defaultShipType or "enigmaticCruiser"
+    local resolvedType = shipType or server.shipContextGetType()
     if not _ensureInitialized(resolvedType) then
         return false, "state init failed"
     end
@@ -320,8 +295,41 @@ function _loadoutAPI.setLoadout(shipType, requestedLoadout)
     return true, nil
 end
 
+function _loadoutAPI.validateSnapshot(shipType, configurationId, requestedLoadout)
+    local resolvedType = shipType or server.shipContextGetType()
+    local definition = _resolveShipDefinition(resolvedType)
+    if definition.shipType == nil then
+        return nil, "ship type not found: " .. tostring(resolvedType)
+    end
+    local configuration = _findConfiguration(definition, configurationId)
+    if configuration == nil then return nil, "configuration not found" end
+    local loadout, loadoutError =
+        _buildResolvedLoadout(definition, configuration, requestedLoadout or {})
+    if loadout == nil then return nil, loadoutError end
+    local shapeOk, shapeError =
+        _validateConfigurationShape(definition, configuration, loadout)
+    if not shapeOk then return nil, shapeError end
+    return {
+        shipType = resolvedType,
+        configurationId =
+            tostring(configuration.configurationId or configurationId or ""),
+        loadout = loadout,
+    }, nil
+end
+
+function _loadoutAPI.applySnapshot(snapshot)
+    local resolved = snapshot or {}
+    local shipType = tostring(resolved.shipType or server.shipContextGetType())
+    _stateByType[shipType] = {
+        shipType = shipType,
+        configurationId = tostring(resolved.configurationId or ""),
+        loadout = _cloneTable(resolved.loadout or {}),
+    }
+    return _rebuildResolvedDefinition(shipType) ~= nil
+end
+
 function _loadoutAPI.resolveShipDefinition(shipType)
-    local resolvedType = shipType or server.defaultShipType or "enigmaticCruiser"
+    local resolvedType = shipType or server.shipContextGetType()
     if not _ensureInitialized(resolvedType) then
         return nil
     end
@@ -343,7 +351,7 @@ server._slotLoadoutAPI = _loadoutAPI
 -- ============ 规范化的模块接口 ============
 
 function server.slotLoadoutInit(shipType)
-    local resolvedType = shipType or server.defaultShipType or "enigmaticCruiser"
+    local resolvedType = shipType or server.shipContextGetType()
     local ok, err = _initInternal(resolvedType)
     if not ok then
         DebugPrint("[slotLoadout] init failed: " .. tostring(err or "unknown"))

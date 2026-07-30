@@ -1,0 +1,28 @@
+---@diagnostic disable: undefined-global
+
+weaponDefineRay({
+    weaponType = "largeGammaLaser",
+    displayName = "大型伽马激光",
+    englishName = "Large Gamma Laser",
+    slotTypes = { "L" },
+    fxProfile = "gammaBeam",
+    muzzleFxProfile = "gammaLarge",
+    impactFxProfile = "gammaLarge",
+    projectileFxVariant = "none",
+    damage = 185,
+    cooldown = 1.45,
+    maxRange = 560.0,
+    shieldFix = 0.5,
+    armorFix = 1.5,
+    bodyFix = 1.25,
+    targetingMode = "forward",
+    closeRangeFocus = true,
+    closeRangeFocusRange = 220.0,
+    mountProfile = "lLaser",
+    salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.14 },
+    aimControlMode = "camera_limited",
+    aimLimitDeg = 70.0,
+    aimPitchOffsetDeg = 6.0,
+    officialComponentId = "LARGE_GAMMA_LASER",
+    family = "laser",
+})

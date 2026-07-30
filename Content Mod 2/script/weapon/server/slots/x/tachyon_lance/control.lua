@@ -110,8 +110,8 @@ end
 -- 读取目标飞船护盾半径（用于护盾球面入射点修正）
 local function _resolveTargetShieldRadius(targetBody, fallbackShipType)
     local radiusFallback = 20
-    local fallbackType = fallbackShipType or "enigmaticCruiser"
-    local fallbackShipData = (shipData and shipData[fallbackType]) or (shipData and shipData.enigmaticCruiser) or {}
+    local fallbackType = fallbackShipType or server.shipContextGetType()
+    local fallbackShipData = shipDefinitionGet(fallbackType, fallbackType)
     if fallbackShipData.shieldRadius ~= nil then
         radiusFallback = fallbackShipData.shieldRadius
     end
@@ -129,7 +129,7 @@ local function _resolveTargetShieldRadius(targetBody, fallbackShipType)
     end
 
     local targetType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(targetBody) or fallbackType
-    local targetTypeData = (shipData and shipData[targetType]) or (shipData and shipData[fallbackType]) or {}
+    local targetTypeData = shipDefinitionGet(targetType, fallbackType)
     return targetTypeData.shieldRadius or radiusFallback
 end
 
@@ -137,11 +137,12 @@ end
 -- 服务端函数：接收客户端开火输入并写入统一 request 键
 -- 说明：这里只写请求，不在这里推进 charging/launching
 function server_xSlot_handleFireRequest()
-    local shipBody = server.shipBody
+    local shipBody = server.shipContextGetBody()
     if shipBody == nil or shipBody == 0 then
         return
     end
-    server.registryShipEnsure(shipBody, server.defaultShipType, server.defaultShipType)
+    local shipType = server.shipContextGetType()
+    server.registryShipEnsure(shipBody, shipType, shipType)
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then
         return
     end
@@ -253,7 +254,7 @@ function server.xSlot_computeHitResult(shipBodyId, firePosOffset, fireDirRelativ
         local bodyT = GetBodyTransform(targetBody)
         local comLocal = GetBodyCenterOfMass(targetBody)
         local center = TransformToParentPoint(bodyT, comLocal)
-        local shieldRadius = _resolveTargetShieldRadius(targetBody, server.defaultShipType or "enigmaticCruiser")
+        local shieldRadius = _resolveTargetShieldRadius(targetBody, server.shipContextGetType())
         local entryT = _raySphereEntryT(origin, dir, center, shieldRadius)
         if entryT ~= nil and entryT <= maxRange then
             endPos = VecAdd(origin, VecScale(dir, entryT))
@@ -305,7 +306,7 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
     end
 
     if isHitStellarisBody then
-        local resolvedDefaultShipType = server.defaultShipType or "enigmaticCruiser"
+        local resolvedDefaultShipType = server.shipContextGetType()
         if not server.registryShipEnsure(hitTarget, resolvedDefaultShipType, resolvedDefaultShipType) then
             return renderResult
         end
@@ -319,13 +320,6 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
             return renderResult
         end
 
-        local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitTarget) or resolvedDefaultShipType
-        local targetShieldHP, targetArmorHP, targetBodyHP = server.registryShipGetHP(hitTarget)
-        if targetShieldHP == nil or targetArmorHP == nil or targetBodyHP == nil then
-            return renderResult
-        end
-
-        local targetShipData = (shipData and shipData[targetShipType]) or (shipData and shipData[resolvedDefaultShipType]) or {}
         local targetWeaponData = (weaponData and weaponData[weaponType]) or (weaponData and weaponData.tachyonLance) or {}
         local damageMin = targetWeaponData.damageMin or 0
         local damageMax = targetWeaponData.damageMax or damageMin
@@ -338,60 +332,13 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
             rolledDamage = math.random(damageMin, damageMax)
         end
 
-        -- 伤害跨层溢出模型：
-        -- rawDamage 按层系数转换为当前层有效伤害；若本层被打穿，剩余“原始伤害”继续传给下一层
-        local rawRemain = rolledDamage
-
-        local function _applyLayerOverflow(layerName, currentHp, damageFix)
-            local hp = currentHp or 0
-            local fix = damageFix or 1
-            if hp <= 0 or rawRemain <= 0 or fix <= 0 then
-                return hp
-            end
-
-            local potential = rawRemain * fix
-            if potential <= 0 then
-                return hp
-            end
-
-            local consumedRaw = 0
-            if potential < hp then
-                hp = hp - potential
-                consumedRaw = rawRemain
-            else
-                consumedRaw = hp / fix
-                hp = 0
-            end
-
-            rawRemain = rawRemain - consumedRaw
-            if rawRemain < 0 then
-                rawRemain = 0
-            end
-
-            -- 记录第一命中层：用于客户端特效分层
-            if renderResult.impactLayer == "none" then
-                renderResult.impactLayer = layerName
-            end
-            if layerName == "shield" then
-                renderResult.didHitShield = true
-            end
-
-            return hp
-        end
-
-        targetShieldHP = _applyLayerOverflow("shield", targetShieldHP or 0, targetWeaponData.shieldFix)
-        targetArmorHP = _applyLayerOverflow("armor", targetArmorHP or 0, targetWeaponData.armorFix)
-        targetBodyHP = _applyLayerOverflow("body", targetBodyHP or 0, targetWeaponData.bodyFix)
-
-        -- 上限钳制，避免异常数值超过类型定义的最大值
-        local maxShield = targetShipData.maxShieldHP or targetShieldHP or 0
-        local maxArmor = targetShipData.maxArmorHP or targetArmorHP or 0
-        local maxBody = targetShipData.maxBodyHP or targetBodyHP or 0
-        if targetShieldHP > maxShield then targetShieldHP = maxShield end
-        if targetArmorHP > maxArmor then targetArmorHP = maxArmor end
-        if targetBodyHP > maxBody then targetBodyHP = maxBody end
-
-        server.registryShipSetHP(hitTarget, targetShieldHP, targetArmorHP, targetBodyHP)
+        local damageResult = server.shipDamageApplyWeaponDefinition(
+            hitTarget,
+            targetWeaponData,
+            rolledDamage
+        )
+        renderResult.didHitShield = damageResult.didHitShield
+        renderResult.impactLayer = damageResult.impactLayer
 
         return renderResult
     end
@@ -483,12 +430,13 @@ end
 -- 3) 全流程由 Registry 驱动（state/chargeRemain/launchRemain）
 function server.xSlotControlTick(dt)
 
-    local shipBody = server.shipBody
+    local shipBody = server.shipContextGetBody()
     if shipBody == nil or shipBody == 0 then
         return
     end
 
-    if not server.registryShipEnsure(shipBody, server.defaultShipType, server.defaultShipType) then
+    local shipType = server.shipContextGetType()
+    if not server.registryShipEnsure(shipBody, shipType, shipType) then
         return
     end
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(shipBody) then

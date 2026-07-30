@@ -133,7 +133,7 @@ function client.tachyonBeamFxTick(dt)
     local state = client.tachyonBeamFxState
     if config.enabled ~= true then return end
 
-    local shipBody = math.floor(client.shipBody or 0)
+    local shipBody = client.shipContextGetBody()
     if shipBody ~= 0 and IsHandleValid(shipBody) then
         local render = client.xSlotRenderGetEvent(shipBody)
         if render ~= nil then

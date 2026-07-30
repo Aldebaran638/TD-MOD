@@ -9,19 +9,38 @@ client.weaponConfigUiState = client.weaponConfigUiState or {
     shipType = "enigmaticCruiser",
     configurationId = "",
     loadout = {},
+    componentLoadout = {},
     message = "",
+    selectedSlot = "",
+    selectedDefenseType = "",
+    selectedDefenseIndex = 0,
+    framePickerOpen = false,
 }
 
-local _panelWidth = 1240
-local _panelHeight = 820
-local _sidebarWidth = 266
-local _groupOrder = { "X", "L", "G", "M", "H" }
-local _slotNames = {
-    X = "SPINAL",
-    L = "LARGE",
-    M = "MEDIUM",
-    G = "TORPEDO",
-    H = "HANGAR",
+local _panelWidth = 1280
+local _panelHeight = 940
+local _leftWidth = 272
+local _rightWidth = 286
+local _contentGap = 18
+local _mainHeight = 764
+local _footerY = 776
+local _slotOrder = { "X", "L", "G", "M", "H" }
+
+local _slotLabels = {
+    X = { zh = "轴基武器", en = "X-SLOT", color = { 0.62, 0.30, 0.96 } },
+    L = { zh = "大型武器", en = "L-SLOT", color = { 0.32, 0.72, 0.92 } },
+    G = { zh = "制导武器", en = "G-SLOT", color = { 0.22, 0.45, 1.00 } },
+    M = { zh = "中型武器", en = "M-SLOT", color = { 0.96, 0.55, 0.18 } },
+    H = { zh = "舰载机", en = "H-SLOT", color = { 0.94, 0.78, 0.18 } },
+}
+
+local _frameLabels = {
+    battleline_2x2l4m = { zh = "炮击框架", en = "ARTILLERY FRAME" },
+    torpedo_2x4g4m = { zh = "雷击框架", en = "TORPEDO FRAME" },
+}
+
+local _shipLabels = {
+    enigmaticCruiser = { zh = "神秘战列巡洋舰", en = "ENIGMA BATTLECRUISER" },
 }
 
 local function _uiRegistryKey()
@@ -32,14 +51,32 @@ local function _shipDefinition()
     return (shipTypeRegistryData or {})[client.weaponConfigUiState.shipType] or {}
 end
 
-local function _shipDisplayName()
-    return tostring(_shipDefinition().displayName or client.weaponConfigUiState.shipType)
+local function _shipLabel()
+    local state = client.weaponConfigUiState
+    local known = _shipLabels[state.shipType]
+    if known ~= nil then return known end
+    return {
+        zh = tostring(_shipDefinition().displayName or state.shipType),
+        en = string.upper(tostring(state.shipType or "")),
+    }
+end
+
+local function _frameLabel(configuration)
+    local id = tostring((configuration or {}).configurationId or "")
+    local known = _frameLabels[id]
+    if known ~= nil then return known end
+    return {
+        zh = tostring((configuration or {}).label or id),
+        en = string.upper(id),
+    }
 end
 
 local function _configurableShipTypes()
     local result = {}
     for shipType, definition in pairs(shipTypeRegistryData or {}) do
-        if #(definition.slotConfigurations or {}) > 0 then result[#result + 1] = tostring(shipType) end
+        if #(definition.slotConfigurations or {}) > 0 then
+            result[#result + 1] = tostring(shipType)
+        end
     end
     table.sort(result)
     return result
@@ -47,8 +84,14 @@ end
 
 local function _findConfiguration(configurationId)
     for _, configuration in ipairs(_shipDefinition().slotConfigurations or {}) do
-        if tostring(configuration.configurationId or "") == tostring(configurationId or "") then
+        if tostring(configuration.configurationId or "") ==
+            tostring(configurationId or "") then
             return configuration
+        end
+        for _, alias in ipairs(configuration.legacyConfigurationIds or {}) do
+            if tostring(alias or "") == tostring(configurationId or "") then
+                return configuration
+            end
         end
     end
     return nil
@@ -56,12 +99,26 @@ end
 
 local function _copyLoadout(source)
     local result = {}
-    for key, value in pairs(source or {}) do result[key] = tostring(value or "") end
+    for key, value in pairs(source or {}) do
+        result[key] = tostring(value or "")
+    end
+    return result
+end
+
+local function _copyComponentLoadout(source)
+    local result = {}
+    for slotType, slots in pairs(source or {}) do
+        result[tostring(slotType or "")] = {}
+        for index, componentId in ipairs(slots or {}) do
+            result[slotType][index] = tostring(componentId or "")
+        end
+    end
     return result
 end
 
 local function _weaponAllowed(slotType, weaponType)
-    for _, candidate in ipairs(((_shipDefinition().slotWeaponPools or {})[slotType]) or {}) do
+    local pool = ((_shipDefinition().slotWeaponPools or {})[slotType]) or {}
+    for _, candidate in ipairs(pool) do
         if tostring(candidate) == tostring(weaponType or "") then return true end
     end
     return false
@@ -71,10 +128,12 @@ local function _ensureDraft()
     local state = client.weaponConfigUiState
     local configuration = _findConfiguration(state.configurationId)
     if configuration == nil then
-        state.configurationId = tostring(_shipDefinition().defaultSlotConfigurationId or "battleline_2x2l4m")
+        state.configurationId =
+            tostring(_shipDefinition().defaultSlotConfigurationId or "")
         configuration = _findConfiguration(state.configurationId)
     end
     if configuration == nil then return nil end
+
     local defaults = configuration.defaultLoadout or {}
     for _, group in ipairs(configuration.slotGroups or {}) do
         local slotType = tostring(group.slotType or "")
@@ -82,7 +141,34 @@ local function _ensureDraft()
             state.loadout[slotType] = tostring(defaults[slotType] or "")
         end
     end
+    local componentDefaults = configuration.defaultComponentLoadout or {}
+    state.componentLoadout = state.componentLoadout or {}
+    for _, group in ipairs(shipComponentSlotGroups(configuration)) do
+        local slotType = group.slotType
+        state.componentLoadout[slotType] = state.componentLoadout[slotType] or {}
+        for index = 1, group.count do
+            local componentId =
+                tostring(state.componentLoadout[slotType][index] or "")
+            if not shipComponentAllowed(_shipDefinition(), slotType, componentId) then
+                componentId =
+                    tostring((componentDefaults[slotType] or {})[index] or "")
+            end
+            state.componentLoadout[slotType][index] = componentId
+        end
+    end
     return configuration
+end
+
+local function _activeGroups(configuration)
+    local bySlot = {}
+    for _, group in ipairs((configuration or {}).slotGroups or {}) do
+        bySlot[tostring(group.slotType or "")] = group
+    end
+    local result = {}
+    for _, slotType in ipairs(_slotOrder) do
+        if bySlot[slotType] ~= nil then result[#result + 1] = bySlot[slotType] end
+    end
+    return result
 end
 
 local function _selectNextShipType()
@@ -97,29 +183,46 @@ local function _selectNextShipType()
     local template = client.weaponConfiguratorRequestTemplate(state.shipType)
     state.configurationId = tostring(template.configurationId or "")
     state.loadout = _copyLoadout(template.loadout)
+    state.componentLoadout = _copyComponentLoadout(template.componentLoadout)
+    state.selectedSlot = ""
+    state.selectedDefenseType = ""
+    state.selectedDefenseIndex = 0
+    state.framePickerOpen = false
     state.dirty = false
-    state.message = "LOCAL DESIGN LOADED"
+    state.message = "已载入本地设计 / LOCAL DESIGN LOADED"
     _ensureDraft()
 end
 
 local function _open()
     local state = client.weaponConfigUiState
     local available = _configurableShipTypes()
-    if #available > 0 and _shipDefinition().shipType == nil then state.shipType = available[1] end
+    if #available > 0 and _shipDefinition().shipType == nil then
+        state.shipType = available[1]
+    end
     local template = client.weaponConfiguratorRequestTemplate(state.shipType)
     state.configurationId = tostring(template.configurationId or "")
     state.loadout = _copyLoadout(template.loadout)
+    state.componentLoadout = _copyComponentLoadout(template.componentLoadout)
     state.pending = false
     state.dirty = false
-    state.message = "LOCAL DESIGN LOADED"
+    state.selectedSlot = ""
+    state.selectedDefenseType = ""
+    state.selectedDefenseIndex = 0
+    state.framePickerOpen = false
+    state.message = "已载入本地设计 / LOCAL DESIGN LOADED"
     state.open = true
     SetBool(_uiRegistryKey(), true)
     _ensureDraft()
 end
 
 local function _close()
-    client.weaponConfigUiState.open = false
-    client.weaponConfigUiState.pending = false
+    local state = client.weaponConfigUiState
+    state.open = false
+    state.pending = false
+    state.selectedSlot = ""
+    state.selectedDefenseType = ""
+    state.selectedDefenseIndex = 0
+    state.framePickerOpen = false
     SetBool(_uiRegistryKey(), false)
 end
 
@@ -127,7 +230,7 @@ function client.weaponConfigUiSetOpen(open)
     if open then _open() else _close() end
 end
 
-function client.weaponConfigUiIsOpen()
+function client.weaponConfigPanelIsOpen()
     return client.weaponConfigUiState.open and true or false
 end
 
@@ -135,7 +238,12 @@ function client.weaponConfiguratorRequestTemplate(shipType)
     return client.weaponLocalConfigRead(tostring(shipType or ""))
 end
 
-function client.weaponConfiguratorSaveTemplate(shipType, configurationId, loadout)
+function client.weaponConfiguratorSaveTemplate(
+    shipType,
+    configurationId,
+    loadout,
+    componentLoadout
+)
     local selected = loadout or {}
     client.weaponLocalConfigWrite(
         tostring(shipType or ""),
@@ -146,11 +254,13 @@ function client.weaponConfiguratorSaveTemplate(shipType, configurationId, loadou
             M = tostring(selected.M or ""),
             G = tostring(selected.G or ""),
             H = tostring(selected.H or ""),
-        }
+        },
+        componentLoadout
     )
     local state = client.weaponConfigUiState
     state.pending = false
-    state.message = "LOCAL DESIGN SAVED — APPLIES TO THE NEXT SPAWNED " .. string.upper(_shipDisplayName())
+    state.message = "设计已保存，仅影响下一艘生成的飞船"
+        .. " / SAVED FOR NEXT SPAWN"
     state.dirty = false
     return true
 end
@@ -168,87 +278,594 @@ local function _text(text, size, r, g, b, a)
     UiText(tostring(text or ""))
 end
 
-local function _frameCard(x, y, width, height, configuration, selected, enabled)
-    UiPush()
-        UiTranslate(x, y)
-        local hover = enabled and UiIsMouseInRect(width, height)
-        UiColor(selected and 0.055 or 0.025, selected and 0.18 or 0.07, selected and 0.25 or 0.10, 0.98)
-        UiRect(width, height)
-        if hover and not selected then
-            UiColor(0.08, 0.32, 0.42, 0.32)
-            UiRect(width, height)
-        end
-        UiColor(selected and 0.22 or 0.10, selected and 0.82 or 0.34, selected and 1.0 or 0.48, 1)
-        UiRect(4, height)
-        UiRectOutline(width, height, selected and 2 or 1)
-        UiTranslate(18, 16)
-        _text(tostring(configuration.label or configuration.configurationId), 25, 0.84, 0.95, 1, 1)
-        UiTranslate(0, 31)
-        local groups = {}
-        for _, group in ipairs(configuration.slotGroups or {}) do
-            groups[#groups + 1] = tostring(group.count or 0) .. tostring(group.slotType or "")
-        end
-        _text(table.concat(groups, "  •  "), 16, 0.42, 0.66, 0.76, 1)
-        local clicked = enabled and hover and InputPressed("lmb")
-    UiPop()
-    return clicked
+local function _bilingual(zh, en, zhSize, enSize, color, alpha)
+    local c = color or { 0.86, 0.94, 0.96 }
+    _text(zh, zhSize or 20, c[1], c[2], c[3], alpha or 1)
+    UiTranslate(0, (zhSize or 20) + 5)
+    _text(en, enSize or 11, c[1] * 0.72, c[2] * 0.82, c[3] * 0.88, alpha or 1)
 end
 
-local function _weaponCard(x, y, width, height, slotType, weaponType, selected, enabled)
-    local definition = (weaponData or {})[weaponType] or {}
+local function _panel(x, y, width, height, strong)
     UiPush()
         UiTranslate(x, y)
-        local hover = enabled and UiIsMouseInRect(width, height)
-        UiColor(selected and 0.04 or 0.025, selected and 0.20 or 0.075, selected and 0.28 or 0.105, 0.98)
+        UiColor(0.010, strong and 0.050 or 0.035, strong and 0.058 or 0.045, 0.98)
         UiRect(width, height)
-        if hover and not selected then
-            UiColor(0.10, 0.44, 0.56, 0.28)
-            UiRect(width, height)
-        end
-        UiColor(selected and 0.28 or 0.10, selected and 0.90 or 0.38, selected and 1.0 or 0.52, 1)
-        UiRectOutline(width, height, selected and 2 or 1)
-        if selected then
-            UiRect(width, 3)
-        end
-
-        local icon = tostring(definition.iconPath or "")
-        UiTranslate(8, 8)
-        UiColor(0.015, 0.035, 0.05, 1)
-        UiRect(40, 40)
-        if icon ~= "" then
-            UiColor(1, 1, 1, enabled and 1 or 0.45)
-            UiImageBox(icon, 40, 40, 0, 0)
-        end
-        UiTranslate(0, 46)
-        _text(tostring(definition.displayName or weaponType), 13, 0.88, 0.95, 0.98, enabled and 1 or 0.45)
-        UiTranslate(0, 15)
-        local _en = tostring(definition.englishName or weaponType)
-        _text(_en, 9, 0.52, 0.74, 0.84, enabled and 0.85 or 0.38)
-        UiTranslate(0, 11)
-        _text(string.upper(tostring(definition.behaviorType or "")), 9, 0.35, 0.65, 0.76, enabled and 1 or 0.45)
-        local clicked = enabled and hover and InputPressed("lmb")
+        UiColor(0.10, strong and 0.52 or 0.34, strong and 0.46 or 0.38, 0.92)
+        UiRectOutline(width, height, strong and 2 or 1)
     UiPop()
-    return clicked
 end
 
-local function _actionButton(x, y, width, height, text, primary, enabled)
+local function _button(x, y, width, height, label, primary, enabled)
     UiPush()
         UiTranslate(x, y)
         local hover = enabled and UiIsMouseInRect(width, height)
         if primary then
-            UiColor(0.04, hover and 0.54 or 0.40, hover and 0.69 or 0.56, enabled and 1 or 0.45)
+            UiColor(0.06, hover and 0.48 or 0.34, hover and 0.42 or 0.30, enabled and 1 or 0.40)
         else
-            UiColor(0.04, 0.09, 0.12, enabled and 0.98 or 0.45)
+            UiColor(0.03, hover and 0.18 or 0.09, hover and 0.20 or 0.12, enabled and 0.98 or 0.40)
         end
         UiRect(width, height)
-        UiColor(primary and 0.34 or 0.14, primary and 0.92 or 0.46, 1, 1)
+        UiColor(primary and 0.30 or 0.12, primary and 0.84 or 0.48, primary and 0.72 or 0.48, 1)
         UiRectOutline(width, height, primary and 2 or 1)
         UiAlign("center middle")
         UiTranslate(width * 0.5, height * 0.5)
-        _text(text, 20, 0.92, 0.98, 1, enabled and 1 or 0.45)
+        _text(label, 16, 0.90, 0.98, 0.96, enabled and 1 or 0.45)
         local clicked = enabled and hover and InputPressed("lmb")
     UiPop()
     return clicked
+end
+
+local function _drawHeader()
+    UiColor(0.014, 0.070, 0.068, 1)
+    UiRect(_panelWidth, 72)
+    UiColor(0.12, 0.62, 0.52, 1)
+    UiRect(_panelWidth, 3)
+    UiPush()
+        UiTranslate(24, 16)
+        _bilingual("舰船设计器", "SHIP DESIGNER", 24, 11)
+    UiPop()
+
+    local ship = _shipLabel()
+    UiPush()
+        UiTranslate(_panelWidth - 330, 17)
+        UiAlign("right top")
+        _text(ship.zh, 19, 0.90, 0.77, 0.34, 1)
+        UiTranslate(0, 23)
+        _text(ship.en, 10, 0.58, 0.70, 0.68, 1)
+    UiPop()
+    if _button(_panelWidth - 54, 14, 38, 38, "X", false, true) then
+        _close()
+    end
+end
+
+local function _drawShipSidebar(configuration)
+    local state = client.weaponConfigUiState
+    _panel(0, 0, _leftWidth, _mainHeight, false)
+    UiPush()
+        UiTranslate(18, 18)
+        _bilingual("舰船类型", "SHIP CLASS", 19, 10)
+    UiPop()
+
+    local ship = _shipLabel()
+    UiPush()
+        UiTranslate(16, 72)
+        UiColor(0.025, 0.090, 0.085, 1)
+        UiRect(_leftWidth - 32, 92)
+        UiColor(0.18, 0.56, 0.48, 1)
+        UiRectOutline(_leftWidth - 32, 92, 1)
+        UiTranslate(14, 18)
+        _bilingual(ship.zh, ship.en, 18, 10, { 0.86, 0.93, 0.88 })
+    UiPop()
+
+    local available = _configurableShipTypes()
+    if #available > 1 and
+        _button(16, 176, _leftWidth - 32, 38, "切换舰船 / NEXT SHIP", false, true) then
+        _selectNextShipType()
+    end
+
+    local frame = _frameLabel(configuration)
+    UiPush()
+        UiTranslate(18, 246)
+        _bilingual("当前区段", "CURRENT SECTION", 18, 10)
+        UiTranslate(0, 56)
+        _text(frame.zh, 20, 0.90, 0.77, 0.34, 1)
+        UiTranslate(0, 25)
+        _text(frame.en, 10, 0.48, 0.66, 0.62, 1)
+    UiPop()
+
+    UiPush()
+        UiTranslate(18, 375)
+        _bilingual("部署规则", "DEPLOYMENT RULE", 18, 10)
+        UiTranslate(0, 58)
+        _text("当前飞船不会改变", 15, 0.70, 0.82, 0.78, 1)
+        UiTranslate(0, 22)
+        _text("EXISTING SHIPS UNCHANGED", 9, 0.40, 0.60, 0.56, 1)
+        UiTranslate(0, 34)
+        _text("配置应用于下一艘飞船", 15, 0.70, 0.82, 0.78, 1)
+        UiTranslate(0, 22)
+        _text("APPLIES TO NEXT SPAWN", 9, 0.40, 0.60, 0.56, 1)
+    UiPop()
+
+    if state.dirty then
+        UiPush()
+            UiTranslate(18, 552)
+            _text("● 未保存 / UNSAVED", 12, 0.95, 0.64, 0.24, 1)
+        UiPop()
+    end
+end
+
+local function _drawWeaponOption(x, y, width, height, slotType, weaponType)
+    local state = client.weaponConfigUiState
+    local definition = (weaponData or {})[weaponType] or {}
+    local selected = tostring(state.loadout[slotType] or "") == tostring(weaponType)
+    local slot = _slotLabels[slotType] or _slotLabels.M
+    UiPush()
+        UiTranslate(x, y)
+        local hover = UiIsMouseInRect(width, height)
+        UiColor(
+            selected and 0.045 or 0.018,
+            selected and 0.150 or (hover and 0.090 or 0.052),
+            selected and 0.145 or (hover and 0.092 or 0.060),
+            1
+        )
+        UiRect(width, height)
+        UiColor(slot.color[1], slot.color[2], slot.color[3], selected and 1 or 0.55)
+        UiRect(selected and 4 or 2, height)
+        UiRectOutline(width, height, selected and 2 or 1)
+
+        UiTranslate(10, 10)
+        UiColor(0.008, 0.018, 0.024, 1)
+        UiRect(50, 50)
+        local icon = tostring(definition.iconPath or "")
+        if icon ~= "" then
+            UiColor(1, 1, 1, 1)
+            UiImageBox(icon, 50, 50, 0, 0)
+        end
+        UiTranslate(62, 1)
+        _text(tostring(definition.displayName or weaponType), 15, 0.88, 0.95, 0.92, 1)
+        UiTranslate(0, 20)
+        _text(tostring(definition.englishName or weaponType), 10, 0.48, 0.68, 0.64, 1)
+        UiTranslate(0, 19)
+        _text(selected and "已装备 / EQUIPPED" or "点击装备 / SELECT", 9,
+            selected and 0.40 or 0.34, selected and 0.86 or 0.58,
+            selected and 0.72 or 0.54, 1)
+        local clicked = hover and InputPressed("lmb")
+    UiPop()
+    return clicked
+end
+
+local function _drawWeaponSidebar(slotType)
+    local state = client.weaponConfigUiState
+    local slot = _slotLabels[slotType] or _slotLabels.M
+    _panel(0, 0, _leftWidth, _mainHeight, true)
+    UiPush()
+        UiTranslate(18, 17)
+        _bilingual("选择" .. slotType .. "槽武器", "SELECT " .. slot.en .. " WEAPON",
+            18, 9, slot.color)
+    UiPop()
+    if _button(16, 68, _leftWidth - 32, 34, "← 返回 / BACK", false, true) then
+        state.selectedSlot = ""
+        return
+    end
+
+    local pool = ((_shipDefinition().slotWeaponPools or {})[slotType]) or {}
+    local y = 104
+    for _, weaponType in ipairs(pool) do
+        if _drawWeaponOption(12, y, _leftWidth - 24, 74, slotType, tostring(weaponType)) then
+            state.loadout[slotType] = tostring(weaponType)
+            state.message = "未保存的设计 / UNSAVED DESIGN"
+            state.dirty = true
+        end
+        y = y + 79
+    end
+end
+
+local function _drawDefenseOption(x, y, width, height, slotType, componentId)
+    local state = client.weaponConfigUiState
+    local definition = shipComponentData[tostring(componentId or "")] or {}
+    local selected = tostring(
+        ((state.componentLoadout[slotType] or {})[state.selectedDefenseIndex]) or ""
+    ) == tostring(componentId or "")
+    UiPush()
+        UiTranslate(x, y)
+        local hover = UiIsMouseInRect(width, height)
+        UiColor(0.018, hover and 0.090 or 0.052, hover and 0.092 or 0.060, 1)
+        UiRect(width, height)
+        UiColor(0.25, 0.76, 0.66, selected and 1 or 0.55)
+        UiRectOutline(width, height, selected and 2 or 1)
+        UiTranslate(9, 9)
+        UiColor(0.006, 0.016, 0.022, 1)
+        UiRect(48, 48)
+        local icon = tostring(definition.iconPath or "")
+        if icon ~= "" then
+            UiColor(1, 1, 1, 1)
+            UiImageBox(icon, 48, 48, 0, 0)
+        end
+        UiTranslate(60, 2)
+        _text(tostring(definition.displayName or "空槽"), 14, 0.88, 0.95, 0.92, 1)
+        UiTranslate(0, 20)
+        _text(tostring(definition.englishName or "EMPTY"), 9, 0.48, 0.68, 0.64, 1)
+        local clicked = hover and InputPressed("lmb")
+    UiPop()
+    return clicked
+end
+
+local function _drawDefenseSidebar(slotType)
+    local state = client.weaponConfigUiState
+    local slotLabel = slotType == "largeUtility" and "L 防护槽" or "A 辅助槽"
+    local english = slotType == "largeUtility" and "LARGE UTILITY" or "AUXILIARY"
+    _panel(0, 0, _leftWidth, _mainHeight, true)
+    UiPush()
+        UiTranslate(18, 17)
+        _bilingual("选择" .. slotLabel, "SELECT " .. english, 18, 9)
+    UiPop()
+    if _button(16, 68, _leftWidth - 32, 34, "← 返回 / BACK", false, true) then
+        state.selectedDefenseType = ""
+        state.selectedDefenseIndex = 0
+        return
+    end
+    local pool = ((_shipDefinition().componentPools or {})[slotType]) or {}
+    local y = 108
+    if _drawDefenseOption(12, y, _leftWidth - 24, 68, slotType, "") then
+        state.componentLoadout[slotType][state.selectedDefenseIndex] = ""
+        state.message = "未保存的设计 / UNSAVED DESIGN"
+        state.dirty = true
+    end
+    y = y + 73
+    for _, componentId in ipairs(pool) do
+        if _drawDefenseOption(12, y, _leftWidth - 24, 68, slotType, componentId) then
+            state.componentLoadout[slotType][state.selectedDefenseIndex] =
+                tostring(componentId)
+            state.message = "未保存的设计 / UNSAVED DESIGN"
+            state.dirty = true
+        end
+        y = y + 73
+    end
+end
+
+local function _drawDefenseSlot(x, y, size, slotType, index)
+    local state = client.weaponConfigUiState
+    local componentId =
+        tostring(((state.componentLoadout[slotType] or {})[index]) or "")
+    local component = shipComponentData[componentId] or {}
+    local selected = state.selectedDefenseType == slotType
+        and state.selectedDefenseIndex == index
+    UiPush()
+        UiTranslate(x, y)
+        local hover = UiIsMouseInRect(size, size)
+        UiColor(0.012, hover and 0.10 or 0.045, hover and 0.10 or 0.052, 1)
+        UiRect(size, size)
+        UiColor(
+            slotType == "auxiliary" and 0.24 or 0.20,
+            slotType == "auxiliary" and 0.76 or 0.62,
+            slotType == "auxiliary" and 0.58 or 0.82,
+            1
+        )
+        UiRectOutline(size, size, selected and 3 or 1)
+        local icon = tostring(component.iconPath or "")
+        if icon ~= "" then
+            UiColor(1, 1, 1, 1)
+            UiImageBox(icon, size, size, 0, 0)
+        end
+        UiTranslate(4, 3)
+        _text(slotType == "auxiliary" and "A" or "L", 12, 0.9, 0.9, 0.65, 1)
+        local clicked = hover and InputPressed("lmb")
+    UiPop()
+    return clicked
+end
+
+local function _drawGroupCard(x, y, width, height, group)
+    local state = client.weaponConfigUiState
+    local slotType = tostring(group.slotType or "")
+    local slot = _slotLabels[slotType] or _slotLabels.M
+    local weaponType = tostring(state.loadout[slotType] or "")
+    local weapon = (weaponData or {})[weaponType] or {}
+    local selected = state.selectedSlot == slotType
+
+    UiPush()
+        UiTranslate(x, y)
+        local hover = UiIsMouseInRect(width, height)
+        UiColor(
+            selected and 0.040 or 0.014,
+            selected and 0.120 or (hover and 0.085 or 0.045),
+            selected and 0.125 or (hover and 0.090 or 0.058),
+            1
+        )
+        UiRect(width, height)
+        UiColor(slot.color[1], slot.color[2], slot.color[3], selected and 1 or 0.72)
+        UiRectOutline(width, height, selected and 3 or 2)
+        UiRect(width, 5)
+
+        UiTranslate(16, 17)
+        UiColor(slot.color[1], slot.color[2], slot.color[3], 1)
+        UiRect(52, 30)
+        UiAlign("center middle")
+        UiTranslate(26, 15)
+        _text(slotType, 20, 0.03, 0.04, 0.05, 1)
+        UiAlign("left top")
+        UiTranslate(42, -9)
+        _text("×" .. tostring(group.count or 0), 22, 0.88, 0.94, 0.92, 1)
+
+        UiTranslate(-68, 46)
+        local icon = tostring(weapon.iconPath or "")
+        UiColor(0.006, 0.016, 0.022, 1)
+        UiRect(72, 72)
+        if icon ~= "" then
+            UiColor(1, 1, 1, 1)
+            UiImageBox(icon, 72, 72, 0, 0)
+        end
+        UiTranslate(88, 4)
+        _text(tostring(weapon.displayName or weaponType), 17, 0.90, 0.95, 0.92, 1)
+        UiTranslate(0, 25)
+        _text(tostring(weapon.englishName or weaponType), 10, 0.48, 0.68, 0.64, 1)
+        UiTranslate(0, 27)
+        _text(slot.zh .. " / " .. slot.en, 10, slot.color[1], slot.color[2], slot.color[3], 1)
+        UiTranslate(-88, 36)
+        _text("点击更换整组武器 / CLICK TO CHANGE GROUP", 9, 0.38, 0.58, 0.54, 1)
+        local clicked = hover and InputPressed("lmb")
+    UiPop()
+    return clicked
+end
+
+local function _drawCenter(configuration, x, width)
+    local state = client.weaponConfigUiState
+    _panel(x, 0, width, _mainHeight, false)
+    local frame = _frameLabel(configuration)
+    if _button(
+        x + (width - 320) * 0.5,
+        18,
+        320,
+        56,
+        frame.zh .. "  /  " .. frame.en .. "  ▼",
+        false,
+        true
+    ) then
+        state.framePickerOpen = true
+        state.selectedSlot = ""
+        state.selectedDefenseType = ""
+        state.selectedDefenseIndex = 0
+    end
+
+    UiPush()
+        UiTranslate(x + 24, 94)
+        _bilingual("武器组", "WEAPON GROUPS", 19, 10)
+        UiTranslate(0, 48)
+        UiColor(0.06, 0.25, 0.22, 1)
+        UiRect(width - 48, 1)
+    UiPop()
+
+    local groups = _activeGroups(configuration)
+    local cardGap = 16
+    local cardWidth = (width - 64 - cardGap) * 0.5
+    local cardHeight = 194
+    for index, group in ipairs(groups) do
+        local column = (index - 1) % 2
+        local row = math.floor((index - 1) / 2)
+        local cardX = x + 24 + column * (cardWidth + cardGap)
+        local cardY = 154 + row * (cardHeight + 12)
+        if _drawGroupCard(cardX, cardY, cardWidth, cardHeight, group) then
+            state.selectedSlot = tostring(group.slotType or "")
+            state.selectedDefenseType = ""
+            state.selectedDefenseIndex = 0
+        end
+    end
+
+    local componentSlotCounts = {}
+    for _, group in ipairs(shipComponentSlotGroups(configuration)) do
+        componentSlotCounts[group.slotType] = group.count
+    end
+    local defenseY = 570
+    UiPush()
+        UiTranslate(x + 24, defenseY)
+        _bilingual("防护与辅助组件", "DEFENSE & AUXILIARY", 18, 9)
+    UiPop()
+    local slotSize = 54
+    local gap = 8
+    local auxiliaryCount =
+        math.floor(tonumber(componentSlotCounts.auxiliary) or 0)
+    for index = 1, auxiliaryCount do
+        local slotX = x + 24 + (index - 1) * (slotSize + gap)
+        if _drawDefenseSlot(slotX, defenseY + 48, slotSize, "auxiliary", index) then
+            state.selectedSlot = ""
+            state.selectedDefenseType = "auxiliary"
+            state.selectedDefenseIndex = index
+        end
+    end
+    local largeCount =
+        math.floor(tonumber(componentSlotCounts.largeUtility) or 0)
+    for index = 1, largeCount do
+        local slotX = x + 24 + (index - 1) * (slotSize + gap)
+        if _drawDefenseSlot(slotX, defenseY + 112, slotSize, "largeUtility", index) then
+            state.selectedSlot = ""
+            state.selectedDefenseType = "largeUtility"
+            state.selectedDefenseIndex = index
+        end
+    end
+end
+
+local function _drawSummary(configuration, x)
+    local state = client.weaponConfigUiState
+    _panel(x, 0, _rightWidth, _mainHeight, false)
+    UiPush()
+        UiTranslate(x + 18, 18)
+        _bilingual("配置摘要", "DESIGN SUMMARY", 20, 10)
+    UiPop()
+
+    local frame = _frameLabel(configuration)
+    UiPush()
+        UiTranslate(x + 18, 75)
+        _text("框架 / FRAME", 11, 0.38, 0.62, 0.58, 1)
+        UiTranslate(0, 23)
+        _text(frame.zh, 18, 0.90, 0.77, 0.34, 1)
+        UiTranslate(0, 22)
+        _text(frame.en, 9, 0.48, 0.64, 0.60, 1)
+    UiPop()
+
+    local y = 148
+    for _, group in ipairs(_activeGroups(configuration)) do
+        local slotType = tostring(group.slotType or "")
+        local slot = _slotLabels[slotType] or _slotLabels.M
+        local weaponType = tostring(state.loadout[slotType] or "")
+        local weapon = (weaponData or {})[weaponType] or {}
+        UiPush()
+            UiTranslate(x + 16, y)
+            UiColor(0.018, 0.060, 0.062, 1)
+            UiRect(_rightWidth - 32, 92)
+            UiColor(slot.color[1], slot.color[2], slot.color[3], 0.72)
+            UiRect(3, 92)
+            UiTranslate(12, 12)
+            UiColor(slot.color[1], slot.color[2], slot.color[3], 1)
+            UiRect(36, 24)
+            UiAlign("center middle")
+            UiTranslate(18, 12)
+            _text(slotType .. "×" .. tostring(group.count or 0), 13, 0.03, 0.04, 0.05, 1)
+            UiAlign("left top")
+            UiTranslate(30, -8)
+            _text(tostring(weapon.displayName or weaponType), 14, 0.86, 0.94, 0.90, 1)
+            UiTranslate(0, 20)
+            _text(tostring(weapon.englishName or weaponType), 9, 0.45, 0.65, 0.60, 1)
+            UiTranslate(-48, 39)
+            _text(slot.zh .. " / " .. slot.en, 9, slot.color[1], slot.color[2], slot.color[3], 1)
+        UiPop()
+        y = y + 104
+    end
+
+    local profile =
+        shipComponentResolveProfile(_shipDefinition(), state.componentLoadout)
+    local protection = profile.protection or {}
+    local mobility = profile.mobility or {}
+    UiPush()
+        UiTranslate(x + 18, 576)
+        _bilingual("防护数据", "DEFENSE STATS", 17, 9)
+        UiTranslate(0, 46)
+        _text("船体 / HULL        " .. string.format("%.0f", protection.maxBodyHP), 12, 0.78, 0.90, 0.84, 1)
+        UiTranslate(0, 22)
+        _text("装甲 / ARMOR      " .. string.format("%.0f", protection.maxArmorHP), 12, 0.78, 0.90, 0.84, 1)
+        UiTranslate(0, 22)
+        _text("护盾 / SHIELD     " .. string.format("%.0f", protection.maxShieldHP), 12, 0.78, 0.90, 0.84, 1)
+        UiTranslate(0, 22)
+        _text("装甲硬化 / ARMOR  " .. string.format("%.0f%%", protection.armorHardening * 100), 11, 0.64, 0.80, 0.76, 1)
+        UiTranslate(0, 20)
+        _text("护盾硬化 / SHIELD " .. string.format("%.0f%%", protection.shieldHardening * 100), 11, 0.64, 0.80, 0.76, 1)
+        UiTranslate(0, 20)
+        _text(
+            "航速/转向/力度  +"
+                .. string.format("%.0f%%/%.0f%%/%.0f%%",
+                    mobility.speedMultiplier * 100,
+                    mobility.turnResponseMultiplier * 100,
+                    mobility.turnForceMultiplier * 100),
+            10, 0.64, 0.80, 0.76, 1
+        )
+        UiTranslate(0, 18)
+        _text(
+            "恢复 S/A/H  "
+                .. string.format("%.1f/%.1f/%.1f",
+                    protection.shieldRegenPerSecond,
+                    protection.armorRegenPerSecond,
+                    protection.hullRegenPerSecond),
+            10, 0.58, 0.76, 0.70, 1
+        )
+    UiPop()
+end
+
+local function _groupSummary(configuration)
+    local parts = {}
+    for _, group in ipairs(_activeGroups(configuration)) do
+        parts[#parts + 1] = tostring(group.slotType or "")
+            .. "×" .. tostring(group.count or 0)
+    end
+    return table.concat(parts, "   ")
+end
+
+local function _drawFramePicker()
+    local state = client.weaponConfigUiState
+    UiPush()
+        UiColor(0.001, 0.006, 0.008, 0.82)
+        UiRect(_panelWidth, _panelHeight)
+
+        local modalW = 820
+        local modalH = 430
+        local modalX = (_panelWidth - modalW) * 0.5
+        local modalY = (_panelHeight - modalH) * 0.5
+        UiTranslate(modalX, modalY)
+        UiColor(0.010, 0.035, 0.040, 1)
+        UiRect(modalW, modalH)
+        UiColor(0.14, 0.58, 0.50, 1)
+        UiRectOutline(modalW, modalH, 2)
+        UiColor(0.10, 0.48, 0.42, 1)
+        UiRect(modalW, 3)
+
+        UiTranslate(24, 18)
+        _bilingual("选择区段", "SELECT SECTION", 24, 11)
+        if _button(modalW - 86, -4, 38, 38, "X", false, true) then
+            state.framePickerOpen = false
+        end
+
+        local configurations = _shipDefinition().slotConfigurations or {}
+        local cardW = 360
+        local cardH = 282
+        for index, candidate in ipairs(configurations) do
+            local x = (index - 1) * (cardW + 24)
+            local selected = state.configurationId ==
+                tostring(candidate.configurationId or "")
+            UiPush()
+                UiTranslate(x, 82)
+                local hover = UiIsMouseInRect(cardW, cardH)
+                UiColor(
+                    selected and 0.035 or 0.014,
+                    selected and 0.120 or (hover and 0.085 or 0.048),
+                    selected and 0.110 or (hover and 0.080 or 0.052),
+                    1
+                )
+                UiRect(cardW, cardH)
+                UiColor(selected and 0.28 or 0.10, selected and 0.82 or 0.44,
+                    selected and 0.66 or 0.40, 1)
+                UiRectOutline(cardW, cardH, selected and 3 or 1)
+                local label = _frameLabel(candidate)
+                UiTranslate(22, 22)
+                _bilingual(label.zh, label.en, 24, 11,
+                    selected and { 0.94, 0.80, 0.38 } or { 0.82, 0.91, 0.87 })
+                UiTranslate(0, 72)
+                _text("武器槽 / WEAPON SLOTS", 12, 0.38, 0.62, 0.58, 1)
+                UiTranslate(0, 31)
+                _text(_groupSummary(candidate), 25, 0.80, 0.92, 0.86, 1)
+                UiTranslate(0, 62)
+                _text(selected and "当前框架 / CURRENT" or "点击选择 / SELECT",
+                    13, selected and 0.92 or 0.46, selected and 0.76 or 0.70,
+                    selected and 0.30 or 0.64, 1)
+                local clicked = hover and InputPressed("lmb")
+            UiPop()
+            if clicked then
+                state.configurationId =
+                    tostring(candidate.configurationId or "")
+                state.framePickerOpen = false
+                state.selectedSlot = ""
+                state.selectedDefenseType = ""
+                state.selectedDefenseIndex = 0
+                state.message = "未保存的设计 / UNSAVED DESIGN"
+                state.dirty = true
+                _ensureDraft()
+            end
+        end
+    UiPop()
+end
+
+local function _resetDraft()
+    local state = client.weaponConfigUiState
+    local definition = _shipDefinition()
+    state.configurationId = tostring(definition.defaultSlotConfigurationId or "")
+    local configuration = _findConfiguration(state.configurationId)
+    state.loadout = _copyLoadout((configuration or {}).defaultLoadout)
+    state.componentLoadout = _copyComponentLoadout(
+        (configuration or {}).defaultComponentLoadout
+    )
+    state.selectedSlot = ""
+    state.selectedDefenseType = ""
+    state.selectedDefenseIndex = 0
+    state.framePickerOpen = false
+    state.message = "已恢复默认设计 / DEFAULT DESIGN RESTORED"
+    state.dirty = true
+    _ensureDraft()
 end
 
 function client.weaponConfigUiDraw()
@@ -260,134 +877,97 @@ function client.weaponConfigUiDraw()
     UiPush()
         UiMakeInteractive()
         UiBlur(0.65)
-        UiColor(0.002, 0.008, 0.012, 0.80)
+        UiColor(0.001, 0.006, 0.008, 0.84)
         UiRect(UiWidth(), UiHeight())
 
-        local scale = math.min(UiWidth() / 1360, UiHeight() / 800, 1.15)
-        UiTranslate((UiWidth() - _panelWidth * scale) * 0.5, (UiHeight() - _panelHeight * scale) * 0.5)
+        local scale = math.min(
+            (UiWidth() - 24) / _panelWidth,
+            (UiHeight() - 24) / _panelHeight,
+            1.0
+        )
+        UiTranslate(
+            (UiWidth() - _panelWidth * scale) * 0.5,
+            (UiHeight() - _panelHeight * scale) * 0.5
+        )
         UiScale(scale)
 
-        UiColor(0.012, 0.030, 0.043, 0.995)
+        UiColor(0.006, 0.020, 0.024, 1)
         UiRect(_panelWidth, _panelHeight)
-        UiColor(0.10, 0.52, 0.68, 1)
+        UiColor(0.10, 0.48, 0.42, 1)
         UiRectOutline(_panelWidth, _panelHeight, 2)
-        UiColor(0.10, 0.66, 0.84, 1)
-        UiRect(_panelWidth, 4)
+        _drawHeader()
 
-        UiColor(0.018, 0.052, 0.070, 1)
-        UiRect(_sidebarWidth, _panelHeight)
-        UiColor(0.08, 0.34, 0.44, 1)
-        UiTranslate(_sidebarWidth, 0)
-        UiRect(1, _panelHeight)
-        UiTranslate(-_sidebarWidth, 0)
-
-        UiTranslate(24, 24)
-        UiPush()
-            _text("SHIP DESIGNER", 30, 0.66, 0.91, 1, 1)
-            UiTranslate(0, 36)
-            _text("SPAWN TEMPLATE", 15, 0.28, 0.68, 0.82, 1)
-            UiTranslate(0, 72)
-            _text("WEAPON FRAME", 14, 0.42, 0.64, 0.72, 1)
-        UiPop()
-
-        local availableShipTypes = _configurableShipTypes()
-        if _actionButton(0, 76, _sidebarWidth - 48, 36, string.upper(_shipDisplayName()), false, not state.pending) then
-            _selectNextShipType()
-        end
-        if #availableShipTypes > 1 then
-            UiPush()
-                UiTranslate(0, 116)
-                _text("Click ship class to cycle", 11, 0.32, 0.60, 0.70, 1)
-            UiPop()
+        UiTranslate(14, 88)
+        if state.selectedDefenseType ~= "" then
+            _drawDefenseSidebar(state.selectedDefenseType)
+        elseif state.selectedSlot ~= "" then
+            _drawWeaponSidebar(state.selectedSlot)
+        else
+            _drawShipSidebar(configuration)
         end
 
-        for index, candidate in ipairs(_shipDefinition().slotConfigurations or {}) do
-            if _frameCard(
-                0, 150 + (index - 1) * 96, _sidebarWidth - 48, 78,
-                candidate,
-                state.configurationId == tostring(candidate.configurationId or ""),
-                not state.pending
-            ) then
-                state.configurationId = tostring(candidate.configurationId or "")
-                state.message = "UNSAVED DESIGN"
-                state.dirty = true
-                _ensureDraft()
-            end
-        end
+        local centerX = _leftWidth + _contentGap
+        local centerWidth = _panelWidth - 28 - _leftWidth - _rightWidth
+            - _contentGap * 2
+        _drawCenter(configuration, centerX, centerWidth)
+        _drawSummary(
+            configuration,
+            centerX + centerWidth + _contentGap
+        )
 
         UiPush()
-            UiTranslate(0, 732)
-            UiColor(0.03, 0.12, 0.16, 1)
-            UiRect(_sidebarWidth - 48, 72)
-            UiTranslate(12, 12)
-            _text("DEPLOYMENT RULE", 12, 0.30, 0.70, 0.82, 1)
-            UiTranslate(0, 20)
-            _text("Existing ships remain unchanged.", 14, 0.70, 0.82, 0.86, 1)
-            UiTranslate(0, 18)
-            _text("Design loads on the next spawn.", 14, 0.70, 0.82, 0.86, 1)
+            UiTranslate(0, _footerY)
+            UiColor(0.010, 0.045, 0.048, 1)
+            UiRect(_panelWidth - 28, 58)
+            UiTranslate(16, 23)
+            _text(state.message or "", 13, 0.48, 0.70, 0.65, 1)
         UiPop()
 
-        UiTranslate(_sidebarWidth + 28, 0)
-        _text(tostring(configuration.label or configuration.configurationId), 28, 0.82, 0.95, 1, 1)
-        UiTranslate(0, 33)
-        _text("Select one weapon for every active slot group", 15, 0.40, 0.65, 0.74, 1)
-        UiColor(0.06, 0.24, 0.31, 1)
-        UiTranslate(0, 34)
-        UiRect(900, 1)
-
-        local row = 0
-        for _, slotType in ipairs(_groupOrder) do
-            local active = false
-            for _, group in ipairs(configuration.slotGroups or {}) do
-                if tostring(group.slotType or "") == slotType then active = true end
-            end
-            if active then
-                local y = 72 + row * 132
-                UiPush()
-                    UiTranslate(0, y)
-                    UiColor(0.025, 0.075, 0.098, 0.96)
-                    UiRect(900, 120)
-                    UiColor(0.08, 0.31, 0.40, 1)
-                    UiRectOutline(900, 120, 1)
-                    UiTranslate(14, 14)
-                    _text(slotType, 28, 0.30, 0.82, 1, 1)
-                    UiTranslate(0, 32)
-                    _text(_slotNames[slotType] or slotType, 11, 0.34, 0.59, 0.68, 1)
-                    local pool = ((_shipDefinition().slotWeaponPools or {})[slotType]) or {}
-                    for index, weaponType in ipairs(pool) do
-                        if _weaponCard(
-                            74 + (index - 1) * 134, -36, 124, 116,
-                            slotType,
-                            tostring(weaponType),
-                            state.loadout[slotType] == tostring(weaponType),
-                            not state.pending
-                        ) then
-                            state.loadout[slotType] = tostring(weaponType)
-                            state.message = "UNSAVED DESIGN"
-                            state.dirty = true
-                        end
-                    end
-                UiPop()
-                row = row + 1
-            end
+        if _button(
+            _panelWidth - 28 - 404,
+            _footerY + 10,
+            126,
+            38,
+            "恢复默认 / RESET",
+            false,
+            not state.pending
+        ) then
+            _resetDraft()
+            configuration = _ensureDraft() or configuration
         end
-
-        local footerY = 732
-        UiPush()
-            UiTranslate(0, footerY)
-            UiColor(0.025, 0.074, 0.095, 1)
-            UiRect(900, 74)
-            UiTranslate(16, 28)
-            _text(state.message or "", 14, 0.52, 0.76, 0.84, 1)
-        UiPop()
-
-        if _actionButton(604, footerY + 12, 170, 48, "SAVE DESIGN", true, not state.pending) then
+        if _button(
+            _panelWidth - 28 - 266,
+            _footerY + 10,
+            160,
+            38,
+            "保存设计 / SAVE",
+            true,
+            not state.pending
+        ) then
             client.weaponConfiguratorSaveTemplate(
                 state.shipType,
                 state.configurationId,
-                _copyLoadout(state.loadout)
+                _copyLoadout(state.loadout),
+                _copyComponentLoadout(state.componentLoadout)
             )
         end
-        if _actionButton(786, footerY + 12, 114, 48, "CLOSE", false, not state.pending) then _close() end
+        if _button(
+            _panelWidth - 28 - 94,
+            _footerY + 10,
+            94,
+            38,
+            "关闭 / CLOSE",
+            false,
+            not state.pending
+        ) then
+            _close()
+        end
+
+        if state.framePickerOpen then
+            UiPush()
+                UiTranslate(-14, -88)
+                _drawFramePicker()
+            UiPop()
+        end
     UiPop()
 end

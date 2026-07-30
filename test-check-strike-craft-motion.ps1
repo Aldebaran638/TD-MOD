@@ -70,12 +70,12 @@ try {
     Assert-True ($filter.Output -match "filter-resetting query wrapper") "reports query filter ordering"
 
     Write-Fixture $validSource.Replace(
-        "{ yaw = 42.0, pitch = 24.0 },",
-        "{ yaw = 42.0, pitch = 24.0 },`r`n    { yaw = 75.0, pitch = 20.0 },"
+        "{ yaw = 60.0, pitch = 8.0 },",
+        "{ yaw = 60.0, pitch = 8.0 },`r`n    { yaw = 75.0, pitch = 20.0 },"
     )
     $candidates = Invoke-Checker
-    Assert-True ($candidates.ExitCode -eq 1) "rejects more than five planner candidates"
-    Assert-True ($candidates.Output -match "between 1 and 5") "reports candidate budget overflow"
+    Assert-True ($candidates.ExitCode -eq 1) "rejects more than eight planner candidates"
+    Assert-True ($candidates.Output -match "between 1 and 8") "reports candidate budget overflow"
 
     Write-Fixture $validSource.Replace(
         '"emergencyDuration", 0.70',
@@ -91,7 +91,7 @@ try {
     )
     $budget = Invoke-Checker
     Assert-True ($budget.ExitCode -eq 1) "rejects an excessive complex-query budget"
-    Assert-True ($budget.Output -match "exceeds 70") "reports calculated query pressure"
+    Assert-True ($budget.Output -match "exceeds 80") "reports calculated query pressure"
 }
 finally {
     if ($KeepFixtures) {

@@ -47,7 +47,17 @@ local function _shipControlResolveDrivenBody()
     local vehicle = GetPlayerVehicle(playerId)
     if vehicle == nil or vehicle == 0 then return 0 end
     local body = math.floor(GetVehicleBody(vehicle) or 0)
-    local configuredBody = math.floor(client.shipBody or 0)
+    -- state.shipBody is the currently active network target and is cleared when
+    -- the player leaves the vehicle. Lua treats 0 as truthy, so using
+    -- `state.shipBody or contextBody` permanently selected 0 and prevented a
+    -- newly entered/spawned ship from ever reacquiring control. The script
+    -- context is the stable owner of this client script instance.
+    local configuredBody = math.floor(client.shipContextGetBody() or 0)
+    if configuredBody == 0 then
+        configuredBody = math.floor(
+            (client.shipControlSnapshot or {}).shipBody or 0
+        )
+    end
     if body == 0 or configuredBody == 0 or body ~= configuredBody then return 0 end
     if client.registryShipExists ~= nil and not client.registryShipExists(body) then
         return 0

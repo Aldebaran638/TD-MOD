@@ -76,7 +76,7 @@ function client.tachyonMuzzleFxTick(dt)
         return
     end
 
-    local shipBody = math.floor(client.shipBody or 0)
+    local shipBody = client.shipContextGetBody()
     if shipBody ~= 0 and IsHandleValid(shipBody) then
         local render = client.xSlotRenderGetEvent(shipBody)
         if render ~= nil then
@@ -106,7 +106,7 @@ function client.tachyonMuzzleFxRender()
     local state = client.tachyonMuzzleFxState
     local intensity = math.max(0.0, tonumber(state.intensity) or 0.0)
     local sprite = math.floor(state.glareSprite or 0)
-    local shipBody = math.floor(client.shipBody or 0)
+    local shipBody = client.shipContextGetBody()
     if config.enabled ~= true or intensity <= 0.0001 or sprite == 0 then return end
     if shipBody == 0 or not IsHandleValid(shipBody) then return end
 

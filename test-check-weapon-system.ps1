@@ -38,14 +38,61 @@ try {
     [IO.Directory]::CreateDirectory((Join-Path $fixtureMod "prefabs")) | Out-Null
     Copy-Item -LiteralPath (Join-Path $sourceMod "prefabs\swarmerMissile.xml") -Destination (Join-Path $fixtureMod "prefabs\swarmerMissile.xml")
     Copy-Item -LiteralPath (Join-Path $sourceMod "prefabs\devastatorTorpedoes.xml") -Destination (Join-Path $fixtureMod "prefabs\devastatorTorpedoes.xml")
-    [IO.Directory]::CreateDirectory((Join-Path $fixtureMod "sound")) | Out-Null
-    Copy-Item -LiteralPath (Join-Path $sourceMod "sound\weapons") -Destination (Join-Path $fixtureMod "sound") -Recurse
+    Copy-Item -LiteralPath (Join-Path $sourceMod "prefabs\gammaStrikeCraft.xml") -Destination (Join-Path $fixtureMod "prefabs\gammaStrikeCraft.xml")
+    Copy-Item -LiteralPath (Join-Path $sourceMod "sound") -Destination $fixtureMod -Recurse
 
     $valid = Invoke-Checker
     Assert-True ($valid.ExitCode -eq 0) "accepts the complete weapon system contract"
 
-    $standardPath = Join-Path $fixtureMod "script\data\weapons\standard_weapons.lua"
-    $text = [IO.File]::ReadAllText($standardPath)
+    $shipCatalogPath = Join-Path $fixtureMod "script\data\ships\ship_catalog.lua"
+    $shipCatalogText = [IO.File]::ReadAllText($shipCatalogPath)
+    [IO.File]::WriteAllText(
+        $shipCatalogPath,
+        $shipCatalogText.Replace(
+            "#include `"schema.lua`"`r`n#include `"battlecruiser.lua`"",
+            "#include `"battlecruiser.lua`"`r`n#include `"schema.lua`""
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidShipIncludeOrder = Invoke-Checker
+    Assert-True ($invalidShipIncludeOrder.ExitCode -eq 1) "rejects ship definitions loaded before their schema"
+    Assert-True ($invalidShipIncludeOrder.Output -match "schema must be included before") "reports the Teardown include execution contract"
+    [IO.File]::WriteAllText(
+        $shipCatalogPath,
+        $shipCatalogText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    $entryPath = Join-Path $fixtureMod "script\shipMain.lua"
+    $entryText = [IO.File]::ReadAllText($entryPath)
+    [IO.File]::WriteAllText(
+        $entryPath,
+        $entryText.Replace(
+            'server.weaponRuntimeCommandTick(dt)',
+            'server.weaponGroupTick(dt)'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidWeaponLifecycle = Invoke-Checker
+    Assert-True ($invalidWeaponLifecycle.ExitCode -eq 1) "rejects direct concrete weapon lifecycle calls from shipMain"
+    Assert-True ($invalidWeaponLifecycle.Output -match "unified runtime|directly calls concrete") "reports the weapon lifecycle boundary"
+    [IO.File]::WriteAllText($entryPath, $entryText, (New-Object Text.UTF8Encoding($false)))
+
+    $requestAuthorizerPath = Join-Path $fixtureMod "script\ship\common\server\network\request_authorizer.lua"
+    $requestAuthorizerText = [IO.File]::ReadAllText($requestAuthorizerPath)
+    [IO.File]::WriteAllText(
+        $requestAuthorizerPath,
+        ($requestAuthorizerText + "`r`nserver.shipBody = 123`r`n"),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidShipGlobal = Invoke-Checker
+    Assert-True ($invalidShipGlobal.ExitCode -eq 1) "rejects implicit battlecruiser runtime globals"
+    Assert-True ($invalidShipGlobal.Output -match "implicit battlecruiser") "reports the ShipRuntimeContext boundary"
+    [IO.File]::WriteAllText(
+        $requestAuthorizerPath,
+        $requestAuthorizerText,
+        (New-Object Text.UTF8Encoding($false))
+    )
 
     $configUiPath = Join-Path $fixtureMod "script\weapon\client\config_ui\weapon_config_ui.lua"
     $configUiText = [IO.File]::ReadAllText($configUiPath)
@@ -59,7 +106,7 @@ try {
     Assert-True ($invalidUiServerCall.Output -match "must not communicate with the server") "reports the local-only UI contract"
     [IO.File]::WriteAllText($configUiPath, $configUiText, (New-Object Text.UTF8Encoding($false)))
 
-    $bindingPath = Join-Path $fixtureMod "script\ship\battlecruiser\client\config\weapon_configuration_binding.lua"
+    $bindingPath = Join-Path $fixtureMod "script\ship\common\client\config\weapon_configuration_binding.lua"
     $bindingText = [IO.File]::ReadAllText($bindingPath)
     [IO.File]::WriteAllText(
         $bindingPath,
@@ -74,32 +121,46 @@ try {
     Assert-True ($invalidBinding.Output -match "snapshot and submit") "reports the ship snapshot binding contract"
     [IO.File]::WriteAllText($bindingPath, $bindingText, (New-Object Text.UTF8Encoding($false)))
 
-    $heatText = $text.Replace('definition.heatPerShot = 4.0', 'definition.heatPerShot = 5.0')
-    [IO.File]::WriteAllText($standardPath, $heatText, (New-Object Text.UTF8Encoding($false)))
+    $stormfirePath = Join-Path $fixtureMod "script\data\weapons\l\large_stormfire_autocannon.lua"
+    $stormfireText = [IO.File]::ReadAllText($stormfirePath)
+    [IO.File]::WriteAllText(
+        $stormfirePath,
+        $stormfireText.Replace('heatPerShot = 4.0', 'heatPerShot = 5.0'),
+        (New-Object Text.UTF8Encoding($false))
+    )
     $invalidHeat = Invoke-Checker
     Assert-True ($invalidHeat.ExitCode -eq 1) "rejects a mismatched Stormfire heat profile"
-    Assert-True ($invalidHeat.Output -match "Stormfire Autocannons") "reports the Stormfire heat contract"
+    Assert-True ($invalidHeat.Output -match "Stormfire|largeStormfireAutocannon") "reports the Stormfire heat contract"
+    [IO.File]::WriteAllText($stormfirePath, $stormfireText, (New-Object Text.UTF8Encoding($false)))
 
-    [IO.File]::WriteAllText($standardPath, $text, (New-Object Text.UTF8Encoding($false)))
-    $text = $text.Replace('_ray("focusedArcEmitter"', '_ray("brokenArcEmitter"')
-    [IO.File]::WriteAllText($standardPath, $text, (New-Object Text.UTF8Encoding($false)))
+    $arcPath = Join-Path $fixtureMod "script\data\weapons\x\focused_arc_emitter.lua"
+    $arcText = [IO.File]::ReadAllText($arcPath)
+    [IO.File]::WriteAllText(
+        $arcPath,
+        $arcText.Replace('weaponType = "focusedArcEmitter"', 'weaponType = "brokenArcEmitter"'),
+        (New-Object Text.UTF8Encoding($false))
+    )
 
     $invalid = Invoke-Checker
     Assert-True ($invalid.ExitCode -eq 1) "rejects a missing required weapon"
     Assert-True ($invalid.Output -match "focusedArcEmitter") "reports the missing weapon id"
+    [IO.File]::WriteAllText($arcPath, $arcText, (New-Object Text.UTF8Encoding($false)))
 
-    [IO.File]::WriteAllText($standardPath, $text.Replace('_ray("brokenArcEmitter"', '_ray("focusedArcEmitter"'), (New-Object Text.UTF8Encoding($false)))
-    $profileText = [IO.File]::ReadAllText($standardPath)
-    $profileText = $profileText.Replace(
-        'gigaCannon = { "xSpinal", 1, "sequential" }',
-        'gigaCannon = { "xSpinal", 2, "grouped" }'
+    $gigaPath = Join-Path $fixtureMod "script\data\weapons\x\giga_cannon.lua"
+    $gigaText = [IO.File]::ReadAllText($gigaPath)
+    [IO.File]::WriteAllText(
+        $gigaPath,
+        $gigaText.Replace(
+            'salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.18 }',
+            'salvoProfile = { groupSize = 2, sequence = "grouped", interval = 0.18 }'
+        ),
+        (New-Object Text.UTF8Encoding($false))
     )
-    [IO.File]::WriteAllText($standardPath, $profileText, (New-Object Text.UTF8Encoding($false)))
     $invalidGiga = Invoke-Checker
     Assert-True ($invalidGiga.ExitCode -eq 1) "rejects simultaneous Giga Cannon barrels"
-    Assert-True ($invalidGiga.Output -match "Giga Cannon") "reports the Giga Cannon salvo contract"
+    Assert-True ($invalidGiga.Output -match "Giga Cannon|gigaCannon") "reports the Giga Cannon salvo contract"
+    [IO.File]::WriteAllText($gigaPath, $gigaText, (New-Object Text.UTF8Encoding($false)))
 
-    [IO.File]::WriteAllText($standardPath, $text.Replace('_ray("brokenArcEmitter"', '_ray("focusedArcEmitter"'), (New-Object Text.UTF8Encoding($false)))
     $shieldPath = Join-Path $fixtureMod "script\weapon\client\common\effects\shield_hit_fx.lua"
     $shieldText = [IO.File]::ReadAllText($shieldPath)
     [IO.File]::WriteAllText(
@@ -138,8 +199,85 @@ try {
     )
     $invalidSnapshot = Invoke-Checker
     Assert-True ($invalidSnapshot.ExitCode -eq 1) "rejects frame-rate-driven control snapshots"
-    Assert-True ($invalidSnapshot.Output -match "validated 20 Hz input snapshot") "reports the control snapshot contract"
+    Assert-True ($invalidSnapshot.Output -match "validated 20 Hz reacquirable input snapshot") "reports the control snapshot contract"
     [IO.File]::WriteAllText($snapshotPath, $snapshotText, (New-Object Text.UTF8Encoding($false)))
+
+    [IO.File]::WriteAllText(
+        $snapshotPath,
+        $snapshotText.Replace(
+            'local configuredBody = math.floor(client.shipContextGetBody() or 0)',
+            'local configuredBody = math.floor((client.shipControlSnapshot or {}).shipBody or 0)'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidSnapshotReacquire = Invoke-Checker
+    Assert-True ($invalidSnapshotReacquire.ExitCode -eq 1) "rejects control snapshots that cannot reacquire a newly entered ship"
+    Assert-True ($invalidSnapshotReacquire.Output -match "reacquirable input snapshot") "reports the control snapshot reacquisition contract"
+    [IO.File]::WriteAllText($snapshotPath, $snapshotText, (New-Object Text.UTF8Encoding($false)))
+
+    $runtimeStatePath = Join-Path $fixtureMod "script\ship\common\server\state\runtime_state.lua"
+    $runtimeStateText = [IO.File]::ReadAllText($runtimeStatePath)
+    [IO.File]::WriteAllText(
+        $runtimeStatePath,
+        $runtimeStateText.Replace(
+            '_normalizeMode(mainWeapon.current, definition)',
+            '_normalizeMode(mainWeapon.current)'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidMainWeaponSync = Invoke-Checker
+    Assert-True ($invalidMainWeaponSync.ExitCode -eq 1) "rejects main weapon sync without its ship definition"
+    Assert-True ($invalidMainWeaponSync.Output -match "normalize against the active ship definition") "reports the Q-toggle synchronization contract"
+    [IO.File]::WriteAllText(
+        $runtimeStatePath,
+        $runtimeStateText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    [IO.File]::WriteAllText(
+        $runtimeStatePath,
+        $runtimeStateText.Replace(
+            'server.shipSlotLoadoutResolveShipDefinition(requestedShipType)',
+            'shipDefinitionGet(requestedShipType)'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidActiveFrameSync = Invoke-Checker
+    Assert-True ($invalidActiveFrameSync.ExitCode -eq 1) "rejects Q-toggle normalization against the default frame"
+    Assert-True ($invalidActiveFrameSync.Output -match "normalize against the active ship definition") "reports the active frame Q-toggle contract"
+    [IO.File]::WriteAllText(
+        $runtimeStatePath,
+        $runtimeStateText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    [IO.File]::WriteAllText(
+        $runtimeStatePath,
+        $runtimeStateText.Replace(
+            'local activeGroups = (definition or {}).weaponGroups or {}',
+            'local activeGroups = {}'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidResolvedGroups = Invoke-Checker
+    Assert-True ($invalidResolvedGroups.ExitCode -eq 1) "rejects Q-toggle normalization that ignores resolved weapon groups"
+    Assert-True ($invalidResolvedGroups.Output -match "normalize against the active ship definition") "reports the resolved weapon group contract"
+    [IO.File]::WriteAllText(
+        $runtimeStatePath,
+        $runtimeStateText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    $entryWithMissingSound = $entryText + "`r`nLoadSound(`"MOD/sound/missing_runtime_asset.ogg`")`r`n"
+    [IO.File]::WriteAllText(
+        $entryPath,
+        $entryWithMissingSound,
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidStaticSound = Invoke-Checker
+    Assert-True ($invalidStaticSound.ExitCode -eq 1) "rejects a static LoadSound reference to a missing file"
+    Assert-True ($invalidStaticSound.Output -match "missing sound asset") "reports the missing runtime sound reference"
+    [IO.File]::WriteAllText($entryPath, $entryText, (New-Object Text.UTF8Encoding($false)))
 
     $missingSound = Join-Path $fixtureMod "sound\weapons\tachyonLance"
     Remove-Item -LiteralPath $missingSound -Recurse -Force

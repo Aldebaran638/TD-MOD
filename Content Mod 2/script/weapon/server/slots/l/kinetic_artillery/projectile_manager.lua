@@ -13,7 +13,7 @@ local registryShipIndexRoot = "StellarisShips/server/ships/index"
 local function _resolveProjectileWeaponSettings(weaponType)
     local defs = weaponData or {}
     local resolvedWeaponType = weaponType or "kineticArtillery"
-    return defs[resolvedWeaponType] or (lSlotWeaponRegistryData or {})[resolvedWeaponType] or defs.kineticArtillery or {}
+    return defs[resolvedWeaponType] or defs.kineticArtillery or {}
 end
 
 local function _applyProjectileEnvironmentExplosions(hitPos, settings)
@@ -117,9 +117,15 @@ local function _playProjectileHitSound(weaponType, hitPos)
     ClientCall(0, "client.playKineticArtilleryHitSound", weaponType or "", p[1], p[2], p[3])
 end
 
-local function _playShieldImpactFx(hitTargetBodyId, hitPos)
+local function _playShieldImpactFx(hitTargetBodyId, hitPos, weaponType)
     local p = hitPos or Vec(0, 0, 0)
-    ClientCall(0, "client.playProjectileShieldImpactFx", hitTargetBodyId or 0, p[1], p[2], p[3])
+    ClientCall(
+        0,
+        "client.playProjectileShieldImpactFx",
+        hitTargetBodyId or 0,
+        p[1], p[2], p[3],
+        weaponType or ""
+    )
 end
 
 local function _applyProjectileShipDamage(hitBody, weaponType)
@@ -138,75 +144,12 @@ local function _applyProjectileShipDamage(hitBody, weaponType)
         }
     end
 
-    local targetShipType = server.registryShipGetShipType ~= nil and server.registryShipGetShipType(hitBody) or (server.defaultShipType or "enigmaticCruiser")
-    local targetShieldHP, targetArmorHP, targetBodyHP = server.registryShipGetHP(hitBody)
-    if targetShieldHP == nil or targetArmorHP == nil or targetBodyHP == nil then
-        return {
-            didDamage = false,
-            didHitShield = false,
-            impactLayer = "none",
-        }
-    end
-
-    local resolvedDefaultShipType = server.defaultShipType or "enigmaticCruiser"
-    local targetShipData = (shipData and shipData[targetShipType]) or (shipData and shipData[resolvedDefaultShipType]) or {}
-    local weaponData = _resolveProjectileWeaponSettings(weaponType)
-    local rawRemain = weaponData.damage or 0.0
-    local result = {
-        didDamage = false,
-        didHitShield = false,
-        impactLayer = "none",
-    }
-
-    local function _applyLayer(layerName, currentHp, damageFix)
-        local hp = currentHp or 0.0
-        local fix = damageFix or 1.0
-        if hp <= 0 or rawRemain <= 0 or fix <= 0 then
-            return hp
-        end
-
-        local potential = rawRemain * fix
-        if potential <= 0 then
-            return hp
-        end
-
-        local consumedRaw = 0.0
-        if potential < hp then
-            hp = hp - potential
-            consumedRaw = rawRemain
-        else
-            consumedRaw = hp / fix
-            hp = 0.0
-        end
-
-        rawRemain = rawRemain - consumedRaw
-        if rawRemain < 0 then
-            rawRemain = 0
-        end
-
-        if result.impactLayer == "none" then
-            result.impactLayer = layerName
-        end
-        if layerName == "shield" then
-            result.didHitShield = true
-        end
-        result.didDamage = true
-        return hp
-    end
-
-    targetShieldHP = _applyLayer("shield", targetShieldHP or 0.0, weaponData.shieldFix)
-    targetArmorHP = _applyLayer("armor", targetArmorHP or 0.0, weaponData.armorFix)
-    targetBodyHP = _applyLayer("body", targetBodyHP or 0.0, weaponData.bodyFix)
-
-    local maxShield = targetShipData.maxShieldHP or targetShieldHP or 0
-    local maxArmor = targetShipData.maxArmorHP or targetArmorHP or 0
-    local maxBody = targetShipData.maxBodyHP or targetBodyHP or 0
-    if targetShieldHP > maxShield then targetShieldHP = maxShield end
-    if targetArmorHP > maxArmor then targetArmorHP = maxArmor end
-    if targetBodyHP > maxBody then targetBodyHP = maxBody end
-
-    server.registryShipSetHP(hitBody, targetShieldHP, targetArmorHP, targetBodyHP)
-    return result
+    local settings = _resolveProjectileWeaponSettings(weaponType)
+    return server.shipDamageApplyWeaponDefinition(
+        hitBody,
+        settings,
+        tonumber(settings.damage) or 0.0
+    )
 end
 
 local function _resolveShieldHit(projectile, startPos, endPos, settings)
@@ -219,7 +162,7 @@ local function _resolveShieldHit(projectile, startPos, endPos, settings)
             if shieldHP ~= nil and bodyHP ~= nil and bodyHP > 0 and shieldHP > 0 then
                 local shieldRadius = 0.0
                 if server.registryShipGetShieldRadius ~= nil then
-                    shieldRadius = server.registryShipGetShieldRadius(bodyId, server.defaultShipType or "enigmaticCruiser") or 0.0
+                    shieldRadius = server.registryShipGetShieldRadius(bodyId, server.shipContextGetType()) or 0.0
                 end
                 if shieldRadius > 0.0 then
                     local bodyT = GetBodyTransform(bodyId)
@@ -330,7 +273,11 @@ function server.projectileManagerTick(dt)
                 _applyProjectileShipDamage(shieldHit.bodyId, projectile.weaponType)
                 _finishProjectileVisual(projectile.id, "impact", shieldHit.hitPos, shieldHit.normal, "shield")
                 _playProjectileHitSound(projectile.weaponType, shieldHit.hitPos)
-                _playShieldImpactFx(shieldHit.bodyId, shieldHit.hitPos)
+                _playShieldImpactFx(
+                    shieldHit.bodyId,
+                    shieldHit.hitPos,
+                    projectile.weaponType
+                )
                 _removeProjectileAt(i)
                 removed = true
             else
@@ -351,7 +298,11 @@ function server.projectileManagerTick(dt)
                                 shouldPlayImpact = true
                             end
                             if damageResult.didHitShield then
-                                _playShieldImpactFx(hitBody, bodyHit.hitPos)
+                                _playShieldImpactFx(
+                                    hitBody,
+                                    bodyHit.hitPos,
+                                    projectile.weaponType
+                                )
                             end
                         end
                     else

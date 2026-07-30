@@ -26,7 +26,9 @@ function server.guidedProjectileMovementUpdate(dt)
             local targetPos = nil
             local targetVel = nil
 
-            if targetBodyId ~= 0 and IsHandleValid(targetBodyId) and server.registryShipExists(targetBodyId) and (not server.registryShipIsBodyDead(targetBodyId)) then
+            if targetBodyId ~= 0
+                and server.weaponTargetIsLockableBody ~= nil
+                and server.weaponTargetIsLockableBody(targetBodyId) then
                 targetPos = server.guidedProjectileGetBodyCenterWorld(targetBodyId)
                 if targetPos ~= nil then
                     targetVel = GetBodyVelocity(targetBodyId)

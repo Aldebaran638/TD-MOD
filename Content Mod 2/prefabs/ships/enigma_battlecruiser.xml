@@ -1,7 +1,7 @@
 <prefab version="2.0.0">
 	<group name="instance=MOD/prefabs/ships/enigma_battlecruiser.xml" pos="0 0 0" rot="0 0 0">
-		<script pos="0.1 0.7 -17.2" rot="0 180 0" file="MOD/script/shipMain.lua">
-			<vehicle name="ship" tags="stellarisShip" pos="0.0 0.0 0.0" driven="true" sound=" " spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
+		<script pos="0.1 0.7 -17.2" rot="0 180 0" file="MOD/script/shipMain.lua" shiptype="enigmaticCruiser">
+			<vehicle name="ship" tags="stellarisShip" pos="0.0 0.0 0.0" driven="true" sound="electric1 0" spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
 				<body name="body" tags="stellarisShip" pos="0.0 0.0 0.0" dynamic="true">
 					<vox tags="missileLauncher" pos="0.5 7.0 1.1" file="MOD/vox/missileLauncher.vox"/>
 					<vox tags="missileLauncher" pos="-0.5 -7.0 1.1" rot="0 0 180" file="MOD/vox/missileLauncher.vox"/>

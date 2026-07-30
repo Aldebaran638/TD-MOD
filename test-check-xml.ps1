@@ -67,7 +67,7 @@ end
 <prefab version="2.0.0">
   <group>
     <script file="MOD/script/shipMain.lua">
-      <vehicle tags="stellarisShip">
+      <vehicle tags="stellarisShip" sound="electric1 0">
         <body tags="stellarisShip">
           <light tags="tachyonMuzzleLight"/>
           <light tags="arcMuzzleLightLeft"/>
@@ -83,6 +83,27 @@ end
 
     $valid = Invoke-Checker
     Assert-True ($valid.ExitCode -eq 0) "accepts valid battlecruiser prefab contract"
+
+    Write-Fixture "prefabs/ships/enigma_battlecruiser.xml" @'
+<prefab version="2.0.0">
+  <group>
+    <script file="MOD/script/shipMain.lua">
+      <vehicle tags="stellarisShip" sound=" ">
+        <body tags="stellarisShip">
+          <light tags="tachyonMuzzleLight"/>
+          <light tags="arcMuzzleLightLeft"/>
+          <light tags="arcMuzzleLightRight"/>
+        </body>
+        <location name="Player" tags="player"/>
+        <location name="exit" tags="exit"/>
+      </vehicle>
+    </script>
+  </group>
+</prefab>
+'@
+    $invalidBlankVehicleSound = Invoke-Checker
+    Assert-True ($invalidBlankVehicleSound.ExitCode -eq 1) "rejects a blank vehicle sound attribute"
+    Assert-True ($invalidBlankVehicleSound.Output -match "missing or blank vehicle sound") "reports the invalid built-in vehicle sound path source"
 }
 finally {
     if ($KeepFixtures) {

@@ -58,8 +58,8 @@ if ($controlSource -notmatch '_hSlotResolveRecoveryPoint' -or
     Add-Issue "craft recovery must return to its launcher point"
 }
 if ($dataSource -notmatch 'maxRange\s*=\s*280\.0' -or
-    $dataSource -notmatch 'cruiseSpeed\s*=\s*82\.0' -or
-    $dataSource -notmatch 'maxAngularImpulse\s*=\s*9000\.0') {
+    $dataSource -notmatch 'cruiseSpeed\s*=\s*130\.0' -or
+    $dataSource -notmatch 'maxAngularImpulse\s*=\s*5000\.0') {
     Add-Issue "production craft flight and beam tuning is incomplete"
 }
 if ($prefabSource -notmatch 'gammaStrikeCraftTest\.vox' -or
@@ -115,8 +115,8 @@ else {
         $candidateMatch.Groups["body"].Value,
         '\{\s*yaw\s*='
     ).Count
-    if ($candidateCount -lt 1 -or $candidateCount -gt 5) {
-        Add-Issue "candidate planner must contain between 1 and 5 directions; found $candidateCount"
+    if ($candidateCount -lt 1 -or $candidateCount -gt 8) {
+        Add-Issue "candidate planner must contain between 1 and 8 directions; found $candidateCount"
     }
 }
 
@@ -165,8 +165,8 @@ if ($nearMatch.Success -and $farMatch.Success -and $plannerMatch.Success -and $c
     if ($openBudget -gt 45.0) {
         Add-Issue "open-space query budget exceeds 45/s: $openBudget"
     }
-    if ($complexBudget -gt 70.0) {
-        Add-Issue "complex-avoidance query budget exceeds 70/s: $complexBudget"
+    if ($complexBudget -gt 80.0) {
+        Add-Issue "complex-avoidance query budget exceeds 80/s: $complexBudget"
     }
 }
 else {

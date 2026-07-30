@@ -1,0 +1,28 @@
+---@diagnostic disable: undefined-global
+
+weaponDefineRay({
+    weaponType = "mediumGammaLaser",
+    displayName = "中型伽马激光",
+    englishName = "Medium Gamma Laser",
+    slotTypes = { "M" },
+    fxProfile = "gammaBeam",
+    muzzleFxProfile = "gammaMedium",
+    impactFxProfile = "gammaMedium",
+    projectileFxVariant = "none",
+    damage = 92,
+    cooldown = 1.1,
+    maxRange = 390.0,
+    shieldFix = 0.5,
+    armorFix = 1.5,
+    bodyFix = 1.25,
+    targetingMode = "forward",
+    closeRangeFocus = true,
+    closeRangeFocusRange = 220.0,
+    mountProfile = "mLaser",
+    salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.10 },
+    aimControlMode = "camera_limited",
+    aimLimitDeg = 70.0,
+    aimPitchOffsetDeg = 6.0,
+    officialComponentId = "MEDIUM_GAMMA_LASER",
+    family = "laser",
+})

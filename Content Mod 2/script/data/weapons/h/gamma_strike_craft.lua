@@ -1,14 +1,13 @@
 ---@diagnostic disable: undefined-global
 
-hSlotWeaponRegistryData = hSlotWeaponRegistryData or {}
-weaponData = weaponData or {}
-
-local gammaStrikeCraftData = {
+weaponDefineStrikeCraft({
     weaponType = "gammaStrikeCraft",
+    displayName = "先进型舰载机",
+    englishName = "Advanced Strike Craft",
+    slotTypes = { "H" },
     cooldown = 20.0,
     prefabPath = "MOD/prefabs/gammaStrikeCraft.xml",
     spawnForwardOffset = 5.0,
-
     attackDuration = 10.0,
     craftLifetime = 26.0,
     returnTimeout = 10.0,
@@ -30,15 +29,15 @@ local gammaStrikeCraftData = {
     nearSweepLookahead = 0.42,
     emergencyDuration = 0.65,
     recoverRadius = 35.0,
-
     fireInterval = 0.16,
     maxRange = 280.0,
     damageMin = 45,
     damageMax = 75,
-    shieldFix = 0.5,
+    shieldFix = 1.0,
     armorFix = 1.5,
+    shieldPenetration = 1.0,
+    armorPenetration = 0.0,
     bodyFix = 1.25,
-
     collisionExplosionSize = 0.03,
     environmentExplosionSize = 0.3,
     beamImpactExplosionSize = 1.05,
@@ -46,7 +45,12 @@ local gammaStrikeCraftData = {
     beamImpactExplosionMinDistance = 0.6,
     beamLife = 0.14,
     beamWidth = 0.24,
-}
-
-hSlotWeaponRegistryData.gammaStrikeCraft = gammaStrikeCraftData
-weaponData.gammaStrikeCraft = gammaStrikeCraftData
+    controllerType = "strikeCraft",
+    mountProfile = "hHangar",
+    salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.25 },
+    aimControlMode = "fixed",
+    aimLimitDeg = 0.0,
+    aimPitchOffsetDeg = 0.0,
+    officialComponentId = "STRIKE_CRAFT_HANGAR_3",
+    family = "strike_craft",
+})

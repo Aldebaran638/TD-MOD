@@ -1,10 +1,17 @@
 ---@diagnostic disable: undefined-global
 
-weaponData = weaponData or {}
-
-local swarmerMissileData = {
+weaponDefineGuided({
     weaponType = "swarmerMissile",
+    displayName = "旋风导弹",
+    englishName = "Whirlwind Missiles",
+    slotTypes = { "M" },
+    fxProfile = "guidedMissile",
+    muzzleFxProfile = "swarmerLaunch",
+    impactFxProfile = "swarmerFragmentation",
+    projectileFxVariant = "swarmer",
+    damage = 210.0,
     cooldown = 10.0,
+    maxRange = 975.0,
     prefabPath = "MOD/prefabs/swarmerMissile.xml",
     spawnForwardOffset = 1.8,
     muzzleSpeed = 10.8,
@@ -12,14 +19,20 @@ local swarmerMissileData = {
     maxSpeed = 57.375,
     acceleration = 9.315,
     lifetime = 18.0,
-    maxRange = 975.0,
     turnBlendRate = 1.95,
     turnRate = 10.5,
     turnImpulse = 210.0,
-    muzzleFxProfile = "swarmerLaunch",
-    damage = 210.0,
+    shieldFix = 1.0,
     armorFix = 1.2,
+    shieldPenetration = 1.0,
+    armorPenetration = 0.0,
     bodyFix = 1.8,
-}
-
-weaponData.swarmerMissile = swarmerMissileData
+    controllerType = "guidedSalvo",
+    mountProfile = "mSwarmer",
+    salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.18 },
+    aimControlMode = "fixed",
+    aimLimitDeg = 0.0,
+    aimPitchOffsetDeg = 0.0,
+    officialComponentId = "SWARMER_MISSILE_2",
+    family = "swarmer_missile",
+})
