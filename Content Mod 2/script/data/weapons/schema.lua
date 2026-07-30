@@ -30,6 +30,27 @@ local function _fillMissing(target, defaults)
     end
 end
 
+local function _defaultShieldImpactStrength(definition)
+    local damage = tonumber(definition.damage)
+    if damage == nil then
+        local minimum = tonumber(definition.damageMin) or 0.0
+        local maximum = tonumber(definition.damageMax) or minimum
+        damage = (minimum + maximum) * 0.5
+    end
+
+    local effectiveDamage = math.max(
+        0.0,
+        damage * math.max(0.0, tonumber(definition.shieldFix) or 1.0)
+    )
+    if effectiveDamage <= 0.0 then return 0 end
+    if effectiveDamage <= 50.0 then return 1 end
+
+    local doubledSteps = math.ceil(
+        math.log(effectiveDamage / 50.0) / math.log(2.0)
+    )
+    return math.max(1, math.min(7, 1 + doubledSteps))
+end
+
 local function _finish(definition)
     local id = tostring((definition or {}).weaponType or "")
     if id == "" then error("weapon definition is missing weaponType") end
@@ -46,6 +67,16 @@ local function _finish(definition)
         sequence = "sequential",
         interval = 0.0,
     }
+    definition.shieldImpactStrength = math.max(
+        0,
+        math.min(
+            7,
+            math.floor(
+                tonumber(definition.shieldImpactStrength)
+                    or _defaultShieldImpactStrength(definition)
+            )
+        )
+    )
     weaponData[id] = definition
     return definition
 end

@@ -117,9 +117,15 @@ local function _playProjectileHitSound(weaponType, hitPos)
     ClientCall(0, "client.playKineticArtilleryHitSound", weaponType or "", p[1], p[2], p[3])
 end
 
-local function _playShieldImpactFx(hitTargetBodyId, hitPos)
+local function _playShieldImpactFx(hitTargetBodyId, hitPos, weaponType)
     local p = hitPos or Vec(0, 0, 0)
-    ClientCall(0, "client.playProjectileShieldImpactFx", hitTargetBodyId or 0, p[1], p[2], p[3])
+    ClientCall(
+        0,
+        "client.playProjectileShieldImpactFx",
+        hitTargetBodyId or 0,
+        p[1], p[2], p[3],
+        weaponType or ""
+    )
 end
 
 local function _applyProjectileShipDamage(hitBody, weaponType)
@@ -330,7 +336,11 @@ function server.projectileManagerTick(dt)
                 _applyProjectileShipDamage(shieldHit.bodyId, projectile.weaponType)
                 _finishProjectileVisual(projectile.id, "impact", shieldHit.hitPos, shieldHit.normal, "shield")
                 _playProjectileHitSound(projectile.weaponType, shieldHit.hitPos)
-                _playShieldImpactFx(shieldHit.bodyId, shieldHit.hitPos)
+                _playShieldImpactFx(
+                    shieldHit.bodyId,
+                    shieldHit.hitPos,
+                    projectile.weaponType
+                )
                 _removeProjectileAt(i)
                 removed = true
             else
@@ -351,7 +361,11 @@ function server.projectileManagerTick(dt)
                                 shouldPlayImpact = true
                             end
                             if damageResult.didHitShield then
-                                _playShieldImpactFx(hitBody, bodyHit.hitPos)
+                                _playShieldImpactFx(
+                                    hitBody,
+                                    bodyHit.hitPos,
+                                    projectile.weaponType
+                                )
                             end
                         end
                     else

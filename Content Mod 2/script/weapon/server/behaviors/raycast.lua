@@ -74,7 +74,8 @@ local function _fireRaycast(context)
             0,
             "client.playProjectileShieldImpactFx",
             hitBody,
-            endpoint[1], endpoint[2], endpoint[3]
+            endpoint[1], endpoint[2], endpoint[3],
+            context.weaponType
         )
     end
     ClientCall(

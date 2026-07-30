@@ -144,7 +144,13 @@ local function _guidedProjectileHandleHit(projectile, hitPos, hitBody, hitNormal
     if bodyId ~= 0 and server.registryShipExists(bodyId) and not server.registryShipIsBodyDead(bodyId) then
         local impactLayer = _guidedProjectileApplyShipDamage(bodyId, projectile)
         server.guidedProjectilePlayImpactSound(projectile.weaponType, pos)
-        server.guidedProjectilePlayImpactFx(projectile.weaponType, pos, hitNormal, impactLayer ~= "none" and impactLayer or "body")
+        server.guidedProjectilePlayImpactFx(
+            projectile.weaponType,
+            pos,
+            hitNormal,
+            impactLayer ~= "none" and impactLayer or "body",
+            bodyId
+        )
         return
     end
     if bodyId ~= 0 then

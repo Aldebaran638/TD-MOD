@@ -124,7 +124,7 @@ function server.guidedProjectilePlayImpactSound(weaponType, hitPos)
     )
 end
 
-function server.guidedProjectilePlayImpactFx(weaponType, hitPos, hitNormal, impactLayer)
+function server.guidedProjectilePlayImpactFx(weaponType, hitPos, hitNormal, impactLayer, hitTargetBodyId)
     local p = hitPos or Vec(0, 0, 0)
     local normal = hitNormal or Vec(0, 1, 0)
     server.netClientCall(
@@ -134,7 +134,8 @@ function server.guidedProjectilePlayImpactFx(weaponType, hitPos, hitNormal, impa
         weaponType or "",
         p[1], p[2], p[3],
         normal[1], normal[2], normal[3],
-        impactLayer or "body"
+        impactLayer or "body",
+        math.floor(hitTargetBodyId or 0)
     )
 end
 

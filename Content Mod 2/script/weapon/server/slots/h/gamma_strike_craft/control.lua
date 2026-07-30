@@ -735,7 +735,8 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
             0,
             "client.playProjectileShieldImpactFx",
             hitBody,
-            hitPos[1], hitPos[2], hitPos[3]
+            hitPos[1], hitPos[2], hitPos[3],
+            craft.weaponType or "gammaStrikeCraft"
         )
     end
 
