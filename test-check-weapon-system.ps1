@@ -199,7 +199,20 @@ try {
     )
     $invalidSnapshot = Invoke-Checker
     Assert-True ($invalidSnapshot.ExitCode -eq 1) "rejects frame-rate-driven control snapshots"
-    Assert-True ($invalidSnapshot.Output -match "validated 20 Hz input snapshot") "reports the control snapshot contract"
+    Assert-True ($invalidSnapshot.Output -match "validated 20 Hz reacquirable input snapshot") "reports the control snapshot contract"
+    [IO.File]::WriteAllText($snapshotPath, $snapshotText, (New-Object Text.UTF8Encoding($false)))
+
+    [IO.File]::WriteAllText(
+        $snapshotPath,
+        $snapshotText.Replace(
+            'local configuredBody = math.floor(client.shipContextGetBody() or 0)',
+            'local configuredBody = math.floor((client.shipControlSnapshot or {}).shipBody or 0)'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidSnapshotReacquire = Invoke-Checker
+    Assert-True ($invalidSnapshotReacquire.ExitCode -eq 1) "rejects control snapshots that cannot reacquire a newly entered ship"
+    Assert-True ($invalidSnapshotReacquire.Output -match "reacquirable input snapshot") "reports the control snapshot reacquisition contract"
     [IO.File]::WriteAllText($snapshotPath, $snapshotText, (New-Object Text.UTF8Encoding($false)))
 
     $runtimeStatePath = Join-Path $fixtureMod "script\ship\common\server\state\runtime_state.lua"

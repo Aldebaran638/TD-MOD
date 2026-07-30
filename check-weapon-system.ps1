@@ -684,6 +684,8 @@ if ($hSlotControl -notmatch 'debugEnabled\s*=\s*false' -or
 }
 if ($inputSnapshot -notmatch 'activeInterval\s*=\s*0\.05' -or
     $inputSnapshot -notmatch 'idleInterval\s*=\s*0\.20' -or
+    $inputSnapshot -notmatch 'configuredBody\s*=\s*math\.floor\(client\.shipContextGetBody\(\)\s*or\s*0\)' -or
+    $inputSnapshot -match '\(client\.shipControlSnapshot\s+or\s+\{\}\)\.shipBody\s+or\s+client\.shipContextGetBody\(\)' -or
     $inputSnapshot -notmatch 'server\.shipReceiveControlSnapshot' -or
     $serverRequests -notmatch 'function\s+server\.shipReceiveControlSnapshot\s*\(' -or
     $serverRequests -notmatch 'lastSequence' -or
@@ -691,7 +693,7 @@ if ($inputSnapshot -notmatch 'activeInterval\s*=\s*0\.05' -or
     $shipCamera -match 'client\.shipRequestWeaponAim\s*\(' -or
     $shipRoll -match 'client\.shipRequestRollError\s*\(' -or
     $bodyMove -match 'client\.shipRequestMoveState\s*\(') {
-    Add-Issue "battlecruiser controls must use the validated 20 Hz input snapshot"
+    Add-Issue "battlecruiser controls must use the validated 20 Hz reacquirable input snapshot"
 }
 if ($guidedRuntime -notmatch 'syncInterval\s*=\s*0\.1' -or
     $guidedCollider -notmatch 'client\.correctMissileVisual' -or
