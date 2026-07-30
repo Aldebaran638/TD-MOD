@@ -113,6 +113,12 @@ local battlecruiserDefinition = {
         armorNoDamageDelay = 4.0,
         bodyNoDamageDelay = 6.0,
     },
+    externalDamage = {
+        bulletDamage = 20.0,
+        explosionMinStrength = 0.5,
+        explosionMaxDistance = 10.0,
+        explosionDamageScale = 30.0,
+    },
     fx = {
         shieldHit = {
             ringParticleRadius = 0.1,

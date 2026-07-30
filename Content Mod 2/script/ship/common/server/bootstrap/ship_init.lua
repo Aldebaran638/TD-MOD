@@ -32,6 +32,7 @@ end
 function server.shipInitInit(shipType)
     server.shipContextInit(shipType, "stellarisShip")
     SetBool("StellarisShips/debug/inputTestEnabled", false)
+    server.shipDestructibilityInit(server.shipContextGetBody())
     _registerCurrentShip(shipType)
 end
 

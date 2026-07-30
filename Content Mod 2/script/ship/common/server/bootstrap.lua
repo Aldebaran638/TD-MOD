@@ -6,7 +6,10 @@
 #include "registry/ship_registry.lua"
 #include "network/request_authorizer.lua"
 #include "network/control_snapshot_endpoint.lua"
+#include "lifecycle/ship_destructibility.lua"
 #include "bootstrap/ship_init.lua"
+#include "damage/ship_damage.lua"
+#include "damage/external_damage.lua"
 #include "movement/body_mass_upward_move.lua"
 #include "movement/body_directional_move.lua"
 #include "movement/body_move_state_receive.lua"
@@ -27,6 +30,7 @@ end
 
 function server.shipServerTick(dt)
     server.runtimeStateTick(dt)
+    server.shipExternalDamageTick(dt)
     server.shipHpRecoveryTick(dt)
     server.shipDeathExplosionTick(dt)
     server.bodyMoveStateReceiveTick(dt)

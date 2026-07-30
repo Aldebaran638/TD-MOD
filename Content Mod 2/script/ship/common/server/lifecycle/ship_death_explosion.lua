@@ -47,6 +47,7 @@ function server.shipDeathExplosionTick(dt)
     if isDead and (not exploded) then
         local cfg = server.shipDeathExplosionConfig
         local explosionSize = tonumber(cfg.explosionSize) or 4.0
+        server.shipDestructibilityUnlock(body)
         _explodeAtBodyCenter(body, explosionSize)
         state.explodedByBody[body] = true
     end

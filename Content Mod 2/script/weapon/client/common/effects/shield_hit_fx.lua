@@ -219,7 +219,7 @@ local function _trimBurstLimit()
     while #bursts >= ShieldConfig.maxActiveBursts do table.remove(bursts, 1) end
 end
 
-local function _startShieldBurst(shipBodyId, hitTargetBodyId, hitPointWorld, shotId, weaponType)
+local function _startShieldBurst(shipBodyId, hitTargetBodyId, hitPointWorld, shotId, weaponType, explicitStrength)
     local _ = shipBodyId
     if hitTargetBodyId == nil or hitTargetBodyId == 0 then return end
     if IsHandleValid ~= nil and not IsHandleValid(hitTargetBodyId) then return end
@@ -230,7 +230,12 @@ local function _startShieldBurst(shipBodyId, hitTargetBodyId, hitPointWorld, sho
     local hitNormalWorld = _safeNormalize(VecSub(hitPointWorld, centerWorld), Vec(0, 1, 0))
     local rightWorld = _buildPerpBasis(hitNormalWorld)
     local now = GetTime()
-    local maxRing = _resolveImpactRingCount(weaponType)
+    local maxRing = tonumber(explicitStrength)
+        or _resolveImpactRingCount(weaponType)
+    maxRing = math.max(
+        1,
+        math.min(ShieldConfig.maxImpactRing, math.floor(maxRing))
+    )
     local localHit = TransformToLocalPoint(bodyTransform, hitPointWorld)
     local seed = _weaponTypeSeed(weaponType)
         + (tonumber(shotId) or 0) * 97
@@ -341,6 +346,17 @@ function client.playProjectileShieldImpactFx(hitTargetBodyId, hitX, hitY, hitZ, 
         Vec(hitX or 0, hitY or 0, hitZ or 0),
         0,
         weaponType
+    )
+end
+
+function client.playExternalShieldImpactFx(hitTargetBodyId, hitX, hitY, hitZ, impactStrength)
+    _startShieldBurst(
+        0,
+        hitTargetBodyId,
+        Vec(hitX or 0, hitY or 0, hitZ or 0),
+        0,
+        "",
+        impactStrength
     )
 end
 
