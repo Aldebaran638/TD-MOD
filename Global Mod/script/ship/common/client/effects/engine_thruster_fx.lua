@@ -364,6 +364,19 @@ function client.engineThrusterFxRender()
     local body = math.floor(state.body or 0)
     local sprite = math.floor(state.sprite or 0)
     if body == 0 or sprite == 0 or not IsHandleValid(body) then return end
+
+    -- 优化：无人驾驶时不渲染尾焰
+    local hasDriver = false
+    local playerId = GetLocalPlayer()
+    if playerId ~= nil and playerId > 0 then
+        local vehicle = GetPlayerVehicle(playerId)
+        if vehicle ~= nil and vehicle ~= 0 then
+            local vehicleBody = GetVehicleBody(vehicle)
+            hasDriver = (vehicleBody == body)
+        end
+    end
+    if not hasDriver then return end
+
     if (state.cameraDistance or 0.0)
         > (_engineThrusterConfig().renderCutoffDistance or 1200.0) then
         return
