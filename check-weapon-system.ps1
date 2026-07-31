@@ -79,6 +79,7 @@ $serverRequests = (Read-Required "script\ship\common\server\network\request_auth
     "`n" + (Read-Required "script\ship\common\server\network\control_snapshot_endpoint.lua") +
     "`n" + (Read-Required "script\weapon\server\network\weapon_command_endpoint.lua")
 $groupRuntime = Read-Required "script\weapon\server\common\runtime\weapon_group.lua"
+$weaponDamageRuntime = Read-Required "script\weapon\server\common\runtime\damage.lua"
 $weaponRuntime = Read-Required "script\weapon\server\common\runtime\weapon_runtime.lua"
 $controllerRegistry = Read-Required "script\weapon\server\common\runtime\controller_registry.lua"
 $specializedControllerAdapters = Read-Required "script\weapon\server\common\runtime\specialized_controller_adapters.lua"
@@ -219,6 +220,67 @@ foreach ($item in $expectedEnglishNames.GetEnumerator()) {
     if ($weaponSource -notmatch "(?s)weaponType\s*=\s*`"$id`".*?englishName\s*=\s*`"$name`"") {
         Add-Issue "weapon $($item.Key) does not use official English name '$($item.Value)'"
     }
+}
+
+$officialCombatFields = @(
+    "damageMin", "damageMax", "shieldFix", "armorFix", "bodyFix",
+    "shieldPenetration", "armorPenetration"
+)
+$officialCombatStats = [ordered]@{
+    tachyonLance = @(780, 1950, 0.5, 2.0, 1.5, 0.0, 0.0)
+    focusedArcEmitter = @(2, 1690, 1.0, 1.0, 1.0, 1.0, 1.0)
+    gigaCannon = @(910, 2600, 1.5, 0.75, 1.0, 0.0, 0.0)
+    largeGammaLaser = @(102, 276, 0.5, 1.5, 1.25, 0.0, 0.0)
+    largePlasmaCannon = @(126, 336, 0.25, 2.0, 1.5, 0.0, 0.0)
+    largeGaussCannon = @(96, 276, 1.5, 0.5, 1.0, 0.0, 0.0)
+    kineticArtillery = @(195, 585, 2.0, 0.5, 1.0, 0.0, 0.0)
+    largeStormfireAutocannon = @(78, 162, 1.5, 0.25, 1.25, 0.0, 0.0)
+    mediumGammaLaser = @(43, 115, 0.5, 1.5, 1.25, 0.0, 0.0)
+    mediumPlasmaCannon = @(53, 140, 0.25, 2.0, 1.5, 0.0, 0.0)
+    phaseDisruptor = @(1, 48, 1.25, 1.0, 1.0, 0.70, 0.70)
+    mediumGaussCannon = @(40, 115, 1.5, 0.5, 1.0, 0.0, 0.0)
+    mediumStormfireAutocannon = @(33, 68, 1.5, 0.25, 1.25, 0.0, 0.0)
+    swarmerMissile = @(61, 85, 1.0, 1.0, 1.0, 1.0, 0.0)
+    devastatorTorpedoes = @(169, 254, 1.0, 1.5, 1.0, 1.0, 0.0)
+    neutronLauncher = @(61, 131, 0.5, 1.5, 1.75, 0.0, 0.0)
+    gammaStrikeCraft = @(6, 17, 1.0, 1.5, 1.0, 1.0, 0.0)
+    flakArtillery = @(4, 8, 2.0, 0.25, 1.0, 0.25, 0.0)
+    guardianPointDefense = @(4, 8, 0.25, 2.0, 1.0, 0.0, 0.25)
+}
+
+foreach ($weaponEntry in $officialCombatStats.GetEnumerator()) {
+    $source = [string]$weaponSourceById[$weaponEntry.Key]
+    for ($fieldIndex = 0; $fieldIndex -lt $officialCombatFields.Count; $fieldIndex++) {
+        $field = $officialCombatFields[$fieldIndex]
+        $expectedValue = [double]$weaponEntry.Value[$fieldIndex]
+        $fieldMatch = [Regex]::Match(
+            $source,
+            "(?m)^\s*$([Regex]::Escape($field))\s*=\s*(-?(?:\d+(?:\.\d*)?|\.\d+))\s*,"
+        )
+        if (-not $fieldMatch.Success) {
+            if ($expectedValue -eq 0.0 -and $field -in @("shieldPenetration", "armorPenetration")) {
+                continue
+            }
+            Add-Issue "weapon $($weaponEntry.Key) is missing official Stellaris combat stat $field"
+            continue
+        }
+        $actualValue = [double]::Parse(
+            $fieldMatch.Groups[1].Value,
+            [Globalization.CultureInfo]::InvariantCulture
+        )
+        if ([Math]::Abs($actualValue - $expectedValue) -gt 0.0001) {
+            Add-Issue "weapon $($weaponEntry.Key) has non-official $field=$actualValue (expected $expectedValue)"
+        }
+    }
+}
+
+if ($weaponDamageRuntime -notmatch 'function\s+server\.weaponDamageRoll\s*\(' -or
+    $weaponDamageRuntime -notmatch 'minimum\s*\+\s*\(maximum\s*-\s*minimum\)\s*\*\s*math\.random\(\)' -or
+    $guidedGroup -notmatch 'damageMin\s*=\s*tonumber\(weaponDef\.damageMin\)' -or
+    $guidedRuntime -notmatch 'damageMin\s*=\s*tonumber\(cfg\.damageMin\)' -or
+    $guidedCollider -notmatch 'server\.weaponDamageRoll\(projectile\)' -or
+    $projectileManager -notmatch 'server\.weaponDamageRoll\(settings\)') {
+    Add-Issue "weapon hit paths do not roll the configured Stellaris damage interval"
 }
 
 foreach ($behavior in @("raycast", "projectile", "rocketProjectile", "guidedProjectile", "strikeCraft")) {
@@ -532,7 +594,7 @@ if ($groupRuntime -notmatch 'mount\.overheated' -or
 if ($crosshair -notmatch 'weaponConfigUiIsOpen') {
     Add-Issue "crosshair is not hidden while the independent UI is open"
 }
-if ([string]$weaponSourceById.focusedArcEmitter -notmatch '(?s)bodyFix\s*=\s*2\.3.*?chargeDuration\s*=\s*0\.50.*?controllerType\s*=\s*"chargedSpinal"' -or
+if ([string]$weaponSourceById.focusedArcEmitter -notmatch '(?s)bodyFix\s*=\s*1\.0.*?chargeDuration\s*=\s*0\.50.*?controllerType\s*=\s*"chargedSpinal"' -or
     $xSlotState -notmatch 'weaponDef\.chargeDuration\s+or\s+fireProfile\.chargeDuration' -or
     $xSlotControl -notmatch '(?s)elseif\s+activeState\s*==\s*"charged"\s+then.*?if\s+releaseRequested\s+then.*?elseif\s+not\s+holdRequested\s+then' -or
     $xSlotControl -match 'if\s+holdRequested\s+or\s+releaseRequested\s+then') {
@@ -564,11 +626,11 @@ if ($projectileManager -notmatch 'playKineticArtilleryFireSound",\s*weaponType' 
 if ([string]$weaponSourceById.gigaCannon -notmatch '(?s)mountProfile\s*=\s*"xSpinal".*?salvoProfile\s*=\s*\{\s*groupSize\s*=\s*1,\s*sequence\s*=\s*"sequential"') {
     Add-Issue "Giga Cannon must use Tachyon hardpoints and fire one barrel at a time"
 }
-if ([string]$weaponSourceById.gigaCannon -notmatch '(?s)damage\s*=\s*2350.*?cooldown\s*=\s*3\.5.*?maxRange\s*=\s*750\.0.*?projectileSpeed\s*=\s*560\.0' -or
+if ([string]$weaponSourceById.gigaCannon -notmatch '(?s)cooldown\s*=\s*3\.5.*?maxRange\s*=\s*750\.0.*?projectileSpeed\s*=\s*560\.0' -or
     $projectileVisual -notmatch '(?s)local function _updateGigaCannonProjectile.*?_emitDistanceEvents.*?"nextTrailDistance".*?function\(p, eventPos\)') {
     Add-Issue "Giga Cannon speed, cooldown, or dedicated trail rendering is missing"
 }
-if ([string]$weaponSourceById.neutronLauncher -notmatch '(?s)damage\s*=\s*610.*?cooldown\s*=\s*4\.5.*?maxRange\s*=\s*1150\.0.*?targetingMode\s*=\s*"forward".*?mountProfile\s*=\s*"gNeutron".*?groupSize\s*=\s*1.*?aimControlMode\s*=\s*"camera_limited"') {
+if ([string]$weaponSourceById.neutronLauncher -notmatch '(?s)cooldown\s*=\s*4\.5.*?maxRange\s*=\s*1150\.0.*?targetingMode\s*=\s*"forward".*?mountProfile\s*=\s*"gNeutron".*?groupSize\s*=\s*1.*?aimControlMode\s*=\s*"camera_limited"') {
     Add-Issue "Neutron Launcher must rotate through four X-aligned mounts, support tilt fire, and use a 4.5s cooldown"
 }
 $gRocketBlock = [Regex]::Match($ship, '(?s)gRocket\s*=\s*\{(.*?)\n\s*\},\s*\n\s*gNeutron\s*=').Groups[1].Value

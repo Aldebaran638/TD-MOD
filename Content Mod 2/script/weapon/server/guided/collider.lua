@@ -58,7 +58,7 @@ local function _guidedProjectileApplyShipDamage(hitBody, projectile)
     local result = server.shipDamageApplyWeaponDefinition(
         hitBody,
         projectile,
-        tonumber(projectile.damage) or 0.0
+        server.weaponDamageRoll(projectile)
     )
     return result.impactLayer
 end

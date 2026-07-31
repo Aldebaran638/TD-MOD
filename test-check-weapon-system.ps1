@@ -149,6 +149,18 @@ try {
     Assert-True ($invalidHeat.Output -match "Stormfire|largeStormfireAutocannon") "reports the Stormfire heat contract"
     [IO.File]::WriteAllText($stormfirePath, $stormfireText, (New-Object Text.UTF8Encoding($false)))
 
+    $tachyonPath = Join-Path $fixtureMod "script\data\weapons\x\tachyon_lance.lua"
+    $tachyonText = [IO.File]::ReadAllText($tachyonPath)
+    [IO.File]::WriteAllText(
+        $tachyonPath,
+        $tachyonText.Replace('damageMin = 780', 'damageMin = 781'),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidOfficialDamage = Invoke-Checker
+    Assert-True ($invalidOfficialDamage.ExitCode -eq 1) "rejects a non-official Stellaris damage value"
+    Assert-True ($invalidOfficialDamage.Output -match "tachyonLance.*damageMin") "reports the official Stellaris damage contract"
+    [IO.File]::WriteAllText($tachyonPath, $tachyonText, (New-Object Text.UTF8Encoding($false)))
+
     $arcPath = Join-Path $fixtureMod "script\data\weapons\x\focused_arc_emitter.lua"
     $arcText = [IO.File]::ReadAllText($arcPath)
     [IO.File]::WriteAllText(

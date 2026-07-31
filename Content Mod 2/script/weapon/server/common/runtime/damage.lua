@@ -2,6 +2,20 @@
 
 server = server or {}
 
+function server.weaponDamageRoll(definition)
+    local data = definition or {}
+    local minimum = tonumber(data.damageMin)
+    local maximum = tonumber(data.damageMax)
+    if minimum == nil and maximum == nil then
+        return math.max(0.0, tonumber(data.damage) or 0.0)
+    end
+
+    minimum = math.max(0.0, minimum or maximum or 0.0)
+    maximum = math.max(minimum, maximum or minimum)
+    if maximum <= minimum then return minimum end
+    return minimum + (maximum - minimum) * math.random()
+end
+
 function server.weaponDamageApplyToShip(hitBody, weaponType)
     local bodyId = math.floor(hitBody or 0)
     local definition = (weaponData or {})[tostring(weaponType or "")] or {}
@@ -9,8 +23,7 @@ function server.weaponDamageApplyToShip(hitBody, weaponType)
         return false, false, "environment"
     end
 
-    local raw = tonumber(definition.damage)
-        or ((tonumber(definition.damageMin) or 0.0) + (tonumber(definition.damageMax) or 0.0)) * 0.5
+    local raw = server.weaponDamageRoll(definition)
     local result = server.shipDamageApplyWeaponDefinition(bodyId, definition, raw)
     return result.didDamage, result.didHitShield, result.impactLayer
 end

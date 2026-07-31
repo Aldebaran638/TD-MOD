@@ -148,7 +148,7 @@ local function _applyProjectileShipDamage(hitBody, weaponType)
     return server.shipDamageApplyWeaponDefinition(
         hitBody,
         settings,
-        tonumber(settings.damage) or 0.0
+        server.weaponDamageRoll(settings)
     )
 end
 
