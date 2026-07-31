@@ -132,6 +132,11 @@ local function _evaluateVehicleTarget(vehicleId, shipBody, aimOrigin, aimForward
     end
 
     local targetBody = GetVehicleBody(vehicleId)
+    if targetBody ~= nil and targetBody ~= 0
+        and client.weaponTargetIsLockableBody ~= nil
+        and not client.weaponTargetIsLockableBody(targetBody, shipBody) then
+        return nil
+    end
     if targetBody ~= nil and targetBody ~= 0 and targetBody == shipBody then
         return nil
     end

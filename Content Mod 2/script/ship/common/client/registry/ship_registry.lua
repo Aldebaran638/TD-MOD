@@ -59,6 +59,37 @@ function client.registryShipGetShipType(shipBodyId)
     return GetString(client.registryShipKeyPrefix(shipBodyId) .. "/shipType")
 end
 
+function client.registryShipGetInterceptorClass(shipBodyId)
+    if not client.registryShipExists(shipBodyId) then return "" end
+    return GetString(client.registryShipKeyPrefix(shipBodyId) .. "/interceptorClass")
+end
+
+function client.registryShipIsPlayerLockable(shipBodyId)
+    return client.registryShipExists(shipBodyId)
+        and GetBool(client.registryShipKeyPrefix(shipBodyId) .. "/playerLockable")
+end
+
+function client.registryShipIsCloaked(shipBodyId)
+    return client.registryShipExists(shipBodyId)
+        and GetBool(client.registryShipKeyPrefix(shipBodyId) .. "/cloaked")
+end
+
+function client.registryShipGetCloakStrength(shipBodyId)
+    if not client.registryShipExists(shipBodyId) then return 0.0 end
+    return GetFloat(client.registryShipKeyPrefix(shipBodyId) .. "/cloakStrength")
+end
+
+function client.shipRequestToggleCloak(shipBodyId, active)
+    if not client.registryShipExists(shipBodyId) then return false end
+    ServerCall(
+        "server.shipRequestToggleCloak",
+        GetLocalPlayer(),
+        shipBodyId,
+        active and 1 or 0
+    )
+    return true
+end
+
 function client.registryShipGetHP(shipBodyId)
     if not client.registryShipExists(shipBodyId) then
         return nil, nil, nil

@@ -69,4 +69,8 @@ shipMountProfileData.enigmaticCruiser = {
         { firePosOffset = { x = 0.8, y = 6.5, z = -1.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
         { firePosOffset = { x = -0.8, y = 6.5, z = -1.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
     },
+    pDefense = {
+        { firePosOffset = { x = 2.5, y = 1.1, z = -1.8 } },
+        { firePosOffset = { x = -2.5, y = 1.1, z = -1.8 } },
+    },
 }

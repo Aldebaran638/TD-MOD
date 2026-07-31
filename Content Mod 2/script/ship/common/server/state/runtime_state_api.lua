@@ -46,6 +46,18 @@ function server.shipRuntimeGetWeaponDamageMultiplier(shipBodyId)
     )
 end
 
+function server.shipRuntimeGetCloak(shipBodyId)
+    return _api.getCloak(shipBodyId, server.shipContextGetType())
+end
+
+function server.shipRuntimeSetCloakActive(shipBodyId, active)
+    return _api.setCloakActive(
+        shipBodyId,
+        active,
+        server.shipContextGetType()
+    )
+end
+
 -- ============ Regen ============
 function server.shipRuntimeGetRegenConfig(shipBodyId)
     return _api.getRegenConfig(shipBodyId, server.shipContextGetType())

@@ -5,6 +5,7 @@
 #include "state/runtime_state_api.lua"
 #include "registry/ship_registry.lua"
 #include "components/ship_components.lua"
+#include "lifecycle/ship_cloak.lua"
 #include "network/request_authorizer.lua"
 #include "network/control_snapshot_endpoint.lua"
 #include "lifecycle/ship_destructibility.lua"
@@ -16,6 +17,7 @@
 #include "movement/body_directional_move.lua"
 #include "movement/body_move_state_receive.lua"
 #include "movement/body_velocity_quadratic_damping.lua"
+#include "movement/body_combat_speed_limit.lua"
 #include "movement/ship_attitude_controller.lua"
 #include "movement/ship_roll_stabilizer.lua"
 #include "lifecycle/ship_death_explosion.lua"
@@ -28,6 +30,7 @@ function server.shipServerInit(shipType)
     local body = server.shipContextGetBody()
     server.runtimeStateInit(body, shipType, shipType)
     server.shipComponentApplyDefault(shipType)
+    server.shipCloakInit()
     return body
 end
 
@@ -36,11 +39,13 @@ function server.shipServerTick(dt)
     server.shipPlayerProtectionTick()
     server.shipExternalDamageTick(dt)
     server.shipHpRecoveryTick(dt)
+    server.shipCloakTick(dt)
     server.shipDeathExplosionTick(dt)
     server.bodyMoveStateReceiveTick(dt)
     server.bodyMassUpwardMoveTick(dt)
     server.bodyDirectionalMoveTick(dt)
     server.bodyVelocityQuadraticDampingTick(dt)
+    server.bodyCombatSpeedLimitTick(dt)
 end
 
 function server.shipServerUpdate(dt)

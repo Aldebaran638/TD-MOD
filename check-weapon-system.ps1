@@ -47,6 +47,7 @@ foreach ($weaponFile in $weaponDefinitionFiles) {
 $catalog = Read-Required "script\data\weapons\weapon_catalog.lua"
 $shipDefinition = Read-Required "script\data\ships\battlecruiser.lua"
 $strikeCraftDefinition = Read-Required "script\data\ships\advanced_strike_craft.lua"
+$interceptorShipDefinitions = Read-Required "script\data\ships\interceptor_projectiles.lua"
 $componentCatalog = Read-Required "script\data\components\component_catalog.lua"
 $shipMounts = Read-Required "script\data\ships\battlecruiser_mounts.lua"
 $ship = $shipDefinition + "`n" + $shipMounts
@@ -107,6 +108,10 @@ $missileVisual = Read-Required "script\weapon\client\guided\effects\missile_visu
 $projectileManager = Read-Required "script\weapon\server\slots\l\kinetic_artillery\projectile_manager.lua"
 $hSlotControl = Read-Required "script\weapon\server\slots\h\gamma_strike_craft\control.lua"
 $hSlotFlight = Read-Required "script\weapon\server\slots\h\gamma_strike_craft\flight_controller.lua"
+$flakWeapon = Read-Required "script\data\weapons\p\flak_artillery.lua"
+$pointDefenseWeapon = Read-Required "script\data\weapons\p\guardian_point_defense.lua"
+$pointDefenseControl = Read-Required "script\weapon\server\slots\p\point_defense\control.lua"
+$pointDefenseFx = Read-Required "script\weapon\client\slots\p\point_defense\effects.lua"
 $networkDebug = Read-Required "script\net\network_debug.lua"
 $syncLimiter = Read-Required "script\net\server_sync_limiter.lua"
 $inputSnapshot = Read-Required "script\net\client_input_snapshot.lua"
@@ -118,6 +123,8 @@ $shipRoll = Read-Required "script\ship\common\client\hud\ship_roll_error.lua"
 $bodyMove = Read-Required "script\ship\common\client\input\body_move_input.lua"
 $shipRegistryServer = Read-Required "script\ship\common\server\registry\ship_registry.lua"
 $shipComponents = Read-Required "script\ship\common\server\components\ship_components.lua"
+$shipCloak = Read-Required "script\ship\common\server\lifecycle\ship_cloak.lua"
+$speedLimit = Read-Required "script\ship\common\server\movement\body_combat_speed_limit.lua"
 $shipDamage = Read-Required "script\ship\common\server\damage\ship_damage.lua"
 $sensorHud = Read-Required "script\ship\common\client\hud\ship_sensor_hud.lua"
 $strikeCraftEntry = Read-Required "script\strikeCraftMain.lua"
@@ -791,6 +798,40 @@ if ($sensorHud -notmatch 'UiWorldToPixel' -or
     $sensorHud -notmatch 'math\.deg\(math\.atan2\(dy,\s*dx\)\)') {
     Add-Issue "client sensor HUD lacks registered-ship scan, projection, or off-screen arrows"
 }
+if ($ship -notmatch 'slotType\s*=\s*"P",\s*count\s*=\s*2,\s*automatic\s*=\s*true' -or
+    $flakWeapon -notmatch 'officialComponentId\s*=\s*"FLAK_BATTERY_3"' -or
+    $flakWeapon -notmatch 'shieldFix\s*=\s*2\.0' -or
+    $flakWeapon -notmatch 'shieldPenetration\s*=\s*0\.25' -or
+    $pointDefenseWeapon -notmatch 'officialComponentId\s*=\s*"POINT_DEFENCE_3"' -or
+    $pointDefenseWeapon -notmatch 'armorFix\s*=\s*2\.0' -or
+    $pointDefenseWeapon -notmatch 'armorPenetration\s*=\s*0\.25' -or
+    $pointDefenseControl -notmatch '_pdInterceptTime' -or
+    $pointDefenseControl -notmatch 'automaticPointDefense' -or
+    $pointDefenseFx -notmatch 'function\s+client\.spawnPointDefenseFx') {
+    Add-Issue "P-slot flak/point-defense official modifiers, predictive AI, or FX are incomplete"
+}
+if ($interceptorShipDefinitions -notmatch 'advancedSwarmerMissile' -or
+    $interceptorShipDefinitions -notmatch 'devastatorTorpedo' -or
+    $interceptorShipDefinitions -notmatch 'playerDriveable\s*=\s*false' -or
+    $interceptorShipDefinitions -notmatch 'playerLockable\s*=\s*false' -or
+    $guidedRuntime -notmatch 'interceptorShipType' -or
+    $shipRegistryServer -notmatch 'registryShipSetInterceptorOwner') {
+    Add-Issue "missiles, torpedoes, or strike craft are missing non-player interceptor ship registration"
+}
+if ($componentCatalog -notmatch 'reactorBooster3' -or
+    $componentCatalog -notmatch 'reactorOutputMultiplier\s*=\s*0\.50' -or
+    $componentCatalog -notmatch 'darkMatterCloakingField' -or
+    $componentCatalog -notmatch 'cloakStrength\s*=\s*1\.0' -or
+    $shipCloak -notmatch 'shipRequestToggleCloak' -or
+    $shipCloak -notmatch 'shipCloakApplyShieldCap' -or
+    $client -notmatch 'shipCloakInputTick') {
+    Add-Issue "reactor boosters or dark-matter cloaking runtime is incomplete"
+}
+if ($shipDefinition -notmatch 'maxCombatSpeed\s*=\s*42\.0' -or
+    $speedLimit -notmatch 'SetBodyVelocity' -or
+    $shipServerBootstrap -notmatch 'bodyCombatSpeedLimitTick') {
+    Add-Issue "combat speed cap is missing from the ship runtime"
+}
 if ($strikeCraftDefinition -notmatch 'shipType\s*=\s*"advancedStrikeCraft"' -or
     $strikeCraftDefinition -notmatch 'playerConfigurable\s*=\s*false' -or
     $strikeCraftDefinition -notmatch 'maxShieldHP\s*=\s*25\.0' -or
@@ -798,12 +839,15 @@ if ($strikeCraftDefinition -notmatch 'shipType\s*=\s*"advancedStrikeCraft"' -or
     $strikeCraftDefinition -notmatch 'maxBodyHP\s*=\s*12\.0' -or
     $strikeCraftEntry -notmatch 'server\.shipServerInit\(configuredShipType\)' -or
     $strikeCraftEntry -match 'weapon/server/bootstrap\.lua' -or
-    $strikeCraftPrefab -notmatch '<vehicle[^>]+driven="true"[^>]+sound="none 0"' -or
+    $strikeCraftPrefab -notmatch '<vehicle[^>]+driven="false"[^>]+sound="none 0"' -or
+    $strikeCraftDefinition -notmatch 'playerDriveable\s*=\s*false' -or
+    $strikeCraftDefinition -notmatch 'playerLockable\s*=\s*false' -or
+    $strikeCraftDefinition -notmatch 'interceptorClass\s*=\s*"strike_craft"' -or
     $strikeCraftPrefab -notmatch 'strikeCraftMain\.lua' -or
     $hSlotControl -notmatch 'registryShipRegister\(\s*craftBody,\s*"advancedStrikeCraft"' -or
     $hSlotControl -notmatch 'registryShipIsBodyDead\(craft\.bodyId\)' -or
     $shipRegistryServer -notmatch 'function\s+server\.registryShipUnregister') {
-    Add-Issue "advanced strike craft is not a fixed, boardable, AI-controlled registered Stellaris ship"
+    Add-Issue "advanced strike craft is not a fixed, AI-controlled, non-player-lockable registered Stellaris ship"
 }
 
 $prefabMatches = [Regex]::Matches($standard, '"(MOD/prefabs/[^"]+\.xml)"')
@@ -828,7 +872,7 @@ foreach ($luaFile in Get-ChildItem -LiteralPath $modRoot -Recurse -Filter "*.lua
 }
 
 Write-Host "=== CM2 Weapon System Semantic Checker ===" -ForegroundColor Cyan
-Write-Host "Checked $($expected.Count) standard weapons, core components, sensor HUD, fixed strike craft, two frames, five behaviors, and FX/prefab references."
+Write-Host "Checked $($expected.Count) standard weapons, core components, sensor HUD, fixed interceptors, two frames, five behaviors, and FX/prefab references."
 if ($issues -gt 0) {
     Write-Host "Check failed: $issues issue(s)." -ForegroundColor Red
     exit 1

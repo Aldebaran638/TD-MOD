@@ -102,6 +102,11 @@ local function _getVehicleAimWorld(vehicleId)
         return nil, 0
     end
     local targetBody = GetVehicleBody(vehicleId)
+    if targetBody ~= nil and targetBody ~= 0
+        and client.weaponTargetIsLockableBody ~= nil
+        and not client.weaponTargetIsLockableBody(targetBody, client.shipContextGetBody()) then
+        return nil, 0
+    end
     if targetBody ~= nil and targetBody ~= 0 then
         return _getBodyCenterWorld(targetBody), targetBody
     end

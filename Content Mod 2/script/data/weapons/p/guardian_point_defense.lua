@@ -1,0 +1,25 @@
+---@diagnostic disable: undefined-global
+
+weaponDefineRay({
+    weaponType = "guardianPointDefense",
+    displayName = "守护者点防御",
+    englishName = "Guardian Point-Defense",
+    slotTypes = { "P" },
+    iconPath = "MOD/gfx/ui/weapon_icons/mediumGammaLaser.png",
+    damageMin = 4.0,
+    damageMax = 8.0,
+    cooldown = 0.45,
+    officialCooldown = 5.0,
+    maxRange = 220.0,
+    shieldFix = 0.25,
+    armorFix = 2.0,
+    armorPenetration = 0.25,
+    bodyFix = 1.0,
+    powerUse = 10.0,
+    automaticPointDefense = true,
+    pointDefenseRole = "missile",
+    targetingMode = "automatic_interceptor",
+    mountProfile = "pDefense",
+    officialComponentId = "POINT_DEFENCE_3",
+    family = "point_defense_energy",
+})

@@ -38,5 +38,6 @@ weaponDefineRocket({
     aimLimitDeg = 0.0,
     aimPitchOffsetDeg = 0.0,
     officialComponentId = "TORPEDO_3",
+    interceptorShipType = "devastatorTorpedo",
     family = "torpedo",
 })

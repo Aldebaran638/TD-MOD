@@ -69,6 +69,42 @@ shipComponentData = shipComponentData or {
         armorHardening = 0.25,
         powerUse = 25.0,
     },
+    reactorBooster1 = {
+        componentId = "reactorBooster1",
+        slotType = "auxiliary",
+        displayName = "反应堆增压器 I",
+        englishName = "Reactor Booster I",
+        iconPath = "MOD/gfx/ui/defense_components/advancedAfterburners.png",
+        reactorOutputMultiplier = 0.20,
+    },
+    reactorBooster2 = {
+        componentId = "reactorBooster2",
+        slotType = "auxiliary",
+        displayName = "反应堆增压器 II",
+        englishName = "Reactor Booster II",
+        iconPath = "MOD/gfx/ui/defense_components/advancedAfterburners.png",
+        reactorOutputMultiplier = 0.33,
+    },
+    reactorBooster3 = {
+        componentId = "reactorBooster3",
+        slotType = "auxiliary",
+        displayName = "反应堆增压器 III",
+        englishName = "Reactor Booster III",
+        iconPath = "MOD/gfx/ui/defense_components/advancedAfterburners.png",
+        reactorOutputMultiplier = 0.50,
+    },
+    darkMatterCloakingField = {
+        componentId = "darkMatterCloakingField",
+        slotType = "auxiliary",
+        displayName = "暗物质隐形场",
+        englishName = "Dark Matter Cloaking Field",
+        iconPath = "MOD/gfx/ui/defense_components/darkMatterDeflector.png",
+        officialComponentId = "BATTLESHIP_CLOAKING_DARK_MATTER",
+        powerUse = 180.0,
+        cloakStrength = 1.0,
+        cloakedShieldReduction = 0.50,
+        shipLimit = 1,
+    },
     chemicalThrusters = {
         componentId = "chemicalThrusters",
         slotType = "thruster",
@@ -293,6 +329,7 @@ function shipComponentResolveProfile(
     }
     local shieldMultiplier = 0.0
     local powerOutput = 0.0
+    local reactorOutputMultiplier = 0.0
     local componentPowerUse = 0.0
     local fixedSensor = (definition or {}).fixedSensorProfile or {}
     local sensor = {
@@ -300,6 +337,12 @@ function shipComponentResolveProfile(
         interval = tonumber(fixedSensor.interval) or 1.0,
         trackingAdd = tonumber(fixedSensor.trackingAdd) or 0.0,
         componentId = tostring(fixedSensor.componentId or ""),
+    }
+    local cloak = {
+        available = false,
+        strength = 0.0,
+        shieldReduction = 0.0,
+        shipLimit = 0,
     }
 
     local function applyComponent(componentId)
@@ -337,6 +380,23 @@ function shipComponentResolveProfile(
         powerOutput = powerOutput + (tonumber(component.powerOutput) or 0.0)
         componentPowerUse =
             componentPowerUse + (tonumber(component.powerUse) or 0.0)
+        reactorOutputMultiplier = reactorOutputMultiplier
+            + (tonumber(component.reactorOutputMultiplier) or 0.0)
+        if (tonumber(component.cloakStrength) or 0.0) > 0.0 then
+            cloak.available = true
+            cloak.strength = math.max(
+                cloak.strength,
+                tonumber(component.cloakStrength) or 0.0
+            )
+            cloak.shieldReduction = math.max(
+                cloak.shieldReduction,
+                tonumber(component.cloakedShieldReduction) or 0.0
+            )
+            cloak.shipLimit = math.max(
+                cloak.shipLimit,
+                math.floor(tonumber(component.shipLimit) or 0)
+            )
+        end
         if (tonumber(component.sensorRange) or 0.0) > 0.0 then
             sensor.range = tonumber(component.sensorRange) or 0.0
             sensor.interval = math.max(
@@ -352,6 +412,7 @@ function shipComponentResolveProfile(
         for _, componentId in ipairs(slots or {}) do applyComponent(componentId) end
     end
 
+    powerOutput = powerOutput * (1.0 + math.max(0.0, reactorOutputMultiplier))
     protection.maxShieldHP =
         math.max(0.0, protection.maxShieldHP * (1.0 + shieldMultiplier))
     protection.maxArmorHP = math.max(0.0, protection.maxArmorHP)
@@ -406,7 +467,9 @@ function shipComponentResolveProfile(
             speedMultiplier = excessBonus,
             evasionMultiplier = excessBonus,
             weaponDamageMultiplier = excessBonus,
+            reactorOutputMultiplier = reactorOutputMultiplier,
         },
+        cloak = cloak,
     }
 end
 

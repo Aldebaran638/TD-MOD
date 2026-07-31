@@ -72,6 +72,7 @@ function client.weaponConfigurationBindingTick(dt)
         tostring(loadout.M or ""),
         tostring(loadout.G or ""),
         tostring(loadout.H or ""),
+        tostring(loadout.P or ""),
         componentPayload
     )
 end

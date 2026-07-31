@@ -21,5 +21,7 @@ weaponData = weaponData or {}
 #include "g/devastator_torpedoes.lua"
 #include "g/neutron_launcher.lua"
 #include "h/gamma_strike_craft.lua"
+#include "p/flak_artillery.lua"
+#include "p/guardian_point_defense.lua"
 
 -- 可以在此处继续添加更多武器配置，例如：

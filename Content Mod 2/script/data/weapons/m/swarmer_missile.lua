@@ -34,5 +34,6 @@ weaponDefineGuided({
     aimLimitDeg = 0.0,
     aimPitchOffsetDeg = 0.0,
     officialComponentId = "SWARMER_MISSILE_2",
+    interceptorShipType = "advancedSwarmerMissile",
     family = "swarmer_missile",
 })

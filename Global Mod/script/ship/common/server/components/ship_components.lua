@@ -80,6 +80,8 @@ function server.shipComponentApplyPrepared(loadout, profile, restoreFull)
         (profile or {}).protection,
         restoreFull and true or false
     )
+    local available, strength = server.shipRuntimeGetCloak(body)
+    server.registryShipSetCloak(body, false, available and strength or 0.0)
     server.shipComponentLoadout = loadout or {}
     server.shipComponentProfile = profile or {}
     return true, nil

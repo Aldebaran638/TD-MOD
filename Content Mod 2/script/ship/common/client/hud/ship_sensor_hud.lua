@@ -78,8 +78,12 @@ function client.shipSensorHudTick(dt)
             local minBounds, maxBounds = GetBodyBounds(body)
             local center = VecLerp(minBounds, maxBounds, 0.5)
             local distance = VecLength(VecSub(center, ownPos))
+            local cloaked = client.registryShipIsCloaked ~= nil
+                and client.registryShipIsCloaked(body)
             local _, _, hull = client.registryShipGetHP(body)
-            if distance <= state.range and (tonumber(hull) or 0.0) > 0.0 then
+            if distance <= state.range
+                and (not cloaked or distance <= 80.0)
+                and (tonumber(hull) or 0.0) > 0.0 then
                 local shipType = client.registryShipGetShipType(body)
                 targets[#targets + 1] = {
                     body = body,

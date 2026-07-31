@@ -49,8 +49,8 @@ try {
     [IO.File]::WriteAllText(
         $shipCatalogPath,
         $shipCatalogText.Replace(
-            "#include `"schema.lua`"`r`n#include `"advanced_strike_craft.lua`"`r`n#include `"battlecruiser.lua`"",
-            "#include `"advanced_strike_craft.lua`"`r`n#include `"battlecruiser.lua`"`r`n#include `"schema.lua`""
+            "#include `"schema.lua`"`r`n#include `"advanced_strike_craft.lua`"`r`n#include `"interceptor_projectiles.lua`"`r`n#include `"battlecruiser.lua`"",
+            "#include `"advanced_strike_craft.lua`"`r`n#include `"interceptor_projectiles.lua`"`r`n#include `"battlecruiser.lua`"`r`n#include `"schema.lua`""
         ),
         (New-Object Text.UTF8Encoding($false))
     )
@@ -95,7 +95,7 @@ try {
     )
     $invalidStrikeCraft = Invoke-Checker
     Assert-True ($invalidStrikeCraft.ExitCode -eq 1) "rejects a player-configurable strike craft"
-    Assert-True ($invalidStrikeCraft.Output -match "fixed, boardable") "reports the fixed strike-craft contract"
+    Assert-True ($invalidStrikeCraft.Output -match "fixed, AI-controlled") "reports the fixed strike-craft contract"
     [IO.File]::WriteAllText(
         $strikeCraftPath,
         $strikeCraftText,

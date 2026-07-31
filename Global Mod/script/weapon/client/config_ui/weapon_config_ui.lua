@@ -24,7 +24,7 @@ local _rightWidth = 286
 local _contentGap = 18
 local _mainHeight = 764
 local _footerY = 776
-local _slotOrder = { "X", "L", "G", "M", "H" }
+local _slotOrder = { "X", "L", "G", "M", "H", "P" }
 
 local _slotLabels = {
     X = { zh = "轴基武器", en = "X-SLOT", color = { 0.62, 0.30, 0.96 } },
@@ -32,6 +32,7 @@ local _slotLabels = {
     G = { zh = "制导武器", en = "G-SLOT", color = { 0.22, 0.45, 1.00 } },
     M = { zh = "中型武器", en = "M-SLOT", color = { 0.96, 0.55, 0.18 } },
     H = { zh = "舰载机", en = "H-SLOT", color = { 0.94, 0.78, 0.18 } },
+    P = { zh = "自动防御", en = "P-SLOT AUTO", color = { 0.34, 0.88, 0.62 } },
 }
 
 local _frameLabels = {

@@ -33,6 +33,7 @@ local function _guidedGroupBuildLauncherConfig(slotDef)
         fireDirRelative = _guidedGroupCloneVec3(slotDef and slotDef.fireDirRelative, 0.0, 0.0, -1.0),
         cooldown = tonumber(weaponDef.cooldown) or 0.0,
         prefabPath = tostring(weaponDef.prefabPath or ""),
+        interceptorShipType = tostring(weaponDef.interceptorShipType or ""),
         spawnForwardOffset = tonumber(weaponDef.spawnForwardOffset) or 0.0,
         muzzleSpeed = tonumber(weaponDef.muzzleSpeed) or 0.0,
         cruiseSpeed = tonumber(weaponDef.cruiseSpeed) or 0.0,

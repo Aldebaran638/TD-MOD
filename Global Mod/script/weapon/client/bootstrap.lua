@@ -31,6 +31,7 @@
 #include "guided/effects/missile_visual.lua"
 #include "slots/h/gamma_strike_craft/effects/beam_fx.lua"
 #include "slots/h/gamma_strike_craft/effects/craft_fx.lua"
+#include "slots/p/point_defense/effects.lua"
 
 client = client or {}
 
@@ -49,6 +50,7 @@ function client.weaponClientInit()
     client.projectileVisualInit()
     client.missileVisualInit()
     client.hSlotCraftFxInit()
+    client.pointDefenseFxInit()
 end
 
 function client.weaponClientTick(dt)
@@ -67,6 +69,7 @@ function client.weaponClientTick(dt)
     client.missileVisualTick(dt)
     client.hSlotBeamFxTick(dt)
     client.hSlotCraftFxTick(dt)
+    client.pointDefenseFxTick(dt)
     client.genericRaycastFxTick(dt)
     client.gammaLaserFxTick(dt)
     client.weaponMuzzleFxTick(dt)
@@ -78,6 +81,7 @@ function client.weaponClientRender()
     client.missileVisualRender()
     client.hSlotBeamFxRender()
     client.hSlotCraftFxRender()
+    client.pointDefenseFxRender()
     client.tachyonBeamFxRender()
     client.tachyonMuzzleFxRender()
     client.focusedArcChargingFxRender()

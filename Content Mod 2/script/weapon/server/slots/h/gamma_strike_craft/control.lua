@@ -1496,6 +1496,9 @@ function server.hSlotControlTick(dt)
         "advancedStrikeCraft",
         server.shipContextGetType()
     )
+    if server.registryShipSetInterceptorOwner ~= nil then
+        server.registryShipSetInterceptorOwner(craftBody, shipBody)
+    end
     server.netClientCall("weapon.fireFx", 0, "client.spawnHSlotLaunchFx", firePos[1], firePos[2], firePos[3], fireDir[1], fireDir[2], fireDir[3])
     server.netClientCall(
         "weapon.fireFx",

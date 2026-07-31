@@ -14,6 +14,7 @@
 #include "hud/ship_help_overlay.lua"
 #include "hud/native_vehicle_hud.lua"
 #include "hud/ship_sensor_hud.lua"
+#include "hud/ship_cloak.lua"
 #include "effects/ship_destroyed_fx.lua"
 #include "effects/engine_thruster_fx.lua"
 
@@ -41,6 +42,7 @@ function client.shipClientAfterWeaponTick(dt)
     client.shipHealthBarTick(dt)
     client.shipHelpOverlayTick(dt)
     client.shipSensorHudTick(dt)
+    client.shipCloakInputTick()
 end
 
 function client.shipClientRender()
@@ -62,6 +64,7 @@ end
 
 function client.shipClientDrawSensors()
     client.shipSensorHudDraw()
+    client.shipCloakDraw()
 end
 
 function client.shipClientSuppressNativeHud()

@@ -156,6 +156,7 @@ function _runtimeAPI.setComponentProfile(shipBodyId, profile, defaultShipType)
     local resolved = (profile or {}).protection or {}
     local mobility = (profile or {}).mobility or {}
     local energy = (profile or {}).energy or {}
+    local cloak = (profile or {}).cloak or {}
     state.maxHP = {
         shield = math.max(0.0, _safeNumber(resolved.maxShieldHP, 0.0)),
         armor = math.max(0.0, _safeNumber(resolved.maxArmorHP, 0.0)),
@@ -184,6 +185,16 @@ function _runtimeAPI.setComponentProfile(shipBodyId, profile, defaultShipType)
             _safeNumber(energy.weaponDamageMultiplier, 0.0)
         ),
     }
+    state.cloak = {
+        available = cloak.available and true or false,
+        strength = math.max(0.0, _safeNumber(cloak.strength, 0.0)),
+        shieldReduction = math.max(
+            0.0,
+            math.min(1.0, _safeNumber(cloak.shieldReduction, 0.0))
+        ),
+        shipLimit = math.max(0, math.floor(_safeNumber(cloak.shipLimit, 0.0))),
+        active = (state.cloak or {}).active and true or false,
+    }
     local config = state.regen.config or {}
     config.shieldPerSecond = math.max(0.0,
         _safeNumber(resolved.shieldRegenPerSecond, 0.0))
@@ -197,6 +208,24 @@ function _runtimeAPI.setComponentProfile(shipBodyId, profile, defaultShipType)
         armor = state.maxHP.armor,
         body = state.maxHP.body,
     }
+    return true
+end
+
+function _runtimeAPI.getCloak(shipBodyId, defaultShipType)
+    local state = _getOrCreateState(shipBodyId, defaultShipType, defaultShipType)
+    if state == nil then return false, 0.0, 0.0, 0 end
+    local cloak = state.cloak or {}
+    return cloak.available and true or false,
+        tonumber(cloak.strength) or 0.0,
+        tonumber(cloak.shieldReduction) or 0.0,
+        math.floor(tonumber(cloak.shipLimit) or 0)
+end
+
+function _runtimeAPI.setCloakActive(shipBodyId, active, defaultShipType)
+    local state = _getOrCreateState(shipBodyId, defaultShipType, defaultShipType)
+    if state == nil then return false end
+    state.cloak = state.cloak or {}
+    state.cloak.active = active and true or false
     return true
 end
 

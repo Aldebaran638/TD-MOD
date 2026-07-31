@@ -2,6 +2,26 @@
 
 client = client or {}
 
+function client.weaponTargetIsLockableBody(bodyId, observerBodyId)
+    local body = math.floor(tonumber(bodyId) or 0)
+    local observer = math.floor(tonumber(observerBodyId) or 0)
+    if body == 0 or not IsHandleValid(body) then return false end
+    if client.registryShipExists ~= nil and client.registryShipExists(body) then
+        if client.registryShipIsPlayerLockable ~= nil
+            and not client.registryShipIsPlayerLockable(body) then return false end
+        if client.registryShipIsCloaked ~= nil
+            and client.registryShipIsCloaked(body) then
+            if observer == 0 or not IsHandleValid(observer) then return false end
+            local distance = VecLength(VecSub(
+                GetBodyTransform(observer).pos,
+                GetBodyTransform(body).pos
+            ))
+            return distance <= 80.0
+        end
+    end
+    return true
+end
+
 function client.weaponTargetIsExternalBody(bodyId)
     local body = math.floor(bodyId or 0)
     if body == 0 or not IsHandleValid(body) then return false end

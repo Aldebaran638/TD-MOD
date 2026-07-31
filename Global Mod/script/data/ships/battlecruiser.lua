@@ -15,6 +15,8 @@ local battlecruiserDefinition = {
         disableLiftVoxelRatio = 0.6,
         forwardAcceleration = 50.0,
         backwardAcceleration = 50.0,
+        maxCombatSpeed = 42.0,
+        maxReverseSpeed = 28.0,
         quadraticDamping = 5000.0,
         dampingMinSpeed = 0.01,
         attitude = {
@@ -128,6 +130,10 @@ local battlecruiserDefinition = {
             "naniteRepairSystem",
             "advancedShieldHardener",
             "livingReactiveArmor",
+            "reactorBooster1",
+            "reactorBooster2",
+            "reactorBooster3",
+            "darkMatterCloakingField",
         },
         thruster = {
             "chemicalThrusters",
@@ -187,6 +193,7 @@ local battlecruiserDefinition = {
         },
         G = { "devastatorTorpedoes", "neutronLauncher" },
         H = { "gammaStrikeCraft" },
+        P = { "flakArtillery", "guardianPointDefense" },
     },
     weaponMountProfiles = shipMountProfileData.enigmaticCruiser,
     defaultSlotConfigurationId = "battleline_2x2l4m",
@@ -199,12 +206,14 @@ local battlecruiserDefinition = {
                 { groupId = "lSlot", slotType = "L", count = 2 },
                 { groupId = "mSlot", slotType = "M", count = 4 },
                 { groupId = "hSlot", slotType = "H", count = 2 },
+                { groupId = "pSlot", slotType = "P", count = 2, automatic = true },
             },
             defaultLoadout = {
                 X = "tachyonLance",
                 L = "kineticArtillery",
                 M = "swarmerMissile",
                 H = "gammaStrikeCraft",
+                P = "flakArtillery",
             },
             componentSlots = {
                 { slotType = "largeUtility", count = 8 },
@@ -239,12 +248,14 @@ local battlecruiserDefinition = {
                 { groupId = "gSlot", slotType = "G", count = 4 },
                 { groupId = "mSlot", slotType = "M", count = 4 },
                 { groupId = "hSlot", slotType = "H", count = 2 },
+                { groupId = "pSlot", slotType = "P", count = 2, automatic = true },
             },
             defaultLoadout = {
                 X = "tachyonLance",
                 G = "devastatorTorpedoes",
                 M = "swarmerMissile",
                 H = "gammaStrikeCraft",
+                P = "guardianPointDefense",
             },
             componentSlots = {
                 { slotType = "largeUtility", count = 8 },

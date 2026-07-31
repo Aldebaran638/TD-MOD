@@ -78,6 +78,9 @@ end
 
 local function _guidedProjectileDeleteBody(bodyId)
     if bodyId ~= nil and bodyId ~= 0 and IsHandleValid(bodyId) then
+        if server.registryShipUnregister ~= nil then
+            server.registryShipUnregister(bodyId)
+        end
         Delete(bodyId)
     end
 end
@@ -179,6 +182,18 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
     local startVelocity = VecAdd(ownerVelocity, VecScale(dir, tonumber(cfg.muzzleSpeed) or 0.0))
     SetBodyVelocity(bodyId, startVelocity)
 
+    local interceptorShipType = tostring(cfg.interceptorShipType or "")
+    if interceptorShipType ~= "" and server.registryShipRegister ~= nil then
+        server.registryShipRegister(
+            bodyId,
+            interceptorShipType,
+            server.shipContextGetType()
+        )
+        if server.registryShipSetInterceptorOwner ~= nil then
+            server.registryShipSetInterceptorOwner(bodyId, ownerShipBody)
+        end
+    end
+
     local projectileId = state.nextProjectileId or 1
     state.nextProjectileId = projectileId + 1
 
@@ -215,6 +230,7 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         ownerShipBody = ownerShipBody,
         groupMode = tostring(groupMode or ""),
         weaponType = tostring(cfg.weaponType or ""),
+        interceptorShipType = interceptorShipType,
         targetBodyId = math.floor(targetBodyId or 0),
         targetVehicleId = math.floor(targetVehicleId or 0),
         damage = tonumber(cfg.damage) or 0.0,
@@ -269,7 +285,12 @@ function server.guidedProjectileRuntimeTick(dt)
     local active = server.guidedProjectileRuntimeState.activeProjectiles or {}
     for i = #active, 1, -1 do
         local bodyId = (active[i] or {}).bodyId or 0
-        if bodyId == 0 or not IsHandleValid(bodyId) then
+        local destroyed = bodyId ~= 0
+            and server.registryShipExists ~= nil
+            and server.registryShipExists(bodyId)
+            and server.registryShipIsBodyDead ~= nil
+            and server.registryShipIsBodyDead(bodyId)
+        if bodyId == 0 or not IsHandleValid(bodyId) or destroyed then
             server.guidedProjectileRemoveAt(i)
         end
     end

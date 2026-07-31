@@ -78,6 +78,13 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
     SetBool(prefix .. "/exists", true, true)
     _ensureShipBodyIndexed(shipBodyId)
     SetString(prefix .. "/shipType", resolvedShipType, true)
+    SetString(prefix .. "/interceptorClass",
+        tostring(definition.interceptorClass or ""), true)
+    SetInt(prefix .. "/ownerBody", 0, true)
+    SetBool(prefix .. "/playerLockable",
+        definition.playerLockable ~= false, true)
+    SetBool(prefix .. "/cloaked", false, true)
+    SetFloat(prefix .. "/cloakStrength", 0.0, true)
     SetFloat(prefix .. "/shieldRadius", tonumber(definition.shieldRadius) or 0.0, true)
     SetFloat(prefix .. "/shieldHP", tonumber(definition.maxShieldHP) or 0.0, true)
     SetFloat(prefix .. "/armorHP", tonumber(definition.maxArmorHP) or 0.0, true)
@@ -88,6 +95,60 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
     SetFloat(prefix .. "/shieldHardening", 0.0, true)
     SetFloat(prefix .. "/armorHardening", 0.0, true)
     SetBool(prefix .. "/destroyed", false, true)
+end
+
+function server.registryShipGetRegisteredCount()
+    return math.max(0, GetInt(registryShipIndexRoot .. "/count"))
+end
+
+function server.registryShipGetRegisteredBodyIdAt(index)
+    local resolved = math.floor(tonumber(index) or 0)
+    if resolved <= 0 then return 0 end
+    return GetInt(
+        registryShipIndexRoot .. "/" .. tostring(resolved) .. "/bodyId"
+    )
+end
+
+function server.registryShipSetInterceptorOwner(shipBodyId, ownerBodyId)
+    if not server.registryShipExists(shipBodyId) then return false end
+    SetInt(
+        _shipKeyPrefix(shipBodyId) .. "/ownerBody",
+        math.floor(tonumber(ownerBodyId) or 0),
+        true
+    )
+    return true
+end
+
+function server.registryShipGetInterceptorClass(shipBodyId)
+    if not server.registryShipExists(shipBodyId) then return "" end
+    return GetString(_shipKeyPrefix(shipBodyId) .. "/interceptorClass")
+end
+
+function server.registryShipGetOwnerBody(shipBodyId)
+    if not server.registryShipExists(shipBodyId) then return 0 end
+    return GetInt(_shipKeyPrefix(shipBodyId) .. "/ownerBody")
+end
+
+function server.registryShipIsPlayerLockable(shipBodyId)
+    return server.registryShipExists(shipBodyId)
+        and GetBool(_shipKeyPrefix(shipBodyId) .. "/playerLockable")
+end
+
+function server.registryShipSetCloak(shipBodyId, active, strength)
+    if not server.registryShipExists(shipBodyId) then return false end
+    local prefix = _shipKeyPrefix(shipBodyId)
+    SetBool(prefix .. "/cloaked", active and true or false, true)
+    SetFloat(
+        prefix .. "/cloakStrength",
+        active and math.max(0.0, tonumber(strength) or 0.0) or 0.0,
+        true
+    )
+    return true
+end
+
+function server.registryShipIsCloaked(shipBodyId)
+    return server.registryShipExists(shipBodyId)
+        and GetBool(_shipKeyPrefix(shipBodyId) .. "/cloaked")
 end
 
 function server.registryShipSetProtectionProfile(shipBodyId, profile, restoreFull)

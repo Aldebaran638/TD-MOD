@@ -143,6 +143,7 @@ local function _rebuildResolvedDefinition(shipType)
             slotType = slotType,
             count = math.max(0, math.floor(tonumber(group.count) or 0)),
             mountCollection = collectionName,
+            automatic = group.automatic and true or false,
         }
         local mounts = shipDefinitionResolveMounts(
             shipType,

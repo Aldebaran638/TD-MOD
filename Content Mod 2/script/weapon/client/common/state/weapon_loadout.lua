@@ -4,7 +4,16 @@ client = client or {}
 client.weaponLoadoutStateByShip = client.weaponLoadoutStateByShip or {}
 client.weaponLoadoutSyncState = client.weaponLoadoutSyncState or { age = 0.0 }
 
-function client.updateShipWeaponConfiguration(shipBodyId, configurationId, xWeapon, lWeapon, mWeapon, gWeapon, hWeapon)
+function client.updateShipWeaponConfiguration(
+    shipBodyId,
+    configurationId,
+    xWeapon,
+    lWeapon,
+    mWeapon,
+    gWeapon,
+    hWeapon,
+    pWeapon
+)
     local body = math.floor(shipBodyId or 0)
     if body == 0 then return end
     client.weaponLoadoutStateByShip[body] = {
@@ -14,6 +23,7 @@ function client.updateShipWeaponConfiguration(shipBodyId, configurationId, xWeap
         mSlot = tostring(mWeapon or ""),
         gSlot = tostring(gWeapon or ""),
         hSlot = tostring(hWeapon or ""),
+        pSlot = tostring(pWeapon or ""),
     }
 end
 

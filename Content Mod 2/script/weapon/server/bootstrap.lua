@@ -33,6 +33,7 @@
 #include "guided/g_slot_control.lua"
 #include "slots/h/gamma_strike_craft/flight_controller.lua"
 #include "slots/h/gamma_strike_craft/control.lua"
+#include "slots/p/point_defense/control.lua"
 #include "slots/l/kinetic_artillery/projectile_manager.lua"
 
 -- 适配器必须最后加载，确保它引用的旧控制器均已定义。

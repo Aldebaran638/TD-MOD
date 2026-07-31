@@ -268,6 +268,34 @@ _register("specialized.strikeCraft", {
     end,
 })
 
+_register("specialized.pointDefense", {
+    initOrder = 95,
+    rebuildResetOrder = 55,
+    rebuildInitOrder = 55,
+    simulationTickOrder = 75,
+    deactivateOrder = 75,
+    isActive = function(phase)
+        return phase == "init" or phase == "rebuildReset"
+            or phase == "rebuildInit" or phase == "deactivate"
+            or server.pointDefenseNeedsTick()
+    end,
+    init = function(shipType)
+        server.pointDefenseInit(shipType)
+    end,
+    rebuildReset = function()
+        server.pointDefenseReset()
+    end,
+    rebuildInit = function(shipType)
+        server.pointDefenseInit(shipType)
+    end,
+    simulationTick = function(dt)
+        server.pointDefenseTick(dt)
+    end,
+    deactivate = function()
+        server.pointDefenseReset()
+    end,
+})
+
 _register("weapon.group", {
     initOrder = 100,
     rebuildInitOrder = 60,

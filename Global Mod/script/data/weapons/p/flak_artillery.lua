@@ -1,0 +1,26 @@
+---@diagnostic disable: undefined-global
+
+weaponDefineRay({
+    weaponType = "flakArtillery",
+    displayName = "高射炮",
+    englishName = "Flak Artillery",
+    slotTypes = { "P" },
+    iconPath = "MOD/gfx/ui/weapon_icons/mediumStormfireAutocannon.png",
+    damageMin = 4.0,
+    damageMax = 8.0,
+    cooldown = 0.60,
+    officialCooldown = 5.0,
+    maxRange = 220.0,
+    projectileSpeed = 180.0,
+    shieldFix = 2.0,
+    shieldPenetration = 0.25,
+    armorFix = 0.25,
+    bodyFix = 1.0,
+    powerUse = 10.0,
+    automaticPointDefense = true,
+    pointDefenseRole = "flak",
+    targetingMode = "automatic_interceptor",
+    mountProfile = "pDefense",
+    officialComponentId = "FLAK_BATTERY_3",
+    family = "point_defense_kinetic",
+})

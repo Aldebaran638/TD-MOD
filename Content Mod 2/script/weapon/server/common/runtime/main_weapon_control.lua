@@ -56,7 +56,9 @@ local function _nextAvailableWeaponMode(current)
         local index = ((currentIndex - 1 + offset) % #groups) + 1
         local group = groups[index] or {}
         local mounts = definition[tostring(group.mountCollection or "")] or {}
-        if #mounts > 0 then return tostring(group.groupId or "") end
+        if not group.automatic and #mounts > 0 then
+            return tostring(group.groupId or "")
+        end
     end
     return tostring((groups[1] or {}).groupId or "")
 end

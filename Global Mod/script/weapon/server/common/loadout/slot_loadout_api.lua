@@ -56,7 +56,8 @@ function server.shipWeaponSyncConfiguration(shipType, recipientPlayerId)
         tostring(loadout.L or ""),
         tostring(loadout.M or ""),
         tostring(loadout.G or ""),
-        tostring(loadout.H or "")
+        tostring(loadout.H or ""),
+        tostring(loadout.P or "")
     )
 end
 
@@ -125,6 +126,7 @@ function server.shipWeaponBindLocalConfiguration(
     mWeapon,
     gWeapon,
     hWeapon,
+    pWeapon,
     componentPayload
 )
     local pid = math.floor(playerId or 0)
@@ -170,6 +172,7 @@ function server.shipWeaponBindLocalConfiguration(
             M = tostring(mWeapon or ""),
             G = tostring(gWeapon or ""),
             H = tostring(hWeapon or ""),
+            P = tostring(pWeapon or ""),
         }
     )
     if weaponSnapshot == nil then

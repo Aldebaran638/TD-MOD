@@ -23,6 +23,11 @@ local function _requestContext(shipBodyId, targetVehicleId, targetBodyId)
         vehicleId = 0
         bodyId = 0
     end
+    if bodyId ~= 0 and server.weaponTargetIsLockableBody ~= nil
+        and not server.weaponTargetIsLockableBody(bodyId, ownerBody) then
+        vehicleId = 0
+        bodyId = 0
+    end
     return {
         shipBodyId = ownerBody,
         targetVehicleId = vehicleId,
@@ -57,6 +62,9 @@ end
 function server.shipRequestMainWeaponFire(playerId, shipBodyId, request)
     _count()
     if not server.shipRequestAuthorize(playerId, shipBodyId) then return end
+    if math.floor(request or 0) ~= 0 and server.shipCloakBreakForWeapon ~= nil then
+        server.shipCloakBreakForWeapon(shipBodyId)
+    end
     server.mainWeaponRequestSetFireRequested(math.floor(request or 0) ~= 0)
 end
 
@@ -82,6 +90,9 @@ local function _requestLockedGroup(
     groupId
 )
     if not server.shipRequestAuthorize(playerId, shipBodyId) then return false end
+    if server.shipCloakBreakForWeapon ~= nil then
+        server.shipCloakBreakForWeapon(shipBodyId)
+    end
     if server.shipRuntimeGetCurrentMainWeapon(shipBodyId) ~= groupId then return false end
     local request =
         _requestContext(shipBodyId, targetVehicleId, targetBodyId)
