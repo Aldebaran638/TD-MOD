@@ -41,6 +41,13 @@ function server.registryShipExists(shipBodyId)
     return GetBool(_shipKeyPrefix(shipBodyId) .. "/exists")
 end
 
+function server.registryShipUnregister(shipBodyId)
+    if shipBodyId == nil or shipBodyId == 0 then return end
+    local prefix = _shipKeyPrefix(shipBodyId)
+    SetBool(prefix .. "/exists", false, true)
+    SetBool(prefix .. "/destroyed", true, true)
+end
+
 function server.registryShipIsBodyDead(shipBodyId)
     if not server.registryShipExists(shipBodyId) then
         return false

@@ -129,6 +129,27 @@ local battlecruiserDefinition = {
             "advancedShieldHardener",
             "livingReactiveArmor",
         },
+        thruster = {
+            "chemicalThrusters",
+            "ionThrusters",
+            "plasmaThrusters",
+            "impulseThrusters",
+            "darkMatterThrusters",
+        },
+        sensor = {
+            "radarSystem",
+            "graviticSensors",
+            "subspaceSensors",
+            "tachyonSensors",
+        },
+        reactor = {
+            "fissionReactor",
+            "fusionReactor",
+            "coldFusionReactor",
+            "antimatterReactor",
+            "zeroPointReactor",
+            "darkMatterReactor",
+        },
     },
     externalDamage = {
         bulletDamage = 20.0,
@@ -188,6 +209,9 @@ local battlecruiserDefinition = {
             componentSlots = {
                 { slotType = "largeUtility", count = 8 },
                 { slotType = "auxiliary", count = 3 },
+                { slotType = "thruster", count = 1 },
+                { slotType = "sensor", count = 1 },
+                { slotType = "reactor", count = 1 },
             },
             defaultComponentLoadout = {
                 largeUtility = {
@@ -201,6 +225,9 @@ local battlecruiserDefinition = {
                     "advancedShieldHardener",
                     "naniteRepairSystem",
                 },
+                thruster = { "darkMatterThrusters" },
+                sensor = { "tachyonSensors" },
+                reactor = { "darkMatterReactor" },
             },
         },
         {
@@ -222,6 +249,9 @@ local battlecruiserDefinition = {
             componentSlots = {
                 { slotType = "largeUtility", count = 8 },
                 { slotType = "auxiliary", count = 3 },
+                { slotType = "thruster", count = 1 },
+                { slotType = "sensor", count = 1 },
+                { slotType = "reactor", count = 1 },
             },
             defaultComponentLoadout = {
                 largeUtility = {
@@ -235,6 +265,9 @@ local battlecruiserDefinition = {
                     "advancedShieldHardener",
                     "naniteRepairSystem",
                 },
+                thruster = { "darkMatterThrusters" },
+                sensor = { "tachyonSensors" },
+                reactor = { "darkMatterReactor" },
             },
         },
     },

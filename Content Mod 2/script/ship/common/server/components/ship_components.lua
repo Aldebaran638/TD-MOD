@@ -27,7 +27,8 @@ end
 function server.shipComponentPrepareLoadout(
     shipType,
     configurationId,
-    requested
+    requested,
+    weaponLoadout
 )
     local definition = shipDefinitionGet(shipType, server.shipContextGetType())
     local configuration =
@@ -55,7 +56,16 @@ function server.shipComponentPrepareLoadout(
         end
     end
 
-    local profile = shipComponentResolveProfile(definition, result)
+    local profile = shipComponentResolveProfile(
+        definition,
+        result,
+        configuration,
+        weaponLoadout
+    )
+    if (definition or {}).requiresPositivePower ~= false
+        and not ((profile.energy or {}).valid) then
+        return nil, nil, "ship design requires positive power balance"
+    end
     return result, profile, nil
 end
 
@@ -84,7 +94,8 @@ function server.shipComponentApplyLoadout(
     local loadout, profile, err = server.shipComponentPrepareLoadout(
         shipType,
         configurationId,
-        requested
+        requested,
+        nil
     )
     if loadout == nil then return false, err end
     return server.shipComponentApplyPrepared(loadout, profile, restoreFull)

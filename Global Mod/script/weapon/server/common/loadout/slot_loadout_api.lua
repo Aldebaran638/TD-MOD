@@ -161,16 +161,6 @@ function server.shipWeaponBindLocalConfiguration(
         _shipWeaponBindingResult(pid, body, 0)
         return false
     end
-    local componentLoadout, componentProfile =
-        server.shipComponentPrepareLoadout(
-            resolvedType,
-            tostring(configurationId or ""),
-            requestedComponents
-        )
-    if componentLoadout == nil then
-        _shipWeaponBindingResult(pid, body, 0)
-        return false
-    end
     local weaponSnapshot = server.shipSlotLoadoutValidateSnapshot(
         resolvedType,
         tostring(configurationId or ""),
@@ -183,6 +173,17 @@ function server.shipWeaponBindLocalConfiguration(
         }
     )
     if weaponSnapshot == nil then
+        _shipWeaponBindingResult(pid, body, 0)
+        return false
+    end
+    local componentLoadout, componentProfile =
+        server.shipComponentPrepareLoadout(
+            resolvedType,
+            tostring(configurationId or ""),
+            requestedComponents,
+            weaponSnapshot.loadout
+        )
+    if componentLoadout == nil then
         _shipWeaponBindingResult(pid, body, 0)
         return false
     end

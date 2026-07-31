@@ -1,0 +1,8 @@
+* text=auto eol=crlf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ogg binary
+*.tde binary
+*.vox binary
