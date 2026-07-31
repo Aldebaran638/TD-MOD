@@ -275,7 +275,11 @@ local function _hSlotDeleteCraftBody(bodyId)
                 bodyId
             )
         end
-        Delete(bodyId)
+        if server.registryShipUnregister ~= nil then
+            server.registryShipUnregister(bodyId)
+        end
+        local vehicle = GetBodyVehicle(bodyId)
+        Delete(vehicle ~= nil and vehicle ~= 0 and vehicle or bodyId)
     end
 end
 
@@ -1022,6 +1026,15 @@ local function _hSlotUpdateReplacementFlight(
         return
     end
 
+    if server.registryShipExists(craft.bodyId)
+        and server.registryShipIsBodyDead ~= nil
+        and server.registryShipIsBodyDead(craft.bodyId) then
+        _hSlotSetDebugReason(slotIndex, "craft_destroyed", craft)
+        _hSlotCraftExplode(shipBody, craft, weaponConfig)
+        _hSlotFinishCraft(state, slotIndex)
+        return
+    end
+
     craft.lifeRemain = (craft.lifeRemain or 0.0) - (dt or 0.0)
     if craft.lifeRemain <= 0.0 then
         _hSlotSetDebugReason(slotIndex, "life_timeout_explode", craft)
@@ -1477,6 +1490,11 @@ function server.hSlotControlTick(dt)
             math.max(4.0, tonumber(launcher.config.cruiseSpeed) or 82.0)
                 * (tonumber(launcher.config.launchSpeedFactor) or 0.86)
         )
+    )
+    server.registryShipRegister(
+        craftBody,
+        "advancedStrikeCraft",
+        server.shipContextGetType()
     )
     server.netClientCall("weapon.fireFx", 0, "client.spawnHSlotLaunchFx", firePos[1], firePos[2], firePos[3], fireDir[1], fireDir[2], fireDir[3])
     server.netClientCall(

@@ -39,6 +39,13 @@ function server.shipRuntimeGetMobilityModifiers(shipBodyId)
     )
 end
 
+function server.shipRuntimeGetWeaponDamageMultiplier(shipBodyId)
+    return _api.getWeaponDamageMultiplier(
+        shipBodyId,
+        server.shipContextGetType()
+    )
+end
+
 -- ============ Regen ============
 function server.shipRuntimeGetRegenConfig(shipBodyId)
     return _api.getRegenConfig(shipBodyId, server.shipContextGetType())

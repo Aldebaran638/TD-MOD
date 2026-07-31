@@ -17,7 +17,8 @@ function client.weaponConfigurationBindingInit(shipType, shipBody)
     state.shipType = tostring(shipType or client.shipContextGetType())
     state.shipBody = math.floor(shipBody or 0)
     state.snapshot = client.weaponLocalConfigRead(state.shipType)
-    state.complete = false
+    local definition = (shipTypeRegistryData or {})[state.shipType] or {}
+    state.complete = definition.playerConfigurable == false
     state.requestPending = false
     state.retryRemain = 0.0
 end

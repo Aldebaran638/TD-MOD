@@ -19,6 +19,7 @@ shipComponentData = shipComponentData or {
         shieldAdd = 2925.0,
         shieldRegenAdd = 8.125,
         shieldHardening = 0.05,
+        powerUse = 220.0,
     },
     advancedAfterburners = {
         componentId = "advancedAfterburners",
@@ -29,6 +30,7 @@ shipComponentData = shipComponentData or {
         speedMultiplier = 0.20,
         turnResponseMultiplier = 0.50,
         turnForceMultiplier = 1.00,
+        powerUse = 20.0,
     },
     shieldCapacitor = {
         componentId = "shieldCapacitor",
@@ -37,6 +39,7 @@ shipComponentData = shipComponentData or {
         englishName = "Shield Capacitor",
         iconPath = "MOD/gfx/ui/defense_components/shieldCapacitor.png",
         shieldMultiplier = 0.10,
+        powerUse = 20.0,
     },
     naniteRepairSystem = {
         componentId = "naniteRepairSystem",
@@ -46,6 +49,7 @@ shipComponentData = shipComponentData or {
         iconPath = "MOD/gfx/ui/defense_components/naniteRepairSystem.png",
         hullRegenPercent = 0.0015,
         armorRegenPercent = 0.0020,
+        powerUse = 15.0,
     },
     advancedShieldHardener = {
         componentId = "advancedShieldHardener",
@@ -54,6 +58,7 @@ shipComponentData = shipComponentData or {
         englishName = "Advanced Shield Hardener",
         iconPath = "MOD/gfx/ui/defense_components/advancedShieldHardener.png",
         shieldHardening = 0.25,
+        powerUse = 25.0,
     },
     livingReactiveArmor = {
         componentId = "livingReactiveArmor",
@@ -62,6 +67,151 @@ shipComponentData = shipComponentData or {
         englishName = "Living Reactive Armor",
         iconPath = "MOD/gfx/ui/defense_components/livingReactiveArmor.png",
         armorHardening = 0.25,
+        powerUse = 25.0,
+    },
+    chemicalThrusters = {
+        componentId = "chemicalThrusters",
+        slotType = "thruster",
+        displayName = "化学推进器",
+        englishName = "Chemical Thrusters",
+        officialComponentId = "BATTLESHIP_SHIP_THRUSTER_1",
+        powerUse = 80.0,
+    },
+    ionThrusters = {
+        componentId = "ionThrusters",
+        slotType = "thruster",
+        displayName = "离子推进器",
+        englishName = "Ion Thrusters",
+        officialComponentId = "BATTLESHIP_SHIP_THRUSTER_2",
+        powerUse = 120.0,
+        speedMultiplier = 0.25,
+        turnResponseMultiplier = 0.25,
+        turnForceMultiplier = 0.25,
+    },
+    plasmaThrusters = {
+        componentId = "plasmaThrusters",
+        slotType = "thruster",
+        displayName = "等离子推进器",
+        englishName = "Plasma Thrusters",
+        officialComponentId = "BATTLESHIP_SHIP_THRUSTER_3",
+        powerUse = 160.0,
+        speedMultiplier = 0.50,
+        turnResponseMultiplier = 0.50,
+        turnForceMultiplier = 0.50,
+    },
+    impulseThrusters = {
+        componentId = "impulseThrusters",
+        slotType = "thruster",
+        displayName = "脉冲推进器",
+        englishName = "Impulse Thrusters",
+        officialComponentId = "BATTLESHIP_SHIP_THRUSTER_4",
+        powerUse = 200.0,
+        speedMultiplier = 0.75,
+        turnResponseMultiplier = 0.75,
+        turnForceMultiplier = 0.75,
+    },
+    darkMatterThrusters = {
+        componentId = "darkMatterThrusters",
+        slotType = "thruster",
+        displayName = "暗物质推进器",
+        englishName = "Dark Matter Thrusters",
+        officialComponentId = "BATTLESHIP_SHIP_THRUSTER_5",
+        powerUse = 240.0,
+        speedMultiplier = 1.25,
+        turnResponseMultiplier = 1.25,
+        turnForceMultiplier = 1.25,
+    },
+    radarSystem = {
+        componentId = "radarSystem",
+        slotType = "sensor",
+        displayName = "雷达系统",
+        englishName = "Radar System",
+        officialComponentId = "SENSOR_1",
+        powerUse = 5.0,
+        sensorRange = 300.0,
+        sensorInterval = 1.0,
+        trackingAdd = 0.0,
+    },
+    graviticSensors = {
+        componentId = "graviticSensors",
+        slotType = "sensor",
+        displayName = "引力传感器",
+        englishName = "Gravitic Sensors",
+        officialComponentId = "SENSOR_2",
+        powerUse = 10.0,
+        sensorRange = 600.0,
+        sensorInterval = 0.75,
+        trackingAdd = 5.0,
+    },
+    subspaceSensors = {
+        componentId = "subspaceSensors",
+        slotType = "sensor",
+        displayName = "亚空间传感器",
+        englishName = "Subspace Sensors",
+        officialComponentId = "SENSOR_3",
+        powerUse = 15.0,
+        sensorRange = 900.0,
+        sensorInterval = 0.50,
+        trackingAdd = 10.0,
+    },
+    tachyonSensors = {
+        componentId = "tachyonSensors",
+        slotType = "sensor",
+        displayName = "快子传感器",
+        englishName = "Tachyon Sensors",
+        officialComponentId = "SENSOR_4",
+        powerUse = 20.0,
+        sensorRange = 1200.0,
+        sensorInterval = 0.25,
+        trackingAdd = 15.0,
+    },
+    fissionReactor = {
+        componentId = "fissionReactor",
+        slotType = "reactor",
+        displayName = "裂变反应堆",
+        englishName = "Fission Reactor",
+        officialComponentId = "BATTLESHIP_FISSION_REACTOR",
+        powerOutput = 550.0,
+    },
+    fusionReactor = {
+        componentId = "fusionReactor",
+        slotType = "reactor",
+        displayName = "聚变反应堆",
+        englishName = "Fusion Reactor",
+        officialComponentId = "BATTLESHIP_FUSION_REACTOR",
+        powerOutput = 720.0,
+    },
+    coldFusionReactor = {
+        componentId = "coldFusionReactor",
+        slotType = "reactor",
+        displayName = "冷核聚变反应堆",
+        englishName = "Cold Fusion Reactor",
+        officialComponentId = "BATTLESHIP_COLD_FUSION_REACTOR",
+        powerOutput = 950.0,
+    },
+    antimatterReactor = {
+        componentId = "antimatterReactor",
+        slotType = "reactor",
+        displayName = "反物质反应堆",
+        englishName = "Antimatter Reactor",
+        officialComponentId = "BATTLESHIP_ANTIMATTER_REACTOR",
+        powerOutput = 1250.0,
+    },
+    zeroPointReactor = {
+        componentId = "zeroPointReactor",
+        slotType = "reactor",
+        displayName = "零点反应堆",
+        englishName = "Zero Point Reactor",
+        officialComponentId = "BATTLESHIP_ZERO_POINT_REACTOR",
+        powerOutput = 1550.0,
+    },
+    darkMatterReactor = {
+        componentId = "darkMatterReactor",
+        slotType = "reactor",
+        displayName = "暗物质反应堆",
+        englishName = "Dark Matter Reactor",
+        officialComponentId = "BATTLESHIP_DARK_MATTER_REACTOR",
+        powerOutput = 2000.0,
     },
 }
 
@@ -99,7 +249,11 @@ function shipComponentSlotGroups(configuration)
 end
 
 function shipComponentAllowed(definition, slotType, componentId)
-    if tostring(componentId or "") == "" then return true end
+    if tostring(componentId or "") == "" then
+        return slotType ~= "thruster"
+            and slotType ~= "sensor"
+            and slotType ~= "reactor"
+    end
     local component = shipComponentData[tostring(componentId or "")]
     if component == nil or tostring(component.slotType or "") ~= tostring(slotType or "") then
         return false
@@ -111,7 +265,12 @@ function shipComponentAllowed(definition, slotType, componentId)
     return false
 end
 
-function shipComponentResolveProfile(definition, componentLoadout)
+function shipComponentResolveProfile(
+    definition,
+    componentLoadout,
+    configuration,
+    weaponLoadout
+)
     local base = (definition or {}).componentProfile or {}
     local regen = (definition or {}).regen or {}
     local protection = {
@@ -133,6 +292,15 @@ function shipComponentResolveProfile(definition, componentLoadout)
         turnForceMultiplier = 0.0,
     }
     local shieldMultiplier = 0.0
+    local powerOutput = 0.0
+    local componentPowerUse = 0.0
+    local fixedSensor = (definition or {}).fixedSensorProfile or {}
+    local sensor = {
+        range = tonumber(fixedSensor.range) or 0.0,
+        interval = tonumber(fixedSensor.interval) or 1.0,
+        trackingAdd = tonumber(fixedSensor.trackingAdd) or 0.0,
+        componentId = tostring(fixedSensor.componentId or ""),
+    }
 
     local function applyComponent(componentId)
         local component = shipComponentData[tostring(componentId or "")]
@@ -166,6 +334,18 @@ function shipComponentResolveProfile(definition, componentLoadout)
                 + (tonumber(component.turnForceMultiplier) or 0.0)
         shieldMultiplier =
             shieldMultiplier + (tonumber(component.shieldMultiplier) or 0.0)
+        powerOutput = powerOutput + (tonumber(component.powerOutput) or 0.0)
+        componentPowerUse =
+            componentPowerUse + (tonumber(component.powerUse) or 0.0)
+        if (tonumber(component.sensorRange) or 0.0) > 0.0 then
+            sensor.range = tonumber(component.sensorRange) or 0.0
+            sensor.interval = math.max(
+                0.05,
+                tonumber(component.sensorInterval) or 1.0
+            )
+            sensor.trackingAdd = tonumber(component.trackingAdd) or 0.0
+            sensor.componentId = tostring(component.componentId or "")
+        end
     end
 
     for _, slots in pairs(componentLoadout or {}) do
@@ -185,12 +365,49 @@ function shipComponentResolveProfile(definition, componentLoadout)
     protection.hullRegenPerSecond =
         protection.maxBodyHP * protection.hullRegenPercent
 
+    local weaponPowerUse = 0.0
+    for _, group in ipairs((configuration or {}).slotGroups or {}) do
+        local slotType = tostring(group.slotType or "")
+        local count = math.max(0, math.floor(tonumber(group.count) or 0))
+        local weaponId = tostring((weaponLoadout or {})[slotType]
+            or ((configuration or {}).defaultLoadout or {})[slotType] or "")
+        local weapon = (weaponData or {})[weaponId] or {}
+        weaponPowerUse = weaponPowerUse
+            + count * math.max(0.0, tonumber(weapon.powerUse) or 0.0)
+    end
+    local powerUse = componentPowerUse + weaponPowerUse
+    local powerBalance = powerOutput - powerUse
+    local excessRatio = 0.0
+    if powerOutput > 0.0 and powerBalance / powerOutput >= 0.05 then
+        excessRatio = _componentClamp(powerBalance / powerOutput, 0.0, 1.0)
+    end
+    local excessBonus = excessRatio * 0.10
+    mobility.speedMultiplier = mobility.speedMultiplier + excessBonus
+    mobility.turnResponseMultiplier =
+        mobility.turnResponseMultiplier + excessBonus
+    mobility.turnForceMultiplier = mobility.turnForceMultiplier + excessBonus
     mobility.speedMultiplier = math.max(-0.95, mobility.speedMultiplier)
     mobility.turnResponseMultiplier =
         math.max(-0.95, mobility.turnResponseMultiplier)
     mobility.turnForceMultiplier =
         math.max(-0.95, mobility.turnForceMultiplier)
-    return { protection = protection, mobility = mobility }
+    return {
+        protection = protection,
+        mobility = mobility,
+        sensor = sensor,
+        energy = {
+            output = powerOutput,
+            componentUse = componentPowerUse,
+            weaponUse = weaponPowerUse,
+            use = powerUse,
+            balance = powerBalance,
+            valid = powerOutput > 0.0 and powerBalance > 0.0,
+            excessRatio = excessRatio,
+            speedMultiplier = excessBonus,
+            evasionMultiplier = excessBonus,
+            weaponDamageMultiplier = excessBonus,
+        },
+    }
 end
 
 function shipComponentDefaultLoadout(definition, configurationId)

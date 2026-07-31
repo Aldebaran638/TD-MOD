@@ -1,5 +1,6 @@
 ﻿*
 !.gitignore
+!.gitattributes
 !check-encoding.ps1
 !test-check-encoding.ps1
 !check-lua.ps1

@@ -43,6 +43,24 @@ local _shipLabels = {
     enigmaticCruiser = { zh = "神秘战列巡洋舰", en = "ENIGMA BATTLECRUISER" },
 }
 
+local _componentSlotLabels = {
+    largeUtility = { zh = "L 防护槽", en = "LARGE UTILITY", mark = "L" },
+    auxiliary = { zh = "A 辅助槽", en = "AUXILIARY", mark = "A" },
+    thruster = { zh = "推进器槽", en = "THRUSTER", mark = "T" },
+    sensor = { zh = "传感器槽", en = "SENSOR", mark = "S" },
+    reactor = { zh = "反应堆槽", en = "REACTOR", mark = "R" },
+}
+
+local function _componentProfile(configuration)
+    local state = client.weaponConfigUiState
+    return shipComponentResolveProfile(
+        _shipDefinition(),
+        state.componentLoadout,
+        configuration,
+        state.loadout
+    )
+end
+
 local function _uiRegistryKey()
     return client.weaponLocalConfigUiOpenKey()
 end
@@ -74,7 +92,8 @@ end
 local function _configurableShipTypes()
     local result = {}
     for shipType, definition in pairs(shipTypeRegistryData or {}) do
-        if #(definition.slotConfigurations or {}) > 0 then
+        if definition.playerConfigurable ~= false
+            and #(definition.slotConfigurations or {}) > 0 then
             result[#result + 1] = tostring(shipType)
         end
     end
@@ -244,6 +263,20 @@ function client.weaponConfiguratorSaveTemplate(
     loadout,
     componentLoadout
 )
+    local definition = (shipTypeRegistryData or {})[tostring(shipType or "")] or {}
+    local configuration = shipComponentFindConfiguration(definition, configurationId)
+    local profile = shipComponentResolveProfile(
+        definition,
+        componentLoadout,
+        configuration,
+        loadout
+    )
+    if not ((profile.energy or {}).valid) then
+        local state = client.weaponConfigUiState
+        state.pending = false
+        state.message = "能源必须为正 / POSITIVE POWER BALANCE REQUIRED"
+        return false
+    end
     local selected = loadout or {}
     client.weaponLocalConfigWrite(
         tostring(shipType or ""),
@@ -492,8 +525,10 @@ end
 
 local function _drawDefenseSidebar(slotType)
     local state = client.weaponConfigUiState
-    local slotLabel = slotType == "largeUtility" and "L 防护槽" or "A 辅助槽"
-    local english = slotType == "largeUtility" and "LARGE UTILITY" or "AUXILIARY"
+    local label = _componentSlotLabels[slotType]
+        or { zh = slotType, en = string.upper(slotType), mark = "?" }
+    local slotLabel = label.zh
+    local english = label.en
     _panel(0, 0, _leftWidth, _mainHeight, true)
     UiPush()
         UiTranslate(18, 17)
@@ -506,12 +541,15 @@ local function _drawDefenseSidebar(slotType)
     end
     local pool = ((_shipDefinition().componentPools or {})[slotType]) or {}
     local y = 108
-    if _drawDefenseOption(12, y, _leftWidth - 24, 68, slotType, "") then
-        state.componentLoadout[slotType][state.selectedDefenseIndex] = ""
-        state.message = "未保存的设计 / UNSAVED DESIGN"
-        state.dirty = true
+    local optional = slotType == "largeUtility" or slotType == "auxiliary"
+    if optional then
+        if _drawDefenseOption(12, y, _leftWidth - 24, 68, slotType, "") then
+            state.componentLoadout[slotType][state.selectedDefenseIndex] = ""
+            state.message = "未保存的设计 / UNSAVED DESIGN"
+            state.dirty = true
+        end
+        y = y + 73
     end
-    y = y + 73
     for _, componentId in ipairs(pool) do
         if _drawDefenseOption(12, y, _leftWidth - 24, 68, slotType, componentId) then
             state.componentLoadout[slotType][state.selectedDefenseIndex] =
@@ -535,10 +573,12 @@ local function _drawDefenseSlot(x, y, size, slotType, index)
         local hover = UiIsMouseInRect(size, size)
         UiColor(0.012, hover and 0.10 or 0.045, hover and 0.10 or 0.052, 1)
         UiRect(size, size)
+        local core = slotType == "thruster"
+            or slotType == "sensor" or slotType == "reactor"
         UiColor(
-            slotType == "auxiliary" and 0.24 or 0.20,
-            slotType == "auxiliary" and 0.76 or 0.62,
-            slotType == "auxiliary" and 0.58 or 0.82,
+            core and 0.76 or (slotType == "auxiliary" and 0.24 or 0.20),
+            core and 0.60 or (slotType == "auxiliary" and 0.76 or 0.62),
+            core and 0.22 or (slotType == "auxiliary" and 0.58 or 0.82),
             1
         )
         UiRectOutline(size, size, selected and 3 or 1)
@@ -548,7 +588,8 @@ local function _drawDefenseSlot(x, y, size, slotType, index)
             UiImageBox(icon, size, size, 0, 0)
         end
         UiTranslate(4, 3)
-        _text(slotType == "auxiliary" and "A" or "L", 12, 0.9, 0.9, 0.65, 1)
+        local label = _componentSlotLabels[slotType] or { mark = "?" }
+        _text(label.mark, 12, 0.9, 0.9, 0.65, 1)
         local clicked = hover and InputPressed("lmb")
     UiPop()
     return clicked
@@ -636,7 +677,8 @@ local function _drawCenter(configuration, x, width)
 
     local groups = _activeGroups(configuration)
     local cardGap = 16
-    local cardWidth = (width - 64 - cardGap) * 0.5
+    local coreStripWidth = 78
+    local cardWidth = (width - 64 - cardGap - coreStripWidth) * 0.5
     local cardHeight = 194
     for index, group in ipairs(groups) do
         local column = (index - 1) % 2
@@ -654,6 +696,28 @@ local function _drawCenter(configuration, x, width)
     for _, group in ipairs(shipComponentSlotGroups(configuration)) do
         componentSlotCounts[group.slotType] = group.count
     end
+
+    UiPush()
+        UiTranslate(x + width - 70, 102)
+        _bilingual("核心", "CORE", 16, 9)
+    UiPop()
+    local coreTypes = { "thruster", "sensor", "reactor" }
+    for index, slotType in ipairs(coreTypes) do
+        if math.floor(tonumber(componentSlotCounts[slotType]) or 0) > 0 then
+            if _drawDefenseSlot(
+                x + width - 70,
+                158 + (index - 1) * 74,
+                54,
+                slotType,
+                1
+            ) then
+                state.selectedSlot = ""
+                state.selectedDefenseType = slotType
+                state.selectedDefenseIndex = 1
+            end
+        end
+    end
+
     local defenseY = 570
     UiPush()
         UiTranslate(x + 24, defenseY)
@@ -730,10 +794,10 @@ local function _drawSummary(configuration, x)
         y = y + 104
     end
 
-    local profile =
-        shipComponentResolveProfile(_shipDefinition(), state.componentLoadout)
+    local profile = _componentProfile(configuration)
     local protection = profile.protection or {}
     local mobility = profile.mobility or {}
+    local energy = profile.energy or {}
     UiPush()
         UiTranslate(x + 18, 576)
         _bilingual("防护数据", "DEFENSE STATS", 17, 9)
@@ -758,12 +822,16 @@ local function _drawSummary(configuration, x)
         )
         UiTranslate(0, 18)
         _text(
-            "恢复 S/A/H  "
-                .. string.format("%.1f/%.1f/%.1f",
-                    protection.shieldRegenPerSecond,
-                    protection.armorRegenPerSecond,
-                    protection.hullRegenPerSecond),
-            10, 0.58, 0.76, 0.70, 1
+            "能源 / POWER  "
+                .. string.format("%.0f - %.0f = %.0f",
+                    energy.output or 0.0,
+                    energy.use or 0.0,
+                    energy.balance or 0.0),
+            10,
+            energy.valid and 0.58 or 0.96,
+            energy.valid and 0.76 or 0.30,
+            energy.valid and 0.70 or 0.22,
+            1
         )
     UiPop()
 end
@@ -923,6 +991,7 @@ function client.weaponConfigUiDraw()
             _text(state.message or "", 13, 0.48, 0.70, 0.65, 1)
         UiPop()
 
+        local designValid = ((_componentProfile(configuration).energy or {}).valid)
         if _button(
             _panelWidth - 28 - 404,
             _footerY + 10,
@@ -942,7 +1011,7 @@ function client.weaponConfigUiDraw()
             38,
             "保存设计 / SAVE",
             true,
-            not state.pending
+            not state.pending and designValid
         ) then
             client.weaponConfiguratorSaveTemplate(
                 state.shipType,

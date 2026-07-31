@@ -63,6 +63,7 @@ local function _finish(definition)
         continuousFire = true,
         shieldPenetration = 0.0,
         armorPenetration = 0.0,
+        powerUse = 0.0,
     })
     definition.salvoProfile = definition.salvoProfile or {
         groupSize = 1,

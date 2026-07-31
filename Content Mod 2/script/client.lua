@@ -21,6 +21,7 @@ end
 
 function client.clientDraw()
     client.shipClientDrawHealth()
+    client.shipClientDrawSensors()
     client.mainWeaponHudDraw()
     client.shipClientDrawHelp()
     client.shipCrosshairDraw()

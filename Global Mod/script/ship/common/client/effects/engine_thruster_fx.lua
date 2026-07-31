@@ -264,6 +264,33 @@ function client.engineThrusterFxTick(dt)
         state.nozzles = {}
         return
     end
+
+    -- 优化：检测是否有任何玩家在驾驶这艘飞船
+    local hasDriver = false
+    for _, playerId in ipairs(GetAllPlayers() or {}) do
+        local vehicle = GetPlayerVehicle(playerId)
+        if vehicle ~= nil and vehicle ~= 0 then
+            local vehicleBody = GetVehicleBody(vehicle)
+            if vehicleBody == body then
+                hasDriver = true
+                break
+            end
+        end
+    end
+
+    if not hasDriver then
+        -- 无人驾驶：平滑关闭尾焰
+        local response = 12.0
+        local blend = 1.0 - math.exp(-response * frameDt)
+        state.throttle = (state.throttle or 0.0) * (1.0 - blend)
+        if state.throttle < 0.01 then
+            state.throttle = 0.0
+            state.particleAccumulator = 0.0
+            return
+        end
+        state.particleAccumulator = 0.0
+        return
+    end
     if body ~= state.body or #(state.nozzles or {}) == 0 then
         state.body = body
         state.nozzles = _engineThrusterDiscoverNozzles(body)
@@ -339,6 +366,19 @@ function client.engineThrusterFxRender()
     local body = math.floor(state.body or 0)
     local sprite = math.floor(state.sprite or 0)
     if body == 0 or sprite == 0 or not IsHandleValid(body) then return end
+
+    -- 优化：无人驾驶时不渲染尾焰
+    local hasDriver = false
+    local playerId = GetLocalPlayer()
+    if playerId ~= nil and playerId > 0 then
+        local vehicle = GetPlayerVehicle(playerId)
+        if vehicle ~= nil and vehicle ~= 0 then
+            local vehicleBody = GetVehicleBody(vehicle)
+            hasDriver = (vehicleBody == body)
+        end
+    end
+    if not hasDriver then return end
+
     if (state.cameraDistance or 0.0)
         > (_engineThrusterConfig().renderCutoffDistance or 1200.0) then
         return

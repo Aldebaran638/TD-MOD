@@ -13,6 +13,7 @@
 #include "hud/ship_health_bar.lua"
 #include "hud/ship_help_overlay.lua"
 #include "hud/native_vehicle_hud.lua"
+#include "hud/ship_sensor_hud.lua"
 #include "effects/ship_destroyed_fx.lua"
 #include "effects/engine_thruster_fx.lua"
 
@@ -25,6 +26,7 @@ function client.shipClientInit(shipType)
     client.shipControlSnapshotInit(context.bodyId)
     client.engineThrusterFxInit()
     client.weaponConfigurationBindingInit(context.shipType, context.bodyId)
+    client.shipSensorHudInit()
 end
 
 function client.shipClientBeforeWeaponTick(dt)
@@ -38,6 +40,7 @@ function client.shipClientAfterWeaponTick(dt)
     client.shipControlSnapshotTick(dt)
     client.shipHealthBarTick(dt)
     client.shipHelpOverlayTick(dt)
+    client.shipSensorHudTick(dt)
 end
 
 function client.shipClientRender()
@@ -55,6 +58,10 @@ end
 
 function client.shipClientDrawHelp()
     client.shipHelpOverlayDraw()
+end
+
+function client.shipClientDrawSensors()
+    client.shipSensorHudDraw()
 end
 
 function client.shipClientSuppressNativeHud()

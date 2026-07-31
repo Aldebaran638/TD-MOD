@@ -46,6 +46,8 @@ foreach ($weaponFile in $weaponDefinitionFiles) {
 }
 $catalog = Read-Required "script\data\weapons\weapon_catalog.lua"
 $shipDefinition = Read-Required "script\data\ships\battlecruiser.lua"
+$strikeCraftDefinition = Read-Required "script\data\ships\advanced_strike_craft.lua"
+$componentCatalog = Read-Required "script\data\components\component_catalog.lua"
 $shipMounts = Read-Required "script\data\ships\battlecruiser_mounts.lua"
 $ship = $shipDefinition + "`n" + $shipMounts
 $entry = Read-Required "script\shipMain.lua"
@@ -115,6 +117,11 @@ $shipCamera = Read-Required "script\ship\common\client\camera\ship_camera.lua"
 $shipRoll = Read-Required "script\ship\common\client\hud\ship_roll_error.lua"
 $bodyMove = Read-Required "script\ship\common\client\input\body_move_input.lua"
 $shipRegistryServer = Read-Required "script\ship\common\server\registry\ship_registry.lua"
+$shipComponents = Read-Required "script\ship\common\server\components\ship_components.lua"
+$shipDamage = Read-Required "script\ship\common\server\damage\ship_damage.lua"
+$sensorHud = Read-Required "script\ship\common\client\hud\ship_sensor_hud.lua"
+$strikeCraftEntry = Read-Required "script\strikeCraftMain.lua"
+$strikeCraftPrefab = Read-Required "prefabs\gammaStrikeCraft.xml"
 $shipServerBootstrap = Read-Required "script\ship\common\server\bootstrap.lua"
 $shipClientBootstrap = Read-Required "script\ship\common\client\bootstrap.lua"
 $serverShipContext = Read-Required "script\ship\common\server\runtime_context.lua"
@@ -771,6 +778,34 @@ if ($ship -notmatch '(?s)configurationId\s*=\s*"torpedo_2x4g4m".*?\{.*?slotType\
     Add-Issue "torpedo frame must contain 4G and 4M"
 }
 
+if ($shipDefinition -notmatch '(?s)slotType\s*=\s*"thruster".*?slotType\s*=\s*"sensor".*?slotType\s*=\s*"reactor"' -or
+    $componentCatalog -notmatch 'officialComponentId\s*=\s*"BATTLESHIP_DARK_MATTER_REACTOR"' -or
+    $componentCatalog -notmatch 'EXCESS|weaponDamageMultiplier\s*=\s*excessBonus' -or
+    $shipComponents -notmatch 'positive power balance' -or
+    $shipDamage -notmatch 'shipRuntimeGetWeaponDamageMultiplier') {
+    Add-Issue "core slots, positive-power validation, or Stellaris excess-power buffs are incomplete"
+}
+if ($sensorHud -notmatch 'UiWorldToPixel' -or
+    $sensorHud -notmatch 'registryShipGetRegisteredBodyIds' -or
+    $sensorHud -notmatch 'cameraDistance\s*<\s*0\.0' -or
+    $sensorHud -notmatch 'math\.deg\(math\.atan2\(dy,\s*dx\)\)') {
+    Add-Issue "client sensor HUD lacks registered-ship scan, projection, or off-screen arrows"
+}
+if ($strikeCraftDefinition -notmatch 'shipType\s*=\s*"advancedStrikeCraft"' -or
+    $strikeCraftDefinition -notmatch 'playerConfigurable\s*=\s*false' -or
+    $strikeCraftDefinition -notmatch 'maxShieldHP\s*=\s*25\.0' -or
+    $strikeCraftDefinition -notmatch 'maxArmorHP\s*=\s*0\.0' -or
+    $strikeCraftDefinition -notmatch 'maxBodyHP\s*=\s*12\.0' -or
+    $strikeCraftEntry -notmatch 'server\.shipServerInit\(configuredShipType\)' -or
+    $strikeCraftEntry -match 'weapon/server/bootstrap\.lua' -or
+    $strikeCraftPrefab -notmatch '<vehicle[^>]+driven="true"[^>]+sound="none 0"' -or
+    $strikeCraftPrefab -notmatch 'strikeCraftMain\.lua' -or
+    $hSlotControl -notmatch 'registryShipRegister\(\s*craftBody,\s*"advancedStrikeCraft"' -or
+    $hSlotControl -notmatch 'registryShipIsBodyDead\(craft\.bodyId\)' -or
+    $shipRegistryServer -notmatch 'function\s+server\.registryShipUnregister') {
+    Add-Issue "advanced strike craft is not a fixed, boardable, AI-controlled registered Stellaris ship"
+}
+
 $prefabMatches = [Regex]::Matches($standard, '"(MOD/prefabs/[^"]+\.xml)"')
 foreach ($match in $prefabMatches) {
     $reference = $match.Groups[1].Value
@@ -793,7 +828,7 @@ foreach ($luaFile in Get-ChildItem -LiteralPath $modRoot -Recurse -Filter "*.lua
 }
 
 Write-Host "=== CM2 Weapon System Semantic Checker ===" -ForegroundColor Cyan
-Write-Host "Checked $($expected.Count) standard weapons, official English names, local UI configuration binding, two frames, five behaviors, and FX/prefab references."
+Write-Host "Checked $($expected.Count) standard weapons, core components, sensor HUD, fixed strike craft, two frames, five behaviors, and FX/prefab references."
 if ($issues -gt 0) {
     Write-Host "Check failed: $issues issue(s)." -ForegroundColor Red
     exit 1

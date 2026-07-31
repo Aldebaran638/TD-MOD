@@ -105,6 +105,12 @@ local function _getOrCreateState(shipBodyId, shipType, defaultShipType)
             turnResponseMultiplier = 0.0,
             turnForceMultiplier = 0.0,
         },
+        energy = {
+            output = 0.0,
+            use = 0.0,
+            balance = 0.0,
+            weaponDamageMultiplier = 0.0,
+        },
         regen = {
             config = _cloneRegenConfig(definition),
             lastDamageTimes = { shield = nowTime, armor = nowTime, body = nowTime },
@@ -149,6 +155,7 @@ function _runtimeAPI.setComponentProfile(shipBodyId, profile, defaultShipType)
     if state == nil then return false end
     local resolved = (profile or {}).protection or {}
     local mobility = (profile or {}).mobility or {}
+    local energy = (profile or {}).energy or {}
     state.maxHP = {
         shield = math.max(0.0, _safeNumber(resolved.maxShieldHP, 0.0)),
         armor = math.max(0.0, _safeNumber(resolved.maxArmorHP, 0.0)),
@@ -167,6 +174,15 @@ function _runtimeAPI.setComponentProfile(shipBodyId, profile, defaultShipType)
             _safeNumber(mobility.turnResponseMultiplier, 0.0)),
         turnForceMultiplier = math.max(-0.95,
             _safeNumber(mobility.turnForceMultiplier, 0.0)),
+    }
+    state.energy = {
+        output = math.max(0.0, _safeNumber(energy.output, 0.0)),
+        use = math.max(0.0, _safeNumber(energy.use, 0.0)),
+        balance = _safeNumber(energy.balance, 0.0),
+        weaponDamageMultiplier = math.max(
+            0.0,
+            _safeNumber(energy.weaponDamageMultiplier, 0.0)
+        ),
     }
     local config = state.regen.config or {}
     config.shieldPerSecond = math.max(0.0,
@@ -199,6 +215,15 @@ function _runtimeAPI.getMobilityModifiers(shipBodyId, defaultShipType)
     return tonumber(mobility.speedMultiplier) or 0.0,
         tonumber(mobility.turnResponseMultiplier) or 0.0,
         tonumber(mobility.turnForceMultiplier) or 0.0
+end
+
+function _runtimeAPI.getWeaponDamageMultiplier(shipBodyId, defaultShipType)
+    local state = _getOrCreateState(shipBodyId, defaultShipType, defaultShipType)
+    if state == nil then return 0.0 end
+    return math.max(
+        0.0,
+        tonumber((state.energy or {}).weaponDamageMultiplier) or 0.0
+    )
 end
 
 function _runtimeAPI.getRegenConfig(shipBodyId, defaultShipType)

@@ -52,5 +52,6 @@ weaponDefineStrikeCraft({
     aimLimitDeg = 0.0,
     aimPitchOffsetDeg = 0.0,
     officialComponentId = "STRIKE_CRAFT_HANGAR_3",
+    powerUse = 59.0,
     family = "strike_craft",
 })

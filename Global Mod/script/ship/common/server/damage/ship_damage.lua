@@ -15,7 +15,15 @@ end
 function server.shipDamageApplyRaw(shipBodyId, rawDamage)
     local result = _emptyDamageResult()
     local body = math.floor(shipBodyId or 0)
+    local outgoingMultiplier = 0.0
+    if server.shipRuntimeGetWeaponDamageMultiplier ~= nil
+        and server.shipContextGetBody ~= nil then
+        outgoingMultiplier = server.shipRuntimeGetWeaponDamageMultiplier(
+            server.shipContextGetBody()
+        )
+    end
     local remaining = math.max(0.0, tonumber(rawDamage) or 0.0)
+        * (1.0 + math.max(0.0, tonumber(outgoingMultiplier) or 0.0))
     if body == 0 or remaining <= 0.0 then return result end
     if server.registryShipExists == nil or not server.registryShipExists(body) then
         return result
