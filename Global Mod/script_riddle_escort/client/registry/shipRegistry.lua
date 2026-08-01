@@ -67,6 +67,13 @@ function client.registryShipGetHP(shipBodyId)
     return GetFloat(prefix .. "/shieldHP"), GetFloat(prefix .. "/armorHP"), GetFloat(prefix .. "/bodyHP")
 end
 
+function client.registryShipIsBodyDead(shipBodyId)
+    if not client.registryShipExists(shipBodyId) then return false end
+    local prefix = client.registryShipKeyPrefix(shipBodyId)
+    return GetBool(prefix .. "/destroyed")
+        or GetFloat(prefix .. "/bodyHP") <= 0.0
+end
+
 function client.registryShipGetMaxHP(shipBodyId)
     if not client.registryShipExists(shipBodyId) then
         return nil, nil, nil

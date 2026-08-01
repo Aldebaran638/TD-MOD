@@ -13,6 +13,10 @@ function client.init()
 end
 
 function client.clientTick(dt)
+    if client.shipClientIsDestroyed() then
+        client.shipClientDestroyedUiTick(dt)
+        return
+    end
     client.weaponFxBudgetBeginFrame(dt)
     client.shipClientBeforeWeaponTick(dt)
     client.weaponClientTick(dt)
@@ -31,6 +35,7 @@ function client.clientDraw()
 end
 
 function client.render()
+    if client.shipClientIsDestroyed() then return end
     client.shipClientRender()
     client.weaponClientRender()
     client.shipClientRenderEffects()

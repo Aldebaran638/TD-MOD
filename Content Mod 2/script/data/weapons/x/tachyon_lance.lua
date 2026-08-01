@@ -8,6 +8,7 @@ weaponDefineRay({
     fxProfile = "tachyonLance",
     damageMin = 780,
     damageMax = 1950,
+    powerUse = 260.0,
     cooldown = 6.0,
     CD = 6.0,
     maxRange = 500.0,

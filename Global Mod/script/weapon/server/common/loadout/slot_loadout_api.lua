@@ -43,10 +43,34 @@ function server.shipSlotLoadoutResolveShipDefinition(shipType)
     return _api.resolveShipDefinition(shipType)
 end
 
+local function _resolveProfileForSync(shipType, state, loadout)
+    local profile = server.shipComponentProfile
+    if profile ~= nil and profile.sensor ~= nil then
+        return profile
+    end
+    local definition = server.shipContextGetDefinition() or {}
+    local configuration = shipComponentFindConfiguration(
+        definition,
+        state.configurationId
+    )
+    if configuration == nil then return {} end
+    return shipComponentResolveProfile(
+        definition,
+        server.shipComponentLoadout or {},
+        configuration,
+        loadout
+    ) or {}
+end
+
 function server.shipWeaponSyncConfiguration(shipType, recipientPlayerId)
     local resolvedType = tostring(shipType or server.shipContextGetType())
     local state = server.shipSlotLoadoutGetState(resolvedType) or {}
     local loadout = state.loadout or {}
+    local profile = _resolveProfileForSync(resolvedType, state, loadout)
+    local sensor = profile.sensor or {}
+    local energy = profile.energy or {}
+    local mobility = profile.mobility or {}
+    local cloak = profile.cloak or {}
     ClientCall(
         math.floor(recipientPlayerId or 0),
         "client.updateShipWeaponConfiguration",
@@ -57,7 +81,21 @@ function server.shipWeaponSyncConfiguration(shipType, recipientPlayerId)
         tostring(loadout.M or ""),
         tostring(loadout.G or ""),
         tostring(loadout.H or ""),
-        tostring(loadout.P or "")
+        tostring(loadout.P or ""),
+        tonumber(sensor.range) or 0.0,
+        tonumber(sensor.interval) or 1.0,
+        tonumber(sensor.trackingAdd) or 0.0,
+        tonumber(energy.output) or 0.0,
+        tonumber(energy.use) or 0.0,
+        tonumber(energy.balance) or 0.0,
+        tonumber(energy.weaponDamageMultiplier) or 0.0,
+        tonumber(mobility.speedMultiplier) or 0.0,
+        tonumber(mobility.turnResponseMultiplier) or 0.0,
+        tonumber(mobility.turnForceMultiplier) or 0.0,
+        cloak.available and 1 or 0,
+        tonumber(cloak.strength) or 0.0,
+        tonumber(cloak.shieldReduction) or 0.0,
+        math.floor(tonumber(cloak.shipLimit) or 0)
     )
 end
 

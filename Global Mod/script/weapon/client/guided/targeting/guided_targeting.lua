@@ -39,6 +39,32 @@ local function _guidedTargetingClamp(v, a, b)
     return v
 end
 
+local function _guidedTargetingResolveConfig(shipBody, baseConfig, weaponGroupId)
+    local base = baseConfig or {}
+    local resolved = {}
+    for key, value in pairs(base) do resolved[key] = value end
+    local weapon = client.getShipWeaponDefinition ~= nil
+        and client.getShipWeaponDefinition(shipBody, weaponGroupId)
+        or {}
+    local weaponRange = tonumber(weapon.maxRange) or 0.0
+    local sensor = client.getShipSensorProfile ~= nil
+        and client.getShipSensorProfile(shipBody) or {}
+    local sensorRange = tonumber(sensor.range) or 0.0
+    local lockDistance = tonumber(resolved.lockDistance) or 0.0
+    if weaponRange > 0.0 then lockDistance = math.min(lockDistance, weaponRange) end
+    if sensorRange > 0.0 then lockDistance = math.min(lockDistance, sensorRange) end
+    resolved.lockDistance = lockDistance
+    local tracking = math.max(0.0, tonumber(sensor.trackingAdd) or 0.0)
+    resolved.lockHalfAngleDeg = (tonumber(resolved.lockHalfAngleDeg) or 0.0)
+        + math.min(8.0, tracking * 0.25)
+    resolved.lockAcquireTime = math.max(
+        0.20,
+        (tonumber(resolved.lockAcquireTime) or 1.0)
+            * (1.0 - math.min(0.50, tracking * 0.02))
+    )
+    return resolved
+end
+
 local function _guidedTargetingResetState(state)
     state.active = false
     state.shipBody = 0
@@ -302,6 +328,7 @@ function client.guidedTargetingTick(dt)
             lockLoseGraceTime = cfg.lockLoseGraceTime,
         }
     end
+    modeCfg = _guidedTargetingResolveConfig(shipBody, modeCfg, currentMode)
 
     local shipT = GetBodyTransform(shipBody)
     local shipPos = shipT.pos

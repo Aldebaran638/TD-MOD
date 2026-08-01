@@ -16,7 +16,7 @@ function server.weaponDamageRoll(definition)
     return minimum + (maximum - minimum) * math.random()
 end
 
-function server.weaponDamageApplyToShip(hitBody, weaponType)
+function server.weaponDamageApplyToShip(hitBody, weaponType, attackerBodyId)
     local bodyId = math.floor(hitBody or 0)
     local definition = (weaponData or {})[tostring(weaponType or "")] or {}
     if bodyId == 0 or server.registryShipExists == nil or not server.registryShipExists(bodyId) then
@@ -24,7 +24,12 @@ function server.weaponDamageApplyToShip(hitBody, weaponType)
     end
 
     local raw = server.weaponDamageRoll(definition)
-    local result = server.shipDamageApplyWeaponDefinition(bodyId, definition, raw)
+    local result = server.shipDamageApplyWeaponDefinition(
+        bodyId,
+        definition,
+        raw,
+        attackerBodyId
+    )
     return result.didDamage, result.didHitShield, result.impactLayer
 end
 

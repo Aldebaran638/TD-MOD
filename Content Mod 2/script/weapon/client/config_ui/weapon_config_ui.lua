@@ -22,8 +22,9 @@ local _panelHeight = 940
 local _leftWidth = 272
 local _rightWidth = 286
 local _contentGap = 18
-local _mainHeight = 764
-local _footerY = 776
+-- The footer is anchored to the panel origin, below the content transform.
+local _mainHeight = 770
+local _footerY = _panelHeight - 104
 local _slotOrder = { "X", "L", "G", "M", "H", "P" }
 
 local _slotLabels = {
@@ -88,6 +89,16 @@ local function _frameLabel(configuration)
         zh = tostring((configuration or {}).label or id),
         en = string.upper(id),
     }
+end
+
+local function _toggleFramePicker()
+    local state = client.weaponConfigUiState
+    state.framePickerOpen = not state.framePickerOpen
+    if state.framePickerOpen then
+        state.selectedSlot = ""
+        state.selectedDefenseType = ""
+        state.selectedDefenseIndex = 0
+    end
 end
 
 local function _configurableShipTypes()
@@ -288,6 +299,7 @@ function client.weaponConfiguratorSaveTemplate(
             M = tostring(selected.M or ""),
             G = tostring(selected.G or ""),
             H = tostring(selected.H or ""),
+            P = tostring(selected.P or ""),
         },
         componentLoadout
     )
@@ -331,6 +343,7 @@ end
 
 local function _button(x, y, width, height, label, primary, enabled)
     UiPush()
+        UiAlign("left top")
         UiTranslate(x, y)
         local hover = enabled and UiIsMouseInRect(width, height)
         if primary then
@@ -341,10 +354,15 @@ local function _button(x, y, width, height, label, primary, enabled)
         UiRect(width, height)
         UiColor(primary and 0.30 or 0.12, primary and 0.84 or 0.48, primary and 0.72 or 0.48, 1)
         UiRectOutline(width, height, primary and 2 or 1)
+        local clicked = enabled and UiBlankButton(width, height)
+        -- Keep the action usable on builds where UiBlankButton does not report
+        -- a click after a preceding custom draw operation.
+        if enabled and not clicked and hover and InputPressed("lmb") then
+            clicked = true
+        end
         UiAlign("center middle")
         UiTranslate(width * 0.5, height * 0.5)
         _text(label, 16, 0.90, 0.98, 0.96, enabled and 1 or 0.45)
-        local clicked = enabled and hover and InputPressed("lmb")
     UiPop()
     return clicked
 end
@@ -401,11 +419,18 @@ local function _drawShipSidebar(configuration)
     UiPush()
         UiTranslate(18, 246)
         _bilingual("当前区段", "CURRENT SECTION", 18, 10)
-        UiTranslate(0, 56)
-        _text(frame.zh, 20, 0.90, 0.77, 0.34, 1)
-        UiTranslate(0, 25)
-        _text(frame.en, 10, 0.48, 0.66, 0.62, 1)
     UiPop()
+    if _button(
+        18,
+        296,
+        _leftWidth - 36,
+        56,
+        frame.zh .. " / " .. frame.en .. "  ▼",
+        false,
+        true
+    ) then
+        _toggleFramePicker()
+    end
 
     UiPush()
         UiTranslate(18, 375)
@@ -552,13 +577,18 @@ local function _drawDefenseSidebar(slotType)
         y = y + 73
     end
     for _, componentId in ipairs(pool) do
-        if _drawDefenseOption(12, y, _leftWidth - 24, 68, slotType, componentId) then
-            state.componentLoadout[slotType][state.selectedDefenseIndex] =
-                tostring(componentId)
-            state.message = "未保存的设计 / UNSAVED DESIGN"
-            state.dirty = true
+        local hiddenLowerReactorBooster = slotType == "auxiliary"
+            and (componentId == "reactorBooster1"
+                or componentId == "reactorBooster2")
+        if not hiddenLowerReactorBooster then
+            if _drawDefenseOption(12, y, _leftWidth - 24, 68, slotType, componentId) then
+                state.componentLoadout[slotType][state.selectedDefenseIndex] =
+                    tostring(componentId)
+                state.message = "未保存的设计 / UNSAVED DESIGN"
+                state.dirty = true
+            end
+            y = y + 73
         end
-        y = y + 73
     end
 end
 
@@ -618,32 +648,32 @@ local function _drawGroupCard(x, y, width, height, group)
         UiRectOutline(width, height, selected and 3 or 2)
         UiRect(width, 5)
 
-        UiTranslate(16, 17)
+        UiTranslate(14, 12)
         UiColor(slot.color[1], slot.color[2], slot.color[3], 1)
-        UiRect(52, 30)
+        UiRect(46, 26)
         UiAlign("center middle")
-        UiTranslate(26, 15)
-        _text(slotType, 20, 0.03, 0.04, 0.05, 1)
+        UiTranslate(23, 13)
+        _text(slotType, 17, 0.03, 0.04, 0.05, 1)
         UiAlign("left top")
-        UiTranslate(42, -9)
-        _text("×" .. tostring(group.count or 0), 22, 0.88, 0.94, 0.92, 1)
+        UiTranslate(36, -7)
+        _text("×" .. tostring(group.count or 0), 18, 0.88, 0.94, 0.92, 1)
 
-        UiTranslate(-68, 46)
+        UiTranslate(-50, 36)
         local icon = tostring(weapon.iconPath or "")
         UiColor(0.006, 0.016, 0.022, 1)
-        UiRect(72, 72)
+        UiRect(58, 58)
         if icon ~= "" then
             UiColor(1, 1, 1, 1)
-            UiImageBox(icon, 72, 72, 0, 0)
+            UiImageBox(icon, 58, 58, 0, 0)
         end
-        UiTranslate(88, 4)
-        _text(tostring(weapon.displayName or weaponType), 17, 0.90, 0.95, 0.92, 1)
-        UiTranslate(0, 25)
-        _text(tostring(weapon.englishName or weaponType), 10, 0.48, 0.68, 0.64, 1)
-        UiTranslate(0, 27)
-        _text(slot.zh .. " / " .. slot.en, 10, slot.color[1], slot.color[2], slot.color[3], 1)
-        UiTranslate(-88, 36)
-        _text("点击更换整组武器 / CLICK TO CHANGE GROUP", 9, 0.38, 0.58, 0.54, 1)
+        UiTranslate(70, 0)
+        _text(tostring(weapon.displayName or weaponType), 13, 0.90, 0.95, 0.92, 1)
+        UiTranslate(0, 18)
+        _text(tostring(weapon.englishName or weaponType), 9, 0.48, 0.68, 0.64, 1)
+        UiTranslate(0, 18)
+        _text(slot.zh .. " / " .. slot.en, 8, slot.color[1], slot.color[2], slot.color[3], 1)
+        UiTranslate(-70, 22)
+        _text("点击更换整组武器 / CLICK TO CHANGE GROUP", 8, 0.38, 0.58, 0.54, 1)
         local clicked = hover and InputPressed("lmb")
     UiPop()
     return clicked
@@ -662,10 +692,7 @@ local function _drawCenter(configuration, x, width)
         false,
         true
     ) then
-        state.framePickerOpen = true
-        state.selectedSlot = ""
-        state.selectedDefenseType = ""
-        state.selectedDefenseIndex = 0
+        _toggleFramePicker()
     end
 
     UiPush()
@@ -677,15 +704,15 @@ local function _drawCenter(configuration, x, width)
     UiPop()
 
     local groups = _activeGroups(configuration)
-    local cardGap = 16
-    local coreStripWidth = 78
+    local cardGap = 12
+    local coreStripWidth = 70
     local cardWidth = (width - 64 - cardGap - coreStripWidth) * 0.5
-    local cardHeight = 194
+    local cardHeight = 132
     for index, group in ipairs(groups) do
         local column = (index - 1) % 2
         local row = math.floor((index - 1) / 2)
         local cardX = x + 24 + column * (cardWidth + cardGap)
-        local cardY = 154 + row * (cardHeight + 12)
+        local cardY = 142 + row * (cardHeight + 10)
         if _drawGroupCard(cardX, cardY, cardWidth, cardHeight, group) then
             state.selectedSlot = tostring(group.slotType or "")
             state.selectedDefenseType = ""
@@ -699,16 +726,16 @@ local function _drawCenter(configuration, x, width)
     end
 
     UiPush()
-        UiTranslate(x + width - 70, 102)
+        UiTranslate(x + width - 62, 102)
         _bilingual("核心", "CORE", 16, 9)
     UiPop()
     local coreTypes = { "thruster", "sensor", "reactor" }
     for index, slotType in ipairs(coreTypes) do
         if math.floor(tonumber(componentSlotCounts[slotType]) or 0) > 0 then
             if _drawDefenseSlot(
-                x + width - 70,
-                158 + (index - 1) * 74,
-                54,
+                x + width - 62,
+                150 + (index - 1) * 66,
+                58,
                 slotType,
                 1
             ) then
@@ -719,18 +746,19 @@ local function _drawCenter(configuration, x, width)
         end
     end
 
-    local defenseY = 570
+    local weaponRows = math.ceil(#groups / 2)
+    local defenseY = 142 + weaponRows * (cardHeight + 10) + 14
     UiPush()
         UiTranslate(x + 24, defenseY)
         _bilingual("防护与辅助组件", "DEFENSE & AUXILIARY", 18, 9)
     UiPop()
-    local slotSize = 54
-    local gap = 8
+    local slotSize = 48
+    local gap = 6
     local auxiliaryCount =
         math.floor(tonumber(componentSlotCounts.auxiliary) or 0)
     for index = 1, auxiliaryCount do
         local slotX = x + 24 + (index - 1) * (slotSize + gap)
-        if _drawDefenseSlot(slotX, defenseY + 48, slotSize, "auxiliary", index) then
+        if _drawDefenseSlot(slotX, defenseY + 44, slotSize, "auxiliary", index) then
             state.selectedSlot = ""
             state.selectedDefenseType = "auxiliary"
             state.selectedDefenseIndex = index
@@ -740,7 +768,7 @@ local function _drawCenter(configuration, x, width)
         math.floor(tonumber(componentSlotCounts.largeUtility) or 0)
     for index = 1, largeCount do
         local slotX = x + 24 + (index - 1) * (slotSize + gap)
-        if _drawDefenseSlot(slotX, defenseY + 112, slotSize, "largeUtility", index) then
+        if _drawDefenseSlot(slotX, defenseY + 102, slotSize, "largeUtility", index) then
             state.selectedSlot = ""
             state.selectedDefenseType = "largeUtility"
             state.selectedDefenseIndex = index
@@ -766,7 +794,7 @@ local function _drawSummary(configuration, x)
         _text(frame.en, 9, 0.48, 0.64, 0.60, 1)
     UiPop()
 
-    local y = 148
+    local y = 128
     for _, group in ipairs(_activeGroups(configuration)) do
         local slotType = tostring(group.slotType or "")
         local slot = _slotLabels[slotType] or _slotLabels.M
@@ -775,9 +803,9 @@ local function _drawSummary(configuration, x)
         UiPush()
             UiTranslate(x + 16, y)
             UiColor(0.018, 0.060, 0.062, 1)
-            UiRect(_rightWidth - 32, 92)
+            UiRect(_rightWidth - 32, 70)
             UiColor(slot.color[1], slot.color[2], slot.color[3], 0.72)
-            UiRect(3, 92)
+            UiRect(3, 70)
             UiTranslate(12, 12)
             UiColor(slot.color[1], slot.color[2], slot.color[3], 1)
             UiRect(36, 24)
@@ -786,13 +814,13 @@ local function _drawSummary(configuration, x)
             _text(slotType .. "×" .. tostring(group.count or 0), 13, 0.03, 0.04, 0.05, 1)
             UiAlign("left top")
             UiTranslate(30, -8)
-            _text(tostring(weapon.displayName or weaponType), 14, 0.86, 0.94, 0.90, 1)
-            UiTranslate(0, 20)
-            _text(tostring(weapon.englishName or weaponType), 9, 0.45, 0.65, 0.60, 1)
-            UiTranslate(-48, 39)
-            _text(slot.zh .. " / " .. slot.en, 9, slot.color[1], slot.color[2], slot.color[3], 1)
+            _text(tostring(weapon.displayName or weaponType), 12, 0.86, 0.94, 0.90, 1)
+            UiTranslate(0, 18)
+            _text(tostring(weapon.englishName or weaponType), 8, 0.45, 0.65, 0.60, 1)
+            UiTranslate(-48, 22)
+            _text(slot.zh .. " / " .. slot.en, 8, slot.color[1], slot.color[2], slot.color[3], 1)
         UiPop()
-        y = y + 104
+        y = y + 78
     end
 
     local profile = _componentProfile(configuration)
@@ -800,7 +828,7 @@ local function _drawSummary(configuration, x)
     local mobility = profile.mobility or {}
     local energy = profile.energy or {}
     UiPush()
-        UiTranslate(x + 18, 576)
+        UiTranslate(x + 18, 570)
         _bilingual("防护数据", "DEFENSE STATS", 17, 9)
         UiTranslate(0, 46)
         _text("船体 / HULL        " .. string.format("%.0f", protection.maxBodyHP), 12, 0.78, 0.90, 0.84, 1)
@@ -849,6 +877,7 @@ end
 local function _drawFramePicker()
     local state = client.weaponConfigUiState
     UiPush()
+        UiMakeInteractive()
         UiColor(0.001, 0.006, 0.008, 0.82)
         UiRect(_panelWidth, _panelHeight)
 
@@ -890,6 +919,7 @@ local function _drawFramePicker()
                 UiColor(selected and 0.28 or 0.10, selected and 0.82 or 0.44,
                     selected and 0.66 or 0.40, 1)
                 UiRectOutline(cardW, cardH, selected and 3 or 1)
+                local clicked = UiBlankButton(cardW, cardH)
                 local label = _frameLabel(candidate)
                 UiTranslate(22, 22)
                 _bilingual(label.zh, label.en, 24, 11,
@@ -902,7 +932,6 @@ local function _drawFramePicker()
                 _text(selected and "当前框架 / CURRENT" or "点击选择 / SELECT",
                     13, selected and 0.92 or 0.46, selected and 0.76 or 0.70,
                     selected and 0.30 or 0.64, 1)
-                local clicked = hover and InputPressed("lmb")
             UiPop()
             if clicked then
                 state.configurationId =
@@ -935,6 +964,68 @@ local function _resetDraft()
     state.message = "已恢复默认设计 / DEFAULT DESIGN RESTORED"
     state.dirty = true
     _ensureDraft()
+end
+
+local function _drawFooter(configuration)
+    local state = client.weaponConfigUiState
+    local footerWidth = _panelWidth - 28
+    local buttonY = _footerY + 48
+    local resetX = footerWidth - 494
+    local saveX = resetX + 182
+    local cancelX = saveX + 182
+
+    UiPush()
+        UiTranslate(14, _footerY)
+        UiColor(0.010, 0.045, 0.048, 1)
+        UiRect(footerWidth, 104)
+        UiColor(0.10, 0.48, 0.42, 1)
+        UiRect(footerWidth, 2)
+        UiTranslate(16, 16)
+        _text(state.message or "", 13, 0.52, 0.74, 0.69, 1)
+    UiPop()
+
+    local designValid = ((_componentProfile(configuration).energy or {}).valid)
+    if _button(
+        14 + resetX,
+        buttonY,
+        170,
+        38,
+        "恢复默认 / RESET",
+        false,
+        not state.pending
+    ) then
+        _resetDraft()
+        configuration = _ensureDraft() or configuration
+        designValid = ((_componentProfile(configuration).energy or {}).valid)
+    end
+    if _button(
+        14 + saveX,
+        buttonY,
+        170,
+        38,
+        "保存设计 / SAVE",
+        true,
+        not state.pending and designValid
+    ) then
+        client.weaponConfiguratorSaveTemplate(
+            state.shipType,
+            state.configurationId,
+            _copyLoadout(state.loadout),
+            _copyComponentLoadout(state.componentLoadout)
+        )
+    end
+    if _button(
+        14 + cancelX,
+        buttonY,
+        130,
+        38,
+        "关闭 / CLOSE",
+        false,
+        not state.pending
+    ) then
+        _close()
+    end
+    return configuration
 end
 
 function client.weaponConfigUiDraw()
@@ -984,54 +1075,11 @@ function client.weaponConfigUiDraw()
             centerX + centerWidth + _contentGap
         )
 
+        -- Return to panel coordinates before drawing the fixed action bar.
         UiPush()
-            UiTranslate(0, _footerY)
-            UiColor(0.010, 0.045, 0.048, 1)
-            UiRect(_panelWidth - 28, 58)
-            UiTranslate(16, 23)
-            _text(state.message or "", 13, 0.48, 0.70, 0.65, 1)
+            UiTranslate(-14, -88)
+            configuration = _drawFooter(configuration)
         UiPop()
-
-        local designValid = ((_componentProfile(configuration).energy or {}).valid)
-        if _button(
-            _panelWidth - 28 - 404,
-            _footerY + 10,
-            126,
-            38,
-            "恢复默认 / RESET",
-            false,
-            not state.pending
-        ) then
-            _resetDraft()
-            configuration = _ensureDraft() or configuration
-        end
-        if _button(
-            _panelWidth - 28 - 266,
-            _footerY + 10,
-            160,
-            38,
-            "保存设计 / SAVE",
-            true,
-            not state.pending and designValid
-        ) then
-            client.weaponConfiguratorSaveTemplate(
-                state.shipType,
-                state.configurationId,
-                _copyLoadout(state.loadout),
-                _copyComponentLoadout(state.componentLoadout)
-            )
-        end
-        if _button(
-            _panelWidth - 28 - 94,
-            _footerY + 10,
-            94,
-            38,
-            "关闭 / CLOSE",
-            false,
-            not state.pending
-        ) then
-            _close()
-        end
 
         if state.framePickerOpen then
             UiPush()

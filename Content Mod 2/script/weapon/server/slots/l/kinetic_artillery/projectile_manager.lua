@@ -128,7 +128,7 @@ local function _playShieldImpactFx(hitTargetBodyId, hitPos, weaponType)
     )
 end
 
-local function _applyProjectileShipDamage(hitBody, weaponType)
+local function _applyProjectileShipDamage(hitBody, weaponType, attackerBodyId)
     if hitBody == nil or hitBody == 0 then
         return {
             didDamage = false,
@@ -148,7 +148,8 @@ local function _applyProjectileShipDamage(hitBody, weaponType)
     return server.shipDamageApplyWeaponDefinition(
         hitBody,
         settings,
-        server.weaponDamageRoll(settings)
+        server.weaponDamageRoll(settings),
+        attackerBodyId
     )
 end
 
@@ -270,7 +271,11 @@ function server.projectileManagerTick(dt)
 
             local shieldHit = _resolveShieldHit(projectile, projectile.lastPosition, projectile.position, settings)
             if shieldHit ~= nil then
-                _applyProjectileShipDamage(shieldHit.bodyId, projectile.weaponType)
+                _applyProjectileShipDamage(
+                    shieldHit.bodyId,
+                    projectile.weaponType,
+                    projectile.ownerShipBody
+                )
                 _finishProjectileVisual(projectile.id, "impact", shieldHit.hitPos, shieldHit.normal, "shield")
                 _playProjectileHitSound(projectile.weaponType, shieldHit.hitPos)
                 _playShieldImpactFx(
@@ -292,7 +297,11 @@ function server.projectileManagerTick(dt)
                             shouldPlayImpact = true
                             shouldExplode = false
                         else
-                            local damageResult = _applyProjectileShipDamage(hitBody, projectile.weaponType)
+                            local damageResult = _applyProjectileShipDamage(
+                                hitBody,
+                                projectile.weaponType,
+                                projectile.ownerShipBody
+                            )
                             impactLayer = damageResult.impactLayer or impactLayer
                             if damageResult.didDamage then
                                 shouldPlayImpact = true

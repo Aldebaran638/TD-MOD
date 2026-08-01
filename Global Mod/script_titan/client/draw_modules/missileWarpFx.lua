@@ -56,7 +56,7 @@ function client.missileWarpFxTick(dt)
             -- 微弱的能量粒子开始聚集
             if preFlashProgress > 0.5 then
                 ParticleReset()
-                ParticleColor(0.2, 0.5, 1.0, 1.0, 0.2, 0.5, 1.0, 0.0)
+                ParticleColor(0.2, 0.5, 1.0, 0.2, 0.5, 1.0)
                 ParticleRadius(0.1, 0.0, "easeout")
                 ParticleAlpha(0.3, 0.0)
                 ParticleGravity(0.0)
@@ -86,7 +86,7 @@ function client.missileWarpFxTick(dt)
             
             -- 使用粒子模拟白爆效果
             ParticleReset()
-            ParticleColor(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0)
+            ParticleColor(1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
             ParticleRadius(flashSize, 0.0, "linear")
             ParticleAlpha(alpha, 0.0)
             ParticleGravity(0.0)
@@ -101,8 +101,8 @@ function client.missileWarpFxTick(dt)
                 -- 能量撕裂的初始爆发
                 ParticleReset()
                 ParticleColor(
-                    cfg.energyRipColorStart[1], cfg.energyRipColorStart[2], cfg.energyRipColorStart[3], cfg.energyRipColorStart[4],
-                    cfg.energyRipColorEnd[1], cfg.energyRipColorEnd[2], cfg.energyRipColorEnd[3], cfg.energyRipColorEnd[4]
+                    cfg.energyRipColorStart[1], cfg.energyRipColorStart[2], cfg.energyRipColorStart[3],
+                    cfg.energyRipColorEnd[1], cfg.energyRipColorEnd[2], cfg.energyRipColorEnd[3]
                 )
                 ParticleRadius(0.2, 0.0, "easeout")
                 ParticleAlpha(1.0, 0.0)
@@ -140,8 +140,8 @@ function client.missileWarpFxTick(dt)
                 -- 补充一些粒子
                 ParticleReset()
                 ParticleColor(
-                    cfg.energyRipColorStart[1], cfg.energyRipColorStart[2], cfg.energyRipColorStart[3], cfg.energyRipColorStart[4],
-                    cfg.energyRipColorEnd[1], cfg.energyRipColorEnd[2], cfg.energyRipColorEnd[3], cfg.energyRipColorEnd[4]
+                    cfg.energyRipColorStart[1], cfg.energyRipColorStart[2], cfg.energyRipColorStart[3],
+                    cfg.energyRipColorEnd[1], cfg.energyRipColorEnd[2], cfg.energyRipColorEnd[3]
                 )
                 ParticleRadius(0.1, 0.0, "easeout")
                 ParticleAlpha(0.8, 0.0)
@@ -174,8 +174,8 @@ function client.missileWarpFxTick(dt)
             if afterglowProgress < 0.5 then
                 ParticleReset()
                 ParticleColor(
-                    cfg.energyRipColorStart[1], cfg.energyRipColorStart[2], cfg.energyRipColorStart[3], 0.5,
-                    cfg.energyRipColorEnd[1], cfg.energyRipColorEnd[2], cfg.energyRipColorEnd[3], 0.0
+                    cfg.energyRipColorStart[1], cfg.energyRipColorStart[2], cfg.energyRipColorStart[3],
+                    cfg.energyRipColorEnd[1], cfg.energyRipColorEnd[2], cfg.energyRipColorEnd[3]
                 )
                 ParticleRadius(0.2, 0.0, "easeout")
                 ParticleAlpha(0.5, 0.0)

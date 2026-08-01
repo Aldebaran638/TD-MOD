@@ -10,6 +10,8 @@ _tachyonLightConfig.weaponType = "tachyonLance"
 _tachyonLightConfig.weaponTypes = _tachyonLightConfig.weaponTypes or {}
 _tachyonLightConfig.weaponTypes.tachyonLance = true
 _tachyonLightConfig.weaponTypes.focusedArcEmitter = true
+_tachyonLightConfig.weaponTypes.particleLance = true
+_tachyonLightConfig.weaponTypes.arcEmitter = true
 _tachyonLightConfig.lightTag = _tachyonLightConfig.lightTag or "tachyonMuzzleLight"
 _tachyonLightConfig.arcLeftLightTag = _tachyonLightConfig.arcLeftLightTag or "arcMuzzleLightLeft"
 _tachyonLightConfig.arcRightLightTag = _tachyonLightConfig.arcRightLightTag or "arcMuzzleLightRight"
@@ -20,9 +22,9 @@ _tachyonLightConfig.launchPeakIntensity = _tachyonLightConfig.launchPeakIntensit
 _tachyonLightConfig.launchFlashDuration = _tachyonLightConfig.launchFlashDuration or 0.03
 _tachyonLightConfig.launchFadeDuration = _tachyonLightConfig.launchFadeDuration or 0.10
 _tachyonLightConfig.arcChargeStartIntensity = _tachyonLightConfig.arcChargeStartIntensity or 0.0
-_tachyonLightConfig.arcCenterChargeEndIntensity = _tachyonLightConfig.arcCenterChargeEndIntensity or 1.70
+_tachyonLightConfig.arcCenterChargeEndIntensity = _tachyonLightConfig.arcCenterChargeEndIntensity or 50.0
 _tachyonLightConfig.arcSideChargeEndIntensity = _tachyonLightConfig.arcSideChargeEndIntensity or 0.65
-_tachyonLightConfig.arcCenterOverloadPeak = _tachyonLightConfig.arcCenterOverloadPeak or 1.70
+_tachyonLightConfig.arcCenterOverloadPeak = _tachyonLightConfig.arcCenterOverloadPeak or 50.0
 _tachyonLightConfig.arcSideOverloadPeak = _tachyonLightConfig.arcSideOverloadPeak or 0.65
 
 server.tachyonMuzzleLightState = server.tachyonMuzzleLightState or {
@@ -89,9 +91,13 @@ local function _tachyonLightSetColor(weaponType)
         "rightLight",
         config.arcRightLightTag or "arcMuzzleLightRight"
     )
-    local isArc = tostring(weaponType or "") == "focusedArcEmitter"
+    local requested = tostring(weaponType or "")
+    local isArc = requested == "focusedArcEmitter" or requested == "arcEmitter"
+    local isParticle = requested == "particleLance"
     if center ~= 0 and IsHandleValid(center) then
-        if isArc then
+        if isParticle then
+            SetLightColor(center, 1.0, 0.12, 0.03)
+        elseif isArc then
             SetLightColor(center, 0.72, 0.22, 1.0)
         else
             SetLightColor(center, 0.45, 0.85, 1.0)

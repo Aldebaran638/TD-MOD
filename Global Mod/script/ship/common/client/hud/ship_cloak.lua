@@ -3,6 +3,37 @@
 client = client or {}
 client.shipCloakInputState = client.shipCloakInputState or { lastBody = 0 }
 
+local function _shipCloakPlayerVehicleBody(playerId)
+    local vehicle = GetPlayerVehicle(playerId)
+    if vehicle == nil or vehicle == 0 then return 0 end
+    local body = GetVehicleBody(vehicle)
+    if body == nil or body == 0 then return 0 end
+    return body
+end
+
+function client.shipCloakPlayersTick()
+    local anyCloaked = false
+    for _, body in ipairs(client.registryShipGetRegisteredBodyIds() or {}) do
+        if client.registryShipIsCloaked(body) then
+            anyCloaked = true
+            break
+        end
+    end
+
+    for _, playerId in ipairs(GetAllPlayers() or {}) do
+        local body = _shipCloakPlayerVehicleBody(playerId)
+        if body ~= 0 and client.registryShipIsCloaked(body) then
+            -- SetPlayerHidden is frame-scoped, so refresh it while cloaked.
+            SetPlayerHidden(playerId)
+        end
+    end
+
+    -- The stock multiplayer HUD exposes only a level-wide nameplate switch;
+    -- keep it in sync with the cloak state so a cloaked pilot's name is not
+    -- rendered above the hidden character.
+    SetBool("level.hidenameplates", anyCloaked)
+end
+
 function client.shipCloakInputTick()
     local body = client.shipContextGetBody()
     if body == 0 or not client.registryShipExists(body) then return end

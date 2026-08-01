@@ -11,6 +11,7 @@ weaponDefineProjectile({
     projectileFxVariant = "autocannonLarge",
     damageMin = 78,
     damageMax = 162,
+    powerUse = 112.0,
     cooldown = 0.0,
     CD = 0.0,
     maxRange = 220.0,

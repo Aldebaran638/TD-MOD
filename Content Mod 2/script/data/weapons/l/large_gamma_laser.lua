@@ -11,6 +11,7 @@ weaponDefineRay({
     projectileFxVariant = "none",
     damageMin = 102,
     damageMax = 276,
+    powerUse = 88.0,
     cooldown = 1.45,
     maxRange = 560.0,
     shieldFix = 0.5,

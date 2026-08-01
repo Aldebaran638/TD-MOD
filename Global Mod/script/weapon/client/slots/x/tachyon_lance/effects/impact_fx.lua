@@ -28,7 +28,11 @@ local function _tableToVec(t)
     return Vec(t.x or 0, t.y or 0, t.z or 0)
 end
 
-local function _resolveLayerColors(impactLayer)
+local function _resolveLayerColors(impactLayer, weaponType)
+    local definition = (weaponData or {})[tostring(weaponType or "tachyonLance")] or {}
+    if definition.fxPalette == "particleLance" then
+        return 1.0, 0.08, 0.02, 0.55, 0.01, 0.005
+    end
     if impactLayer == "shield" then
         return 0.25, 0.90, 1.00, 0.08, 0.32, 1.00
     elseif impactLayer == "armor" then
@@ -144,9 +148,9 @@ local function _spawnImpactPlumeBurst(impact)
     SpawnParticle(impact.pos, Vec(0, 0, 0), 0.11)
 end
 
-local function _spawnTachyonImpact(pos, normal, backDirection, impactLayer)
+local function _spawnTachyonImpact(pos, normal, backDirection, impactLayer, weaponType)
     local config = client.tachyonImpactFxConfig
-    local r1, g1, b1, r2, g2, b2 = _resolveLayerColors(impactLayer)
+    local r1, g1, b1, r2, g2, b2 = _resolveLayerColors(impactLayer, weaponType)
     local back = _safeNormalize(backDirection, Vec(0, 1, 0))
     local surfaceNormal = _safeNormalize(normal, back)
     if VecDot(surfaceNormal, back) < 0.0 then
@@ -312,8 +316,9 @@ function client.tachyonImpactFxTick(dt)
                 local lastSeq = state.lastRenderSeqByShip[shipBodyId] or -1
 
                 if seq ~= lastSeq then
+                    local definition = (weaponData or {})[tostring(render.weaponType or "")] or {}
                     if render.eventType == "launch_start"
-                        and tostring(render.weaponType or "") == "tachyonLance"
+                        and definition.family == "energy_lance"
                         and render.didHit == 1 then
                         local pos = _tableToVec(render.hitPoint)
                         local firePoint = _tableToVec(render.firePoint)
@@ -321,7 +326,8 @@ function client.tachyonImpactFxTick(dt)
                             pos,
                             _tableToVec(render.normal),
                             _safeNormalize(VecSub(firePoint, pos), Vec(0, 1, 0)),
-                            render.impactLayer
+                            render.impactLayer,
+                            render.weaponType
                         )
                     end
                     state.lastRenderSeqByShip[shipBodyId] = seq

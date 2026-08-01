@@ -36,6 +36,10 @@ local function _canAcceptShipRequest(playerId, shipBodyId)
     if server.registryShipExists ~= nil and (not server.registryShipExists(shipBodyId)) then
         return false
     end
+    if server.registryShipIsBodyDead ~= nil
+        and server.registryShipIsBodyDead(shipBodyId) then
+        return false
+    end
     if not _isPlayerDrivingShip(playerId, shipBodyId) then
         return false
     end

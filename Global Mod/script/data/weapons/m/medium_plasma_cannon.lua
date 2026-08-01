@@ -11,6 +11,7 @@ weaponDefineProjectile({
     projectileFxVariant = "plasmaMedium",
     damageMin = 53,
     damageMax = 140,
+    powerUse = 47.0,
     cooldown = 0.0,
     CD = 0.0,
     maxRange = 330.0,

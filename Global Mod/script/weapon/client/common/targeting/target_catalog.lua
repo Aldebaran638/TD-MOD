@@ -4,19 +4,33 @@ client = client or {}
 
 function client.weaponTargetIsLockableBody(bodyId, observerBodyId)
     local body = math.floor(tonumber(bodyId) or 0)
-    local observer = math.floor(tonumber(observerBodyId) or 0)
     if body == 0 or not IsHandleValid(body) then return false end
-    if client.registryShipExists ~= nil and client.registryShipExists(body) then
+    local isRegistered = client.registryShipExists ~= nil
+        and client.registryShipExists(body)
+    if isRegistered then
+        if client.registryShipIsBodyDead ~= nil
+            and client.registryShipIsBodyDead(body) then
+            return false
+        end
         if client.registryShipIsPlayerLockable ~= nil
             and not client.registryShipIsPlayerLockable(body) then return false end
         if client.registryShipIsCloaked ~= nil
             and client.registryShipIsCloaked(body) then
-            if observer == 0 or not IsHandleValid(observer) then return false end
-            local distance = VecLength(VecSub(
-                GetBodyTransform(observer).pos,
-                GetBodyTransform(body).pos
-            ))
-            return distance <= 80.0
+            -- Sensors still report a cloaked ship, but weapon locks cannot
+            -- acquire it at any distance until the cloak is broken.
+            return false
+        end
+        return true
+    end
+
+    -- Unregistering a short-lived interceptor clears `exists` but preserves
+    -- its historical fields. Reject that stale handle before a reused Body ID
+    -- can be mistaken for an ordinary vehicle.
+    if client.registryShipKeyPrefix ~= nil then
+        local prefix = client.registryShipKeyPrefix(body)
+        if GetString(prefix .. "/interceptorClass") ~= ""
+            or GetBool(prefix .. "/destroyed") then
+            return false
         end
     end
     return true

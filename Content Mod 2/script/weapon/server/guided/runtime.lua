@@ -142,6 +142,49 @@ function server.guidedProjectilePlayImpactFx(weaponType, hitPos, hitNormal, impa
     )
 end
 
+function server.guidedProjectileDestroyIfDeadAt(index)
+    local active = server.guidedProjectileRuntimeState.activeProjectiles or {}
+    local projectile = active[index]
+    local bodyId = projectile and math.floor(projectile.bodyId or 0) or 0
+    if bodyId == 0
+        or server.registryShipExists == nil
+        or not server.registryShipExists(bodyId)
+        or server.registryShipIsBodyDead == nil
+        or not server.registryShipIsBodyDead(bodyId) then
+        return false
+    end
+
+    projectile.destroyed = true
+    projectile.targetBodyId = 0
+    projectile.targetVehicleId = 0
+    projectile.kinematicVelocity = Vec(0, 0, 0)
+    projectile.desiredRot = nil
+    local pos = server.guidedProjectileGetBodyCenterWorld(bodyId)
+        or GetBodyTransform(bodyId).pos
+    SetBodyVelocity(bodyId, Vec(0, 0, 0))
+    SetBodyAngularVelocity(bodyId, Vec(0, 0, 0))
+    server.guidedProjectilePlayImpactSound(projectile.weaponType, pos)
+    server.guidedProjectilePlayImpactFx(
+        projectile.weaponType,
+        pos,
+        Vec(0, 1, 0),
+        "body",
+        0
+    )
+    local explosionSize = math.max(
+        0.0,
+        tonumber(projectile.destroyedExplosionSize) or 0.5
+    )
+    if explosionSize > 0.0 then
+        Explosion(pos, explosionSize)
+        if server.netDebugCountExplosion ~= nil then
+            server.netDebugCountExplosion(1)
+        end
+    end
+    server.guidedProjectileRemoveAt(index)
+    return true
+end
+
 function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosWorld, fireDirWorld, targetBodyId, targetVehicleId)
     local state = server.guidedProjectileRuntimeState
     local active = state.activeProjectiles or {}
@@ -240,6 +283,7 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         bodyFix = tonumber(cfg.bodyFix) or 1.0,
         shieldPenetration = tonumber(cfg.shieldPenetration) or 0.0,
         armorPenetration = tonumber(cfg.armorPenetration) or 0.0,
+        destroyedExplosionSize = tonumber(cfg.destroyedExplosionSize) or 0.5,
         cruiseSpeed = tonumber(cfg.cruiseSpeed) or 0.0,
         maxSpeed = tonumber(cfg.maxSpeed) or 0.0,
         acceleration = tonumber(cfg.acceleration) or 0.0,
@@ -286,13 +330,10 @@ function server.guidedProjectileRuntimeTick(dt)
     local active = server.guidedProjectileRuntimeState.activeProjectiles or {}
     for i = #active, 1, -1 do
         local bodyId = (active[i] or {}).bodyId or 0
-        local destroyed = bodyId ~= 0
-            and server.registryShipExists ~= nil
-            and server.registryShipExists(bodyId)
-            and server.registryShipIsBodyDead ~= nil
-            and server.registryShipIsBodyDead(bodyId)
-        if bodyId == 0 or not IsHandleValid(bodyId) or destroyed then
+        if bodyId == 0 or not IsHandleValid(bodyId) then
             server.guidedProjectileRemoveAt(i)
+        else
+            server.guidedProjectileDestroyIfDeadAt(i)
         end
     end
     server.netDebugSetEntityCounts(#active, nil, nil)

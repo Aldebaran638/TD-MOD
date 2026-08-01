@@ -11,9 +11,14 @@ weaponBehaviorProfiles = weaponBehaviorProfiles or {
 weaponFxProfiles = weaponFxProfiles or {
     tachyonLance = true,
     gammaBeam = true,
+    redBeam = true,
+    blueBeam = true,
+    uvBeam = true,
+    xrayBeam = true,
     energyBeam = true,
     focusedArcBeam = true,
     arcBeam = true,
+    psionicArcBeam = true,
     kineticProjectile = true,
     plasmaProjectile = true,
     autocannonProjectile = true,
@@ -98,7 +103,8 @@ function weaponDefineRay(definition)
         launchDuration = tonumber(definition.launchDuration)
             or (chargeDuration > 0.0 and 0.20 or 0.10),
         rayStyle = (definition.fxProfile == "arcBeam"
-            or definition.fxProfile == "focusedArcBeam") and "arc" or "beam",
+            or definition.fxProfile == "focusedArcBeam"
+            or definition.fxProfile == "psionicArcBeam") and "arc" or "beam",
     }
     definition.damageMin = definition.damageMin or definition.damage
     definition.damageMax = definition.damageMax or definition.damage
@@ -134,6 +140,7 @@ function weaponDefineGuided(definition)
         behaviorType = "guidedProjectile",
         targetingMode = "target_lock",
         fireProfile = { mode = "single" },
+        destroyedExplosionSize = 0.5,
     })
     definition.projectileProfile = definition.projectileProfile or {
         mode = "guided",
@@ -149,6 +156,7 @@ function weaponDefineRocket(definition)
         fireProfile = { mode = "single" },
         aimControlMode = "fixed",
         forceForward = true,
+        destroyedExplosionSize = 0.5,
     })
     definition.projectileProfile = definition.projectileProfile or {
         mode = "unguided_rocket",

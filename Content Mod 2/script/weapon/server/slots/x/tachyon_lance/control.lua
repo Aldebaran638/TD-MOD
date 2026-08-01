@@ -275,7 +275,14 @@ end
 -- 命中非群星飞船：在命中点产生一次爆炸
 -- 未命中：不产生效果
 -- 返回值：渲染层辅助信息（didHitShield / impactLayer）
-function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBody, weaponType)
+function server.xSlot_applyHitResult(
+    endPos,
+    hitTarget,
+    isHit,
+    isHitStellarisBody,
+    weaponType,
+    attackerBodyId
+)
 
     local resolvedWeapon = (weaponData or {})[tostring(weaponType or "")]
         or (weaponData or {}).tachyonLance
@@ -335,7 +342,8 @@ function server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBod
         local damageResult = server.shipDamageApplyWeaponDefinition(
             hitTarget,
             targetWeaponData,
-            rolledDamage
+            rolledDamage,
+            attackerBodyId
         )
         renderResult.didHitShield = damageResult.didHitShield
         renderResult.impactLayer = damageResult.impactLayer
@@ -377,15 +385,19 @@ end
 -- 写入渲染事件：开始发射
 function server.xSlot_broadcastLaunchingStart(shipBodyId, slotIndex, weaponType, firePointWorld, hitPointWorld, didHit, didHitStellarisBody, didHitShield, hitTargetBodyId, normal, impactLayer)
     server.tachyonMuzzleLightTrigger(weaponType)
-    if tostring(weaponType or "") == "focusedArcEmitter" then
+    local definition = (weaponData or {})[tostring(weaponType or "")] or {}
+    if definition.family == "arc_emitter" then
         local hitNormal = normal or Vec(0, 1, 0)
+        local fxProfile = tostring(weaponType or "") == "focusedArcEmitter"
+            and "focusedArcBeam" or (definition.fxProfile or "arcBeam")
         ClientCall(
             0, "client.spawnGenericRaycastWeaponFx",
-            weaponType, "focusedArcBeam",
+            weaponType, fxProfile,
             firePointWorld[1], firePointWorld[2], firePointWorld[3],
             hitPointWorld[1], hitPointWorld[2], hitPointWorld[3],
             hitNormal[1], hitNormal[2], hitNormal[3],
-            didHit and 1 or 0
+            didHit and 1 or 0,
+            impactLayer
         )
     end
     server.xSlotRenderPushEvent(shipBodyId, {
@@ -614,8 +626,18 @@ function server.xSlotControlTick(dt)
         elseif activeState == "charged" then
             server.xSlot_broadcastChargingStart(shipBody, activeSlot, runtimeWeaponType, firePointWorld)
         elseif activeState == "launching" then
+            if server.shipCloakBreakForWeapon ~= nil then
+                server.shipCloakBreakForWeapon(shipBody)
+            end
             local endPos, hitTarget, isHit, isHitStellarisBody, normal = server.xSlot_computeHitResult(shipBody, firePosOffset, fireDir, runtimeWeaponType)
-            local renderHitResult = server.xSlot_applyHitResult(endPos, hitTarget, isHit, isHitStellarisBody, runtimeWeaponType)
+            local renderHitResult = server.xSlot_applyHitResult(
+                endPos,
+                hitTarget,
+                isHit,
+                isHitStellarisBody,
+                runtimeWeaponType,
+                shipBody
+            )
             server.xSlot_broadcastLaunchingStart(
                 shipBody,
                 activeSlot,

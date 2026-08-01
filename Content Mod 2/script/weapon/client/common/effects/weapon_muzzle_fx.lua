@@ -40,12 +40,13 @@ function client.spawnWeaponMuzzleFx(weaponType, px, py, pz, dx, dy, dz)
         if effect.key == key then effect.age = 0; effect.intensity = math.min(1.5, effect.intensity + 0.4); return end
     end
     if #state.active >= (client.weaponFxBudgetConfig.maxActiveMuzzles or 128) then table.remove(state.active, 1) end
-    table.insert(state.active, { key = key, position = position, direction = direction, profile = profile, age = 0, intensity = 1.0 })
+    table.insert(state.active, { key = key, position = position, direction = direction, profile = profile, color = definition.fxColor or profile.color, age = 0, intensity = 1.0 })
     if profile.portalFx then
         table.insert(state.portals, { pos = position, age = 0, life = profile.portalLife or 0.40 })
     end
     if not client.weaponFxTakeParticles(profile.particles, "normal") then return end
-    ParticleReset(); ParticleType("plain"); ParticleColor(profile.color[1], profile.color[2], profile.color[3], profile.color[1] * 0.25, profile.color[2] * 0.12, profile.color[3] * 0.08); ParticleRadius(0.09, 0.01, "easeout"); ParticleAlpha(0.95, 0, "easeout"); ParticleGravity(0); ParticleDrag(0.14); ParticleEmissive(16, 0); ParticleCollide(0)
+    local tint = definition.fxColor or profile.color
+    ParticleReset(); ParticleType("plain"); ParticleColor(tint[1], tint[2], tint[3], tint[1] * 0.25, tint[2] * 0.12, tint[3] * 0.08); ParticleRadius(0.09, 0.01, "easeout"); ParticleAlpha(0.95, 0, "easeout"); ParticleGravity(0); ParticleDrag(0.14); ParticleEmissive(16, 0); ParticleCollide(0)
     for _ = 1, profile.particles do SpawnParticle(position, VecAdd(VecScale(direction, -3 - math.random() * 5), Vec(math.random() - 0.5, math.random() - 0.5, math.random() - 0.5)), 0.10 + math.random() * 0.10) end
 end
 
@@ -64,18 +65,18 @@ end
 function client.weaponMuzzleFxRender()
     local state = client.weaponMuzzleFxState
     for _, effect in ipairs(state.active) do
-        local profile = effect.profile; local alpha = (1 - effect.age / profile.life) ^ 2 * effect.intensity
-        if client.weaponFxTakeSprite(1) then DrawSprite(state.sprite, Transform(effect.position, QuatLookAt(effect.position, GetCameraTransform().pos)), profile.size * (0.7 + effect.age / profile.life), profile.size * (0.7 + effect.age / profile.life), profile.color[1], profile.color[2], profile.color[3], alpha, true, true, false) end
+        local profile = effect.profile; local tint = effect.color or profile.color; local alpha = (1 - effect.age / profile.life) ^ 2 * effect.intensity
+        if client.weaponFxTakeSprite(1) then DrawSprite(state.sprite, Transform(effect.position, QuatLookAt(effect.position, GetCameraTransform().pos)), profile.size * (0.7 + effect.age / profile.life), profile.size * (0.7 + effect.age / profile.life), tint[1], tint[2], tint[3], alpha, true, true, false) end
         if profile.lines > 0 then
             local right = _normalize(VecCross(effect.direction, Vec(0, 1, 0)))
             for index = 1, profile.lines do
                 if client.weaponFxTakeLine(1) then
                     local offset = profile.lines == 2 and VecScale(right, index == 1 and 0.18 or -0.18) or Vec(0, 0, 0)
-                    DrawLine(VecAdd(effect.position, offset), VecAdd(VecAdd(effect.position, offset), VecScale(effect.direction, 1.2)), profile.color[1], profile.color[2], profile.color[3], alpha)
+                    DrawLine(VecAdd(effect.position, offset), VecAdd(VecAdd(effect.position, offset), VecScale(effect.direction, 1.2)), tint[1], tint[2], tint[3], alpha)
                 end
             end
         end
-        if profile.light > 0 then client.weaponFxPointLight(effect.position, profile.color[1], profile.color[2], profile.color[3], profile.light * alpha, profile.distance) end
+        if profile.light > 0 then client.weaponFxPointLight(effect.position, tint[1], tint[2], tint[3], profile.light * alpha, profile.distance) end
     end
     local cam = GetCameraTransform()
     for _, portal in ipairs(state.portals) do

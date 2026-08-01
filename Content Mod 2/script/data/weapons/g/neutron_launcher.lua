@@ -11,6 +11,7 @@ weaponDefineProjectile({
     projectileFxVariant = "neutron",
     damageMin = 61,
     damageMax = 131,
+    powerUse = 154.0,
     cooldown = 4.5,
     maxRange = 1150.0,
     projectileSpeed = 420.0,

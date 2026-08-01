@@ -11,6 +11,7 @@ weaponDefineProjectile({
     projectileFxVariant = "kineticArtillery",
     damageMin = 195,
     damageMax = 585,
+    powerUse = 91.0,
     cooldown = 0.1,
     CD = 0.1,
     maxRange = 750.0,

@@ -58,7 +58,8 @@ local function _guidedProjectileApplyShipDamage(hitBody, projectile)
     local result = server.shipDamageApplyWeaponDefinition(
         hitBody,
         projectile,
-        server.weaponDamageRoll(projectile)
+        server.weaponDamageRoll(projectile),
+        projectile.ownerShipBody
     )
     return result.impactLayer
 end
@@ -128,6 +129,8 @@ function server.guidedProjectileColliderPostUpdate()
         local bodyId = projectile and projectile.bodyId or 0
         if bodyId == 0 or not IsHandleValid(bodyId) then
             server.guidedProjectileRemoveAt(i)
+        elseif server.guidedProjectileDestroyIfDeadAt(i) then
+            -- Destroyed interceptors terminate before collision or range logic.
         else
             local bodyT = GetBodyTransform(bodyId)
             local probes = server.guidedProjectileGetProbePoints(bodyT)

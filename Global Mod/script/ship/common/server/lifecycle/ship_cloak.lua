@@ -33,6 +33,23 @@ function server.shipCloakBreakForWeapon(body)
     return true
 end
 
+function server.shipCloakBreakForDamage(body)
+    local target = math.floor(tonumber(body) or 0)
+    if target == 0 or server.registryShipExists == nil
+        or not server.registryShipExists(target)
+        or server.registryShipIsCloaked == nil
+        or not server.registryShipIsCloaked(target) then
+        return false
+    end
+    local strength = server.registryShipGetCloakStrength ~= nil
+        and server.registryShipGetCloakStrength(target) or 0.0
+    if target == _cloakBody() then
+        return server.shipCloakBreakForWeapon(target)
+    end
+    server.registryShipSetCloak(target, false, strength)
+    return true
+end
+
 function server.shipRequestToggleCloak(playerId, shipBodyId, requested)
     if not server.shipRequestAuthorize(playerId, shipBodyId) then return false end
     if shipBodyId ~= _cloakBody() then return false end
@@ -63,6 +80,13 @@ end
 function server.shipCloakTick(_dt)
     local body = _cloakBody()
     if body == 0 or not server.registryShipExists(body) then return end
+    if not server.registryShipIsCloaked(body) then
+        if server.shipCloakState.active then
+            server.shipRuntimeSetCloakActive(body, false)
+        end
+        server.shipCloakState.active = false
+        return
+    end
     if not server.shipCloakState.active then return end
     if server.registryShipIsBodyDead(body) then
         server.shipCloakBreakForWeapon(body)

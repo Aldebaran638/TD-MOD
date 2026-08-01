@@ -14,12 +14,22 @@ function server.bodyCombatSpeedLimitTick(dt)
     if baseLimit <= 0.0 then return end
     local mobility = 0.0
     if server.shipRuntimeGetMobilityModifiers ~= nil then
-        mobility = tonumber(server.shipRuntimeGetMobilityModifiers(body)) or 0.0
+        local speedMultiplier = server.shipRuntimeGetMobilityModifiers(body)
+        mobility = tonumber(speedMultiplier) or 0.0
     end
-    local limit = baseLimit * math.max(0.50, 1.0 + math.max(-0.50, mobility) * 0.35)
-    local speed = VecLength(velocity)
-    if speed <= limit then return end
-
-    local clamped = VecScale(velocity, limit / math.max(0.001, speed))
-    SetBodyVelocity(body, clamped)
+    local forwardLimit = baseLimit * math.max(0.50, 1.0 + math.max(-0.50, mobility) * 0.35)
+    local reverseBase = tonumber(flight.maxReverseSpeed) or baseLimit
+    local reverseLimit = reverseBase * math.max(0.50, 1.0 + math.max(-0.50, mobility) * 0.35)
+    local bodyTransform = GetBodyTransform(body)
+    local localVelocity = TransformToLocalVec(bodyTransform, velocity)
+    local longitudinal = localVelocity[3]
+    local clampedLongitudinal = longitudinal
+    if longitudinal < -forwardLimit then
+        clampedLongitudinal = -forwardLimit
+    elseif longitudinal > reverseLimit then
+        clampedLongitudinal = reverseLimit
+    end
+    if clampedLongitudinal == longitudinal then return end
+    localVelocity[3] = clampedLongitudinal
+    SetBodyVelocity(body, TransformToParentVec(bodyTransform, localVelocity))
 end

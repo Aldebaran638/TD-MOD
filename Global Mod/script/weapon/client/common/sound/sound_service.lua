@@ -42,7 +42,10 @@ local function _resolvePlayPos(eventPos)
 end
 
 function client.playWeaponSound(weaponType, eventType, x, y, z)
-    local profile = _weaponSoundHandles[tostring(weaponType or "")]
+    local requested = tostring(weaponType or "")
+    local definition = (weaponData or {})[requested] or {}
+    local profile = _weaponSoundHandles[requested]
+        or _weaponSoundHandles[tostring(definition.soundProfileId or "")]
     if profile == nil then return end
     local position, distant = _resolvePlayPos(Vec(x or 0, y or 0, z or 0))
     local suffix = distant and "Far" or "Near"
@@ -82,7 +85,8 @@ local function _xSlotEventTick(shipBodyId)
     state.lastRenderSeqByShip[shipBodyId] = sequence
 
     local weaponType = tostring(render.weaponType or "")
-    if weaponType ~= "tachyonLance" and weaponType ~= "focusedArcEmitter" then return end
+    local definition = (weaponData or {})[weaponType] or {}
+    if definition.family ~= "energy_lance" and definition.family ~= "arc_emitter" then return end
     local firePoint = _tableToVec(render.firePoint)
     local eventType = tostring(render.eventType or "")
     if eventType == "charging_start" then

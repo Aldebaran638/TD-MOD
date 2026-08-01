@@ -44,6 +44,15 @@ function client.pointDefenseFxRender()
                 math.max(0.0, progress - 0.10)
             )
             DrawLine(tail, head, 1.0, 0.78, 0.22, alpha)
+        elseif trace.role == "laser" then
+            DrawLine(
+                trace.startPosition,
+                trace.endPosition,
+                0.35,
+                0.95,
+                1.0,
+                alpha
+            )
         else
             DrawLine(
                 trace.startPosition,

@@ -17,6 +17,15 @@
 ---@diagnostic disable: duplicate-set-field
 
 local configuredShipType = GetStringParam("shiptype", "enigmaticCruiser")
+local destroyedControlsDisabled = false
+
+local function disableDestroyedControls()
+    if destroyedControlsDisabled then return end
+    server.weaponRuntimeClearCommands()
+    server.weaponRuntimeDeactivate()
+    server.shipServerFinalizeDestroyed()
+    destroyedControlsDisabled = true
+end
 
 -- server = server or {}
 
@@ -31,6 +40,7 @@ local configuredShipType = GetStringParam("shiptype", "enigmaticCruiser")
 
 -- 服务端初始化
 function server.init()
+    destroyedControlsDisabled = false
     -- -- 当前武器状
     -- -- "idle"      空闲
     -- -- "charging"  充能
@@ -48,7 +58,6 @@ function server.init()
 
     -- 初始化当前飞船
     local shipBody = server.shipServerInit(configuredShipType)
-    server.slotLoadoutInit(configuredShipType)
     server.weaponRuntimeInit(configuredShipType)
     server.shipRuntimeSyncMainWeapon(shipBody, true)
     server.shipWeaponSyncConfiguration(configuredShipType)
@@ -61,19 +70,26 @@ end
 -- server.chargeTime 飞船充能所需时间
 -- server.launchTime 飞船发射持续时间
 function server.serverTick(dt)
+    if server.shipServerIsDestroyed() then
+        disableDestroyedControls()
+        return
+    end
     server.networkDebugTick(dt)
     -- server.ensureCurrentShipState(defaultShipType)
     server.weaponRuntimeCommandTick(dt)
     server.weaponRuntimeSimulationTick(dt)
     server.shipServerTick(dt)
+    if server.shipServerIsDestroyed() then disableDestroyedControls() end
 end
 
 function server.update(dt)
+    if server.shipServerIsDestroyed() then return end
     server.weaponRuntimeUpdate(dt)
     server.shipServerUpdate(dt)
 end
 
 function server.postUpdate()
+    if server.shipServerIsDestroyed() then return end
     server.weaponRuntimePostUpdate()
     server.shipServerPostUpdate()
 end

@@ -5,9 +5,14 @@ client.genericRaycastFxState = client.genericRaycastFxState or { beams = {}, spr
 
 local _profiles = {
     gammaBeam = { color = { 1.0, 0.38, 0.05 }, coreColor = { 1.0, 0.78, 0.32 }, width = 0.2, life = 0.115 },
+    redBeam = { color = { 1.0, 0.08, 0.03 }, coreColor = { 1.8, 0.55, 0.28 }, width = 0.20, life = 0.115 },
+    blueBeam = { color = { 0.06, 0.32, 1.0 }, coreColor = { 0.55, 0.85, 1.8 }, width = 0.20, life = 0.115 },
+    uvBeam = { color = { 0.62, 0.10, 1.0 }, coreColor = { 1.20, 0.65, 1.8 }, width = 0.20, life = 0.115 },
+    xrayBeam = { color = { 0.15, 1.0, 0.95 }, coreColor = { 0.70, 1.8, 1.7 }, width = 0.20, life = 0.115 },
     energyBeam = { color = { 0.25, 0.65, 1.0 }, width = 1.2, life = 0.16 },
     focusedArcBeam = { color = { 0.72, 0.22, 1.0 }, width = 1.8, life = 0.22 },
     arcBeam = { color = { 0.18, 1.0, 0.32 }, width = 1.8, life = 0.22 },
+    psionicArcBeam = { color = { 0.72, 0.18, 1.0 }, width = 1.8, life = 0.22 },
 }
 
 local function _normalize(value, fallback)
@@ -23,8 +28,8 @@ local function _cameraAxis(direction, center)
     return _normalize(projected, Vec(1, 0, 0))
 end
 
-local function _spawnImpactParticles(profile, position, normal)
-    local color = profile.color or { 1.0, 0.38, 0.05 }
+local function _spawnImpactParticles(profile, position, normal, tint)
+    local color = tint or profile.color or { 1.0, 0.38, 0.05 }
     local impactNormal = _normalize(normal, Vec(0, 1, 0))
     ParticleReset()
     ParticleColor(
@@ -70,6 +75,8 @@ function client.spawnGenericRaycastWeaponFx(
 )
     local profileId = tostring(fxProfile or "energyBeam")
     local profile = _profiles[profileId] or _profiles.energyBeam
+    local definition = (weaponData or {})[tostring(weaponType or "")] or {}
+    local fxColor = definition.fxColor
     local life = profileId == "gammaBeam" and client.gammaLaserFxProfile(weaponType).life or profile.life
     local endPos = Vec(ex or 0, ey or 0, ez or 0)
     local hitNormal = Vec(nx or 0, ny or 1, nz or 0)
@@ -81,6 +88,7 @@ function client.spawnGenericRaycastWeaponFx(
         hitNormal = hitNormal,
         didHit = math.floor(didHit or 0) ~= 0,
         impactLayer = tostring(impactLayer or "none"),
+        fxColor = fxColor,
         life = life,
         maxLife = life,
     })
@@ -89,7 +97,7 @@ function client.spawnGenericRaycastWeaponFx(
         if math.floor(didHit or 0) ~= 0 then client.spawnGammaLaserImpactFx(weaponType, endPos, hitNormal, impactLayer) end
     elseif math.floor(didHit or 0) ~= 0 then
         if not client.spawnWeaponImpactFx(weaponType, endPos, hitNormal, impactLayer) then
-            _spawnImpactParticles(profile, endPos, hitNormal)
+            _spawnImpactParticles(profile, endPos, hitNormal, fxColor)
         end
     end
 end
@@ -114,11 +122,16 @@ function client.genericRaycastFxRender()
             local direction = VecScale(vector, 1.0 / length)
             local center = VecLerp(beam.startPos, beam.endPos, 0.5)
             local alpha = math.max(0.0, math.min(1.0, (beam.life or 0.0) / math.max(0.001, beam.maxLife or 0.1)))
-            local color = profile.color
-            local coreColor = profile.coreColor or { 2.5, 2.5, 2.5 }
+            local color = beam.fxColor or profile.color
+            local coreColor = profile.coreColor or {
+                math.max(1.6, color[1] * 1.8),
+                math.max(1.6, color[2] * 1.8),
+                math.max(1.6, color[3] * 1.8),
+            }
             if beam.profile == "gammaBeam" then
                 client.gammaLaserDrawBeam(beam.startPos, beam.endPos, client.gammaLaserFxProfile(beam.weaponType), (beam.maxLife - beam.life), beam.maxLife)
-            elseif beam.profile == "arcBeam" or beam.profile == "focusedArcBeam" then
+            elseif beam.profile == "arcBeam" or beam.profile == "focusedArcBeam"
+                or beam.profile == "psionicArcBeam" then
                 local axisA = _cameraAxis(direction, center)
                 local axisB = _normalize(VecCross(direction, axisA), Vec(0, 1, 0))
                 local previous = beam.startPos

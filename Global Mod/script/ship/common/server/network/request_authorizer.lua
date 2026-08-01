@@ -38,6 +38,10 @@ function server.shipRequestAuthorize(playerId, shipBodyId)
     if server.registryShipExists ~= nil and not server.registryShipExists(body) then
         return false
     end
+    if server.registryShipIsBodyDead ~= nil
+        and server.registryShipIsBodyDead(body) then
+        return false
+    end
     if not server.shipRequestIsDriver(pid, body) then return false end
 
     local previousDriver = server.shipRuntimeGetDriverPlayerId(body)

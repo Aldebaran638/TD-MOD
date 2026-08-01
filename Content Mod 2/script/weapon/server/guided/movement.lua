@@ -5,10 +5,12 @@ server = server or {}
 
 function server.guidedProjectileMovementUpdate(dt)
     local active = (server.guidedProjectileRuntimeState or {}).activeProjectiles or {}
-    for i = 1, #active do
+    for i = #active, 1, -1 do
         local projectile = active[i]
         local bodyId = projectile and projectile.bodyId or 0
-        if bodyId ~= 0 and IsHandleValid(bodyId) and projectile.desiredRot ~= nil then
+        if not server.guidedProjectileDestroyIfDeadAt(i)
+            and bodyId ~= 0 and IsHandleValid(bodyId)
+            and projectile.desiredRot ~= nil then
             projectile.lifeRemain = (projectile.lifeRemain or 0.0) - (dt or 0.0)
             local bodyT = GetBodyTransform(bodyId)
             local currentRot = bodyT.rot

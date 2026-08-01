@@ -231,7 +231,7 @@ local battlecruiserDefinition = {
                 },
                 auxiliary = {
                     "advancedAfterburners",
-                    "advancedShieldHardener",
+                    "reactorBooster3",
                     "naniteRepairSystem",
                 },
                 thruster = { "darkMatterThrusters" },
@@ -273,7 +273,7 @@ local battlecruiserDefinition = {
                 },
                 auxiliary = {
                     "advancedAfterburners",
-                    "advancedShieldHardener",
+                    "reactorBooster3",
                     "naniteRepairSystem",
                 },
                 thruster = { "darkMatterThrusters" },
@@ -283,5 +283,9 @@ local battlecruiserDefinition = {
         },
     },
 }
+
+for slotType, pool in pairs(stellarisWeaponPoolData or {}) do
+    battlecruiserDefinition.slotWeaponPools[slotType] = pool
+end
 
 shipDefinitionRegister(battlecruiserDefinition)

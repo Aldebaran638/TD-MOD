@@ -17,12 +17,46 @@ local function _resolveShipTypeDefinition(shipType, defaultShipType)
     return resolvedShipType, definition
 end
 
+local function _compactShipBodyIndex()
+    local count = math.max(0, GetInt(registryShipIndexRoot .. "/count"))
+    local writeIndex = 1
+    for readIndex = 1, count do
+        local bodyId = GetInt(
+            registryShipIndexRoot .. "/" .. tostring(readIndex) .. "/bodyId"
+        )
+        if bodyId ~= nil and bodyId ~= 0
+            and GetBool(_shipKeyPrefix(bodyId) .. "/exists") then
+            if writeIndex ~= readIndex then
+                SetInt(
+                    registryShipIndexRoot .. "/" .. tostring(writeIndex) .. "/bodyId",
+                    bodyId,
+                    true
+                )
+            end
+            writeIndex = writeIndex + 1
+        end
+    end
+
+    for index = writeIndex, count do
+        SetInt(
+            registryShipIndexRoot .. "/" .. tostring(index) .. "/bodyId",
+            0,
+            true
+        )
+    end
+    local compactedCount = writeIndex - 1
+    if compactedCount ~= count then
+        SetInt(registryShipIndexRoot .. "/count", compactedCount, true)
+    end
+    return compactedCount
+end
+
 local function _ensureShipBodyIndexed(shipBodyId)
     if shipBodyId == nil or shipBodyId == 0 then
         return
     end
 
-    local count = GetInt(registryShipIndexRoot .. "/count")
+    local count = _compactShipBodyIndex()
     for i = 1, count do
         if GetInt(registryShipIndexRoot .. "/" .. tostring(i) .. "/bodyId") == shipBodyId then
             return
@@ -41,11 +75,19 @@ function server.registryShipExists(shipBodyId)
     return GetBool(_shipKeyPrefix(shipBodyId) .. "/exists")
 end
 
+-- Expose the stable property prefix to target validation. Historical fields
+-- remain after a transient interceptor is unregistered so reused Body IDs can
+-- be rejected before they are mistaken for ordinary vehicles.
+function server.registryShipKeyPrefix(shipBodyId)
+    return _shipKeyPrefix(shipBodyId)
+end
+
 function server.registryShipUnregister(shipBodyId)
     if shipBodyId == nil or shipBodyId == 0 then return end
     local prefix = _shipKeyPrefix(shipBodyId)
     SetBool(prefix .. "/exists", false, true)
     SetBool(prefix .. "/destroyed", true, true)
+    _compactShipBodyIndex()
 end
 
 function server.registryShipIsBodyDead(shipBodyId)
@@ -149,6 +191,11 @@ end
 function server.registryShipIsCloaked(shipBodyId)
     return server.registryShipExists(shipBodyId)
         and GetBool(_shipKeyPrefix(shipBodyId) .. "/cloaked")
+end
+
+function server.registryShipGetCloakStrength(shipBodyId)
+    if not server.registryShipExists(shipBodyId) then return 0.0 end
+    return math.max(0.0, GetFloat(_shipKeyPrefix(shipBodyId) .. "/cloakStrength"))
 end
 
 function server.registryShipSetProtectionProfile(shipBodyId, profile, restoreFull)

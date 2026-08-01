@@ -12,18 +12,31 @@ local function _emptyDamageResult()
     }
 end
 
+local function _stopDestroyedInterceptor(body, hull)
+    if (tonumber(hull) or 0.0) > 0.0
+        or server.registryShipGetInterceptorClass == nil
+        or server.registryShipGetInterceptorClass(body) == "" then
+        return
+    end
+    if server.registryShipIsBodyDead ~= nil then
+        server.registryShipIsBodyDead(body)
+    end
+    if IsHandleValid == nil or IsHandleValid(body) then
+        SetBodyVelocity(body, Vec(0, 0, 0))
+        SetBodyAngularVelocity(body, Vec(0, 0, 0))
+    end
+end
+
+local function _breakCloakForDamage(body)
+    if server.shipCloakBreakForDamage ~= nil then
+        server.shipCloakBreakForDamage(body)
+    end
+end
+
 function server.shipDamageApplyRaw(shipBodyId, rawDamage)
     local result = _emptyDamageResult()
     local body = math.floor(shipBodyId or 0)
-    local outgoingMultiplier = 0.0
-    if server.shipRuntimeGetWeaponDamageMultiplier ~= nil
-        and server.shipContextGetBody ~= nil then
-        outgoingMultiplier = server.shipRuntimeGetWeaponDamageMultiplier(
-            server.shipContextGetBody()
-        )
-    end
     local remaining = math.max(0.0, tonumber(rawDamage) or 0.0)
-        * (1.0 + math.max(0.0, tonumber(outgoingMultiplier) or 0.0))
     if body == 0 or remaining <= 0.0 then return result end
     if server.registryShipExists == nil or not server.registryShipExists(body) then
         return result
@@ -31,6 +44,7 @@ function server.shipDamageApplyRaw(shipBodyId, rawDamage)
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(body) then
         return result
     end
+    _breakCloakForDamage(body)
 
     local shield, armor, hull = server.registryShipGetHP(body)
     if shield == nil or armor == nil or hull == nil then return result end
@@ -56,13 +70,33 @@ function server.shipDamageApplyRaw(shipBodyId, rawDamage)
     armor = applyLayer("armor", armor)
     hull = applyLayer("body", hull)
     server.registryShipSetHP(body, shield, armor, hull)
+    _stopDestroyedInterceptor(body, hull)
     return result
 end
 
-function server.shipDamageApplyWeaponDefinition(shipBodyId, definition, rawDamage)
+function server.shipDamageApplyWeaponDefinition(
+    shipBodyId,
+    definition,
+    rawDamage,
+    attackerBodyId
+)
     local result = _emptyDamageResult()
     local body = math.floor(shipBodyId or 0)
     local remaining = math.max(0.0, tonumber(rawDamage) or 0.0)
+    local attacker = math.floor(tonumber(attackerBodyId) or 0)
+    if attacker ~= 0 and server.shipRuntimeGetWeaponDamageMultiplier ~= nil then
+        remaining = remaining * (1.0 + math.max(
+            0.0,
+            tonumber(server.shipRuntimeGetWeaponDamageMultiplier(attacker)) or 0.0
+        ))
+    end
+    -- Point-defense weapons can have an explicit Stellaris conversion scale.
+    -- Apply it here so every firing path (not only the automatic controller)
+    -- uses the same damage value.
+    local pointDefenseScale = tonumber((definition or {}).pointDefenseDamageMultiplier)
+    if pointDefenseScale ~= nil then
+        remaining = remaining * math.max(0.0, pointDefenseScale)
+    end
     if body == 0 or remaining <= 0.0 then return result end
     if server.registryShipExists == nil or not server.registryShipExists(body) then
         return result
@@ -70,6 +104,7 @@ function server.shipDamageApplyWeaponDefinition(shipBodyId, definition, rawDamag
     if server.registryShipIsBodyDead ~= nil and server.registryShipIsBodyDead(body) then
         return result
     end
+    _breakCloakForDamage(body)
 
     local shield, armor, hull = server.registryShipGetHP(body)
     if shield == nil or armor == nil or hull == nil then return result end
@@ -134,6 +169,7 @@ function server.shipDamageApplyWeaponDefinition(shipBodyId, definition, rawDamag
     )
     hull = applyLayer("body", hull, weapon.bodyFix, 0.0, 0.0)
     server.registryShipSetHP(body, shield, armor, hull)
+    _stopDestroyedInterceptor(body, hull)
     return result
 end
 

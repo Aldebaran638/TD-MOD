@@ -45,6 +45,8 @@ foreach ($weaponFile in $weaponDefinitionFiles) {
     }
 }
 $catalog = Read-Required "script\data\weapons\weapon_catalog.lua"
+$stellaris446Catalog = Read-Required "script\data\weapons\stellaris_4_4_6.lua"
+$stellarisGeneratedCatalog = Read-Required "script\data\weapons\stellaris_generated_4_4_6.lua"
 $shipDefinition = Read-Required "script\data\ships\battlecruiser.lua"
 $strikeCraftDefinition = Read-Required "script\data\ships\advanced_strike_craft.lua"
 $interceptorShipDefinitions = Read-Required "script\data\ships\interceptor_projectiles.lua"
@@ -274,6 +276,82 @@ foreach ($weaponEntry in $officialCombatStats.GetEnumerator()) {
     }
 }
 
+$officialPowerUse = [ordered]@{
+    tachyonLance = 260; focusedArcEmitter = 260; gigaCannon = 260
+    largeGammaLaser = 88; largePlasmaCannon = 107; largeGaussCannon = 88
+    kineticArtillery = 91; largeStormfireAutocannon = 112
+    mediumGammaLaser = 39; mediumPlasmaCannon = 47; phaseDisruptor = 39
+    mediumGaussCannon = 39; mediumStormfireAutocannon = 49; swarmerMissile = 17
+    devastatorTorpedoes = 64; neutronLauncher = 154; gammaStrikeCraft = 59
+    flakArtillery = 10; guardianPointDefense = 10
+}
+foreach ($powerEntry in $officialPowerUse.GetEnumerator()) {
+    $source = [string]$weaponSourceById[$powerEntry.Key]
+    $powerMatch = [Regex]::Match($source, '(?m)^\s*powerUse\s*=\s*(\d+(?:\.\d*)?)\s*,')
+    if (-not $powerMatch.Success -or
+        [Math]::Abs([double]$powerMatch.Groups[1].Value - [double]$powerEntry.Value) -gt 0.0001) {
+        Add-Issue "weapon $($powerEntry.Key) does not use official Stellaris 4.4.6 power=$($powerEntry.Value)"
+    }
+}
+
+$requiredCatalogTokens = @(
+    'RED_LASER', 'GAMMA_LASER', 'MASS_DRIVER_1', 'MASS_DRIVER_5',
+    'PLASMA_1', 'PLASMA_3', 'DISRUPTOR_1', 'DISRUPTOR_3', 'AUTOCANNON_4',
+    'KINETIC_ARTILLERY_1', 'ENERGY_LANCE_1', 'ARC_EMITTER_1', 'MASS_ACCELERATOR_1',
+    'MISSILE_1', 'MISSILE_5', 'SWARMER_MISSILE_1', 'TORPEDO_1', 'TORPEDO_2',
+    'ENERGY_TORPEDO_1', 'PSIONIC_TORPEDO', 'PSIONIC_LIGHTNING',
+    'SMALL_PSIONIC_DISRUPTOR', 'MEDIUM_PSIONIC_DISRUPTOR',
+    'LARGE_SCOUT_HANGAR_1', 'STRIKE_CRAFT_HANGAR_1', 'STRIKE_CRAFT_HANGAR_2',
+    'STRIKE_CRAFT_SKRAND', 'PSIONIC_STRIKE_CRAFT'
+)
+foreach ($token in $requiredCatalogTokens) {
+    if ($stellaris446Catalog -notmatch [Regex]::Escape($token)) {
+        Add-Issue "Stellaris 4.4.6 mechanical catalog is missing official component token: $token"
+    }
+}
+if ($catalog -notmatch '#include\s+"stellaris_4_4_6\.lua"' -or
+    $stellaris446Catalog -notmatch 'stellarisWeaponPoolData\s*=\s*\{\}' -or
+    $stellaris446Catalog -notmatch '#include\s+"stellaris_generated_4_4_6\.lua"' -or
+    $stellarisGeneratedCatalog -notmatch 'stellarisGeneratedWeaponCount\s*=\s*(?:[8-9]\d|1\d\d)' -or
+    $stellarisGeneratedCatalog -match '(?:component|id)\s*=\s*"[^"]*(?:BIO|HIVE|TOXIC|AMOEBA|METEOROID|GG_STRIKE|AI_STRIKE|DRONE_STRIKE|CARAVANEER|LENS_FLARE|SOLARFLARE)' -or
+    $shipDefinition -notmatch 'pairs\(stellarisWeaponPoolData\s+or\s+\{\}\)') {
+    Add-Issue "complete Stellaris X/L/M/S/G/H catalog is not loaded into the battlecruiser weapon pools"
+}
+if ($stellarisGeneratedCatalog -notmatch '(?m)^\s*local\s+_generatedSizes\s*=\s*\{' -or
+    $stellarisGeneratedCatalog -notmatch '(?m)^\s*local\s+function\s+_generatedIcon\s*\(' -or
+    $stellarisGeneratedCatalog -notmatch '(?m)^\s*local\s+function\s+_generatedDefineRay\s*\(' -or
+    $stellarisGeneratedCatalog -notmatch '(?m)^\s*local\s+function\s+_generatedDefineProjectile\s*\(' -or
+    $stellarisGeneratedCatalog -notmatch '(?m)^\s*local\s+function\s+_generatedDefineGuided\s*\(' -or
+    $stellarisGeneratedCatalog -notmatch '(?m)^\s*local\s+function\s+_generatedDefineCraft\s*\(' -or
+    $stellarisGeneratedCatalog -match '_sizes\[item\.slot\]|_icon\(item\.icon\)|_define(?:Ray|Projectile|Guided|Craft)\(common\)') {
+    Add-Issue "generated Stellaris catalog is not self-contained across Teardown include scopes"
+}
+
+$stellarisIconRoot = Join-Path $modRoot "gfx\ui\weapon_icons\stellaris"
+$requiredIconNames = @(
+    'laser_1', 'laser_2', 'laser_3', 'laser_4', 'laser_5',
+    'mass_driver_1', 'mass_driver_2', 'mass_driver_3', 'mass_driver_4', 'mass_driver_5',
+    'plasma_1', 'plasma_2', 'plasma_3', 'disruptor_1', 'disruptor_2', 'disruptor_3',
+    'autocannon_1', 'autocannon_2', 'autocannon_3', 'autocannon_4', 'kinetic_artillery_1',
+    'energy_lance_1', 'arc_emitter_1', 'mass_accelerator_1', 'missile_1', 'missile_2',
+    'missile_3', 'missile_4', 'missile_5', 'swarmer_missile_1', 'torpedo_1', 'torpedo_2',
+    'energy_torpedo_1', 'zro_launchers', 'psionic_lightning', 'psionic_disruptor',
+    'strike_craft_scout_1', 'strike_craft_fighter_1', 'strike_craft_fighter_2',
+    'skrand_strike_craft', 'psionic_bombers'
+)
+foreach ($iconName in $requiredIconNames) {
+    if (-not (Test-Path -LiteralPath (Join-Path $stellarisIconRoot ($iconName + '.png')) -PathType Leaf)) {
+        Add-Issue "Stellaris weapon icon is missing: $iconName.png"
+    }
+}
+$generatedIconMatches = [Regex]::Matches($stellarisGeneratedCatalog, '(?m)^\s*\{.*?\bicon\s*=\s*"([^"]+)"')
+foreach ($iconMatch in $generatedIconMatches) {
+    $generatedIconName = $iconMatch.Groups[1].Value
+    if (-not (Test-Path -LiteralPath (Join-Path $stellarisIconRoot ($generatedIconName + '.png')) -PathType Leaf)) {
+        Add-Issue "generated Stellaris weapon icon is missing: $generatedIconName.png"
+    }
+}
+
 if ($weaponDamageRuntime -notmatch 'function\s+server\.weaponDamageRoll\s*\(' -or
     $weaponDamageRuntime -notmatch 'minimum\s*\+\s*\(maximum\s*-\s*minimum\)\s*\*\s*math\.random\(\)' -or
     $guidedGroup -notmatch 'damageMin\s*=\s*tonumber\(weaponDef\.damageMin\)' -or
@@ -293,7 +371,8 @@ foreach ($behavior in @("raycast", "projectile", "rocketProjectile", "guidedProj
 }
 
 foreach ($profile in @(
-    "tachyonLance", "gammaBeam", "energyBeam", "focusedArcBeam", "arcBeam", "kineticProjectile",
+    "tachyonLance", "gammaBeam", "redBeam", "blueBeam", "uvBeam", "xrayBeam",
+    "energyBeam", "focusedArcBeam", "arcBeam", "psionicArcBeam", "kineticProjectile",
     "plasmaProjectile", "autocannonProjectile", "gigaCannonProjectile",
     "neutronProjectile", "guidedMissile",
     "energyTorpedo", "strikeCraft"
@@ -301,6 +380,18 @@ foreach ($profile in @(
     if ($standard -notmatch [Regex]::Escape("$profile = true")) {
         Add-Issue "FX profile is not registered: $profile"
     }
+}
+
+if ($stellaris446Catalog -notmatch 'fxPalette\s*=\s*"particleLance"' -or
+    $stellaris446Catalog -notmatch 'zroLauncher' -or
+    $stellaris446Catalog -notmatch 'fxColor\s*=\s*color' -or
+    $stellarisGeneratedCatalog -notmatch 'common\.fxColor\s*=\s*item\.color' -or
+    $xSlotChargingFx -notmatch 'definition\.fxPalette\s*==\s*"particleLance"' -or
+    $projectileVisual -notmatch 'fxColor\s*=\s*definition\.fxColor' -or
+    $genericRaycastFx -notmatch 'psionicArcBeam' -or
+    $genericRaycastFx -notmatch 'beam\.fxColor\s+or\s+profile\.color' -or
+    $genericRaycastFx -notmatch '_spawnImpactParticles\(profile,\s*endPos,\s*hitNormal,\s*fxColor\)') {
+    Add-Issue "Stellaris weapon variants do not reuse their family FX with data-driven color palettes"
 }
 
 if ($catalog -notmatch '#include\s+"schema\.lua"' -or
@@ -491,7 +582,7 @@ if ($client -notmatch 'effects/engine_thruster_fx\.lua' -or
 }
 if ($arcChargingFx -notmatch 'focusedArcChargingFxRender' -or
     $arcChargingFx -notmatch '_focusedArcDrawBridge' -or
-    $xSlotChargingFx -notmatch '(?s)focusedArcEmitter.*emittersByShip' -or
+    $xSlotChargingFx -notmatch '(?s)definition\.family\s*~=\s*"energy_lance".*emittersByShip' -or
     $xSlotMuzzleLight -notmatch 'arcMuzzleLightLeft' -or
     $xSlotMuzzleLight -notmatch 'arcMuzzleLightRight' -or
     $xSlotMuzzleLight -notmatch '_tachyonLightOverloadWave') {
@@ -571,9 +662,9 @@ if ($weaponSchema -notmatch '(?s)function weaponDefineRocket.*?targetingMode\s*=
 if ([string]$weaponSourceById.neutronLauncher -notmatch '(?s)weaponDefineProjectile\(\{.*?weaponType\s*=\s*"neutronLauncher".*?fxProfile\s*=\s*"neutronProjectile".*?targetingMode\s*=\s*"forward"') {
     Add-Issue "Neutron Launcher must be a single forward, non-guided projectile"
 }
-if ($projectileVisual -notmatch '(?s)local function _updatePlasmaProjectile.*?_drawBillboard.*?0\.10,\s*0\.95,\s*0\.20' -or
+if ($projectileVisual -notmatch '(?s)local function _updatePlasmaProjectile.*?projectile\.fxColor.*?_drawBillboard' -or
     $projectileVisual -notmatch '(?s)local function _updateGigaCannonProjectile.*?_pointLight.*?0\.50,\s*0\.08,\s*1\.0' -or
-    $projectileVisual -notmatch '(?s)local function _updateNeutronProjectile.*?_drawDirectionalSprite.*?0\.05,\s*0\.35,\s*1\.4') {
+    $projectileVisual -notmatch '(?s)local function _updateNeutronProjectile.*?local tint = projectile\.fxColor.*?_drawDirectionalSprite') {
     Add-Issue "plasma/giga-cannon/neutron projectile visuals are missing their dedicated color paths"
 }
 if ([string]$weaponSourceById.largeStormfireAutocannon -notmatch '(?s)cooldown\s*=\s*0\.0.*?maxRange\s*=\s*220\.0' -or
@@ -655,10 +746,10 @@ if ([string]$weaponSourceById.phaseDisruptor -notmatch 'fxProfile\s*=\s*"arcBeam
 }
 if ([string]$weaponSourceById.focusedArcEmitter -notmatch '(?s)fxProfile\s*=\s*"focusedArcBeam".*?chargeDuration\s*=\s*0\.50' -or
     $genericRaycastFx -notmatch 'focusedArcBeam\s*=\s*\{\s*color\s*=\s*\{\s*0\.72,\s*0\.22,\s*1\.0\s*\}' -or
-    $xSlotControl -notmatch 'weaponType,\s*"focusedArcBeam"' -or
+    $xSlotControl -notmatch '(?s)tostring\(weaponType or ""\) == "focusedArcEmitter".*focusedArcBeam' -or
     $client -notmatch 'focused_arc_emitter/effects/charging_fx\.lua' -or
     $arcChargingFx -notmatch 'focusedArcChargingFxRender' -or
-    $xSlotChargingFx -notmatch '(?s)focusedArcEmitter.*?_clearEffectsByShip' -or
+    $xSlotChargingFx -notmatch '(?s)definition\.family\s*~=\s*"energy_lance".*?_clearEffectsByShip' -or
     $xSlotChargingFx -match 'ParticleColor\(0\.82,\s*0\.24,\s*1\.0' -or
     $xSlotMuzzleLight -notmatch 'SetLightColor\(center,\s*0\.72,\s*0\.22,\s*1\.0\)') {
     Add-Issue "Focused Arc Emitter must use independent purple charge/beam/light FX"
@@ -880,6 +971,32 @@ if ($interceptorShipDefinitions -notmatch 'advancedSwarmerMissile' -or
     $shipRegistryServer -notmatch 'registryShipSetInterceptorOwner') {
     Add-Issue "missiles, torpedoes, or strike craft are missing non-player interceptor ship registration"
 }
+if ($guidedRuntime -notmatch 'function\s+server\.guidedProjectileDestroyIfDeadAt\s*\(' -or
+    $guidedRuntime -notmatch '(?s)guidedProjectileDestroyIfDeadAt.*?targetBodyId\s*=\s*0.*?Explosion\s*\(.*?guidedProjectileRemoveAt' -or
+    $guidedMovement -notmatch 'guidedProjectileDestroyIfDeadAt\(i\)' -or
+    $guidedCollider -notmatch 'guidedProjectileDestroyIfDeadAt\(i\)' -or
+    $guidedGroup -notmatch 'destroyedExplosionSize\s*=\s*tonumber\(weaponDef\.destroyedExplosionSize\)' -or
+    $shipDamage -notmatch '_stopDestroyedInterceptor' -or
+    $shipDamage -notmatch 'SetBodyAngularVelocity\(body,\s*Vec\(0,\s*0,\s*0\)\)') {
+    Add-Issue "destroyed missiles and torpedoes must stop tracking, explode, and leave the active runtime immediately"
+}
+if ($hSlotControl -notmatch 'local\s+function\s+_hSlotHandleDestroyedCraft' -or
+    $hSlotControl -notmatch '(?s)_hSlotHandleDestroyedCraft.*?craft\.state\s*=\s*"DISABLED".*?_hSlotCraftExplode.*?_hSlotFinishCraft' -or
+    $hSlotControl -notmatch '(?s)registryShipIsBodyDead\(craft\.bodyId\).*?_hSlotHandleDestroyedCraft') {
+    Add-Issue "destroyed strike craft must become disabled, explode, and notify the carrier launcher to start rebuild cooldown"
+}
+if ($shipServerBootstrap -notmatch 'function\s+server\.shipServerIsDestroyed\s*\(' -or
+    $shipServerBootstrap -notmatch 'function\s+server\.shipServerFinalizeDestroyed\s*\(' -or
+    $entry -notmatch '(?s)local\s+function\s+disableDestroyedControls\(\).*?weaponRuntimeClearCommands\(\).*?weaponRuntimeDeactivate\(\)' -or
+    $entry -notmatch '(?s)shipServerIsDestroyed\(\).*?disableDestroyedControls\(\).*?return' -or
+    $strikeCraftEntry -notmatch '(?s)server\.shipServerIsDestroyed\(\).*?server\.shipServerFinalizeDestroyed\(\).*?return' -or
+    $serverRequests -notmatch 'registryShipIsBodyDead\(body\)' -or
+    $clientRegistry -notmatch 'function\s+client\.registryShipIsBodyDead\s*\(' -or
+    $clientShipBootstrap -notmatch 'function\s+client\.shipClientDestroyedUiTick\s*\(' -or
+    $clientEntry -notmatch '(?s)shipClientIsDestroyed\(\).*?shipClientDestroyedUiTick\(dt\).*?return' -or
+    $clientEntry -notmatch '(?s)function\s+client\.clientDraw\(\).*?shipClientDrawHealth\(\)') {
+    Add-Issue "destroyed Stellaris entities must disable control simulation while retaining client UI updates"
+}
 if ($componentCatalog -notmatch 'reactorBooster3' -or
     $componentCatalog -notmatch 'reactorOutputMultiplier\s*=\s*0\.50' -or
     $componentCatalog -notmatch 'darkMatterCloakingField' -or
@@ -901,7 +1018,10 @@ if ($strikeCraftDefinition -notmatch 'shipType\s*=\s*"advancedStrikeCraft"' -or
     $strikeCraftDefinition -notmatch 'maxBodyHP\s*=\s*12\.0' -or
     $strikeCraftEntry -notmatch 'server\.shipServerInit\(configuredShipType\)' -or
     $strikeCraftEntry -match 'weapon/server/bootstrap\.lua' -or
-    $strikeCraftPrefab -notmatch '<vehicle[^>]+driven="false"[^>]+sound="none 0"' -or
+    # Vehicle sound is optional.  The invalid `none` sound bank produces
+    # runtime warnings, so strike craft prefabs must only be non-driveable;
+    # valid sound assets are checked separately below.
+    $strikeCraftPrefab -notmatch '<vehicle[^>]+driven="false"' -or
     $strikeCraftDefinition -notmatch 'playerDriveable\s*=\s*false' -or
     $strikeCraftDefinition -notmatch 'playerLockable\s*=\s*false' -or
     $strikeCraftDefinition -notmatch 'interceptorClass\s*=\s*"strike_craft"' -or

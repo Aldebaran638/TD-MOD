@@ -4,9 +4,9 @@
 server = server or {}
 server.weaponGroupStateById = server.weaponGroupStateById or {}
 
--- 空闲批量更新优化：无人驾驶时降低tick频率
-local _idleTickCounter = 0
-local _idleTickInterval = 25  -- 每25帧tick一次（60fps下约0.42秒），节省96% CPU
+-- 空闲批量更新优化：无人驾驶时降低tick频率。用秒数而不是帧数，避免
+-- 不同帧率下冷却、热量和蓄力推进速度不一致。
+local _idleTickInterval = 0.25
 local _idleAccumulatedDelta = 0.0
 
 local function _resolveShipDefinition(shipType)
@@ -15,6 +15,12 @@ local function _resolveShipDefinition(shipType)
         if resolved ~= nil then return resolved end
     end
     return shipDefinitionGet(shipType, server.shipContextGetType())
+end
+
+local function _weaponGroupBreakCloak(shipBodyId)
+    if server.shipCloakBreakForWeapon ~= nil then
+        server.shipCloakBreakForWeapon(math.floor(tonumber(shipBodyId) or 0))
+    end
 end
 
 local function _buildState(group, shipType)
@@ -210,6 +216,9 @@ function server.weaponGroupSetFireHeld(groupId, active, request)
     local weaponType, weaponDef = _resolveWeapon(state)
     local controller = server.weaponControllerResolve(weaponDef)
     if controller ~= nil and controller.ownsHold and type(controller.setHeld) == "function" then
+        if active then
+            _weaponGroupBreakCloak((request or {}).shipBodyId)
+        end
         state.fireHeld = false
         state.heldRequest = nil
         return controller.setHeld({
@@ -303,10 +312,51 @@ local function _requestHasTarget(request)
     return vehicleBodyId ~= 0 and IsHandleValid(vehicleBodyId)
 end
 
+local function _requestTargetPosition(request)
+    local targetBodyId = math.floor((request or {}).targetBodyId or 0)
+    if targetBodyId ~= 0 and IsHandleValid(targetBodyId) then
+        local transform = GetBodyTransform(targetBodyId)
+        return TransformToParentPoint(transform, GetBodyCenterOfMass(targetBodyId))
+    end
+    local targetVehicleId = math.floor((request or {}).targetVehicleId or 0)
+    if targetVehicleId ~= 0 then
+        local bodyId = math.floor(GetVehicleBody(targetVehicleId) or 0)
+        if bodyId ~= 0 and IsHandleValid(bodyId) then
+            local transform = GetBodyTransform(bodyId)
+            return TransformToParentPoint(transform, GetBodyCenterOfMass(bodyId))
+        end
+        local vehicleTransform = GetVehicleTransform(targetVehicleId)
+        return vehicleTransform and vehicleTransform.pos or nil
+    end
+    return nil
+end
+
+local function _requestWithinSensorAndWeaponRange(request, weaponDefinition)
+    local targetPosition = _requestTargetPosition(request)
+    local shipBodyId = math.floor((request or {}).shipBodyId or 0)
+    if targetPosition == nil or shipBodyId == 0 or not IsHandleValid(shipBodyId) then
+        return false
+    end
+    local shipTransform = GetBodyTransform(shipBodyId)
+    local shipPosition = TransformToParentPoint(
+        shipTransform,
+        GetBodyCenterOfMass(shipBodyId)
+    )
+    local distance = VecLength(VecSub(targetPosition, shipPosition))
+    local weaponRange = tonumber((weaponDefinition or {}).maxRange) or 0.0
+    if weaponRange > 0.0 and distance > weaponRange then
+        return false
+    end
+    local sensor = ((server.shipComponentProfile or {}).sensor or {})
+    local sensorRange = tonumber(sensor.range) or 0.0
+    return sensorRange <= 0.0 or distance <= sensorRange
+end
+
 local function _fireContexts(behavior, contexts, mounts, cooldown)
     local fired = false
     for i = 1, #contexts do
         if behavior.fire(contexts[i]) then
+            _weaponGroupBreakCloak(contexts[i].shipBodyId)
             mounts[i].cooldownRemain = cooldown
             local definition = contexts[i].weaponDefinition or {}
             local overheatThreshold = math.max(
@@ -350,6 +400,10 @@ function server.weaponGroupRequestFire(groupId, request)
         and not _requestHasTarget(normalizedRequest) then
         return false, "target lock required"
     end
+    if tostring(weaponDef.targetingMode or "") == "target_lock"
+        and not _requestWithinSensorAndWeaponRange(normalizedRequest, weaponDef) then
+        return false, "target outside sensor or weapon range"
+    end
 
     local controller = server.weaponControllerResolve(weaponDef)
     if controller ~= nil then
@@ -361,6 +415,7 @@ function server.weaponGroupRequestFire(groupId, request)
             request = normalizedRequest,
         })
         if fired then
+            _weaponGroupBreakCloak(normalizedRequest.shipBodyId)
             state.fireDelay = math.max(
                 0.0,
                 tonumber((weaponDef.salvoProfile or {}).interval) or 0.0
@@ -392,6 +447,7 @@ function server.weaponGroupRequestFire(groupId, request)
     local chargeDuration = math.max(0.0, tonumber(fireProfile.chargeDuration) or 0.0)
     local cooldown = math.max(0.0, tonumber(weaponDef.cooldown) or 0.0)
     if chargeDuration > 0.0 then
+        _weaponGroupBreakCloak(normalizedRequest.shipBodyId)
         state.pending = {
             remaining = chargeDuration,
             total = chargeDuration,
@@ -423,19 +479,16 @@ function server.weaponGroupTick(dt)
 
     if not hasDriver then
         _idleAccumulatedDelta = _idleAccumulatedDelta + delta
-        _idleTickCounter = _idleTickCounter + 1
-
-        if _idleTickCounter < _idleTickInterval then
+        if _idleAccumulatedDelta < _idleTickInterval then
             return  -- 跳过这一帧，节省CPU
         end
 
         -- 达到间隔，使用累积的delta执行一次完整更新
         delta = _idleAccumulatedDelta
-        _idleTickCounter = 0
         _idleAccumulatedDelta = 0.0
     else
-        -- 有驾驶员时重置计数器，恢复正常每帧tick
-        _idleTickCounter = 0
+        -- 驾驶员重新进入时，先补算无人驾驶期间累计的时间，避免冷却/热量丢失。
+        delta = delta + _idleAccumulatedDelta
         _idleAccumulatedDelta = 0.0
     end
 

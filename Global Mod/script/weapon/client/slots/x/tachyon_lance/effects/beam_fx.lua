@@ -46,6 +46,7 @@ client.tachyonBeamFxState = client.tachyonBeamFxState or {
     launchAge = -1.0,
     beamStart = nil,
     beamEnd = nil,
+    weaponType = "tachyonLance",
 }
 
 local function _tachyonBeamSafeNormalize(value, fallback)
@@ -54,6 +55,22 @@ local function _tachyonBeamSafeNormalize(value, fallback)
         return fallback or Vec(0.0, 0.0, -1.0)
     end
     return VecScale(value, 1.0 / length)
+end
+
+local function _tachyonBeamDefinition(weaponType)
+    return (weaponData or {})[tostring(weaponType or "tachyonLance")] or {}
+end
+
+local function _tachyonBeamPalette(weaponType)
+    local definition = _tachyonBeamDefinition(weaponType)
+    if definition.fxPalette == "particleLance" then
+        return {
+            { thickness = 72.0, color = { 0.95, 0.03, 0.01 }, intensityScale = 0.70, alpha = 0.75 },
+            { thickness = 42.0, color = { 1.40, 0.10, 0.03 }, intensityScale = 0.80, alpha = 0.85 },
+            { thickness = 24.0, color = { 1.80, 0.42, 0.12 }, intensityScale = 0.85, alpha = 0.92 },
+        }, { 2.5, 0.62, 0.42 }
+    end
+    return nil, nil
 end
 
 local function _tachyonBeamTableToVec(value)
@@ -126,6 +143,7 @@ function client.tachyonBeamFxInit()
     state.launchAge = -1.0
     state.beamStart = nil
     state.beamEnd = nil
+    state.weaponType = "tachyonLance"
 end
 
 function client.tachyonBeamFxTick(dt)
@@ -140,10 +158,11 @@ function client.tachyonBeamFxTick(dt)
             local seq = math.floor(render.seq or -1)
             if seq ~= state.lastRenderSeq then
                 state.lastRenderSeq = seq
-                if render.eventType == "launch_start"
-                    and tostring(render.weaponType or "") == tostring(config.weaponType or "tachyonLance") then
+                local definition = _tachyonBeamDefinition(render.weaponType)
+                if render.eventType == "launch_start" and definition.family == "energy_lance" then
                     state.beamStart, state.beamEnd = _tachyonBeamResolveEndpoints(render, shipBody, config)
                     state.launchAge = 0.0
+                    state.weaponType = tostring(render.weaponType or "tachyonLance")
                 end
             end
         end
@@ -178,7 +197,8 @@ function client.tachyonBeamFxRender()
     local intensity = _tachyonBeamIntensity(config, tonumber(state.launchAge) or -1.0)
     if intensity <= 0.0001 then return end
 
-    local glowLayers = config.glowLayers or {}
+    local palette, paletteCore = _tachyonBeamPalette(state.weaponType)
+    local glowLayers = palette or config.glowLayers or {}
     for i = 1, #glowLayers do
         local layer = glowLayers[i] or {}
         local color = layer.color or { 0.2, 0.7, 1.0 }
@@ -197,7 +217,7 @@ function client.tachyonBeamFxRender()
         )
     end
 
-    local coreColor = config.color or { 2.5, 2.5, 2.5 }
+    local coreColor = paletteCore or config.color or { 2.5, 2.5, 2.5 }
     DrawSprite(
         sprite,
         beamTransform,

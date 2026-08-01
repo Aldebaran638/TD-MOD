@@ -12,10 +12,52 @@ function client.updateShipWeaponConfiguration(
     mWeapon,
     gWeapon,
     hWeapon,
-    pWeapon
+    pWeapon,
+    sensorRange,
+    sensorInterval,
+    trackingAdd,
+    energyOutput,
+    energyUse,
+    energyBalance,
+    weaponDamageMultiplier,
+    speedMultiplier,
+    turnResponseMultiplier,
+    turnForceMultiplier,
+    cloakAvailable,
+    cloakStrength,
+    cloakShieldReduction,
+    cloakShipLimit
 )
     local body = math.floor(shipBodyId or 0)
     if body == 0 then return end
+    local previous = client.weaponLoadoutStateByShip[body] or {}
+    local serverProfile = previous.serverProfile
+    if sensorRange ~= nil then
+        serverProfile = {
+            sensor = {
+                range = tonumber(sensorRange) or 0.0,
+                interval = tonumber(sensorInterval) or 1.0,
+                trackingAdd = tonumber(trackingAdd) or 0.0,
+            },
+            energy = {
+                output = tonumber(energyOutput) or 0.0,
+                use = tonumber(energyUse) or 0.0,
+                balance = tonumber(energyBalance) or 0.0,
+                weaponDamageMultiplier = tonumber(weaponDamageMultiplier) or 0.0,
+            },
+            mobility = {
+                speedMultiplier = tonumber(speedMultiplier) or 0.0,
+                turnResponseMultiplier = tonumber(turnResponseMultiplier) or 0.0,
+                turnForceMultiplier = tonumber(turnForceMultiplier) or 0.0,
+            },
+            cloak = {
+                available = math.floor(tonumber(cloakAvailable) or 0) ~= 0,
+                strength = tonumber(cloakStrength) or 0.0,
+                shieldReduction = tonumber(cloakShieldReduction) or 0.0,
+                shipLimit = math.floor(tonumber(cloakShipLimit) or 0),
+            },
+        }
+    end
     client.weaponLoadoutStateByShip[body] = {
         configurationId = tostring(configurationId or ""),
         xSlot = tostring(xWeapon or ""),
@@ -24,7 +66,35 @@ function client.updateShipWeaponConfiguration(
         gSlot = tostring(gWeapon or ""),
         hSlot = tostring(hWeapon or ""),
         pSlot = tostring(pWeapon or ""),
+        serverProfile = serverProfile,
     }
+    local binding = client.weaponConfigurationBindingState
+    if binding ~= nil and math.floor(binding.shipBody or 0) == body then
+        binding.serverProfile = serverProfile
+    end
+end
+
+function client.getShipSensorProfile(shipBodyId)
+    local body = math.floor(shipBodyId or 0)
+    local state = client.weaponLoadoutStateByShip[body] or {}
+    local serverProfile = state.serverProfile or {}
+    if serverProfile.sensor ~= nil then return serverProfile.sensor end
+
+    local binding = client.weaponConfigurationBindingState or {}
+    local snapshot = binding.snapshot or {}
+    local shipType = tostring(binding.shipType or client.shipContextGetType())
+    local definition = (shipTypeRegistryData or {})[shipType]
+        or client.shipContextGetDefinition() or {}
+    local configuration = shipComponentFindConfiguration(
+        definition,
+        snapshot.configurationId
+    )
+    return (shipComponentResolveProfile(
+        definition,
+        snapshot.componentLoadout,
+        configuration,
+        snapshot.loadout
+    ) or {}).sensor or {}
 end
 
 function client.getShipWeaponType(shipBodyId, groupId)

@@ -11,6 +11,7 @@ weaponDefineProjectile({
     projectileFxVariant = "gaussLarge",
     damageMin = 96,
     damageMax = 276,
+    powerUse = 88.0,
     cooldown = 0.0,
     CD = 0.0,
     maxRange = 610.0,

@@ -38,7 +38,7 @@ weaponDefineStrikeCraft({
     shieldPenetration = 1.0,
     armorPenetration = 0.0,
     bodyFix = 1.0,
-    collisionExplosionSize = 0.03,
+    collisionExplosionSize = 0.006,
     environmentExplosionSize = 0.3,
     beamImpactExplosionSize = 1.05,
     beamImpactExplosionImpulse = 0.36,

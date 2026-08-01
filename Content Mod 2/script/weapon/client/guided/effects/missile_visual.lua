@@ -21,6 +21,11 @@ local function _configFor(weaponType)
     return _configs[tostring(definition.projectileFxVariant or "")] or _configs.swarmerMissile
 end
 
+local function _colorFor(weaponType, cfg)
+    local definition = (weaponData or {})[tostring(weaponType or "")] or {}
+    return definition.fxColor or cfg.color
+end
+
 client.missileVisualState = client.missileVisualState or { byId = {} }
 
 function client.missileVisualInit()
@@ -31,6 +36,7 @@ function client.spawnMissileVisual(missileId, weaponType, px, py, pz, vx, vy, vz
     client.missileVisualState.byId[missileId] = {
         id = missileId,
         weaponType = tostring(weaponType or ""),
+        color = _colorFor(weaponType, _configFor(weaponType)),
         position = Vec(px or 0, py or 0, pz or 0),
         velocity = Vec(vx or 0, vy or 0, vz or 0),
         lastCircleTime = 0,
@@ -60,7 +66,7 @@ function client.updateMissileVisual(missileId, px, py, pz, vx, vy, vz)
     client.correctMissileVisual(missileId, px, py, pz, vx, vy, vz, 0.0)
 end
 
-local function _createCircleParticles(pos, velocity, cfg, countScale)
+local function _createCircleParticles(pos, velocity, cfg, countScale, color)
     local normal = VecNormalize(velocity)
     local up = Vec(0, 1, 0)
     if math.abs(VecDot(normal, up)) > 0.9 then up = Vec(1, 0, 0) end
@@ -68,7 +74,8 @@ local function _createCircleParticles(pos, velocity, cfg, countScale)
     local tangent2 = VecNormalize(VecCross(normal, tangent1))
 
     ParticleReset()
-    ParticleColor(cfg.color[1], cfg.color[2], cfg.color[3], cfg.color[1], cfg.color[2], cfg.color[3])
+    local tint = color or cfg.color
+    ParticleColor(tint[1], tint[2], tint[3], tint[1], tint[2], tint[3])
     ParticleRadius(cfg.particleRadius, 0.0, "easeout")
     ParticleAlpha(1.0, 0.0)
     ParticleGravity(0.0)
@@ -107,7 +114,7 @@ function client.missileVisualTick(dt)
             and currentTime - (missile.lastCircleTime or 0) >= cfg.circleInterval
             and VecLength(missile.velocity) > 0.1 then
             missile.lastCircleTime = currentTime
-            _createCircleParticles(missile.position, missile.velocity, cfg, particleScale)
+            _createCircleParticles(missile.position, missile.velocity, cfg, particleScale, missile.color)
         end
         if distance < 600 then
             client.playMissileLoopSound(missile.position[1], missile.position[2], missile.position[3])

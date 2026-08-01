@@ -14,6 +14,25 @@
 
 local escortShipType = "riddle_escort"
 local escortBodyTag = "stellarisShip"
+local destroyedControlsDisabled = false
+
+local function _escortIsDestroyed()
+    return server.shipBody ~= nil
+        and server.shipBody ~= 0
+        and server.registryShipExists(server.shipBody)
+        and server.registryShipIsBodyDead(server.shipBody)
+end
+
+local function _escortDisableDestroyedControls()
+    if destroyedControlsDisabled then return end
+    server.mainWeaponRequestReset()
+    server.escortSSlotStateResetRuntime()
+    server.escortPSlotStateResetRuntime()
+    server.escortGSlotStateResetRuntime()
+    server.escortPProjectileManagerState.active = {}
+    server.shipDeathExplosionTick(0.0)
+    destroyedControlsDisabled = true
+end
 
 function server.registerCurrentShip(shipType)
     local shipBodyId = server.shipBody
@@ -51,6 +70,7 @@ end
 #include "server/recovery/shipHpRecovery.lua"
 
 function server.init()
+    destroyedControlsDisabled = false
     server.shipBody = FindBody(escortBodyTag, false)
     SetBool("StellarisShips/debug/inputTestEnabled", false)
 
@@ -79,6 +99,10 @@ function server.init()
 end
 
 function server.serverTick(dt)
+    if _escortIsDestroyed() then
+        _escortDisableDestroyedControls()
+        return
+    end
     server.mainWeaponControlTick(dt)
     server.shipRuntimeStateSyncTick(dt)
     server.escortSSlotControlTick(dt)
@@ -94,12 +118,14 @@ function server.serverTick(dt)
 end
 
 function server.update(dt)
+    if _escortIsDestroyed() then return end
     server.escortGSlotControlUpdate(dt)
     server.shipAttitudeControllerUpdate(dt)
     server.shipRollStabilizerUpdate(dt)
 end
 
 function server.postUpdate()
+    if _escortIsDestroyed() then return end
     server.escortGSlotControlPostUpdate()
 end
 

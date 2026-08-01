@@ -7,6 +7,7 @@ client.weaponConfigurationBindingState = client.weaponConfigurationBindingState 
     shipType = "",
     shipBody = 0,
     snapshot = nil,
+    serverProfile = nil,
     complete = false,
     requestPending = false,
     retryRemain = 0.0,
@@ -17,6 +18,7 @@ function client.weaponConfigurationBindingInit(shipType, shipBody)
     state.shipType = tostring(shipType or client.shipContextGetType())
     state.shipBody = math.floor(shipBody or 0)
     state.snapshot = client.weaponLocalConfigRead(state.shipType)
+    state.serverProfile = nil
     local definition = (shipTypeRegistryData or {})[state.shipType] or {}
     state.complete = definition.playerConfigurable == false
     state.requestPending = false

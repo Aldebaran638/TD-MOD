@@ -30,6 +30,11 @@ function client.init()
 end
 
 function client.clientTick(dt)
+    if client.registryShipIsBodyDead(client.shipBody) then
+        client.shipDestroyedFxTick(dt)
+        client.shipHealthBarTick(dt)
+        return
+    end
     client.mainWeaponInputTick(dt)
     client.bodyMoveInputTick(dt)
     client.soundModuleTick(dt)
@@ -52,6 +57,7 @@ function client.clientDraw()
 end
 
 function client.render()
+    if client.registryShipIsBodyDead(client.shipBody) then return end
     client.shipCameraTick(0)
     client.shipRollErrorTick(0)
     client.missileVisualTick(0)

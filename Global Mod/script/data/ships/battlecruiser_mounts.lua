@@ -70,7 +70,9 @@ shipMountProfileData.enigmaticCruiser = {
         { firePosOffset = { x = -0.8, y = 6.5, z = -1.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
     },
     pDefense = {
-        { firePosOffset = { x = 2.5, y = 1.1, z = -1.8 } },
-        { firePosOffset = { x = -2.5, y = 1.1, z = -1.8 } },
+        -- Fixed defensive mounts on the two sides of the central core.
+        -- Point-defense queries reject the owning body as a second safeguard.
+        { firePosOffset = { x = 4.4, y = 0.4, z = -2.6 } },
+        { firePosOffset = { x = -4.4, y = 0.4, z = -2.6 } },
     },
 }

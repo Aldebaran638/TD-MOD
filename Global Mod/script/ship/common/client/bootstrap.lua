@@ -30,6 +30,18 @@ function client.shipClientInit(shipType)
     client.shipSensorHudInit()
 end
 
+function client.shipClientIsDestroyed()
+    local body = client.shipContextGetBody()
+    return body ~= 0
+        and client.registryShipIsBodyDead ~= nil
+        and client.registryShipIsBodyDead(body)
+end
+
+function client.shipClientDestroyedUiTick(dt)
+    client.shipDestroyedFxTick(dt)
+    client.shipHealthBarTick(dt)
+end
+
 function client.shipClientBeforeWeaponTick(dt)
     client.weaponConfigurationBindingTick(dt)
 end
@@ -43,6 +55,8 @@ function client.shipClientAfterWeaponTick(dt)
     client.shipHelpOverlayTick(dt)
     client.shipSensorHudTick(dt)
     client.shipCloakInputTick()
+    client.shipCloakPlayersTick()
+    client.nativeVehicleHudTick()
 end
 
 function client.shipClientRender()

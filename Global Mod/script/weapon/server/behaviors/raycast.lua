@@ -53,7 +53,11 @@ local function _fireRaycast(context)
         endpoint = VecAdd(origin, VecScale(direction, range))
     end
 
-    local _, didHitShield, impactLayer = server.weaponDamageApplyToShip(hitBody, context.weaponType)
+    local _, didHitShield, impactLayer = server.weaponDamageApplyToShip(
+        hitBody,
+        context.weaponType,
+        context.shipBodyId
+    )
     local hitRegisteredShip = hitBody ~= 0
         and server.registryShipExists ~= nil
         and server.registryShipExists(hitBody)

@@ -31,6 +31,10 @@ local function _clearEffectsByShip(shipBodyId)
     end
 end
 
+local function _chargingDefinition(weaponType)
+    return (weaponData or {})[tostring(weaponType or "tachyonLance")] or {}
+end
+
 local function _spawnChargingEntry(shipBodyId, shipT, targetLocalPos, radiusScale, weaponType)
     local scale = radiusScale or 1.0
     local fxRadius = 3.0 * scale
@@ -59,7 +63,8 @@ local function _spawnChargingEntry(shipBodyId, shipT, targetLocalPos, radiusScal
 end
 
 local function _startOrUpdateChargingEmitter(shipBodyId, firePointWorld, weaponType)
-    if tostring(weaponType or "") == "focusedArcEmitter" then
+    local definition = _chargingDefinition(weaponType)
+    if definition.family ~= "energy_lance" then
         client.tachyonChargingFxState.emittersByShip[shipBodyId] = nil
         _clearEffectsByShip(shipBodyId)
         return
@@ -178,7 +183,14 @@ function client.tachyonChargingFxTick(dt)
             local pulse = 0.70 + 0.30 * (1.0 - rawT)
 
             ParticleReset()
-            ParticleColor(0.96, 1.0, 1.0, 0.16, 0.45, 1.0)
+            local definition = _chargingDefinition(entry.weaponType)
+            local particleColor = definition.fxPalette == "particleLance"
+                and { 1.0, 0.18, 0.04, 0.45, 0.03, 0.01 }
+                or { 0.96, 1.0, 1.0, 0.16, 0.45, 1.0 }
+            ParticleColor(
+                particleColor[1], particleColor[2], particleColor[3],
+                particleColor[4], particleColor[5], particleColor[6]
+            )
             ParticleRadius(entry.radius, 0.014, "easeout")
             ParticleAlpha(0.86, 0.0)
             ParticleGravity(0.0)

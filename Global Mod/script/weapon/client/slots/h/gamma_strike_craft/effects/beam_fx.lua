@@ -10,8 +10,10 @@ local _recoverSfx = 0
 local _portalGlowSprite = 0
 
 local function _ensureStrikeSounds()
-    if _launchSfx == 0 then _launchSfx = LoadSound("MOD/sound/strike_craft_launch_portal.ogg") end
-    if _recoverSfx == 0 then _recoverSfx = LoadSound("MOD/sound/strike_craft_recover_portal.ogg") end
+    -- The portal assets are WAV data carrying an .ogg suffix and are rejected
+    -- by Teardown's sound loader.  Use valid Ogg assets for the same events.
+    if _launchSfx == 0 then _launchSfx = LoadSound("MOD/sound/laser_fire_01.ogg") end
+    if _recoverSfx == 0 then _recoverSfx = LoadSound("MOD/sound/laser_hit_01.ogg") end
 end
 
 local function _ensurePortalSprite()

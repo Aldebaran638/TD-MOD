@@ -37,6 +37,7 @@ function server.shipComponentPrepareLoadout(
 
     local result = {}
     local knownTypes = {}
+    local componentCounts = {}
     for _, group in ipairs(shipComponentSlotGroups(configuration)) do
         if knownTypes[group.slotType] then
             return nil, nil, "duplicate component slot group"
@@ -48,6 +49,18 @@ function server.shipComponentPrepareLoadout(
             (requested or {})[group.slotType]
         )
         if resolved == nil then return nil, nil, err end
+        for _, componentId in ipairs(resolved) do
+            local component = shipComponentData[tostring(componentId or "")]
+            local limit = math.floor(tonumber((component or {}).shipLimit) or 0)
+            if limit > 0 then
+                local used = (componentCounts[componentId] or 0) + 1
+                if used > limit then
+                    return nil, nil, "component " .. tostring(componentId)
+                        .. " exceeds shipLimit " .. tostring(limit)
+                end
+                componentCounts[componentId] = used
+            end
+        end
         result[group.slotType] = resolved
     end
     for slotType, _ in pairs(requested or {}) do
@@ -91,13 +104,14 @@ function server.shipComponentApplyLoadout(
     shipType,
     configurationId,
     requested,
-    restoreFull
+    restoreFull,
+    weaponLoadout
 )
     local loadout, profile, err = server.shipComponentPrepareLoadout(
         shipType,
         configurationId,
         requested,
-        nil
+        weaponLoadout
     )
     if loadout == nil then return false, err end
     return server.shipComponentApplyPrepared(loadout, profile, restoreFull)
@@ -106,10 +120,18 @@ end
 function server.shipComponentApplyDefault(shipType)
     local definition = shipDefinitionGet(shipType, server.shipContextGetType())
     local loadout, configuration = shipComponentDefaultLoadout(definition)
+    local weaponLoadout = nil
+    if server.shipSlotLoadoutGetState ~= nil then
+        local slotState = server.shipSlotLoadoutGetState(
+            tostring(definition.shipType or shipType or "")
+        ) or {}
+        weaponLoadout = slotState.loadout
+    end
     return server.shipComponentApplyLoadout(
         tostring(definition.shipType or shipType or ""),
         tostring(configuration.configurationId or ""),
         loadout,
-        true
+        true,
+        weaponLoadout
     )
 end

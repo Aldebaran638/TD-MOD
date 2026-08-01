@@ -14,6 +14,25 @@
 
 local titanShipType = "titan"
 local titanBodyTag = "stellarisShip"
+local destroyedControlsDisabled = false
+
+local function _titanIsDestroyed()
+    return server.shipBody ~= nil
+        and server.shipBody ~= 0
+        and server.registryShipExists(server.shipBody)
+        and server.registryShipIsBodyDead(server.shipBody)
+end
+
+local function _titanDisableDestroyedControls()
+    if destroyedControlsDisabled then return end
+    server.mainWeaponRequestReset()
+    server.tSlotStateResetRuntime()
+    server.lSlotStateResetRuntime()
+    server.sSlotStateResetRuntime()
+    server.projectileManagerState.active = {}
+    server.shipDeathExplosionTick(0.0)
+    destroyedControlsDisabled = true
+end
 
 function server.registerCurrentShip(shipType)
     local shipBodyId = server.shipBody
@@ -51,6 +70,7 @@ end
 #include "server/recovery/shipHpRecovery.lua"
 
 function server.init()
+    destroyedControlsDisabled = false
     server.shipBody = FindBody(titanBodyTag, false)
     SetBool("StellarisShips/debug/inputTestEnabled", false)
 
@@ -77,6 +97,10 @@ function server.init()
 end
 
 function server.serverTick(dt)
+    if _titanIsDestroyed() then
+        _titanDisableDestroyedControls()
+        return
+    end
     server.mainWeaponControlTick(dt)
     server.shipRuntimeStateSyncTick(dt)
     server.tSlotControlTick(dt)
@@ -92,12 +116,14 @@ function server.serverTick(dt)
 end
 
 function server.update(dt)
+    if _titanIsDestroyed() then return end
     server.sSlotControlUpdate(dt)
     server.shipAttitudeControllerUpdate(dt)
     server.shipRollStabilizerUpdate(dt)
 end
 
 function server.postUpdate()
+    if _titanIsDestroyed() then return end
     server.sSlotControlPostUpdate()
 end
 

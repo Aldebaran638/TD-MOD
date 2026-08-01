@@ -13,20 +13,31 @@
 local configuredShipType = GetStringParam("shiptype", "advancedStrikeCraft")
 
 function server.init()
+    -- Set this before shared initialization so a failed optional weapon module
+    -- can never leave a strike craft with the full-size ship blast.
+    server.shipDeathExplosionConfig.explosionSize = 4.0 * 0.20
     server.shipServerInit(configuredShipType)
-    server.shipDeathExplosionConfig.explosionSize = 0.0
+    -- Strike craft use the same destruction path as ships, but their death
+    -- blast is intentionally limited to 20% of the standard ship effect.
+    server.shipDeathExplosionConfig.explosionSize = 4.0 * 0.20
 end
 
 function server.tick(dt)
+    if server.shipServerIsDestroyed() then
+        server.shipServerFinalizeDestroyed()
+        return
+    end
     server.networkDebugTick(dt)
     server.shipServerTick(dt)
 end
 
 function server.update(dt)
+    if server.shipServerIsDestroyed() then return end
     server.shipServerUpdate(dt)
 end
 
 function server.postUpdate()
+    if server.shipServerIsDestroyed() then return end
     server.shipServerPostUpdate()
 end
 
@@ -35,6 +46,10 @@ function client.init()
 end
 
 function client.tick(dt)
+    if client.shipClientIsDestroyed() then
+        client.shipClientDestroyedUiTick(dt)
+        return
+    end
     client.shipClientBeforeWeaponTick(dt)
     client.shipClientAfterWeaponTick(dt)
 end
@@ -46,6 +61,7 @@ function client.draw()
 end
 
 function client.render()
+    if client.shipClientIsDestroyed() then return end
     client.shipClientRender()
     client.shipClientRenderEffects()
 end

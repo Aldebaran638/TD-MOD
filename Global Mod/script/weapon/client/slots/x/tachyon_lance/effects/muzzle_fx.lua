@@ -26,11 +26,16 @@ client.tachyonMuzzleFxState = client.tachyonMuzzleFxState or {
     lastRenderSeq = -1,
     age = -1.0,
     intensity = 0.0,
+    weaponType = "tachyonLance",
 }
 
 local function _tachyonMuzzleSmoothStep(value)
     local t = math.max(0.0, math.min(1.0, value))
     return t * t * (3.0 - 2.0 * t)
+end
+
+local function _tachyonMuzzleDefinition(weaponType)
+    return (weaponData or {})[tostring(weaponType or "tachyonLance")] or {}
 end
 
 local function _tachyonMuzzleTableToVec(value)
@@ -64,6 +69,7 @@ function client.tachyonMuzzleFxInit()
     state.lastRenderSeq = -1
     state.age = -1.0
     state.intensity = 0.0
+    state.weaponType = "tachyonLance"
 
 end
 
@@ -83,9 +89,10 @@ function client.tachyonMuzzleFxTick(dt)
             local seq = math.floor(render.seq or -1)
             if seq ~= state.lastRenderSeq then
                 state.lastRenderSeq = seq
-                if render.eventType == "launch_start"
-                    and tostring(render.weaponType or "") == tostring(config.weaponType or "tachyonLance") then
+                local definition = _tachyonMuzzleDefinition(render.weaponType)
+                if render.eventType == "launch_start" and definition.family == "energy_lance" then
                     state.age = 0.0
+                    state.weaponType = tostring(render.weaponType or "tachyonLance")
                 end
             end
         end
@@ -117,7 +124,9 @@ function client.tachyonMuzzleFxRender()
     local minSize = math.max(0.01, tonumber(config.glareSizeMin) or 2.2)
     local maxSize = math.max(minSize, tonumber(config.glareSizeMax) or 5.8)
     local size = minSize + (maxSize - minSize) * intensity
-    local color = config.glareColor or { 0.55, 0.88, 1.20 }
+    local definition = _tachyonMuzzleDefinition(state.weaponType)
+    local color = definition.fxPalette == "particleLance"
+        and { 1.20, 0.10, 0.04 } or (config.glareColor or { 0.55, 0.88, 1.20 })
 
     DrawSprite(
         sprite,

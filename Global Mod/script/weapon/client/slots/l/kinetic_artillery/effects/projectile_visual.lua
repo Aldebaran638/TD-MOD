@@ -113,6 +113,7 @@ function client.spawnProjectileVisual(projectileId, weaponType, px, py, pz, vx, 
         nextTrailDistance = 0.0, nextPulseDistance = 20.0, randomState = numericProjectileId * 977 + 131,
         weaponType = tostring(weaponType or ""), fxProfile = tostring(definition.fxProfile or "kineticProjectile"),
         fxVariant = tostring(definition.projectileFxVariant or definition.fxProfile or "kineticProjectile"),
+        fxColor = definition.fxColor,
     }
     client.spawnWeaponMuzzleFx(weaponType, px, py, pz, vx, vy, vz)
 end
@@ -189,27 +190,29 @@ local function _updateKineticProjectile(projectile, previousDistance, moveLength
 end
 
 local function _updatePlasmaProjectile(projectile, cameraDistance)
+    local tint = projectile.fxColor or { 0.18, 1.0, 0.30 }
     local flicker = math.max(0.80, math.min(1.10, 0.90 + 0.07 * math.sin(projectile.age * 19 + projectile.id) + 0.03 * math.sin(projectile.age * 41 + projectile.id * 0.37)))
     if cameraDistance <= 900 then
         local a = client.projectileVisualState.assets
-        _drawBillboard(a.plasmaGlow, projectile.position, 2.60 * flicker, 2.60 * flicker, 0.02, 0.35, 0.06, 0.42)
-        _drawBillboard(a.plasmaGlow, projectile.position, 1.55 * flicker, 1.55 * flicker, 0.10, 0.95, 0.20, 0.72)
-        _drawBillboard(a.plasmaCore, projectile.position, 0.95, 0.95, 0.75, 1.50, 0.80, 1.0)
+        _drawBillboard(a.plasmaGlow, projectile.position, 2.60 * flicker, 2.60 * flicker, tint[1] * 0.12, tint[2] * 0.35, tint[3] * 0.06, 0.42)
+        _drawBillboard(a.plasmaGlow, projectile.position, 1.55 * flicker, 1.55 * flicker, tint[1] * 0.55, tint[2] * 0.95, tint[3] * 0.20, 0.72)
+        _drawBillboard(a.plasmaCore, projectile.position, 0.95, 0.95, tint[1] * 0.75, tint[2] * 1.50, tint[3] * 0.80, 1.0)
     end
-    if cameraDistance <= 240 then _pointLight(projectile.position, 0.10, 1.0, 0.22, 11.0 * flicker) end
+    if cameraDistance <= 240 then _pointLight(projectile.position, tint[1], tint[2], tint[3], 11.0 * flicker) end
     if cameraDistance <= 380 then
         _emitDistanceEvents(projectile, projectile.lastPosition, projectile.position, "nextTrailDistance", 4.0, 8, _emitPlasmaLeak)
     end
 end
 
 local function _updateNeutronProjectile(projectile, cameraDistance)
+    local tint = projectile.fxColor or { 0.18, 0.58, 1.0 }
     if cameraDistance <= 1000 then
         local startPos = VecSub(projectile.position, VecScale(projectile.direction, 5.0))
         local endPos = VecAdd(projectile.position, VecScale(projectile.direction, 0.5))
-        _drawDirectionalSprite(client.projectileVisualState.assets.neutronNeedle, startPos, endPos, 0.20, 0.05, 0.35, 1.4, 0.80)
-        _drawLine(VecSub(projectile.position, VecScale(projectile.direction, 3.5)), VecAdd(projectile.position, VecScale(projectile.direction, 0.3)), 0.82, 0.96, 1.0, 1.0)
+        _drawDirectionalSprite(client.projectileVisualState.assets.neutronNeedle, startPos, endPos, 0.20, tint[1] * 0.28, tint[2] * 0.60, tint[3] * 1.40, 0.80)
+        _drawLine(VecSub(projectile.position, VecScale(projectile.direction, 3.5)), VecAdd(projectile.position, VecScale(projectile.direction, 0.3)), math.min(1.0, tint[1] * 1.4), math.min(1.0, tint[2] * 1.4), math.min(1.0, tint[3] * 1.2), 1.0)
     end
-    if cameraDistance <= 260 then _pointLight(projectile.position, 0.12, 0.42, 1.0, 9.0) end
+    if cameraDistance <= 260 then _pointLight(projectile.position, tint[1], tint[2], tint[3], 9.0) end
     if cameraDistance <= 500 then
         _emitDistanceEvents(projectile, projectile.lastPosition, projectile.position, "nextPulseDistance", 38.0, 4, _emitNeutronPulse)
     end
@@ -324,9 +327,9 @@ function client.finishProjectileVisual(projectileId, mode, hitX, hitY, hitZ, nx,
     local position = Vec(hitX or 0, hitY or 0, hitZ or 0)
     local impactNormal = _safeNormalize(Vec(nx or 0, ny or 1, nz or 0), Vec(0, 1, 0))
     if projectile.fxProfile == "plasmaProjectile" then
-        _queueImpact({ fxProfile = "plasmaProjectile", position = position, direction = projectile.direction, rightAxis = projectile.rightAxis, upAxis = projectile.upAxis, age = 0, lifetime = 0.65, randomState = projectile.randomState, initialParticlesSpawned = false })
+        _queueImpact({ fxProfile = "plasmaProjectile", fxColor = projectile.fxColor, position = position, direction = projectile.direction, rightAxis = projectile.rightAxis, upAxis = projectile.upAxis, age = 0, lifetime = 0.65, randomState = projectile.randomState, initialParticlesSpawned = false })
     elseif projectile.fxProfile == "neutronProjectile" then
-        _queueImpact({ fxProfile = "neutronProjectile", position = position, direction = projectile.direction, rightAxis = projectile.rightAxis, upAxis = projectile.upAxis, age = 0, lifetime = 0.42, randomState = projectile.randomState, firstRingSpawned = false, secondRingSpawned = false })
+        _queueImpact({ fxProfile = "neutronProjectile", fxColor = projectile.fxColor, position = position, direction = projectile.direction, rightAxis = projectile.rightAxis, upAxis = projectile.upAxis, age = 0, lifetime = 0.42, randomState = projectile.randomState, firstRingSpawned = false, secondRingSpawned = false })
     elseif projectile.fxProfile == "gigaCannonProjectile" then
         _spawnGigaImpact(position, projectile)
     else

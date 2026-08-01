@@ -44,6 +44,38 @@ try {
     $valid = Invoke-Checker
     Assert-True ($valid.ExitCode -eq 0) "accepts the complete weapon system contract"
 
+    $generatedCatalogPath = Join-Path $fixtureMod "script\data\weapons\stellaris_generated_4_4_6.lua"
+    $generatedCatalogText = [IO.File]::ReadAllText($generatedCatalogPath)
+    [IO.File]::WriteAllText(
+        $generatedCatalogPath,
+        $generatedCatalogText.Replace('local _generatedSizes = {', 'local _sizes = {'),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidGeneratedScope = Invoke-Checker
+    Assert-True ($invalidGeneratedScope.ExitCode -eq 1) "rejects generated catalogs that depend on parent include locals"
+    Assert-True ($invalidGeneratedScope.Output -match "self-contained across Teardown include scopes") "reports the generated include scope contract"
+    [IO.File]::WriteAllText(
+        $generatedCatalogPath,
+        $generatedCatalogText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    $tachyonPowerPath = Join-Path $fixtureMod "script\data\weapons\x\tachyon_lance.lua"
+    $tachyonPowerText = [IO.File]::ReadAllText($tachyonPowerPath)
+    [IO.File]::WriteAllText(
+        $tachyonPowerPath,
+        $tachyonPowerText.Replace('powerUse = 260.0', 'powerUse = 261.0'),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidOfficialPower = Invoke-Checker
+    Assert-True ($invalidOfficialPower.ExitCode -eq 1) "rejects a non-official Stellaris weapon power value"
+    Assert-True ($invalidOfficialPower.Output -match "tachyonLance.*power") "reports the official Stellaris power contract"
+    [IO.File]::WriteAllText(
+        $tachyonPowerPath,
+        $tachyonPowerText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
     $shipCatalogPath = Join-Path $fixtureMod "script\data\ships\ship_catalog.lua"
     $shipCatalogText = [IO.File]::ReadAllText($shipCatalogPath)
     [IO.File]::WriteAllText(
@@ -99,6 +131,42 @@ try {
     [IO.File]::WriteAllText(
         $strikeCraftPath,
         $strikeCraftText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    $guidedRuntimePath = Join-Path $fixtureMod "script\weapon\server\guided\runtime.lua"
+    $guidedRuntimeText = [IO.File]::ReadAllText($guidedRuntimePath)
+    [IO.File]::WriteAllText(
+        $guidedRuntimePath,
+        $guidedRuntimeText.Replace(
+            'function server.guidedProjectileDestroyIfDeadAt(index)',
+            'function server.guidedProjectileIgnoreDestroyedAt(index)'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidDestroyedMissile = Invoke-Checker
+    Assert-True ($invalidDestroyedMissile.ExitCode -eq 1) "rejects guided projectiles that ignore zero hull"
+    Assert-True ($invalidDestroyedMissile.Output -match "stop tracking, explode") "reports the destroyed interceptor lifecycle contract"
+    [IO.File]::WriteAllText(
+        $guidedRuntimePath,
+        $guidedRuntimeText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    [IO.File]::WriteAllText(
+        $entryPath,
+        $entryText.Replace(
+            'server.weaponRuntimeDeactivate()',
+            '-- destroyed controls were not deactivated'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidDestroyedShip = Invoke-Checker
+    Assert-True ($invalidDestroyedShip.ExitCode -eq 1) "rejects destroyed ships that keep their weapon runtime active"
+    Assert-True ($invalidDestroyedShip.Output -match "retaining client UI") "reports the destroyed ship control boundary"
+    [IO.File]::WriteAllText(
+        $entryPath,
+        $entryText,
         (New-Object Text.UTF8Encoding($false))
     )
     $invalidShipGlobal = Invoke-Checker

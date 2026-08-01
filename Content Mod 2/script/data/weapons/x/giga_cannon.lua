@@ -11,6 +11,7 @@ weaponDefineProjectile({
     projectileFxVariant = "gigaCannon",
     damageMin = 910,
     damageMax = 2600,
+    powerUse = 260.0,
     cooldown = 3.5,
     maxRange = 750.0,
     projectileSpeed = 560.0,

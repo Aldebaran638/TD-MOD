@@ -499,7 +499,13 @@ local function _hSlotResolveAvoidDirCached(
     return craft.desiredDirection
 end
 
-local function _hSlotApplyBeamDamage(hitPos, hitBody, weaponType, environmentExplosionSize)
+local function _hSlotApplyBeamDamage(
+    hitPos,
+    hitBody,
+    weaponType,
+    environmentExplosionSize,
+    attackerBodyId
+)
     if hitBody ~= nil and hitBody ~= 0 and server.registryShipExists(hitBody) then
         local resolvedDefaultShipType = server.shipContextGetType()
         if not server.registryShipEnsure(hitBody, resolvedDefaultShipType, resolvedDefaultShipType) then
@@ -525,7 +531,8 @@ local function _hSlotApplyBeamDamage(hitPos, hitBody, weaponType, environmentExp
         local result = server.shipDamageApplyWeaponDefinition(
             hitBody,
             weapon,
-            rolledDamage
+            rolledDamage,
+            attackerBodyId
         )
         return result.didHitShield, hitPos, result.impactLayer
     end
@@ -635,7 +642,13 @@ local function _hSlotFireGammaBeam(shipBody, craft, targetCenter, weaponConfig)
         end
     end
 
-    local didHitShield, _, impactLayer = _hSlotApplyBeamDamage(hitPos, hitBody, craft.weaponType, tonumber(weaponConfig.environmentExplosionSize) or 0.1)
+    local didHitShield, _, impactLayer = _hSlotApplyBeamDamage(
+        hitPos,
+        hitBody,
+        craft.weaponType,
+        tonumber(weaponConfig.environmentExplosionSize) or 0.1,
+        shipBody
+    )
 
     local impactExplosionSize = math.max(0.0, tonumber(weaponConfig.beamImpactExplosionSize) or 0.0)
     local impactExplosionImpulse = math.max(0.0, tonumber(weaponConfig.beamImpactExplosionImpulse) or 0.0)
@@ -722,8 +735,14 @@ end
 local function _hSlotCraftExplode(shipBody, craft, weaponConfig)
     _hSlotBumpDebugCounter(shipBody, "craft_explode")
 
-    local pos = craft and craft.pos or nil
+    local bodyId = craft and craft.bodyId or 0
+    local pos = _hSlotGetBodyCenterWorld(bodyId)
+        or (craft and craft.pos or nil)
     local size = tonumber(weaponConfig.collisionExplosionSize) or 0.1
+    if bodyId ~= 0 and IsHandleValid(bodyId) then
+        SetBodyVelocity(bodyId, Vec(0, 0, 0))
+        SetBodyAngularVelocity(bodyId, Vec(0, 0, 0))
+    end
     if pos ~= nil then
         Explosion(pos, size)
         server.netDebugCountExplosion(1)
@@ -753,6 +772,20 @@ local function _hSlotFinishCraft(state, slotIndex, cooldownMode)
     state.activeCrafts = active
     if finishedCraft ~= nil then _hSlotAdjustGlobalCraftCount(-1) end
     if state.hudSync ~= nil then state.hudSync.dirty = true end
+end
+
+local function _hSlotHandleDestroyedCraft(
+    state,
+    shipBody,
+    slotIndex,
+    craft,
+    weaponConfig
+)
+    craft.state = "DISABLED"
+    craft.disabled = true
+    _hSlotSetDebugReason(slotIndex, "craft_destroyed", craft)
+    _hSlotCraftExplode(shipBody, craft, weaponConfig)
+    _hSlotFinishCraft(state, slotIndex)
 end
 
 function server.hSlotStateInit(shipType)
@@ -1029,9 +1062,13 @@ local function _hSlotUpdateReplacementFlight(
     if server.registryShipExists(craft.bodyId)
         and server.registryShipIsBodyDead ~= nil
         and server.registryShipIsBodyDead(craft.bodyId) then
-        _hSlotSetDebugReason(slotIndex, "craft_destroyed", craft)
-        _hSlotCraftExplode(shipBody, craft, weaponConfig)
-        _hSlotFinishCraft(state, slotIndex)
+        _hSlotHandleDestroyedCraft(
+            state,
+            shipBody,
+            slotIndex,
+            craft,
+            weaponConfig
+        )
         return
     end
 
@@ -1135,262 +1172,6 @@ function server.hSlotControlTick(dt)
                 launcher and launcher.config or {},
                 dt
             )
-        end
-    end
-
-    for slotIndex = 1, #launchers do
-        local craft = activeCrafts[slotIndex]
-        if craft ~= nil and false then
-        local launcher = launchers[slotIndex]
-        local weaponConfig = launcher and launcher.config or {}
-        local keepUpdating = true
-
-        if craft.bodyId == nil or craft.bodyId == 0 or not IsHandleValid(craft.bodyId) then
-            _hSlotSetDebugReason(slotIndex, "craft_invalid_handle", craft)
-            _hSlotFinishCraft(state, slotIndex)
-            keepUpdating = false
-        end
-
-        if keepUpdating then
-            local bodyT = GetBodyTransform(craft.bodyId)
-            craft.pos = bodyT.pos
-            local currentVel = GetBodyVelocity(craft.bodyId)
-            local fallbackDir = _hSlotNormalize(TransformToParentVec(bodyT, Vec(0, 0, -1)), craft.forward or Vec(0, 0, -1))
-            craft.forward = _hSlotNormalize(currentVel, fallbackDir)
-        end
-
-        craft.lifeRemain = (craft.lifeRemain or 0.0) - (dt or 0.0)
-        if keepUpdating and craft.lifeRemain <= 0.0 then
-            _hSlotSetDebugReason(slotIndex, "life_timeout_explode", craft)
-            _hSlotCraftExplode(shipBody, craft, weaponConfig)
-            _hSlotFinishCraft(state, slotIndex)
-            keepUpdating = false
-        end
-
-        if keepUpdating then
-            if craft.state ~= "returning" then
-                craft.attackRemain = (craft.attackRemain or (weaponConfig.attackDuration or 10.0)) - (dt or 0.0)
-                if craft.attackRemain <= 0.0 then
-                    craft.state = "returning"
-                    _hSlotSetDebugReason(slotIndex, "attack_window_elapsed_return", craft)
-                end
-            end
-
-            local targetCenter = _hSlotGetBodyCenterWorld(craft.targetBodyId or 0)
-            local targetBodyId = math.floor(craft.targetBodyId or 0)
-            local targetIsStellaris = targetBodyId ~= 0 and server.registryShipExists(targetBodyId)
-            local targetIsDead = false
-
-            if targetIsStellaris and server.registryShipIsBodyDead ~= nil then
-                targetIsDead = server.registryShipIsBodyDead(targetBodyId)
-            end
-
-            if targetIsDead then
-                targetCenter = nil
-            end
-
-            if targetCenter ~= nil then
-                craft.lastTargetCenter = targetCenter
-            elseif not targetIsStellaris then
-                targetCenter = craft.lastTargetCenter
-            end
-
-            if targetIsStellaris and (targetIsDead or targetCenter == nil) then
-                craft.state = "returning"
-            end
-
-            if craft.state == "approach" and targetCenter ~= nil then
-                local currentDist = VecLength(VecSub(craft.pos, targetCenter))
-                local orbitRadius = math.max(2.0, tonumber(weaponConfig.orbitRadius) or 10.0)
-                local entryBand = math.max(1.0, tonumber(weaponConfig.orbitEntryThreshold) or 4.0)
-                if math.abs(currentDist - orbitRadius) <= entryBand then
-                    craft.state = "orbit"
-                end
-            end
-
-            if craft.state == "orbit" and targetCenter ~= nil then
-                local dist = VecLength(VecSub(targetCenter, craft.pos))
-                local orbitRadius = math.max(2.0, tonumber(weaponConfig.orbitRadius) or 10.0)
-                local leaveBand = math.max(2.0, tonumber(weaponConfig.orbitLeaveThreshold) or 8.0)
-                if math.abs(dist - orbitRadius) > leaveBand then
-                    craft.state = "approach"
-                end
-            end
-
-            if craft.state ~= "returning" and targetCenter == nil and targetIsStellaris then
-                craft.state = "returning"
-            end
-
-            if craft.state == "returning" then
-                craft.returnRemain = (craft.returnRemain or (weaponConfig.returnTimeout or 6.0)) - (dt or 0.0)
-                if craft.returnRemain <= 0.0 then
-                    _hSlotSetDebugReason(slotIndex, "return_timeout_explode", craft)
-                    _hSlotCraftExplode(shipBody, craft, weaponConfig)
-                    _hSlotFinishCraft(state, slotIndex)
-                    keepUpdating = false
-                end
-            end
-
-            local desiredDir = craft.forward or Vec(0, 0, -1)
-
-            if keepUpdating and craft.state == "returning" then
-                local recovery = _hSlotResolveRecoveryPoint(shipBody, weaponConfig)
-                local toRecovery = VecSub(recovery, craft.pos)
-                if VecLength(toRecovery) <= math.max(1.0, tonumber(weaponConfig.recoverRadius) or 10.0) then
-                    _hSlotSetDebugReason(slotIndex, "return_recovered_finish", craft)
-                    _hSlotFinishCraft(state, slotIndex, "ready")
-                    keepUpdating = false
-                end
-                if keepUpdating then
-                    desiredDir = _hSlotNormalize(toRecovery, desiredDir)
-                end
-            elseif keepUpdating and craft.state == "orbit" and targetCenter ~= nil then
-                craft.orbitAngle = (craft.orbitAngle or 0.0) + (dt or 0.0) * 1.2
-                local radial = _hSlotNormalize(VecSub(craft.pos, targetCenter), Vec(1, 0, 0))
-                -- 根据切入时选择的方向确定环绕方向
-                local orbitDirection = craft.orbitDirection or "clockwise"
-                local tangent
-                if orbitDirection == "counterclockwise" then
-                    -- 逆时针：使用 radial × up (左手定则)
-                    tangent = _hSlotNormalize(VecCross(radial, Vec(0, 1, 0)), Vec(0, 0, -1))
-                else
-                    -- 顺时针：使用 up × radial (右手定则)
-                    tangent = _hSlotNormalize(VecCross(Vec(0, 1, 0), radial), Vec(0, 0, -1))
-                end
-                local dist = VecLength(VecSub(targetCenter, craft.pos))
-                local radiusErr = ((weaponConfig.orbitRadius or 10.0) - dist)
-                local radialGain = tonumber(weaponConfig.orbitRadialGain) or 0.10
-                desiredDir = _hSlotNormalize(VecAdd(tangent, VecScale(radial, -radiusErr * radialGain)), tangent)
-            elseif keepUpdating then
-                local approachTarget = nil
-                if targetCenter ~= nil then
-                    local orbitRadius = math.max(2.0, tonumber(weaponConfig.orbitRadius) or 10.0)
-                    -- 使用最小转弯切入算法计算最佳切入点和方向
-                    local entryPoint, entryTangent, orbitDirection = _hSlotComputeOptimalEntryPoint(craft.pos, craft.forward or Vec(0, 0, -1), targetCenter, orbitRadius)
-                    approachTarget = entryPoint
-                    -- 保存环绕方向，供环绕阶段使用
-                    craft.orbitDirection = orbitDirection
-                else
-                    approachTarget = VecAdd(craft.pos, VecScale(craft.forward or desiredDir, math.max(8.0, tonumber(weaponConfig.approachDistance) or 14.0)))
-                end
-                desiredDir = _hSlotNormalize(VecSub(approachTarget, craft.pos), desiredDir)
-            end
-
-            if keepUpdating then
-                local avoidDir = _hSlotResolveAvoidDirCached(
-                    shipBody,
-                    craft,
-                    desiredDir,
-                    weaponConfig.avoidProbeDistance or 7.0,
-                    dt
-                )
-                if avoidDir == nil then
-                    avoidDir = _hSlotNormalize(desiredDir, craft.forward or Vec(0, 0, -1))
-                end
-
-                if keepUpdating then
-                    local turnLerp = math.max(0.0, tonumber(weaponConfig.turnLerp) or 4.0)
-                    local blend = math.min(1.0, turnLerp * (dt or 0.0))
-                    local blended = _hSlotNormalize(
-                        VecAdd(VecScale(craft.forward or avoidDir, 1.0 - blend), VecScale(avoidDir, blend)),
-                        avoidDir
-                    )
-                    local speed = math.max(4.0, tonumber(weaponConfig.craftSpeed) or 30.0)
-                    local nextPos = VecAdd(craft.pos, VecScale(blended, speed * (dt or 0.0)))
-
-                    local step = VecSub(nextPos, craft.pos)
-                    local stepLen = VecLength(step)
-                    if stepLen > 0.0001 then
-                        local sweepDir = VecScale(step, 1.0 / stepLen)
-                        local startOffset = math.max(0.0, tonumber(weaponConfig.collisionStartOffset) or 1.2)
-                        local sweepStart = craft.pos
-                        local sweepLen = stepLen
-                        if startOffset > 0.0 then
-                            local clampedOffset = math.min(stepLen * 0.8, startOffset)
-                            sweepStart = VecAdd(craft.pos, VecScale(sweepDir, clampedOffset))
-                            sweepLen = math.max(0.0, stepLen - clampedOffset)
-                        end
-
-                        if sweepLen > 0.0001 then
-                        QueryRequire("physical")
-                        QueryRejectBody(shipBody)
-                        QueryRejectBody(craft.bodyId)
-                        server.netDebugCountRaycast(1)
-                        local hit, hitDist, hitNormal, hitShape = QueryRaycast(sweepStart, sweepDir, sweepLen, weaponConfig.collisionProbeRadius or 0.2)
-                        if hit then
-                            local hitBody = hitShape ~= nil and hitShape ~= 0 and GetShapeBody(hitShape) or 0
-                            _hSlotSetCollisionDebug(hitBody, hitDist)
-
-                            local ignoreDegenerateHit = false
-                            if hitShape == nil or hitShape == 0 then
-                                ignoreDegenerateHit = (tonumber(hitDist) or 0.0) <= 0.05
-                            end
-                            if hitBody == nil or hitBody == 0 or (IsHandleValid ~= nil and not IsHandleValid(hitBody)) then
-                                ignoreDegenerateHit = ignoreDegenerateHit or ((tonumber(hitDist) or 0.0) <= 0.05)
-                            end
-
-                            local ignoreTargetSweep = false
-                            if hitBody ~= 0 and hitBody == math.floor(craft.targetBodyId or 0) then
-                                local targetCenter = _hSlotGetBodyCenterWorld(hitBody)
-                                local targetShieldRadius = _hSlotResolveTargetShieldRadius(hitBody, server.shipContextGetType())
-                                local targetContactRadius = math.max(2.0, targetShieldRadius + 1.0)
-                                if targetCenter ~= nil then
-                                    local distToCenter = VecLength(VecSub(craft.pos, targetCenter))
-                                    if distToCenter > targetContactRadius then
-                                        ignoreTargetSweep = true
-                                    end
-                                end
-                            end
-
-                            if not ignoreDegenerateHit and not ignoreTargetSweep then
-                                local n = hitNormal
-                                if n == nil or VecLength(n) < 0.0001 then
-                                    n = VecScale(sweepDir, -1.0)
-                                end
-                                n = _hSlotNormalize(n, Vec(0, 1, 0))
-
-                                local upBoost = Vec(0, 0.7, 0)
-                                local emergencyDir = _hSlotNormalize(
-                                    VecAdd(VecScale(blended, 0.25), VecAdd(VecScale(n, 1.35), upBoost)),
-                                    n
-                                )
-
-                                craft.state = "returning"
-                                craft.returnRemain = math.max(
-                                    tonumber(craft.returnRemain) or 0.0,
-                                    math.max(0.5, tonumber(weaponConfig.returnTimeout) or 6.0)
-                                )
-                                craft.forward = emergencyDir
-                                craft.pos = VecAdd(craft.pos, VecScale(n, 1.4))
-                                SetBodyVelocity(craft.bodyId, VecScale(emergencyDir, math.max(4.0, tonumber(weaponConfig.craftSpeed) or 30.0)))
-                                _hSlotSetDebugReason(slotIndex, "step_collision_redirect_return", craft)
-                            end
-                        end
-                        end
-                    end
-
-                    if keepUpdating then
-                        craft.forward = blended
-                        craft.pos = nextPos
-                        craft.desiredRot = QuatLookAt(craft.pos, VecAdd(craft.pos, blended))
-                        SetBodyActive(craft.bodyId, true)
-                        SetBodyVelocity(craft.bodyId, VecScale(blended, math.max(4.0, tonumber(weaponConfig.craftSpeed) or 30.0)))
-                        ConstrainOrientation(
-                            craft.bodyId,
-                            0,
-                            GetBodyTransform(craft.bodyId).rot,
-                            craft.desiredRot,
-                            weaponConfig.turnRate or 0.0,
-                            weaponConfig.turnImpulse or 0.0
-                        )
-
-                        if craft.state ~= "returning" then
-                            _hSlotUpdateBeamFire(shipBody, craft, targetCenter, weaponConfig, dt)
-                        end
-                    end
-                end
-            end
-        end
         end
     end
 

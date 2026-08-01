@@ -113,7 +113,8 @@ end
 local function _pdRollDamage(weapon)
     local minimum = math.max(0.0, tonumber((weapon or {}).damageMin) or 0.0)
     local maximum = math.max(minimum, tonumber((weapon or {}).damageMax) or minimum)
-    return minimum + (maximum - minimum) * math.random()
+    local officialDamage = minimum + (maximum - minimum) * math.random()
+    return officialDamage
 end
 
 local function _pdSendFx(role, origin, destination, duration)
@@ -128,19 +129,20 @@ local function _pdSendFx(role, origin, destination, duration)
     )
 end
 
-local function _pdApplyDamage(targetBody, weapon)
+local function _pdApplyDamage(targetBody, weapon, attackerBody)
     if targetBody == 0 or not IsHandleValid(targetBody)
         or not server.registryShipExists(targetBody)
         or server.registryShipIsBodyDead(targetBody) then return false end
     local result = server.shipDamageApplyWeaponDefinition(
         targetBody,
         weapon,
-        _pdRollDamage(weapon)
+        _pdRollDamage(weapon),
+        attackerBody
     )
     return result.didDamage
 end
 
-local function _pdFireFlak(state, origin, target, weapon)
+local function _pdFireFlak(state, origin, target, weapon, attackerBody)
     local flightTime = _pdInterceptTime(
         VecSub(target.center, origin),
         target.velocity,
@@ -155,14 +157,20 @@ local function _pdFireFlak(state, origin, target, weapon)
         aimPosition = predicted,
         remain = flightTime,
         weapon = weapon,
+        attackerBody = attackerBody,
         hitRadius = target.class == "strike_craft" and 6.0 or 3.5,
     }
     _pdSendFx("flak", origin, predicted, flightTime)
 end
 
-local function _pdFireEnergy(origin, target, weapon)
-    _pdApplyDamage(target.bodyId, weapon)
-    _pdSendFx("missile", origin, target.center, 0.10)
+local function _pdFireEnergy(origin, target, weapon, attackerBody)
+    _pdApplyDamage(target.bodyId, weapon, attackerBody)
+    _pdSendFx(
+        tostring((weapon or {}).pointDefenseFxRole or "laser"),
+        origin,
+        target.center,
+        0.10
+    )
 end
 
 local function _pdUpdatePending(state, dt)
@@ -174,7 +182,7 @@ local function _pdUpdatePending(state, dt)
             if center ~= nil
                 and VecLength(VecSub(center, shot.aimPosition))
                     <= (tonumber(shot.hitRadius) or 3.5) then
-                _pdApplyDamage(shot.targetBody, shot.weapon)
+                _pdApplyDamage(shot.targetBody, shot.weapon, shot.attackerBody)
             end
             table.remove(state.pendingShots, index)
         end
@@ -241,9 +249,9 @@ function server.pointDefenseTick(dt)
             local target = _pdFindTarget(shipBody, origin, mount.weapon)
             if target ~= nil and _pdHasLineOfSight(shipBody, origin, target) then
                 if tostring(mount.weapon.pointDefenseRole or "") == "flak" then
-                    _pdFireFlak(state, origin, target, mount.weapon)
+                    _pdFireFlak(state, origin, target, mount.weapon, shipBody)
                 else
-                    _pdFireEnergy(origin, target, mount.weapon)
+                    _pdFireEnergy(origin, target, mount.weapon, shipBody)
                 end
                 mount.cooldownRemain = math.max(
                     0.05,

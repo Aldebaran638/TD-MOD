@@ -13,7 +13,8 @@ function client.playMissileImpactFx(weaponType, hitX, hitY, hitZ, nx, ny, nz, im
     local definition = (weaponData or {})[tostring(weaponType or "")] or {}
     local torpedo = tostring(definition.projectileFxVariant or "") == "devastatorTorpedo"
     local pos, normal = Vec(hitX or 0, hitY or 0, hitZ or 0), _normalize(Vec(nx or 0, ny or 1, nz or 0))
-    local r, g, b = torpedo and 1.0 or 0.25, torpedo and 0.32 or 0.75, torpedo and 0.06 or 1.0
+    local tint = definition.fxColor or (torpedo and { 1.0, 0.32, 0.06 } or { 0.25, 0.75, 1.0 })
+    local r, g, b = tint[1], tint[2], tint[3]
     if impactLayer == "shield" then r, g, b = 0.18, 0.88, 1.0 end
     if impactLayer == "shield" and math.floor(hitTargetBodyId or 0) ~= 0 then
         client.playProjectileShieldImpactFx(
