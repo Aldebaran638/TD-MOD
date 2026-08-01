@@ -388,6 +388,51 @@ local function _drawHeader()
     if _button(_panelWidth - 54, 14, 38, 38, "X", false, true) then
         _close()
     end
+
+    -- Kept deliberately identical to the verified footer-position probe:
+    -- a single direct draw in the header pass, without nested UI helpers.
+    UiPush()
+        UiTranslate(772, 884)
+        UiColor(0.03, 0.12, 0.14, 1.0)
+        UiRect(170, 38)
+        UiAlign("center middle")
+        UiTranslate(85, 19)
+        _text("恢复默认 / RESET", 14, 0.90, 0.98, 0.96, 1.0)
+    UiPop()
+    UiPush()
+        UiTranslate(772, 884)
+        if UiIsMouseInRect(170, 38) and InputPressed("lmb") then
+            client.weaponConfigUiState.pendingHeaderFooterAction = "reset"
+        end
+    UiPop()
+    UiPush()
+        UiTranslate(954, 884)
+        UiColor(0.06, 0.34, 0.30, 1.0)
+        UiRect(170, 38)
+        UiAlign("center middle")
+        UiTranslate(85, 19)
+        _text("保存设计 / SAVE", 14, 0.90, 0.98, 0.96, 1.0)
+    UiPop()
+    UiPush()
+        UiTranslate(954, 884)
+        if UiIsMouseInRect(170, 38) and InputPressed("lmb") then
+            client.weaponConfigUiState.pendingHeaderFooterAction = "save"
+        end
+    UiPop()
+    UiPush()
+        UiTranslate(1136, 884)
+        UiColor(0.03, 0.12, 0.14, 1.0)
+        UiRect(130, 38)
+        UiAlign("center middle")
+        UiTranslate(65, 19)
+        _text("关闭 / CLOSE", 14, 0.90, 0.98, 0.96, 1.0)
+    UiPop()
+    UiPush()
+        UiTranslate(1136, 884)
+        if UiIsMouseInRect(130, 38) and InputPressed("lmb") then
+            client.weaponConfigUiState.pendingHeaderFooterAction = "close"
+        end
+    UiPop()
 end
 
 local function _drawShipSidebar(configuration)
@@ -966,68 +1011,6 @@ local function _resetDraft()
     _ensureDraft()
 end
 
-local function _drawFooter(configuration)
-    local state = client.weaponConfigUiState
-    local footerWidth = _panelWidth - 28
-    local buttonY = _footerY + 48
-    local resetX = footerWidth - 494
-    local saveX = resetX + 182
-    local cancelX = saveX + 182
-
-    UiPush()
-        UiTranslate(14, _footerY)
-        UiColor(0.010, 0.045, 0.048, 1)
-        UiRect(footerWidth, 104)
-        UiColor(0.10, 0.48, 0.42, 1)
-        UiRect(footerWidth, 2)
-        UiTranslate(16, 16)
-        _text(state.message or "", 13, 0.52, 0.74, 0.69, 1)
-    UiPop()
-
-    local designValid = ((_componentProfile(configuration).energy or {}).valid)
-    if _button(
-        14 + resetX,
-        buttonY,
-        170,
-        38,
-        "恢复默认 / RESET",
-        false,
-        not state.pending
-    ) then
-        _resetDraft()
-        configuration = _ensureDraft() or configuration
-        designValid = ((_componentProfile(configuration).energy or {}).valid)
-    end
-    if _button(
-        14 + saveX,
-        buttonY,
-        170,
-        38,
-        "保存设计 / SAVE",
-        true,
-        not state.pending and designValid
-    ) then
-        client.weaponConfiguratorSaveTemplate(
-            state.shipType,
-            state.configurationId,
-            _copyLoadout(state.loadout),
-            _copyComponentLoadout(state.componentLoadout)
-        )
-    end
-    if _button(
-        14 + cancelX,
-        buttonY,
-        130,
-        38,
-        "关闭 / CLOSE",
-        false,
-        not state.pending
-    ) then
-        _close()
-    end
-    return configuration
-end
-
 function client.weaponConfigUiDraw()
     local state = client.weaponConfigUiState
     if not state.open then return end
@@ -1057,6 +1040,22 @@ function client.weaponConfigUiDraw()
         UiRectOutline(_panelWidth, _panelHeight, 2)
         _drawHeader()
 
+        local action = state.pendingHeaderFooterAction
+        state.pendingHeaderFooterAction = nil
+        if action == "reset" then
+            _resetDraft()
+            configuration = _ensureDraft() or configuration
+        elseif action == "save" then
+            client.weaponConfiguratorSaveTemplate(
+                state.shipType,
+                state.configurationId,
+                _copyLoadout(state.loadout),
+                _copyComponentLoadout(state.componentLoadout)
+            )
+        elseif action == "close" then
+            _close()
+        end
+
         UiTranslate(14, 88)
         if state.selectedDefenseType ~= "" then
             _drawDefenseSidebar(state.selectedDefenseType)
@@ -1074,12 +1073,6 @@ function client.weaponConfigUiDraw()
             configuration,
             centerX + centerWidth + _contentGap
         )
-
-        -- Return to panel coordinates before drawing the fixed action bar.
-        UiPush()
-            UiTranslate(-14, -88)
-            configuration = _drawFooter(configuration)
-        UiPop()
 
         if state.framePickerOpen then
             UiPush()
