@@ -41,8 +41,7 @@ local function _getBodyVoxelCount(body)
     return nil
 end
 
--- 移动类模块：始终给指定 body 施加竖直向上的力，力大小 = body 质量
--- 在 Teardown 中使用冲量实现：impulse = force * dt
+-- Compensate the configured fraction of the scene gravity at the center of mass.
 function server.bodyMassUpwardMoveTick(dt)
     dt = dt or 0
     if dt <= 0 then
@@ -90,15 +89,14 @@ function server.bodyMassUpwardMoveTick(dt)
             local comLocal = GetBodyCenterOfMass(body)
             local comWorld = TransformToParentPoint(t, comLocal)
 
-            -- 悬浮抵消重力：F = m * g（Teardown 近似 g=10）
             local flight = server.shipContextGetDefinition().flightProfile or {}
-            local upwardForce = Vec(
-                0,
-                mass * (tonumber(flight.gravityCompensation) or 10.0),
-                0
-            )
-            local impulse = VecScale(upwardForce, dt)
-            ApplyBodyImpulse(body, comWorld, impulse)
+            local configuredCompensation = tonumber(flight.gravityCompensation) or 10.0
+            local compensationScale = configuredCompensation / 10.0
+            local gravity = GetGravity() or Vec(0, -10, 0)
+            if VecLength(gravity) > 0.0001 and compensationScale > 0.0 then
+                local compensationForce = VecScale(gravity, -mass * compensationScale)
+                ApplyBodyImpulse(body, comWorld, VecScale(compensationForce, dt))
+            end
         end
     end
 end
