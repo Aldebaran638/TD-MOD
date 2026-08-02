@@ -16,8 +16,16 @@
 ---@diagnostic disable: undefined-global
 ---@diagnostic disable: duplicate-set-field
 
-local configuredShipType = GetStringParam("shiptype", "enigmaticCruiser")
+local configuredShipType = GetStringParam("shiptype", "")
+local configuredBodyTag = GetStringParam("bodytag", "")
 local destroyedControlsDisabled = false
+
+local function requireShipParameter(name, value)
+    if value == nil or value == "" then
+        error("missing required ship script parameter: " .. name)
+    end
+    return value
+end
 
 local function disableDestroyedControls()
     if destroyedControlsDisabled then return end
@@ -41,6 +49,8 @@ end
 -- 服务端初始化
 function server.init()
     destroyedControlsDisabled = false
+    requireShipParameter("shiptype", configuredShipType)
+    requireShipParameter("bodytag", configuredBodyTag)
     -- -- 当前武器状
     -- -- "idle"      空闲
     -- -- "charging"  充能
@@ -57,7 +67,7 @@ function server.init()
     -- server.launchTime = 0.2
 
     -- 初始化当前飞船
-    local shipBody = server.shipServerInit(configuredShipType)
+    local shipBody = server.shipServerInit(configuredShipType, configuredBodyTag)
     server.weaponRuntimeInit(configuredShipType)
     server.shipRuntimeSyncMainWeapon(shipBody, true)
     server.shipWeaponSyncConfiguration(configuredShipType)

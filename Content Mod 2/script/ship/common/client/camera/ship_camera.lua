@@ -75,6 +75,7 @@ function client.shipCameraApplyProfile()
     camera.rmbLongPressSeconds = tonumber(profile.rmbLongPressSeconds)
         or camera.rmbLongPressSeconds
     camera.fov = tonumber(profile.fov) or camera.fov
+
 end
 
 local function clamp(v, minValue, maxValue)

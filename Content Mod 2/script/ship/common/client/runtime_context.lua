@@ -15,6 +15,7 @@ function client.shipContextInit(shipType, bodyTag)
         shipType = resolvedType,
         definition = definition,
         bodyId = body,
+        bodyTag = tostring(bodyTag or "stellarisShip"),
     }
     return _shipContext
 end

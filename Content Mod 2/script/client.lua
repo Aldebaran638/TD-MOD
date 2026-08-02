@@ -7,8 +7,12 @@ client = client or {}
 #include "weapon/client/bootstrap.lua"
 
 function client.init()
-    local shipType = GetStringParam("shiptype", "enigmaticCruiser")
-    client.shipClientInit(shipType)
+    local shipType = GetStringParam("shiptype", "")
+    local bodyTag = GetStringParam("bodytag", "")
+    if shipType == "" or bodyTag == "" then
+        error("missing required ship script parameter: shiptype/bodytag")
+    end
+    client.shipClientInit(shipType, bodyTag)
     client.weaponClientInit()
 end
 

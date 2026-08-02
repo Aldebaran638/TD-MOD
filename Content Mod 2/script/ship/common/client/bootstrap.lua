@@ -20,8 +20,8 @@
 
 client = client or {}
 
-function client.shipClientInit(shipType)
-    local context = client.shipContextInit(shipType, "stellarisShip")
+function client.shipClientInit(shipType, bodyTag)
+    local context = client.shipContextInit(shipType, bodyTag)
     client.shipCameraApplyProfile()
     client.shipRuntimeStateInit()
     client.shipControlSnapshotInit(context.bodyId)

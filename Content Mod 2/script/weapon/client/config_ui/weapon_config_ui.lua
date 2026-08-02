@@ -228,7 +228,12 @@ end
 local function _open()
     local state = client.weaponConfigUiState
     local available = _configurableShipTypes()
-    local currentType = tostring(client.shipContextGetType() or "")
+    -- The configuration UI also runs from the map-level content host, where
+    -- ship runtime context is intentionally unavailable.
+    local currentType = ""
+    if client.shipContextGetType ~= nil then
+        currentType = tostring(client.shipContextGetType() or "")
+    end
     local currentDefinition = (shipTypeRegistryData or {})[currentType] or {}
     if currentDefinition.playerConfigurable ~= false
         and #(currentDefinition.slotConfigurations or {}) > 0 then

@@ -45,9 +45,9 @@ function server.shipServerFinalizeDestroyed()
     state.destroyedFinalized = true
 end
 
-function server.shipServerInit(shipType)
+function server.shipServerInit(shipType, bodyTag)
     server.shipServerLifecycleState.destroyedFinalized = false
-    server.shipInitInit(shipType)
+    server.shipInitInit(shipType, bodyTag)
     local body = server.shipContextGetBody()
     server.runtimeStateInit(body, shipType, shipType)
     -- Weapon slot state is not part of the shared ship bootstrap.  Interceptor

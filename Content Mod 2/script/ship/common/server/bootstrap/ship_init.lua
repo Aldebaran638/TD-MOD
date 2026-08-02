@@ -29,8 +29,8 @@ end
 
 -- ============ 规范化的模块接口 ============
 
-function server.shipInitInit(shipType)
-    server.shipContextInit(shipType, "stellarisShip")
+function server.shipInitInit(shipType, bodyTag)
+    server.shipContextInit(shipType, bodyTag)
     SetBool("StellarisShips/debug/inputTestEnabled", false)
     server.shipDestructibilityInit(server.shipContextGetBody())
     _registerCurrentShip(shipType)

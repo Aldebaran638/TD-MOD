@@ -23,3 +23,8 @@
 ```
 
 > Codex 实际通过仓库根目录的 `AGENTS.md` 自动加载这些要求；本文件是 `.codex` 内的等效配置副本。
+
+## Teardown 官方特殊头文件
+
+- `#include "script/include/common.lua"` 是 Teardown 官方提供的特殊头文件。
+- 该文件不应当在模组目录中查找、创建、复制或作为缺失依赖处理。
