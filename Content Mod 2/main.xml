@@ -1,44 +1,71 @@
 <scene version="2.0.1" shadowVolume="200 50 200">
-	<environment template="night"/>
-	<script file="main.lua"/>
-	<script file="sandbox.lua"/>
-	<!-- weapon-configurator-host: Global Mod/main.lua -->
-	<voxbox pos="-25 0 -25" size="500 1 500"/>
-	<voxbox pos="-1 0.1 -5" size="20 20 2" material="wood" color="0.7 0.5 0.3"/>
-	<spawnpoint pos="-10.7 1.5 17.6" rot="0 180 0"/>
-	<script pos="0.0 6.5 -22.1" file="MOD/script/shipMain.lua">
-		<vehicle name="ship" tags="stellarisShip" pos="0.0 0.0 0.0" driven="false" sound="electric1 0" spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
-			<body tags="stellarisShip" dynamic="true">
-				<vox pos="0.0 0.0 0.0" rot="0 0 0" file="bomb.vox"/>
-			</body>
-			<location name="Player" tags="player" pos="0.0 -3.5 -0.3" rot="0 180 180"/>
-			<location name="exit" tags="exit" pos="0.0 0.0 0.0"/>
-		</vehicle>
-	</script>
-	<!-- The instance transform preserves the former in-scene ship position and heading. -->
-	<instance pos="-15.1 7.2 -4.4" rot="0 180 0" file="MOD/prefabs/ships/enigma_battlecruiser.xml"/>
-	<script pos="0.0 6.5 -22.1" file="MOD/script/shipMain.lua">
-		<body tags="stellarisShip" dynamic="true">
-			<vox pos="0.0 0.0 0.0" rot="0 0 0" file="MOD/vox/WUJINHAO.vox"/>
-		</body>
-	</script>
-	<script pos="18.0 8.0 8.0" file="MOD/script/shipMain.lua" shiptype="titan">
-		<vehicle name="titan" tags="stellarisShip" pos="0.0 0.0 0.0" driven="true" sound="electric1 0" spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
-			<body name="body" tags="stellarisShip" pos="0.0 0.0 0.0" dynamic="true">
-				<vox pos="0.0 0.0 0.0" file="MOD/vox/Titan.vox"/>
-			</body>
-			<location name="Player" tags="player" pos="0.0 -0.2 9.1" rot="0 180 180"/>
-			<location name="exit" tags="exit" pos="0.0 3.8 8.6"/>
-		</vehicle>
-	</script>
-	<script pos="-18.0 8.0 8.0" file="MOD/script_riddle_escort/shipMain.lua">
-		<vehicle name="riddle_escort" tags="stellarisShip" pos="0.0 0.0 0.0" driven="false" sound="electric1 0" spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
-			<body name="body" tags="stellarisShip" pos="0.0 0.0 0.0" dynamic="true">
-				<vox pos="0.0 0.0 0.0" file="MOD/vox/escort.vox"/>
-			</body>
-			<location name="Player" tags="player" pos="0.0 -0.1 -0.3" rot="0 180 180"/>
-			<location name="exit" tags="exit" pos="0.0 0.2 -2.6"/>
-		</vehicle>
-	</script>
+    <environment template="night"/>
+    <script file="main.lua"/>
+    <script file="sandbox.lua" param0="weather=false"/>
+    <!-- weapon-configurator-host: Global Mod/main.lua -->
+
+    <!-- Engine-level fallback outside the scripted 3.6/4.2 km soft boundary. -->
+    <boundary name="Space Battlefield Boundary">
+        <vertex pos="-5000 -5000"/>
+        <vertex pos="5000 -5000"/>
+        <vertex pos="5000 5000"/>
+        <vertex pos="-5000 5000"/>
+    </boundary>
+
+    <!-- Keep static celestial entities in the scene root so the engine loads them
+         with the level instead of relying on a nested prefab instance. -->
+    <group name="Space Battlefield Celestials">
+        <body name="G-Type Star" tags="celestial star celestialId=star_g_yellow" pos="2900 700 -2200" dynamic="false">
+            <vox name="G-Type Star Shell" tags="celestial star" template="unbreakable" pos="-112 -112 112" collide="false" file="MOD/vox/celestial/star_g_yellow.vox" scale="20"/>
+            <light name="G-Type Star Light" color="1.0 0.56 0.18" scale="900" size="80" unshadowed="1" glare="1" fogscale="0.15"/>
+        </body>
+
+        <body name="Continental Planet" tags="celestial planet celestialId=planet_continental" pos="-900 240 -620" dynamic="false">
+            <vox name="Continental Planet Shell" tags="celestial planet" template="unbreakable" pos="-48 -48 48" collide="false" file="MOD/vox/celestial/planet_continental.vox" scale="20"/>
+        </body>
+
+        <body name="Desert Planet" tags="celestial planet celestialId=planet_desert" pos="-2700 -500 1900" dynamic="false">
+            <vox name="Desert Planet Shell" tags="celestial planet" template="unbreakable" pos="-52 -52 52" collide="false" file="MOD/vox/celestial/planet_desert.vox" scale="20"/>
+        </body>
+
+        <body name="Ringed Gas Giant" tags="celestial planet celestialId=planet_gas_giant_ringed" pos="420 180 -320" rot="12 28 -8" dynamic="false">
+            <vox name="Ringed Gas Giant Shell" tags="celestial planet" template="unbreakable" pos="-96 -60 96" collide="true" file="MOD/vox/celestial/planet_gas_giant_ringed.vox" scale="20"/>
+        </body>
+
+        <body name="Frozen Planet" tags="celestial planet celestialId=planet_frozen" pos="-2100 1100 -2600" dynamic="false">
+            <vox name="Frozen Planet Shell" tags="celestial planet" template="unbreakable" pos="-56 -56 56" collide="false" file="MOD/vox/celestial/planet_frozen.vox" scale="20"/>
+        </body>
+
+        <body name="Volcanic Planet" tags="celestial planet celestialId=planet_volcanic" pos="1450 -400 500" dynamic="false">
+            <vox name="Volcanic Planet Shell" tags="celestial planet" template="unbreakable" pos="-60 -60 60" collide="false" file="MOD/vox/celestial/planet_volcanic.vox" scale="20"/>
+        </body>
+
+        <body name="Ocean Planet" tags="celestial planet celestialId=planet_ocean" pos="850 320 1200" dynamic="false">
+            <vox name="Ocean Planet Shell" tags="celestial planet" template="unbreakable" pos="-64 -64 64" collide="false" file="MOD/vox/celestial/planet_ocean.vox" scale="20"/>
+        </body>
+    </group>
+    <spawnpoint pos="0 64 13" rot="0 180 0"/>
+
+    <instance pos="-220 80 160" rot="0 180 0" file="MOD/prefabs/ships/enigma_battlecruiser.xml"/>
+
+    <script pos="0 60 0" file="MOD/script/shipMain.lua" shiptype="titan">
+        <vehicle name="titan" tags="stellarisShip" driven="false" sound="electric1 0" spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
+            <body name="body" tags="stellarisShip" dynamic="true">
+                <vox file="MOD/vox/Titan.vox"/>
+            </body>
+            <location name="Player" tags="player" pos="0 -0.2 9.1" rot="0 180 180"/>
+            <location name="exit" tags="exit" pos="0 3.8 8.6"/>
+        </vehicle>
+    </script>
+
+    <script pos="220 60 160" file="MOD/script_riddle_escort/shipMain.lua">
+        <vehicle name="riddle_escort" tags="stellarisShip" driven="false" sound="electric1 0" spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
+            <body name="body" tags="stellarisShip" dynamic="true">
+                <vox file="MOD/vox/escort.vox"/>
+            </body>
+            <location name="Player" tags="player" pos="0 -0.1 -0.3" rot="0 180 180"/>
+            <location name="exit" tags="exit" pos="0 0.2 -2.6"/>
+        </vehicle>
+    </script>
 </scene>
 

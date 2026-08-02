@@ -187,6 +187,9 @@ function client.shipHealthBarDraw()
     local bodyFillW = (maxBody > 0) and (bodyW * _clamp(state.displayBody / maxBody, 0, 1)) or 0
     local armorFillW = (maxArmor > 0) and (armorW * _clamp(state.displayArmor / maxArmor, 0, 1)) or 0
     local shieldFillW = (maxShield > 0) and (shieldW * _clamp(state.displayShield / maxShield, 0, 1)) or 0
+    local displayTotal = (tonumber(state.displayBody) or 0) +
+        (tonumber(state.displayArmor) or 0) +
+        (tonumber(state.displayShield) or 0)
 
     UiPush()
         UiAlign("left top")
@@ -235,6 +238,10 @@ function client.shipHealthBarDraw()
         UiTranslate(0, -18)
         UiFont("regular.ttf", 14)
         UiColor(0.82, 0.94, 0.94, 0.95)
-        UiText(string.format("TOTAL %d / %d", math.floor(bodyHP + armorHP + shieldHP + 0.5), math.floor(maxTotal + 0.5)))
+        UiText(string.format(
+            "TOTAL %d / %d",
+            math.floor(displayTotal + 0.5),
+            math.floor(maxTotal + 0.5)
+        ))
     UiPop()
 end

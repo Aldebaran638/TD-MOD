@@ -12,6 +12,16 @@
           <location name="muzzle" tags="strikeCraftMuzzle" pos="0 0 -2.61"/>
           <location name="engineLeft" tags="strikeCraftEngineLeft" pos="-0.70 -0.15 2.58"/>
           <location name="engineRight" tags="strikeCraftEngineRight" pos="0.70 -0.15 2.58"/>
+          <light
+            name="Strike Craft Running Light"
+            tags="strikeCraftRunningLight"
+            pos="0 -0.10 2.40"
+            color="0.12 0.52 1.0"
+            scale="50"
+            size="0.4"
+            unshadowed="0.5"
+            glare="1.0"
+          />
         </body>
         <location name="Player" tags="player" pos="0 0.2 0" rot="0 180 0"/>
         <location name="exit" tags="exit" pos="0 -0.7 1.8"/>

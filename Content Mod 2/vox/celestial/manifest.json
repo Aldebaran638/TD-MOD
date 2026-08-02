@@ -1,0 +1,355 @@
+{
+    "schemaVersion":  1,
+    "generator":  "Content Mod 2/tools/build-space-celestials.ps1",
+    "coordinateConvention":  {
+                                 "logicalAxes":  "Teardown x/y/z",
+                                 "storedMagicaAxes":  "x/logical-z/logical-y",
+                                 "defaultVoxelMeters":  0.1,
+                                 "suggestedXmlScale":  20,
+                                 "voxelMetersAtSuggestedScale":  2
+                             },
+    "design":  {
+                   "bodyCount":  7,
+                   "starCount":  1,
+                   "planetCount":  6,
+                   "minimumPlanetDiameterMeters":  96,
+                   "hollowShells":  true,
+                   "randomNoiseUsed":  false,
+                   "planetsEmissive":  false,
+                   "starEmissive":  true
+               },
+    "backdrop":  {
+                     "file":  "MOD/gfx/space/nebula_backdrop.png",
+                     "width":  1024,
+                     "height":  1024,
+                     "maximumAlpha":  72,
+                     "edgeAlphaMaximum":  0,
+                     "transparentBackground":  true,
+                     "starsIncluded":  false,
+                     "deterministic":  true
+                 },
+    "bodies":  [
+                   {
+                       "id":  "star_g_yellow",
+                       "displayName":  "G-type yellow star",
+                       "kind":  "star",
+                       "file":  "MOD/vox/celestial/star_g_yellow.vox",
+                       "voxVersion":  200,
+                       "logicalSizeVoxels":  [
+                                                 112,
+                                                 112,
+                                                 112
+                                             ],
+                       "bodyDiameterVoxels":  112,
+                       "bodyDiameterMetersAtSuggestedScale":  224,
+                       "fullModelDiameterMetersAtSuggestedScale":  224,
+                       "shellThicknessVoxels":  2,
+                       "ringed":  false,
+                       "paletteColorCount":  4,
+                       "emissivePaletteIndices":  [
+                                                      1,
+                                                      2,
+                                                      3,
+                                                      4
+                                                  ],
+                       "voxelCount":  75200,
+                       "fillFraction":  0.053526,
+                       "connectedComponents":  1,
+                       "largestComponentVoxelCount":  75200,
+                       "centerEmpty":  true,
+                       "hollowCoreEmpty":  true,
+                       "hollowCoreRadiusVoxels":  51.5,
+                       "chunks":  [
+                                      "SIZE",
+                                      "XYZI",
+                                      "nTRN",
+                                      "nGRP",
+                                      "nTRN",
+                                      "nSHP",
+                                      "LAYR",
+                                      "RGBA",
+                                      "MATL",
+                                      "MATL",
+                                      "MATL",
+                                      "MATL"
+                                  ],
+                       "suggestedXmlScale":  20,
+                       "suggestedXmlVoxelOffset":  [
+                                                       -112,
+                                                       -112,
+                                                       112
+                                                   ],
+                       "suggestedXml":  "\u003cvox tags=\"celestial unbreakable\" collide=\"false\" file=\"MOD/vox/celestial/star_g_yellow.vox\" scale=\"20\"/\u003e"
+                   },
+                   {
+                       "id":  "planet_continental",
+                       "displayName":  "Continental world",
+                       "kind":  "continental",
+                       "file":  "MOD/vox/celestial/planet_continental.vox",
+                       "voxVersion":  200,
+                       "logicalSizeVoxels":  [
+                                                 48,
+                                                 48,
+                                                 48
+                                             ],
+                       "bodyDiameterVoxels":  48,
+                       "bodyDiameterMetersAtSuggestedScale":  96,
+                       "fullModelDiameterMetersAtSuggestedScale":  96,
+                       "shellThicknessVoxels":  2,
+                       "ringed":  false,
+                       "paletteColorCount":  7,
+                       "emissivePaletteIndices":  [
+
+                                                  ],
+                       "voxelCount":  12616,
+                       "fillFraction":  0.114077,
+                       "connectedComponents":  1,
+                       "largestComponentVoxelCount":  12616,
+                       "centerEmpty":  true,
+                       "hollowCoreEmpty":  true,
+                       "hollowCoreRadiusVoxels":  19.5,
+                       "chunks":  [
+                                      "SIZE",
+                                      "XYZI",
+                                      "nTRN",
+                                      "nGRP",
+                                      "nTRN",
+                                      "nSHP",
+                                      "LAYR",
+                                      "RGBA"
+                                  ],
+                       "suggestedXmlScale":  20,
+                       "suggestedXmlVoxelOffset":  [
+                                                       -48,
+                                                       -48,
+                                                       48
+                                                   ],
+                       "suggestedXml":  "\u003cvox tags=\"celestial unbreakable\" collide=\"false\" file=\"MOD/vox/celestial/planet_continental.vox\" scale=\"20\"/\u003e"
+                   },
+                   {
+                       "id":  "planet_desert",
+                       "displayName":  "Desert world",
+                       "kind":  "desert",
+                       "file":  "MOD/vox/celestial/planet_desert.vox",
+                       "voxVersion":  200,
+                       "logicalSizeVoxels":  [
+                                                 52,
+                                                 52,
+                                                 52
+                                             ],
+                       "bodyDiameterVoxels":  52,
+                       "bodyDiameterMetersAtSuggestedScale":  104,
+                       "fullModelDiameterMetersAtSuggestedScale":  104,
+                       "shellThicknessVoxels":  2,
+                       "ringed":  false,
+                       "paletteColorCount":  6,
+                       "emissivePaletteIndices":  [
+
+                                                  ],
+                       "voxelCount":  15176,
+                       "fillFraction":  0.107931,
+                       "connectedComponents":  1,
+                       "largestComponentVoxelCount":  15176,
+                       "centerEmpty":  true,
+                       "hollowCoreEmpty":  true,
+                       "hollowCoreRadiusVoxels":  21.5,
+                       "chunks":  [
+                                      "SIZE",
+                                      "XYZI",
+                                      "nTRN",
+                                      "nGRP",
+                                      "nTRN",
+                                      "nSHP",
+                                      "LAYR",
+                                      "RGBA"
+                                  ],
+                       "suggestedXmlScale":  20,
+                       "suggestedXmlVoxelOffset":  [
+                                                       -52,
+                                                       -52,
+                                                       52
+                                                   ],
+                       "suggestedXml":  "\u003cvox tags=\"celestial unbreakable\" collide=\"false\" file=\"MOD/vox/celestial/planet_desert.vox\" scale=\"20\"/\u003e"
+                   },
+                   {
+                       "id":  "planet_gas_giant_ringed",
+                       "displayName":  "Ringed gas giant",
+                       "kind":  "gas_giant_ringed",
+                       "file":  "MOD/vox/celestial/planet_gas_giant_ringed.vox",
+                       "voxVersion":  200,
+                       "logicalSizeVoxels":  [
+                                                 96,
+                                                 60,
+                                                 96
+                                             ],
+                       "bodyDiameterVoxels":  60,
+                       "bodyDiameterMetersAtSuggestedScale":  120,
+                       "fullModelDiameterMetersAtSuggestedScale":  192,
+                       "shellThicknessVoxels":  2,
+                       "ringed":  true,
+                       "paletteColorCount":  8,
+                       "emissivePaletteIndices":  [
+
+                                                  ],
+                       "voxelCount":  28080,
+                       "fillFraction":  0.050781,
+                       "connectedComponents":  1,
+                       "largestComponentVoxelCount":  28080,
+                       "centerEmpty":  true,
+                       "hollowCoreEmpty":  true,
+                       "hollowCoreRadiusVoxels":  25.5,
+                       "chunks":  [
+                                      "SIZE",
+                                      "XYZI",
+                                      "nTRN",
+                                      "nGRP",
+                                      "nTRN",
+                                      "nSHP",
+                                      "LAYR",
+                                      "RGBA"
+                                  ],
+                       "suggestedXmlScale":  20,
+                       "suggestedXmlVoxelOffset":  [
+                                                       -96,
+                                                       -60,
+                                                       96
+                                                   ],
+                       "suggestedXml":  "\u003cvox tags=\"celestial unbreakable\" collide=\"false\" file=\"MOD/vox/celestial/planet_gas_giant_ringed.vox\" scale=\"20\"/\u003e"
+                   },
+                   {
+                       "id":  "planet_frozen",
+                       "displayName":  "Frozen world",
+                       "kind":  "frozen",
+                       "file":  "MOD/vox/celestial/planet_frozen.vox",
+                       "voxVersion":  200,
+                       "logicalSizeVoxels":  [
+                                                 56,
+                                                 56,
+                                                 56
+                                             ],
+                       "bodyDiameterVoxels":  56,
+                       "bodyDiameterMetersAtSuggestedScale":  112,
+                       "fullModelDiameterMetersAtSuggestedScale":  112,
+                       "shellThicknessVoxels":  2,
+                       "ringed":  false,
+                       "paletteColorCount":  6,
+                       "emissivePaletteIndices":  [
+
+                                                  ],
+                       "voxelCount":  17576,
+                       "fillFraction":  0.100082,
+                       "connectedComponents":  1,
+                       "largestComponentVoxelCount":  17576,
+                       "centerEmpty":  true,
+                       "hollowCoreEmpty":  true,
+                       "hollowCoreRadiusVoxels":  23.5,
+                       "chunks":  [
+                                      "SIZE",
+                                      "XYZI",
+                                      "nTRN",
+                                      "nGRP",
+                                      "nTRN",
+                                      "nSHP",
+                                      "LAYR",
+                                      "RGBA"
+                                  ],
+                       "suggestedXmlScale":  20,
+                       "suggestedXmlVoxelOffset":  [
+                                                       -56,
+                                                       -56,
+                                                       56
+                                                   ],
+                       "suggestedXml":  "\u003cvox tags=\"celestial unbreakable\" collide=\"false\" file=\"MOD/vox/celestial/planet_frozen.vox\" scale=\"20\"/\u003e"
+                   },
+                   {
+                       "id":  "planet_volcanic",
+                       "displayName":  "Volcanic world",
+                       "kind":  "volcanic",
+                       "file":  "MOD/vox/celestial/planet_volcanic.vox",
+                       "voxVersion":  200,
+                       "logicalSizeVoxels":  [
+                                                 60,
+                                                 60,
+                                                 60
+                                             ],
+                       "bodyDiameterVoxels":  60,
+                       "bodyDiameterMetersAtSuggestedScale":  120,
+                       "fullModelDiameterMetersAtSuggestedScale":  120,
+                       "shellThicknessVoxels":  2,
+                       "ringed":  false,
+                       "paletteColorCount":  7,
+                       "emissivePaletteIndices":  [
+
+                                                  ],
+                       "voxelCount":  20552,
+                       "fillFraction":  0.095148,
+                       "connectedComponents":  1,
+                       "largestComponentVoxelCount":  20552,
+                       "centerEmpty":  true,
+                       "hollowCoreEmpty":  true,
+                       "hollowCoreRadiusVoxels":  25.5,
+                       "chunks":  [
+                                      "SIZE",
+                                      "XYZI",
+                                      "nTRN",
+                                      "nGRP",
+                                      "nTRN",
+                                      "nSHP",
+                                      "LAYR",
+                                      "RGBA"
+                                  ],
+                       "suggestedXmlScale":  20,
+                       "suggestedXmlVoxelOffset":  [
+                                                       -60,
+                                                       -60,
+                                                       60
+                                                   ],
+                       "suggestedXml":  "\u003cvox tags=\"celestial unbreakable\" collide=\"false\" file=\"MOD/vox/celestial/planet_volcanic.vox\" scale=\"20\"/\u003e"
+                   },
+                   {
+                       "id":  "planet_ocean",
+                       "displayName":  "Ocean world",
+                       "kind":  "ocean",
+                       "file":  "MOD/vox/celestial/planet_ocean.vox",
+                       "voxVersion":  200,
+                       "logicalSizeVoxels":  [
+                                                 64,
+                                                 64,
+                                                 64
+                                             ],
+                       "bodyDiameterVoxels":  64,
+                       "bodyDiameterMetersAtSuggestedScale":  128,
+                       "fullModelDiameterMetersAtSuggestedScale":  128,
+                       "shellThicknessVoxels":  2,
+                       "ringed":  false,
+                       "paletteColorCount":  7,
+                       "emissivePaletteIndices":  [
+
+                                                  ],
+                       "voxelCount":  23144,
+                       "fillFraction":  0.088287,
+                       "connectedComponents":  1,
+                       "largestComponentVoxelCount":  23144,
+                       "centerEmpty":  true,
+                       "hollowCoreEmpty":  true,
+                       "hollowCoreRadiusVoxels":  27.5,
+                       "chunks":  [
+                                      "SIZE",
+                                      "XYZI",
+                                      "nTRN",
+                                      "nGRP",
+                                      "nTRN",
+                                      "nSHP",
+                                      "LAYR",
+                                      "RGBA"
+                                  ],
+                       "suggestedXmlScale":  20,
+                       "suggestedXmlVoxelOffset":  [
+                                                       -64,
+                                                       -64,
+                                                       64
+                                                   ],
+                       "suggestedXml":  "\u003cvox tags=\"celestial unbreakable\" collide=\"false\" file=\"MOD/vox/celestial/planet_ocean.vox\" scale=\"20\"/\u003e"
+                   }
+               ]
+}
