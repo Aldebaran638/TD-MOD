@@ -448,6 +448,16 @@ function server.weaponGroupRequestFire(groupId, request)
     local cooldown = math.max(0.0, tonumber(weaponDef.cooldown) or 0.0)
     if chargeDuration > 0.0 then
         _weaponGroupBreakCloak(normalizedRequest.shipBodyId)
+        -- T 槽只复用旧泰坦的渲染事件协议；发射和伤害仍完全走通用武器组。
+        if weaponDef.family == "perdition_beam" and server.tSlotRenderPushEvent ~= nil then
+            local origin = select(1, server.weaponBehaviorResolveFireTransform(contexts[1]))
+            server.tSlotRenderPushEvent(normalizedRequest.shipBodyId, {
+                eventType = "charging_start",
+                slotIndex = contexts[1].mountIndex,
+                weaponType = weaponType,
+                firePoint = origin,
+            })
+        end
         state.pending = {
             remaining = chargeDuration,
             total = chargeDuration,

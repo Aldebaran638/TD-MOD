@@ -6,7 +6,7 @@ client.weaponConfigUiState = client.weaponConfigUiState or {
     open = false,
     pending = false,
     dirty = false,
-    shipType = "enigmaticCruiser",
+    shipType = "",
     configurationId = "",
     loadout = {},
     componentLoadout = {},
@@ -25,9 +25,10 @@ local _contentGap = 18
 -- The footer is anchored to the panel origin, below the content transform.
 local _mainHeight = 770
 local _footerY = _panelHeight - 104
-local _slotOrder = { "X", "L", "G", "M", "H", "P" }
+local _slotOrder = { "T", "X", "L", "G", "M", "H", "P" }
 
 local _slotLabels = {
+    T = { zh = "泰坦武器", en = "T-SLOT", color = { 0.95, 0.22, 0.18 } },
     X = { zh = "轴基武器", en = "X-SLOT", color = { 0.62, 0.30, 0.96 } },
     L = { zh = "大型武器", en = "L-SLOT", color = { 0.32, 0.72, 0.92 } },
     G = { zh = "制导武器", en = "G-SLOT", color = { 0.22, 0.45, 1.00 } },
@@ -227,8 +228,13 @@ end
 local function _open()
     local state = client.weaponConfigUiState
     local available = _configurableShipTypes()
-    if #available > 0 and _shipDefinition().shipType == nil then
-        state.shipType = available[1]
+    local currentType = tostring(client.shipContextGetType() or "")
+    local currentDefinition = (shipTypeRegistryData or {})[currentType] or {}
+    if currentDefinition.playerConfigurable ~= false
+        and #(currentDefinition.slotConfigurations or {}) > 0 then
+        state.shipType = currentType
+    elseif #available > 0 and _shipDefinition().shipType == nil then
+        state.shipType = (shipTypeRegistryData or {}).titan ~= nil and "titan" or available[1]
     end
     local template = client.weaponConfiguratorRequestTemplate(state.shipType)
     state.configurationId = tostring(template.configurationId or "")
@@ -294,6 +300,7 @@ function client.weaponConfiguratorSaveTemplate(
         tostring(shipType or ""),
         tostring(configurationId or ""),
         {
+            T = tostring(selected.T or ""),
             X = tostring(selected.X or ""),
             L = tostring(selected.L or ""),
             M = tostring(selected.M or ""),
@@ -799,11 +806,15 @@ local function _drawCenter(configuration, x, width)
     UiPop()
     local slotSize = 48
     local gap = 6
+    -- Large ships can carry more than one row of protection components.
+    local slotsPerRow = math.max(1, math.floor((width - 110) / (slotSize + gap)))
     local auxiliaryCount =
         math.floor(tonumber(componentSlotCounts.auxiliary) or 0)
     for index = 1, auxiliaryCount do
-        local slotX = x + 24 + (index - 1) * (slotSize + gap)
-        if _drawDefenseSlot(slotX, defenseY + 44, slotSize, "auxiliary", index) then
+        local row = math.floor((index - 1) / slotsPerRow)
+        local column = (index - 1) % slotsPerRow
+        local slotX = x + 24 + column * (slotSize + gap)
+        if _drawDefenseSlot(slotX, defenseY + 44 + row * (slotSize + gap), slotSize, "auxiliary", index) then
             state.selectedSlot = ""
             state.selectedDefenseType = "auxiliary"
             state.selectedDefenseIndex = index
@@ -812,8 +823,10 @@ local function _drawCenter(configuration, x, width)
     local largeCount =
         math.floor(tonumber(componentSlotCounts.largeUtility) or 0)
     for index = 1, largeCount do
-        local slotX = x + 24 + (index - 1) * (slotSize + gap)
-        if _drawDefenseSlot(slotX, defenseY + 102, slotSize, "largeUtility", index) then
+        local row = math.floor((index - 1) / slotsPerRow)
+        local column = (index - 1) % slotsPerRow
+        local slotX = x + 24 + column * (slotSize + gap)
+        if _drawDefenseSlot(slotX, defenseY + 102 + row * (slotSize + gap), slotSize, "largeUtility", index) then
             state.selectedSlot = ""
             state.selectedDefenseType = "largeUtility"
             state.selectedDefenseIndex = index

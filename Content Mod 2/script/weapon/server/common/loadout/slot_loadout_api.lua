@@ -76,6 +76,7 @@ function server.shipWeaponSyncConfiguration(shipType, recipientPlayerId)
         "client.updateShipWeaponConfiguration",
         server.shipContextGetBody(),
         tostring(state.configurationId or ""),
+        tostring(loadout.T or ""),
         tostring(loadout.X or ""),
         tostring(loadout.L or ""),
         tostring(loadout.M or ""),
@@ -159,6 +160,7 @@ function server.shipWeaponBindLocalConfiguration(
     shipBody,
     shipType,
     configurationId,
+    tWeapon,
     xWeapon,
     lWeapon,
     mWeapon,
@@ -205,6 +207,7 @@ function server.shipWeaponBindLocalConfiguration(
         resolvedType,
         tostring(configurationId or ""),
         {
+            T = tostring(tWeapon or ""),
             X = tostring(xWeapon or ""),
             L = tostring(lWeapon or ""),
             M = tostring(mWeapon or ""),

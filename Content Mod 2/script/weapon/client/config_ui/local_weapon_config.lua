@@ -4,7 +4,7 @@
 client = client or {}
 
 local _weaponConfigRegistryRoot = "level.stellarisships.weaponconfig"
-local _weaponConfigSlots = { "X", "L", "M", "G", "H", "P" }
+local _weaponConfigSlots = { "T", "X", "L", "M", "G", "H", "P" }
 
 local function _weaponConfigSafeId(value)
     return string.lower(tostring(value or "")):gsub("[^a-z0-9._-]", "")

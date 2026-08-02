@@ -231,5 +231,10 @@ function client.shipHealthBarDraw()
         UiPop()
 
         UiRectOutline(barW, barH, 2)
+
+        UiTranslate(0, -18)
+        UiFont("regular.ttf", 14)
+        UiColor(0.82, 0.94, 0.94, 0.95)
+        UiText(string.format("TOTAL %d / %d", math.floor(bodyHP + armorHP + shieldHP + 0.5), math.floor(maxTotal + 0.5)))
     UiPop()
 end

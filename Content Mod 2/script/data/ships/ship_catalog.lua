@@ -2,3 +2,4 @@
 #include "advanced_strike_craft.lua"
 #include "interceptor_projectiles.lua"
 #include "battlecruiser.lua"
+#include "titan.lua"

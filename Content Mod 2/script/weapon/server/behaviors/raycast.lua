@@ -115,6 +115,22 @@ local function _fireRaycast(context)
         hit and 1 or 0,
         impactLayer or "none"
     )
+    if definition.family == "perdition_beam" and server.tSlotRenderPushEvent ~= nil then
+        server.tSlotRenderPushEvent(context.shipBodyId, {
+            eventType = "launch_start",
+            incrementShotId = 1,
+            slotIndex = context.mountIndex,
+            weaponType = context.weaponType,
+            firePoint = origin,
+            hitPoint = endpoint,
+            didHit = hit,
+            didHitStellarisBody = hitRegisteredShip,
+            didHitShield = didHitShield,
+            hitTargetBodyId = hitBody,
+            normal = normal,
+            impactLayer = impactLayer,
+        })
+    end
     return true
 end
 

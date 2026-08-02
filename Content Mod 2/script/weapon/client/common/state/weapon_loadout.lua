@@ -7,6 +7,7 @@ client.weaponLoadoutSyncState = client.weaponLoadoutSyncState or { age = 0.0 }
 function client.updateShipWeaponConfiguration(
     shipBodyId,
     configurationId,
+    tWeapon,
     xWeapon,
     lWeapon,
     mWeapon,
@@ -60,6 +61,7 @@ function client.updateShipWeaponConfiguration(
     end
     client.weaponLoadoutStateByShip[body] = {
         configurationId = tostring(configurationId or ""),
+        tSlot = tostring(tWeapon or ""),
         xSlot = tostring(xWeapon or ""),
         lSlot = tostring(lWeapon or ""),
         mSlot = tostring(mWeapon or ""),

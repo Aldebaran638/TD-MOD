@@ -10,6 +10,7 @@ local _profiles = {
     uvBeam = { color = { 0.62, 0.10, 1.0 }, coreColor = { 1.20, 0.65, 1.8 }, width = 0.20, life = 0.115 },
     xrayBeam = { color = { 0.15, 1.0, 0.95 }, coreColor = { 0.70, 1.8, 1.7 }, width = 0.20, life = 0.115 },
     energyBeam = { color = { 0.25, 0.65, 1.0 }, width = 1.2, life = 0.16 },
+    perditionBeam = { color = { 1.0, 0.17, 0.035 }, coreColor = { 2.4, 0.65, 0.15 }, width = 2.8, life = 0.50 },
     focusedArcBeam = { color = { 0.72, 0.22, 1.0 }, width = 1.8, life = 0.22 },
     arcBeam = { color = { 0.18, 1.0, 0.32 }, width = 1.8, life = 0.22 },
     psionicArcBeam = { color = { 0.72, 0.18, 1.0 }, width = 1.8, life = 0.22 },
@@ -95,7 +96,7 @@ function client.spawnGenericRaycastWeaponFx(
     if profileId == "gammaBeam" then
         client.spawnGammaLaserMuzzleFx(weaponType, Vec(sx or 0, sy or 0, sz or 0), VecSub(endPos, Vec(sx or 0, sy or 0, sz or 0)))
         if math.floor(didHit or 0) ~= 0 then client.spawnGammaLaserImpactFx(weaponType, endPos, hitNormal, impactLayer) end
-    elseif math.floor(didHit or 0) ~= 0 then
+    elseif math.floor(didHit or 0) ~= 0 and profileId ~= "perditionBeam" then
         if not client.spawnWeaponImpactFx(weaponType, endPos, hitNormal, impactLayer) then
             _spawnImpactParticles(profile, endPos, hitNormal, fxColor)
         end

@@ -69,6 +69,7 @@ function client.weaponConfigurationBindingTick(dt)
         state.shipBody,
         state.shipType,
         tostring(snapshot.configurationId or ""),
+        tostring(loadout.T or ""),
         tostring(loadout.X or ""),
         tostring(loadout.L or ""),
         tostring(loadout.M or ""),

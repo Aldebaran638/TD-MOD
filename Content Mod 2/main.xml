@@ -22,7 +22,7 @@
 			<vox pos="0.0 0.0 0.0" rot="0 0 0" file="MOD/vox/WUJINHAO.vox"/>
 		</body>
 	</script>
-	<script pos="18.0 8.0 8.0" file="MOD/script_titan/shipMain.lua">
+	<script pos="18.0 8.0 8.0" file="MOD/script/shipMain.lua" shiptype="titan">
 		<vehicle name="titan" tags="stellarisShip" pos="0.0 0.0 0.0" driven="true" sound="electric1 0" spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
 			<body name="body" tags="stellarisShip" pos="0.0 0.0 0.0" dynamic="true">
 				<vox pos="0.0 0.0 0.0" file="MOD/vox/Titan.vox"/>

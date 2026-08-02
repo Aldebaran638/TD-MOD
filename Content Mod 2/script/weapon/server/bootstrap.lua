@@ -8,6 +8,7 @@
 #include "common/targeting/target_catalog.lua"
 #include "common/runtime/behavior_registry.lua"
 #include "common/runtime/controller_registry.lua"
+#include "common/runtime/t_slot_render_state.lua"
 
 #include "behaviors/common.lua"
 #include "behaviors/raycast.lua"

@@ -23,6 +23,7 @@ weaponData = weaponData or {}
 #include "h/gamma_strike_craft.lua"
 #include "p/flak_artillery.lua"
 #include "p/guardian_point_defense.lua"
+#include "t/perdition_beam.lua"
 #include "stellaris_4_4_6.lua"
 
 -- 可以在此处继续添加更多武器配置，例如：
