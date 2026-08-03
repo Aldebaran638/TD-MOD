@@ -11,6 +11,7 @@ local _weaponSoundHandles = {}
 
 client.soundModuleState = client.soundModuleState or {
     lastRenderSeqByShip = {},
+    lastTSlotSequenceByShip = {},
 }
 
 local function _tableToVec(t)
@@ -100,10 +101,35 @@ local function _xSlotEventTick(shipBodyId)
     end
 end
 
+local function _tSlotEventTick(shipBodyId)
+    if client.tSlotRenderGetEvent == nil then return end
+    local render = client.tSlotRenderGetEvent(shipBodyId)
+    if render == nil or tostring(render.weaponType or "") ~= "perditionBeam" then return end
+
+    local state = client.soundModuleState
+    local sequence = render.seq or -1
+    local firePoint = _tableToVec(render.firePoint)
+    local eventType = tostring(render.eventType or "")
+    if sequence ~= (state.lastTSlotSequenceByShip[shipBodyId] or -1) then
+        state.lastTSlotSequenceByShip[shipBodyId] = sequence
+        if eventType == "charging_start" then
+            client.playWeaponSound("perditionBeam", "windup", firePoint[1], firePoint[2], firePoint[3])
+        elseif eventType == "launch_start" then
+            client.playWeaponSound("perditionBeam", "fire", firePoint[1], firePoint[2], firePoint[3])
+            if (render.didHit or 0) == 1 then
+                local hitPoint = _tableToVec(render.hitPoint)
+                client.playWeaponSound("perditionBeam", "hit", hitPoint[1], hitPoint[2], hitPoint[3])
+            end
+        end
+    end
+end
+
 function client.soundModuleInit()
     _sndEngineLoop = LoadLoop("MOD/sound/dem_sfx_psi_ship_transport_ship_idle_01.ogg")
     _sndMissileLoop = LoadLoop("MOD/sound/missile_loop.ogg")
     _weaponSoundHandles = {}
+    client.soundModuleState.lastRenderSeqByShip = {}
+    client.soundModuleState.lastTSlotSequenceByShip = {}
     for weaponType, profile in pairs(client.weaponSoundCatalog or {}) do
         _weaponSoundHandles[weaponType] = {
             windupNear = _loadSounds(profile.windupNear),
@@ -149,6 +175,7 @@ function client.soundModuleTick(dt)
         if client.registryShipExists(shipBodyId) then
             _engineTick(shipBodyId)
             _xSlotEventTick(shipBodyId)
+            _tSlotEventTick(shipBodyId)
         end
     end
 end

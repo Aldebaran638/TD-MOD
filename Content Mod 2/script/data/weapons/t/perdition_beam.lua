@@ -8,6 +8,7 @@ weaponDefineRay({
     englishName = "Perdition Beam",
     slotTypes = { "T" },
     fxProfile = "perditionBeam",
+    soundProfileId = "perditionBeam",
     iconPath = "MOD/gfx/ui/weapon_icons/tachyonLance.png",
     damageMin = 5000,
     damageMax = 10000,
