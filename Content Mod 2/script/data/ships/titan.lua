@@ -12,7 +12,23 @@ shipDefinitionRegister({
     flightProfile = {
         gravityCompensation = 10, forwardAcceleration = 30, backwardAcceleration = 24,
         maxCombatSpeed = 28, maxReverseSpeed = 18, quadraticDamping = 7000,
-        attitude = { yawForceGain = 40000, pitchForceGain = 180000, yawForceMax = 14000, pitchForceMax = 14000 },
+        attitude = {
+            -- Preserved from the original Titan controller during migration.
+            yawDeadzone = 0.5,
+            pitchDeadzone = 0.5,
+            yawSoftZone = 3.0,
+            pitchSoftZone = 3.0,
+            yawForceGain = 500000,
+            pitchForceGain = 3600000,
+            yawForceMax = 2000000,
+            pitchForceMax = 2000000,
+            yawDamping = 33000000,
+            pitchDamping = 100000000,
+            yawRateDeadzone = 0.01,
+            pitchRateDeadzone = 0.01,
+            yawLeverArm = 8.0,
+            pitchLeverArm = 8.0,
+        },
         roll = { forceGain = 5000, forceMax = 50000 },
     },
     cameraProfile = {
