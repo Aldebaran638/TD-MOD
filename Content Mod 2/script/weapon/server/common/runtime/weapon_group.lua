@@ -36,6 +36,7 @@ local function _buildState(group, shipType)
         nextMountIndex = 1,
         mounts = {},
         pending = nil,
+        releaseRequested = false,
         fireHeld = false,
         heldRequest = nil,
         fireDelay = 0.0,
@@ -196,6 +197,7 @@ function server.weaponGroupReset()
     for _, state in pairs(server.weaponGroupStateById or {}) do
         state.nextMountIndex = 1
         state.pending = nil
+        state.releaseRequested = false
         state.fireHeld = false
         state.heldRequest = nil
         state.fireDelay = 0.0
@@ -231,6 +233,7 @@ function server.weaponGroupSetFireHeld(groupId, active, request)
     end
     state.fireHeld = active and true or false
     if state.fireHeld then
+        state.releaseRequested = false
         local source = request or {}
         state.heldRequest = {
             shipBodyId = math.floor(source.shipBodyId or server.shipContextGetBody()),
@@ -241,6 +244,9 @@ function server.weaponGroupSetFireHeld(groupId, active, request)
         -- Fire the first shot immediately; weaponGroupTick owns held refire.
         return server.weaponGroupRequestFire(state.groupId, state.heldRequest)
     else
+        if (weaponDef.fireProfile or {}).mode == "charged_release" then
+            state.releaseRequested = true
+        end
         state.heldRequest = nil
     end
     return true, nil
@@ -526,21 +532,55 @@ function server.weaponGroupTick(dt)
         end
         local pending = state.pending
         if pending ~= nil then
-            pending.remaining = (tonumber(pending.remaining) or 0.0) - delta
-            if pending.remaining <= 0.0 then
-                _fireContexts(
-                    pending.behavior,
-                    pending.contexts or {},
-                    pending.mounts or {},
-                    pending.cooldown or 0.0
-                )
-                local _, weaponDef = _resolveWeapon(state)
-                state.fireDelay = math.max(
-                    0.0,
-                    tonumber(((weaponDef or {}).salvoProfile or {}).interval) or 0.0
-                )
-                state.pending = nil
-                _pushHud(state, true)
+            local fireProfile = (weaponDef or {}).fireProfile or {}
+            if fireProfile.mode == "charged_release" then
+                pending.remaining = (tonumber(pending.remaining) or 0.0) - delta
+                if pending.remaining <= 0.0 then
+                    pending.remaining = 0.0
+                    pending.charged = true
+                    _pushHud(state, true)
+                end
+                if state.releaseRequested then
+                    if pending.charged then
+                        _fireContexts(
+                            pending.behavior,
+                            pending.contexts or {},
+                            pending.mounts or {},
+                            pending.cooldown or 0.0
+                        )
+                        state.fireDelay = math.max(
+                            0.0,
+                            tonumber(((weaponDef or {}).salvoProfile or {}).interval) or 0.0
+                        )
+                    elseif weaponDef.family == "perdition_beam"
+                        and server.tSlotRenderPushEvent ~= nil then
+                        local context = (pending.contexts or {})[1] or {}
+                        local origin = select(1, server.weaponBehaviorResolveFireTransform(context))
+                        server.tSlotRenderPushEvent(
+                            context.shipBodyId,
+                            { eventType = "charge_cancel", weaponType = weaponType, firePoint = origin }
+                        )
+                    end
+                    state.pending = nil
+                    state.releaseRequested = false
+                    _pushHud(state, true)
+                end
+            else
+                pending.remaining = (tonumber(pending.remaining) or 0.0) - delta
+                if pending.remaining <= 0.0 then
+                    _fireContexts(
+                        pending.behavior,
+                        pending.contexts or {},
+                        pending.mounts or {},
+                        pending.cooldown or 0.0
+                    )
+                    state.fireDelay = math.max(
+                        0.0,
+                        tonumber(((weaponDef or {}).salvoProfile or {}).interval) or 0.0
+                    )
+                    state.pending = nil
+                    _pushHud(state, true)
+                end
             end
         end
         if state.fireHeld and state.pending == nil then

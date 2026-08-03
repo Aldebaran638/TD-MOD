@@ -1,6 +1,6 @@
 shipMountProfileData = shipMountProfileData or {}
 shipMountProfileData.titan = {
-    tTitanic = { { firePosOffset = { x = 0, y = 0.2, z = -10.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } } },
+    tTitanic = { { firePosOffset = { x = 0, y = 0, z = -3.5 }, fireDirRelative = { x = 0, y = 0, z = -1 } } },
     lTitanic = {
         { firePosOffset = { x = 5.5, y = 2.2, z = -6.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
         { firePosOffset = { x = -5.5, y = 2.2, z = -6.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
