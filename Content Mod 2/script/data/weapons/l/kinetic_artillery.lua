@@ -33,7 +33,6 @@ weaponDefineProjectile({
     heatDissipationPerSecond = 10.0,
     overheatThreshold = 100.0,
     recoverThreshold = 60.0,
-    controllerType = "kineticArtillery",
     targetingMode = "forward",
     closeRangeFocus = true,
     closeRangeFocusRange = 220.0,

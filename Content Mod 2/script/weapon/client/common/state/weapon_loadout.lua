@@ -10,6 +10,7 @@ function client.updateShipWeaponConfiguration(
     tWeapon,
     xWeapon,
     lWeapon,
+    lWeapon2,
     mWeapon,
     gWeapon,
     hWeapon,
@@ -64,6 +65,7 @@ function client.updateShipWeaponConfiguration(
         tSlot = tostring(tWeapon or ""),
         xSlot = tostring(xWeapon or ""),
         lSlot = tostring(lWeapon or ""),
+        lSlot2 = tostring(lWeapon2 or lWeapon or ""),
         mSlot = tostring(mWeapon or ""),
         gSlot = tostring(gWeapon or ""),
         hSlot = tostring(hWeapon or ""),
@@ -114,8 +116,9 @@ function client.getShipWeaponType(shipBodyId, groupId)
     )
     for _, group in ipairs((configuration or {}).slotGroups or {}) do
         if tostring(group.groupId or "") == mode then
-            return tostring(((configuration or {}).defaultLoadout or {})
-                [tostring(group.slotType or "")] or "")
+            local defaults = (configuration or {}).defaultLoadout or {}
+            return tostring(defaults[tostring(group.groupId or "")]
+                or defaults[tostring(group.slotType or "")] or "")
         end
     end
     return ""

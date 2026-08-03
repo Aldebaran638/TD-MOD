@@ -58,13 +58,17 @@ shipDefinitionRegister({
     slotConfigurations = {
         {
             configurationId = "titan_core",
-            label = "2T 8L 4M",
+            label = "2T 4L + 4L 4M",
             slotGroups = {
                 { groupId = "tSlot", slotType = "T", count = 2 },
-                { groupId = "lSlot", slotType = "L", count = 8 },
+                { groupId = "lSlot", slotType = "L", count = 4 },
+                { groupId = "lSlot2", slotType = "L", count = 4 },
                 { groupId = "mSlot", slotType = "M", count = 4 },
             },
-            defaultLoadout = { T = "perditionBeam", L = "kineticArtillery", M = "mediumGammaLaser" },
+            defaultLoadout = {
+                T = "perditionBeam", L = "kineticArtillery", L2 = "largeGammaLaser",
+                M = "mediumGammaLaser",
+            },
             -- Standard Titan sections provide 12 large and 3 auxiliary utility slots.
             componentSlots = {
                 { slotType = "largeUtility", count = 12 },

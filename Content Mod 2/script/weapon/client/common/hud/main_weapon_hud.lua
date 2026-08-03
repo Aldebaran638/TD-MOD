@@ -4,12 +4,12 @@
 client = client or {}
 
 client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
-    panelWidth = 350,
+    panelWidth = 420,
     panelHeight = 118,
     rightOffset = 24,
     topOffset = 566,
     helpPanelGap = 14,
-    topBarWidth = 240,
+    topBarWidth = 280,
     topBarHeight = 12,
     topBarOffsetY = 12,
     xCooldownBarWidth = 72,
@@ -28,6 +28,7 @@ client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
     xSlotColor = { 0.62, 0.28, 0.96, 0.95 },
     tSlotColor = { 0.95, 0.22, 0.18, 0.95 },
     lSlotColor = { 1.0, 0.42, 0.12, 0.95 },
+    lSlot2Color = { 0.26, 0.58, 0.82, 0.95 },
     mSlotColor = { 1.0, 0.84, 0.18, 0.95 },
     gSlotColor = { 0.08, 0.25, 0.72, 0.95 },
     hSlotColor = { 0.95, 0.78, 0.18, 0.95 },
@@ -716,6 +717,9 @@ function client.mainWeaponHudDraw()
             topColor = state.overheated and cfg.heatOverColor or cfg.heatFillColor
         end
         modeText = "Main Weapon: L-Slot"
+    elseif currentMode == "lSlot2" then
+        topColor = cfg.lSlot2Color
+        modeText = "Main Weapon: L2-Slot"
     elseif currentMode == "mSlot" then
         if not usesGenericRuntime then
             topFill = state.guidedProgress
@@ -769,13 +773,14 @@ function client.mainWeaponHudDraw()
 
         _drawWeaponIcon(12, 36, cfg.iconSize, cfg.tSlotColor, "T", currentMode == "tSlot", cfg)
         _drawWeaponIcon(46, 36, cfg.iconSize, cfg.xSlotColor, "X", currentMode == "xSlot", cfg)
-        _drawWeaponIcon(80, 36, cfg.iconSize, cfg.lSlotColor, "L", currentMode == "lSlot", cfg)
-        _drawWeaponIcon(114, 36, cfg.iconSize, cfg.mSlotColor, "M", currentMode == "mSlot", cfg)
-        _drawWeaponIcon(148, 36, cfg.iconSize, cfg.gSlotColor, "G", currentMode == "gSlot", cfg)
-        _drawWeaponIcon(182, 36, cfg.iconSize, cfg.hSlotColor, "H", currentMode == "hSlot", cfg)
+        _drawWeaponIcon(80, 36, cfg.iconSize, cfg.lSlotColor, "L1", currentMode == "lSlot", cfg)
+        _drawWeaponIcon(114, 36, cfg.iconSize, cfg.lSlot2Color, "L2", currentMode == "lSlot2", cfg)
+        _drawWeaponIcon(148, 36, cfg.iconSize, cfg.mSlotColor, "M", currentMode == "mSlot", cfg)
+        _drawWeaponIcon(182, 36, cfg.iconSize, cfg.gSlotColor, "G", currentMode == "gSlot", cfg)
+        _drawWeaponIcon(216, 36, cfg.iconSize, cfg.hSlotColor, "H", currentMode == "hSlot", cfg)
 
         UiPush()
-            UiTranslate(224, 30)
+            UiTranslate(258, 30)
             UiColor(cfg.textColor[1], cfg.textColor[2], cfg.textColor[3], cfg.textColor[4])
             UiFont("regular.ttf", cfg.labelSize)
             UiText(titleText)
@@ -783,7 +788,7 @@ function client.mainWeaponHudDraw()
 
         if englishNameText ~= "" then
             UiPush()
-                UiTranslate(224, 44)
+                UiTranslate(258, 44)
                 UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4] * 0.8)
                 UiFont("regular.ttf", cfg.valueSize - 2)
                 UiText(englishNameText)
@@ -791,7 +796,7 @@ function client.mainWeaponHudDraw()
         end
 
         UiPush()
-            UiTranslate(224, 56)
+            UiTranslate(258, 56)
             UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
             UiFont("regular.ttf", cfg.valueSize)
             UiText(modeText)
@@ -802,6 +807,7 @@ function client.mainWeaponHudDraw()
             local slotColor = cfg.xSlotColor
             if currentMode == "tSlot" then slotColor = cfg.tSlotColor end
             if currentMode == "lSlot" then slotColor = cfg.lSlotColor end
+            if currentMode == "lSlot2" then slotColor = cfg.lSlot2Color end
             if currentMode == "mSlot" then slotColor = cfg.mSlotColor end
             if currentMode == "gSlot" then slotColor = cfg.gSlotColor end
             local barCount = 0

@@ -58,12 +58,16 @@ function shipDefinitionResolveMounts(
 
     local typeId = tostring(weaponType or "")
     if typeId == "" then
-        typeId = tostring(((configuration or {}).defaultLoadout or {})
-            [tostring(group.slotType or "")] or "")
+        local defaults = (configuration or {}).defaultLoadout or {}
+        typeId = tostring(defaults[requestedGroup]
+            or defaults[tostring(group.slotType or "")] or "")
     end
     local weapon = (weaponData or {})[typeId] or {}
-    local profile = ((definition.weaponMountProfiles or {})
-        [tostring(weapon.mountProfile or "")]) or {}
+    local profileName = tostring(weapon.mountProfile or "")
+    if requestedGroup == "lSlot2" and profileName ~= "" then
+        profileName = profileName .. "2"
+    end
+    local profile = ((definition.weaponMountProfiles or {})[profileName]) or {}
     local count = math.max(0, math.floor(tonumber(group.count) or 0))
     local mounts = {}
     for i = 1, math.min(count, #profile) do

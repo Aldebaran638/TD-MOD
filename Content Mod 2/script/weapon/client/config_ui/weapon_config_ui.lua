@@ -25,12 +25,13 @@ local _contentGap = 18
 -- The footer is anchored to the panel origin, below the content transform.
 local _mainHeight = 770
 local _footerY = _panelHeight - 104
-local _slotOrder = { "T", "X", "L", "G", "M", "H", "P" }
+local _slotOrder = { "T", "X", "L", "L2", "G", "M", "H", "P" }
 
 local _slotLabels = {
     T = { zh = "泰坦武器", en = "T-SLOT", color = { 0.95, 0.22, 0.18 } },
     X = { zh = "轴基武器", en = "X-SLOT", color = { 0.62, 0.30, 0.96 } },
     L = { zh = "大型武器", en = "L-SLOT", color = { 0.32, 0.72, 0.92 } },
+    L2 = { zh = "大型武器组 2", en = "L-SLOT 2", color = { 0.26, 0.58, 0.82 } },
     G = { zh = "制导武器", en = "G-SLOT", color = { 0.22, 0.45, 1.00 } },
     M = { zh = "中型武器", en = "M-SLOT", color = { 0.96, 0.55, 0.18 } },
     H = { zh = "舰载机", en = "H-SLOT", color = { 0.94, 0.78, 0.18 } },
@@ -169,9 +170,13 @@ local function _ensureDraft()
     local defaults = configuration.defaultLoadout or {}
     for _, group in ipairs(configuration.slotGroups or {}) do
         local slotType = tostring(group.slotType or "")
-        if not _weaponAllowed(slotType, state.loadout[slotType]) then
-            state.loadout[slotType] = tostring(defaults[slotType] or "")
+        local key = tostring(group.groupId or slotType)
+        local current = state.loadout[key]
+        if current == nil or current == "" then current = state.loadout[slotType] end
+        if not _weaponAllowed(slotType, current) then
+            current = defaults[key] or defaults[slotType] or ""
         end
+        state.loadout[key] = tostring(current or "")
     end
     local componentDefaults = configuration.defaultComponentLoadout or {}
     state.componentLoadout = state.componentLoadout or {}
@@ -192,13 +197,9 @@ local function _ensureDraft()
 end
 
 local function _activeGroups(configuration)
-    local bySlot = {}
-    for _, group in ipairs((configuration or {}).slotGroups or {}) do
-        bySlot[tostring(group.slotType or "")] = group
-    end
     local result = {}
-    for _, slotType in ipairs(_slotOrder) do
-        if bySlot[slotType] ~= nil then result[#result + 1] = bySlot[slotType] end
+    for _, group in ipairs((configuration or {}).slotGroups or {}) do
+        result[#result + 1] = group
     end
     return result
 end
@@ -305,13 +306,14 @@ function client.weaponConfiguratorSaveTemplate(
         tostring(shipType or ""),
         tostring(configurationId or ""),
         {
-            T = tostring(selected.T or ""),
-            X = tostring(selected.X or ""),
-            L = tostring(selected.L or ""),
-            M = tostring(selected.M or ""),
-            G = tostring(selected.G or ""),
-            H = tostring(selected.H or ""),
-            P = tostring(selected.P or ""),
+            T = tostring(selected.tSlot or selected.T or ""),
+            X = tostring(selected.xSlot or selected.X or ""),
+            L = tostring(selected.lSlot or selected.L or ""),
+            L2 = tostring(selected.lSlot2 or selected.L2 or selected.lSlot or selected.L or ""),
+            M = tostring(selected.mSlot or selected.M or ""),
+            G = tostring(selected.gSlot or selected.G or ""),
+            H = tostring(selected.hSlot or selected.H or ""),
+            P = tostring(selected.pSlot or selected.P or ""),
         },
         componentLoadout
     )
@@ -510,10 +512,10 @@ local function _drawShipSidebar(configuration)
     end
 end
 
-local function _drawWeaponOption(x, y, width, height, slotType, weaponType)
+local function _drawWeaponOption(x, y, width, height, slotType, loadoutKey, weaponType)
     local state = client.weaponConfigUiState
     local definition = (weaponData or {})[weaponType] or {}
-    local selected = tostring(state.loadout[slotType] or "") == tostring(weaponType)
+    local selected = tostring(state.loadout[loadoutKey] or "") == tostring(weaponType)
     local slot = _slotLabels[slotType] or _slotLabels.M
     UiPush()
         UiTranslate(x, y)
@@ -550,9 +552,21 @@ local function _drawWeaponOption(x, y, width, height, slotType, weaponType)
     return clicked
 end
 
-local function _drawWeaponSidebar(slotType)
+local function _drawWeaponSidebar(groupId)
     local state = client.weaponConfigUiState
-    local slot = _slotLabels[slotType] or _slotLabels.M
+    local configuration = _findConfiguration(state.configurationId) or {}
+    local group = nil
+    for _, candidate in ipairs(configuration.slotGroups or {}) do
+        if tostring(candidate.groupId or "") == tostring(groupId or "") then
+            group = candidate
+            break
+        end
+    end
+    group = group or { groupId = groupId, slotType = groupId }
+    local slotType = tostring(group.slotType or "")
+    local loadoutKey = tostring(group.groupId or slotType)
+    local displaySlot = loadoutKey == "lSlot2" and "L2" or slotType
+    local slot = _slotLabels[displaySlot] or _slotLabels[slotType] or _slotLabels.M
     _panel(0, 0, _leftWidth, _mainHeight, true)
     UiPush()
         UiTranslate(18, 17)
@@ -567,8 +581,8 @@ local function _drawWeaponSidebar(slotType)
     local pool = ((_shipDefinition().slotWeaponPools or {})[slotType]) or {}
     local y = 104
     for _, weaponType in ipairs(pool) do
-        if _drawWeaponOption(12, y, _leftWidth - 24, 74, slotType, tostring(weaponType)) then
-            state.loadout[slotType] = tostring(weaponType)
+        if _drawWeaponOption(12, y, _leftWidth - 24, 74, slotType, loadoutKey, tostring(weaponType)) then
+            state.loadout[loadoutKey] = tostring(weaponType)
             state.message = "未保存的设计 / UNSAVED DESIGN"
             state.dirty = true
         end
@@ -686,10 +700,12 @@ end
 local function _drawGroupCard(x, y, width, height, group)
     local state = client.weaponConfigUiState
     local slotType = tostring(group.slotType or "")
-    local slot = _slotLabels[slotType] or _slotLabels.M
-    local weaponType = tostring(state.loadout[slotType] or "")
+    local loadoutKey = tostring(group.groupId or slotType)
+    local displaySlot = loadoutKey == "lSlot2" and "L2" or slotType
+    local slot = _slotLabels[displaySlot] or _slotLabels[slotType] or _slotLabels.M
+    local weaponType = tostring(state.loadout[loadoutKey] or "")
     local weapon = (weaponData or {})[weaponType] or {}
-    local selected = state.selectedSlot == slotType
+    local selected = state.selectedSlot == loadoutKey
 
     UiPush()
         UiTranslate(x, y)
@@ -710,7 +726,7 @@ local function _drawGroupCard(x, y, width, height, group)
         UiRect(46, 26)
         UiAlign("center middle")
         UiTranslate(23, 13)
-        _text(slotType, 17, 0.03, 0.04, 0.05, 1)
+        _text(displaySlot, 17, 0.03, 0.04, 0.05, 1)
         UiAlign("left top")
         UiTranslate(36, -7)
         _text("×" .. tostring(group.count or 0), 18, 0.88, 0.94, 0.92, 1)
@@ -771,7 +787,7 @@ local function _drawCenter(configuration, x, width)
         local cardX = x + 24 + column * (cardWidth + cardGap)
         local cardY = 142 + row * (cardHeight + 10)
         if _drawGroupCard(cardX, cardY, cardWidth, cardHeight, group) then
-            state.selectedSlot = tostring(group.slotType or "")
+            state.selectedSlot = tostring(group.groupId or group.slotType or "")
             state.selectedDefenseType = ""
             state.selectedDefenseIndex = 0
         end
@@ -860,8 +876,10 @@ local function _drawSummary(configuration, x)
     local y = 128
     for _, group in ipairs(_activeGroups(configuration)) do
         local slotType = tostring(group.slotType or "")
-        local slot = _slotLabels[slotType] or _slotLabels.M
-        local weaponType = tostring(state.loadout[slotType] or "")
+        local loadoutKey = tostring(group.groupId or slotType)
+        local displaySlot = loadoutKey == "lSlot2" and "L2" or slotType
+        local slot = _slotLabels[displaySlot] or _slotLabels[slotType] or _slotLabels.M
+        local weaponType = tostring(state.loadout[loadoutKey] or "")
         local weapon = (weaponData or {})[weaponType] or {}
         UiPush()
             UiTranslate(x + 16, y)
@@ -874,7 +892,7 @@ local function _drawSummary(configuration, x)
             UiRect(36, 24)
             UiAlign("center middle")
             UiTranslate(18, 12)
-            _text(slotType .. "×" .. tostring(group.count or 0), 13, 0.03, 0.04, 0.05, 1)
+            _text(displaySlot .. "×" .. tostring(group.count or 0), 13, 0.03, 0.04, 0.05, 1)
             UiAlign("left top")
             UiTranslate(30, -8)
             _text(tostring(weapon.displayName or weaponType), 12, 0.86, 0.94, 0.90, 1)

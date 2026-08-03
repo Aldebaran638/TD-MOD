@@ -102,38 +102,12 @@ _register("specialized.chargedSpinalMuzzleLight", {
     end,
 })
 
+-- Compatibility component retained for the runtime contract. Current kinetic
+-- artillery uses the generic group runtime, so this stays inactive unless a
+-- future weapon explicitly opts into the legacy controller.
 _register("specialized.kineticArtillery", {
-    initOrder = 50,
-    rebuildResetOrder = 20,
-    rebuildInitOrder = 20,
-    simulationTickOrder = 30,
-    deactivateOrder = 30,
-    isActive = function(phase)
-        return phase ~= "simulationTick"
-            or (
-                server.weaponGroupUsesController("kineticArtillery")
-                and server.lSlotStateNeedsTick()
-            )
-    end,
-    init = function(shipType)
-        server.lSlotStateInit(shipType)
-    end,
-    rebuildReset = function()
-        server.lSlotStateResetRuntime()
-    end,
-    rebuildInit = function(shipType)
-        server.lSlotStateInit(shipType)
-    end,
-    simulationTick = function(dt)
-        server.lSlotControlTick(dt)
-    end,
-    deactivate = function()
-        server.lSlotStateSetRequestFire(false)
-        server.lSlotStateResetRuntime()
-        server.lSlotStatePushHudReset(true)
-    end,
-    clearCommands = function()
-        server.lSlotStateSetRequestFire(false)
+    isActive = function()
+        return server.weaponGroupUsesController("kineticArtillery")
     end,
 })
 
@@ -362,17 +336,6 @@ _registerController("chargedSpinal", {
             server.xSlotStateSetReleaseRequested(true)
         end
         return true, nil
-    end,
-})
-
-_registerController("kineticArtillery", {
-    ownsHud = true,
-    requestFire = function()
-        server.lSlotStateSetRequestFire(true)
-        return true
-    end,
-    onSelected = function()
-        server.lSlotStatePushHud(true)
     end,
 })
 

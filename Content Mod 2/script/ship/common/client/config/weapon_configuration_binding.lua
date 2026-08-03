@@ -72,6 +72,7 @@ function client.weaponConfigurationBindingTick(dt)
         tostring(loadout.T or ""),
         tostring(loadout.X or ""),
         tostring(loadout.L or ""),
+        tostring(loadout.L2 or loadout.L or ""),
         tostring(loadout.M or ""),
         tostring(loadout.G or ""),
         tostring(loadout.H or ""),

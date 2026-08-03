@@ -75,9 +75,13 @@ local function _buildResolvedLoadout(definition, configuration, requestedLoadout
         local group = groups[i] or {}
         local slotType = tostring(group.slotType or "")
         if slotType ~= "" then
-            local candidate = requestedLoadout and requestedLoadout[slotType] or nil
+            local groupId = tostring(group.groupId or "")
+            local candidate = requestedLoadout and requestedLoadout[groupId] or nil
             if candidate == nil or candidate == "" then
-                candidate = defaults[slotType]
+                candidate = requestedLoadout and requestedLoadout[slotType] or nil
+            end
+            if candidate == nil or candidate == "" then
+                candidate = defaults[groupId] or defaults[slotType]
             end
             if candidate == nil or candidate == "" then
                 return nil, "missing weapon for slot group " .. slotType
@@ -85,7 +89,8 @@ local function _buildResolvedLoadout(definition, configuration, requestedLoadout
             if not _weaponAllowed(definition, slotType, candidate) then
                 return nil, "weapon " .. tostring(candidate) .. " is not allowed for slot group " .. slotType
             end
-            result[slotType] = tostring(candidate)
+            result[groupId] = tostring(candidate)
+            if result[slotType] == nil then result[slotType] = tostring(candidate) end
         end
     end
     
@@ -98,7 +103,9 @@ local function _validateConfigurationShape(definition, configuration, loadout)
         local group = groups[i] or {}
         local slotType = tostring(group.slotType or "")
         local count = tonumber(group.count) or 0
-        local weaponType = tostring((loadout or {})[slotType] or "")
+        local groupId = tostring(group.groupId or "")
+        local weaponType = tostring((loadout or {})[groupId]
+            or (loadout or {})[slotType] or "")
         local weaponDefinition = (weaponData or {})[weaponType] or {}
         local profileName = tostring(weaponDefinition.mountProfile or "")
         local profile = ((definition.weaponMountProfiles or {})[profileName]) or {}
@@ -137,7 +144,9 @@ local function _rebuildResolvedDefinition(shipType)
     resolved.weaponGroups = {}
     for _, group in ipairs(configuration.slotGroups or {}) do
         local slotType = tostring(group.slotType or "")
+        local groupId = tostring(group.groupId or "")
         local collectionName = string.lower(slotType) .. "Slots"
+        if groupId == "lSlot2" then collectionName = "lSlot2Slots" end
         resolved.weaponGroups[#resolved.weaponGroups + 1] = {
             groupId = tostring(group.groupId or ""),
             slotType = slotType,
@@ -149,7 +158,7 @@ local function _rebuildResolvedDefinition(shipType)
             shipType,
             configuration.configurationId,
             group.groupId,
-            loadout[slotType]
+            loadout[groupId] or loadout[slotType]
         )
         resolved[collectionName] = mounts
     end
