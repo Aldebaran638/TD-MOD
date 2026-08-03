@@ -4,7 +4,10 @@
 client = client or {}
 
 client.shipHealthBarConfig = client.shipHealthBarConfig or {
-    width = 560,
+    minWidth = 360,
+    maxWidth = 2052,
+    minWidthHP = 8000,
+    maxWidthHP = 60000,
     height = 20,
     bottomOffset = 90,
     segmentGap = 0,
@@ -50,6 +53,15 @@ local function _smoothToward(curr, target, upSpeed, downSpeed, dt)
     local speed = (target < curr) and downSpeed or upSpeed
     local k = math.min(1.0, speed * (dt or 0))
     return curr + (target - curr) * k
+end
+
+local function _resolveBarWidth(maxTotal, cfg)
+    local minWidth = math.max(1, tonumber(cfg.minWidth) or 360)
+    local maxWidth = math.max(minWidth, tonumber(cfg.maxWidth) or minWidth)
+    local minHP = math.max(0, tonumber(cfg.minWidthHP) or 0)
+    local maxHP = math.max(minHP + 1, tonumber(cfg.maxWidthHP) or (minHP + 1))
+    local ratio = _clamp((maxTotal - minHP) / (maxHP - minHP), 0, 1)
+    return minWidth + (maxWidth - minWidth) * ratio
 end
 
 local function _resolveControlledShipBody()
@@ -174,7 +186,7 @@ function client.shipHealthBarDraw()
         return
     end
 
-    local barW = cfg.width
+    local barW = _resolveBarWidth(maxTotal, cfg)
     local barH = cfg.height
 
     local x = UiCenter() - barW * 0.5
