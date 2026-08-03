@@ -36,7 +36,9 @@ local function _resolveCurrentShipDefinition()
     local shipType = server.shipContextGetType()
     if server.shipSlotLoadoutResolveShipDefinition ~= nil then
         local resolved = server.shipSlotLoadoutResolveShipDefinition(shipType)
-        if resolved ~= nil then return resolved end
+        if resolved ~= nil then
+            return resolved
+        end
     end
     return shipDefinitionGet(shipType, shipType)
 end
@@ -77,6 +79,10 @@ end
 
 function _weaponControlAPI.resetRequests()
     _resetRequests()
+end
+
+function _weaponControlAPI.hasPendingRequests()
+    return _requestState.fireRequested or _requestState.toggleRequested
 end
 
 -- 将API导出到server表，供API文件使用

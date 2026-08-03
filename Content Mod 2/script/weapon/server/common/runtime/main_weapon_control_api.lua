@@ -34,3 +34,7 @@ end
 function server.mainWeaponRequestSetToggleRequested(active)
     _api.setToggleRequested(active)
 end
+
+function server.mainWeaponControlHasPendingRequests()
+    return _api.hasPendingRequests()
+end

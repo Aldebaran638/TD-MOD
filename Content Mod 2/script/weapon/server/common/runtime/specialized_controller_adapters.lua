@@ -18,6 +18,7 @@ _register("specialized.mainWeaponControl", {
             or server.shipRuntimeGetDriverPlayerId(
                 server.shipContextGetBody()
             ) > 0
+            or server.mainWeaponControlHasPendingRequests()
     end,
     init = function()
         server.mainWeaponControlInit()
