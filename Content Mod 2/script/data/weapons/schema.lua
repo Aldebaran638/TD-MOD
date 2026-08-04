@@ -3,6 +3,7 @@
 weaponData = weaponData or {}
 weaponBehaviorProfiles = weaponBehaviorProfiles or {
     raycast = true,
+    infernoRaycast = true,
     projectile = true,
     rocketProjectile = true,
     guidedProjectile = true,

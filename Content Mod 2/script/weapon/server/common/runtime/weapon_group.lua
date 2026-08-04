@@ -52,6 +52,30 @@ local function _buildState(group, shipType)
     local shipDef = _resolveShipDefinition(shipType)
     local mountCollection = tostring((group or {}).mountCollection or "")
     local mounts = shipDef[mountCollection] or {}
+    local configuredCount = math.max(0, math.floor(tonumber((group or {}).count) or 0))
+
+    -- A resolved loadout normally provides the collection directly.  Keep a
+    -- second resolution path here because a ship can be rebuilt while its
+    -- loadout snapshot is still being refreshed; otherwise missing mounts
+    -- silently collapse the HUD and salvo to fewer barrels.
+    if #mounts < configuredCount and shipDefinitionResolveMounts ~= nil then
+        local configurationId = tostring(shipDef.defaultSlotConfigurationId or "")
+        local configuration = shipDefinitionFindConfiguration ~= nil
+            and shipDefinitionFindConfiguration(shipDef, configurationId) or nil
+        local fallbackWeapon = ""
+        for _, candidate in ipairs((configuration or {}).slotGroups or {}) do
+            if tostring(candidate.groupId or "") == groupId then
+                local defaults = (configuration or {}).defaultLoadout or {}
+                fallbackWeapon = tostring(defaults[groupId]
+                    or defaults[tostring(candidate.slotType or "")] or "")
+                break
+            end
+        end
+        local resolved = shipDefinitionResolveMounts(
+            shipType, configurationId, groupId, fallbackWeapon
+        )
+        if #resolved > #mounts then mounts = resolved end
+    end
     local state = {
         groupId = groupId,
         slotType = tostring((group or {}).slotType or ""),
@@ -75,6 +99,11 @@ local function _buildState(group, shipType)
             heat = 0.0,
             overheated = false,
         }
+    end
+    if state.groupId == "tSlot" then
+        DebugPrint("[perditionHud] server mounts=" .. tostring(#state.mounts)
+            .. " configured=" .. tostring(configuredCount)
+            .. " collection=" .. mountCollection)
     end
     return state
 end
@@ -174,6 +203,10 @@ local function _pushHud(state, force)
     local shipBody = server.shipContextGetBody()
     local playerId = server.netResolveShipDriver(shipBody)
     if playerId <= 0 then return end
+    if state.groupId == "tSlot" and maximums[2] <= 0.0 then
+        DebugPrint("[perditionHud] server missing T2 HUD mount; mounts="
+            .. tostring(#(state.mounts or {})))
+    end
     server.netClientCall(
         "hud.weaponGroup",
         playerId,

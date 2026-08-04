@@ -16,6 +16,7 @@
 #include "slots/x/hud/x_slot_lock_hud.lua"
 #include "slots/x/tachyon_lance/effects/charging_fx.lua"
 #include "slots/x/focused_arc_emitter/effects/charging_fx.lua"
+#include "common/effects/charged_ray_beam_renderer.lua"
 #include "slots/x/tachyon_lance/effects/beam_fx.lua"
 #include "slots/x/tachyon_lance/effects/muzzle_fx.lua"
 #include "slots/t/perdition_beam/effects/render_state.lua"
@@ -29,6 +30,8 @@
 #include "common/effects/shield_hit_fx.lua"
 #include "common/effects/generic_raycast_fx.lua"
 #include "slots/x/tachyon_lance/effects/impact_fx.lua"
+#include "slots/t/perdition_beam/effects/beam_fx.lua"
+#include "slots/t/perdition_beam/effects/impact_fx.lua"
 #include "slots/l/kinetic_artillery/effects/projectile_visual.lua"
 #include "guided/effects/missile_impact_fx.lua"
 #include "guided/effects/missile_visual.lua"
@@ -45,6 +48,8 @@ function client.weaponClientInit()
     client.tachyonMuzzleFxInit()
     client.perditionChargingFxInit()
     client.perditionLaunchFxInit()
+    client.perditionBeamFxInit()
+    client.perditionImpactFxInit()
     client.weaponFxResourcesInit()
     client.gammaLaserFxInit()
     client.weaponMuzzleFxInit()
@@ -70,6 +75,8 @@ function client.weaponClientTick(dt)
     client.tachyonMuzzleFxTick(dt)
     client.perditionChargingFxTick(dt)
     client.perditionLaunchFxTick(dt)
+    client.perditionBeamFxTick(dt)
+    client.perditionImpactFxTick(dt)
     client.shieldHitFxTick(dt)
     client.tachyonImpactFxTick(dt)
     client.projectileVisualTick(dt)
@@ -92,6 +99,8 @@ function client.weaponClientRender()
     client.tachyonBeamFxRender()
     client.tachyonMuzzleFxRender()
     client.perditionChargingFxRender()
+    client.perditionBeamFxRender()
+    client.perditionImpactFxRender()
     client.focusedArcChargingFxRender()
     client.genericRaycastFxRender()
     client.gammaLaserFxRender()

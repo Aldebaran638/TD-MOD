@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global
 
--- Stellaris 4.4.6: PERDITION_BEAM_TITAN.  It remains a normal charged raycast
--- weapon here so it uses the shared damage, power and loadout systems.
+-- Stellaris 4.4.6: PERDITION_BEAM_TITAN. It remains a charged release weapon
+-- while using its own bounded inferno impact behaviour.
 weaponDefineRay({
     weaponType = "perditionBeam",
     displayName = "炼狱射线",
@@ -14,22 +14,34 @@ weaponDefineRay({
     damageMax = 10000,
     powerUse = 500.0,
     cooldown = 3.0,
-    maxRange = 750.0,
+    maxRange = 1000.0,
     shieldFix = 0.75,
     armorFix = 1.5,
     bodyFix = 1.25,
     controllerType = "chargedRay",
     weaponClass = "chargedRay",
+    behaviorType = "infernoRaycast",
     targetingMode = "camera_limited",
     chargeDuration = 1.50,
-    launchDuration = 0.50,
+    launchDuration = 2.00,
     fireProfile = {
         mode = "charged_release",
         chargeDuration = 1.50,
-        launchDuration = 0.50,
+        launchDuration = 2.00,
     },
-    environmentExplosionSize = 5.0,
-    physicalExplosionCount = 2,
+    -- World damage is resolved by infernoRaycast; registered ships receive only
+    -- the shared Stellaris damage path and are never passed to physical APIs.
+    infernoPulseCoreRadius = 24.0,
+    infernoPulseMaxRadius = 60.0,
+    infernoPulseCoreScale = 0.33,
+    infernoPulseEdgeScale = 0.05,
+    infernoAftershockDelay = 0.25,
+    infernoAftershockScale = 0.16,
+    -- World-only impact policy. A tagged dragon is a scenery target rather
+    -- than a registered ship, so it receives the stronger physical burst.
+    infernoWorldExplosionCount = 5,
+    infernoDragonTargetTag = "dragon",
+    infernoDragonExplosionCount = 10,
     mountProfile = "tTitanic",
     salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.0 },
     aimControlMode = "camera_limited",
@@ -37,19 +49,4 @@ weaponDefineRay({
     aimPitchOffsetDeg = 4.0,
     officialComponentId = "PERDITION_BEAM_TITAN",
     family = "perdition_beam",
-    -- 原泰坦的蓄能、命中冲击波与分层爆炸参数。射线本身由通用 Sprite 特效渲染。
-    shockwaveParticleCount = 2400,
-    shockwaveLightIntensity = 175.0,
-    shockwaveParticleSpeedBase = 750.0,
-    shockwaveParticleSpeedDecay = 437.5,
-    shockwaveParticleSpeedRandom = 312.5,
-    explosionRadius = 4.0,
-    explosionStrength = 1.0,
-    explosionWaves = 20,
-    explosionWaveInterval = 0.4,
-    explosionFirstWaveCount = 12,
-    explosionWaveRadiusIncrement = 10.0,
-    explosionWaveCountIncrement = 8,
-    explosionHeightLayers = 15,
-    explosionHeightSpacing = 3.0,
 })

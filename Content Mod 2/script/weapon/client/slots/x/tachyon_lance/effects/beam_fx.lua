@@ -73,35 +73,9 @@ local function _tachyonBeamPalette(weaponType)
     return nil, nil
 end
 
-local function _tachyonBeamTableToVec(value)
-    local source = value or {}
-    return Vec(
-        tonumber(source.x or source[1]) or 0.0,
-        tonumber(source.y or source[2]) or 0.0,
-        tonumber(source.z or source[3]) or 0.0
-    )
-end
-
-local function _tachyonBeamCameraFacingAxis(beamAxis, beamCenter)
-    local cameraPos = GetCameraTransform().pos
-    local toCamera = VecSub(cameraPos, beamCenter)
-    local projected = VecSub(toCamera, VecScale(beamAxis, VecDot(toCamera, beamAxis)))
-
-    if VecLength(projected) < 0.0001 then
-        local fallback = Vec(0.0, 1.0, 0.0)
-        projected = VecSub(fallback, VecScale(beamAxis, VecDot(fallback, beamAxis)))
-    end
-    if VecLength(projected) < 0.0001 then
-        local fallback = Vec(1.0, 0.0, 0.0)
-        projected = VecSub(fallback, VecScale(beamAxis, VecDot(fallback, beamAxis)))
-    end
-
-    return _tachyonBeamSafeNormalize(projected, Vec(0.0, 0.0, 1.0))
-end
-
 local function _tachyonBeamResolveEndpoints(render, shipBody, config)
-    local beamStart = _tachyonBeamTableToVec(render.firePoint)
-    local beamEnd = _tachyonBeamTableToVec(render.hitPoint)
+    local beamStart = client.chargedRayTableToVec(render.firePoint)
+    local beamEnd = client.chargedRayTableToVec(render.hitPoint)
     if VecLength(VecSub(beamEnd, beamStart)) >= 0.001 then
         return beamStart, beamEnd
     end
@@ -192,7 +166,7 @@ function client.tachyonBeamFxRender()
 
     local beamDirection = VecScale(beamVector, 1.0 / beamLength)
     local beamCenter = VecLerp(state.beamStart, state.beamEnd, 0.5)
-    local cameraFacingAxis = _tachyonBeamCameraFacingAxis(beamDirection, beamCenter)
+    local cameraFacingAxis = client.chargedRayCameraFacingAxis(beamDirection, beamCenter)
     local beamTransform = Transform(beamCenter, QuatAlignXZ(beamDirection, cameraFacingAxis))
     local intensity = _tachyonBeamIntensity(config, tonumber(state.launchAge) or -1.0)
     if intensity <= 0.0001 then return end

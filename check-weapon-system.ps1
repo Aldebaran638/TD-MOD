@@ -90,11 +90,16 @@ $loadoutApi = Read-Required "script\weapon\server\common\loadout\slot_loadout_ap
 $mainWeaponInput = Read-Required "script\weapon\client\common\input\main_weapon_input.lua"
 $behaviorCommon = Read-Required "script\weapon\server\behaviors\common.lua"
 $raycastBehavior = Read-Required "script\weapon\server\behaviors\raycast.lua"
+$raycastCommon = Read-Required "script\weapon\server\behaviors\raycast_common.lua"
+$infernoRaycastBehavior = Read-Required "script\weapon\server\behaviors\inferno_raycast.lua"
 $genericRaycastFx = Read-Required "script\weapon\client\common\effects\generic_raycast_fx.lua"
 $gammaLaserFx = Read-Required "script\weapon\client\common\effects\gamma_laser_fx.lua"
 $weaponMuzzleFx = Read-Required "script\weapon\client\common\effects\weapon_muzzle_fx.lua"
 $weaponImpactFx = Read-Required "script\weapon\client\common\effects\weapon_impact_fx.lua"
 $weaponFxResources = Read-Required "script\weapon\client\common\effects\weapon_fx_resources.lua"
+$chargedRayBeamRenderer = Read-Required "script\weapon\client\common\effects\charged_ray_beam_renderer.lua"
+$perditionBeamFx = Read-Required "script\weapon\client\slots\t\perdition_beam\effects\beam_fx.lua"
+$perditionImpactFx = Read-Required "script\weapon\client\slots\t\perdition_beam\effects\impact_fx.lua"
 $guidedRuntime = Read-Required "script\weapon\server\guided\runtime.lua"
 $guidedMovement = Read-Required "script\weapon\server\guided\movement.lua"
 $guidedCollider = Read-Required "script\weapon\server\guided\collider.lua"
@@ -361,11 +366,12 @@ if ($weaponDamageRuntime -notmatch 'function\s+server\.weaponDamageRoll\s*\(' -o
     Add-Issue "weapon hit paths do not roll the configured Stellaris damage interval"
 }
 
-foreach ($behavior in @("raycast", "projectile", "rocketProjectile", "guidedProjectile", "strikeCraft")) {
+foreach ($behavior in @("raycast", "infernoRaycast", "projectile", "rocketProjectile", "guidedProjectile", "strikeCraft")) {
     if ($standard -notmatch [Regex]::Escape("$behavior = true")) {
         Add-Issue "catalog does not declare behavior $behavior"
     }
-    if ($weaponBootstrap -notmatch [Regex]::Escape("behaviors/$($behavior.Replace('rocketProjectile','rocket_projectile').Replace('guidedProjectile','guided_projectile').Replace('strikeCraft','strike_craft')).lua")) {
+    $behaviorFile = $behavior.Replace('infernoRaycast', 'inferno_raycast').Replace('rocketProjectile','rocket_projectile').Replace('guidedProjectile','guided_projectile').Replace('strikeCraft','strike_craft')
+    if ($weaponBootstrap -notmatch [Regex]::Escape("behaviors/$behaviorFile.lua")) {
         Add-Issue "weapon bootstrap does not include controller for $behavior"
     }
 }
@@ -739,6 +745,29 @@ if ([string]$weaponSourceById.phaseDisruptor -notmatch 'suppressShipExplosion\s*
     $raycastBehavior -notmatch 'suppressPhysicalExplosion\s*=\s*definition\.suppressShipExplosion\s*==\s*true' -or
     $raycastBehavior -notmatch 'not\s+suppressPhysicalExplosion') {
     Add-Issue "Phase Disruptor must not create physical explosions on registered ships"
+}
+if ([string]$weaponSourceById.perditionBeam -notmatch 'behaviorType\s*=\s*"infernoRaycast"' -or
+    [string]$weaponSourceById.perditionBeam -match 'environmentExplosionSize\s*=' -or
+    $infernoRaycastBehavior -notmatch 'weaponBehaviorRegister\("infernoRaycast"' -or
+    $infernoRaycastBehavior -notmatch 'weaponDamageApplyRolledToShip' -or
+    $infernoRaycastBehavior -notmatch '_applyShipPulse' -or
+    $infernoRaycastBehavior -notmatch 'QueryAabbBodies' -or
+    $infernoRaycastBehavior -notmatch 'Explosion\(endpoint, 4\.0\)' -or
+    $infernoRaycastBehavior -match '(?s)if ray\.hitRegisteredShip then.*?(?:Explosion|MakeHole|AddHeat|PaintRGBA|SpawnFire|ApplyBodyImpulse).*?elseif ray\.hit' -or
+    $raycastCommon -notmatch 'function\s+server\.weaponRaycastResolve\s*\(' -or
+    $raycastBehavior -notmatch 'server\.weaponRaycastResolve\(context\)') {
+    Add-Issue "Perdition Beam must use isolated inferno raycasting with safe ship damage and capped world destruction"
+}
+if ($weaponDamageRuntime -notmatch 'function\s+server\.weaponDamageApplyRolledToShip\s*\(' -or
+    $chargedRayBeamRenderer -notmatch 'QuatAlignXZ\(' -or
+    $perditionBeamFx -notmatch 'width = 96\.0' -or
+    $perditionBeamFx -notmatch 'width = 11\.0' -or
+    $perditionImpactFx -notmatch 'TransformToLocalPoint' -or
+    $perditionImpactFx -notmatch 'ShakeCamera' -or
+    $perditionImpactFx -notmatch 'while #impacts > 6' -or
+    $client -notmatch 'perdition_beam/effects/beam_fx\.lua' -or
+    $client -notmatch 'perdition_beam/effects/impact_fx\.lua') {
+    Add-Issue "Perdition Beam needs bounded layered beam and moving-ship impact FX"
 }
 if ([string]$weaponSourceById.phaseDisruptor -notmatch 'fxProfile\s*=\s*"arcBeam"' -or
     $genericRaycastFx -notmatch 'arcBeam\s*=\s*\{\s*color\s*=\s*\{\s*0\.18,\s*1\.0,\s*0\.32\s*\}') {

@@ -23,6 +23,8 @@ client.weaponFxBudgetConfig = client.weaponFxBudgetConfig or {
     maxParticlesSpawnedPerFrame = 280,
     maxPointLightsPerFrame = 28,
     maxSpritesPerFrame = 512,
+    criticalSpriteReserve = 24,
+    criticalPointLightReserve = 2,
     maxLinesPerFrame = 384,
     maxActiveMuzzles = 128,
     maxActiveImpacts = 128,
@@ -69,11 +71,15 @@ function client.weaponFxTakeParticles(count, priority)
     return true
 end
 
-function client.weaponFxTakeSprite(count)
+function client.weaponFxTakeSprite(count, priority)
     local state = client.weaponFxBudgetState
     local cfg = client.weaponFxBudgetConfig
     count = math.max(1, math.floor(tonumber(count) or 1))
-    if state.spritesThisFrame + count > cfg.maxSpritesPerFrame then return false end
+    local limit = cfg.maxSpritesPerFrame
+    if priority ~= "critical" then
+        limit = math.max(0, limit - math.max(0, cfg.criticalSpriteReserve or 0))
+    end
+    if state.spritesThisFrame + count > limit then return false end
     state.spritesThisFrame = state.spritesThisFrame + count
     return true
 end
@@ -87,10 +93,14 @@ function client.weaponFxTakeLine(count)
     return true
 end
 
-function client.weaponFxPointLight(position, r, g, b, intensity, maxDistance)
+function client.weaponFxPointLight(position, r, g, b, intensity, maxDistance, priority)
     local state = client.weaponFxBudgetState
     local cfg = client.weaponFxBudgetConfig
-    if state.pointLightsThisFrame >= cfg.maxPointLightsPerFrame then return false end
+    local limit = cfg.maxPointLightsPerFrame
+    if priority ~= "critical" then
+        limit = math.max(0, limit - math.max(0, cfg.criticalPointLightReserve or 0))
+    end
+    if state.pointLightsThisFrame >= limit then return false end
     if maxDistance ~= nil and VecLength(VecSub(position, GetCameraTransform().pos)) > maxDistance then return false end
     state.pointLightsThisFrame = state.pointLightsThisFrame + 1
     PointLight(position, r, g, b, intensity)

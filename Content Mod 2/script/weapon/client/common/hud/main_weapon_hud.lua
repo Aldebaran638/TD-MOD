@@ -82,6 +82,7 @@ client.mSlotHudStateByShip = client.mSlotHudStateByShip or {}
 client.gSlotHudStateByShip = client.gSlotHudStateByShip or {}
 client.hSlotHudStateByShip = client.hSlotHudStateByShip or {}
 client.weaponGroupHudStateByShip = client.weaponGroupHudStateByShip or {}
+client.mainWeaponHudDebugState = client.mainWeaponHudDebugState or { tSlotSignature = "" }
 client.hSlotDebugState = client.hSlotDebugState or {
     active = 0,
     lastReason = "none",
@@ -229,6 +230,21 @@ function client.updateWeaponGroupHudState(
             tostring(phase3 or "idle"), tostring(phase4 or "idle"),
         },
     }
+
+    if tostring(groupId or "") == "tSlot" then
+        local debug = client.mainWeaponHudDebugState
+        local signature = string.format(
+            "%d|%s|%.2f/%.2f|%.2f/%.2f|%s/%s",
+            body, tostring(weaponType or ""),
+            tonumber(value1) or 0.0, tonumber(maxValue1) or 0.0,
+            tonumber(value2) or 0.0, tonumber(maxValue2) or 0.0,
+            tostring(phase1 or "idle"), tostring(phase2 or "idle")
+        )
+        if debug.tSlotSignature ~= signature then
+            debug.tSlotSignature = signature
+            DebugPrint("[perditionHud] client " .. signature)
+        end
+    end
 end
 
 local function _resolveGenericTopStatus(state)
@@ -693,7 +709,11 @@ function client.mainWeaponHudDraw()
     local currentMode = state.currentMainWeapon or "xSlot"
     local weaponDefinition = client.getShipWeaponDefinition ~= nil
         and client.getShipWeaponDefinition(state.shipBody, currentMode) or {}
-    local usesGenericRuntime = tostring(weaponDefinition.controllerType or "") == ""
+    -- Charged rays are implemented by weapon_group.lua even though their
+    -- definition declares a controller type.  T slots must therefore use the
+    -- generic group HUD instead of the legacy specialised-controller branch.
+    local usesGenericRuntime = currentMode == "tSlot"
+        or tostring(weaponDefinition.controllerType or "") == ""
 
     local topFill, topText = _resolveXSlotTopStatus(state)
     local topColor = cfg.xSlotColor
@@ -817,11 +837,17 @@ function client.mainWeaponHudDraw()
             if currentMode == "mSlot" then slotColor = cfg.mSlotColor end
             if currentMode == "gSlot" then slotColor = cfg.gSlotColor end
             local barCount = 0
+            local groupHud = ((client.weaponGroupHudStateByShip[state.shipBody] or {})[currentMode]) or {}
             for i = 1, 4 do
-                local groupHud = ((client.weaponGroupHudStateByShip[state.shipBody] or {})[currentMode]) or {}
                 if tonumber((groupHud.maximums or {})[i]) ~= nil and tonumber((groupHud.maximums or {})[i]) > 0.0 then
                     barCount = i
                 end
+            end
+            -- Preserve the configured number of barrels during the short
+            -- interval before the first network HUD packet arrives.
+            if client.getShipWeaponMounts ~= nil then
+                local mounts = client.getShipWeaponMounts(state.shipBody, currentMode) or {}
+                barCount = math.max(barCount, math.min(4, #mounts))
             end
             for i = 1, barCount do
                 local column = (i - 1) % 2

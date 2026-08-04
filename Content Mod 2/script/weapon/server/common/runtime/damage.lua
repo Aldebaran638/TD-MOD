@@ -24,12 +24,23 @@ function server.weaponDamageApplyToShip(hitBody, weaponType, attackerBodyId)
     end
 
     local raw = server.weaponDamageRoll(definition)
-    local result = server.shipDamageApplyWeaponDefinition(
+    local result = server.weaponDamageApplyRolledToShip(
         bodyId,
-        definition,
+        weaponType,
         raw,
         attackerBodyId
     )
     return result.didDamage, result.didHitShield, result.impactLayer
+end
+
+-- Applies a caller-owned raw roll.  Area weapons use this to keep every target
+-- of one shot tied to the same randomized damage value.
+function server.weaponDamageApplyRolledToShip(hitBody, weaponType, rawDamage, attackerBodyId)
+    local bodyId = math.floor(hitBody or 0)
+    local definition = (weaponData or {})[tostring(weaponType or "")] or {}
+    if bodyId == 0 or server.registryShipExists == nil or not server.registryShipExists(bodyId) then
+        return { didDamage = false, didHitShield = false, impactLayer = "none" }
+    end
+    return server.shipDamageApplyWeaponDefinition(bodyId, definition, rawDamage, attackerBodyId)
 end
 
