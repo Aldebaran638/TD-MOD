@@ -537,7 +537,9 @@ function client.mainWeaponHudTick(dt)
     else
         state.currentMainWeapon = "xSlot"
     end
-    state.xSlotFireMode = client.getShipXSlotFireMode ~= nil and client.getShipXSlotFireMode(body) or "aim"
+    state.xSlotFireMode = client.getShipWeaponFireMode ~= nil
+        and client.getShipWeaponFireMode(body)
+        or (client.getShipXSlotFireMode ~= nil and client.getShipXSlotFireMode(body) or "aim")
 
     local hud = client.lSlotHudStateByShip[body] or {
         heat = 0.0,
@@ -697,7 +699,11 @@ function client.mainWeaponHudDraw()
     local topColor = cfg.xSlotColor
     local titleText = tostring(weaponDefinition.displayName or "Tachyon Lance")
     local englishNameText = tostring(weaponDefinition.englishName or "")
-    local modeText = string.format("Main Weapon: X-Slot [%s]", string.upper(state.xSlotFireMode or "aim"))
+    local modeText = string.format(
+        "Main Weapon: %s [%s]",
+        tostring(currentMode),
+        string.upper(state.xSlotFireMode or "aim")
+    )
 
     if usesGenericRuntime then
         topFill, topText = _resolveGenericTopStatus(state)

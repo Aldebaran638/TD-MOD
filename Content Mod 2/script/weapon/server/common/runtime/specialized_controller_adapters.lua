@@ -32,76 +32,6 @@ _register("specialized.mainWeaponControl", {
     end,
 })
 
-_register("specialized.chargedSpinal", {
-    initOrder = 20,
-    rebuildResetOrder = 10,
-    rebuildInitOrder = 10,
-    simulationTickOrder = 10,
-    deactivateOrder = 10,
-    isActive = function(phase)
-        return phase ~= "simulationTick"
-            or (
-                server.weaponGroupUsesController("chargedSpinal")
-                and server.xSlotStateNeedsTick()
-            )
-    end,
-    init = function(shipType)
-        server.xSlotStateInit(shipType)
-    end,
-    rebuildReset = function()
-        server.xSlotStateResetRuntime()
-    end,
-    rebuildInit = function(shipType)
-        server.xSlotStateInit(shipType)
-    end,
-    simulationTick = function(dt)
-        server.xSlotControlTick(dt)
-    end,
-    deactivate = function()
-        server.xSlotStateSetHoldRequested(false)
-        server.xSlotStateSetRequestFire(false)
-        server.xSlotStateResetRuntime()
-    end,
-    clearCommands = function()
-        server.xSlotStateSetHoldRequested(false)
-        server.xSlotStateSetRequestFire(false)
-        server.xSlotStateSetReleaseRequested(false)
-    end,
-})
-
-_register("specialized.chargedSpinalRenderState", {
-    initOrder = 30,
-    init = function()
-        server.xSlotRenderStateInit()
-    end,
-})
-
-_register("specialized.chargedSpinalMuzzleLight", {
-    initOrder = 40,
-    rebuildResetOrder = 80,
-    simulationTickOrder = 20,
-    deactivateOrder = 20,
-    isActive = function(phase)
-        return phase ~= "simulationTick"
-            or (
-                server.weaponGroupUsesController("chargedSpinal")
-                and server.xSlotStateNeedsTick()
-            )
-    end,
-    init = function()
-        server.tachyonMuzzleLightInit()
-    end,
-    rebuildReset = function()
-        server.tachyonMuzzleLightStop("tachyonLance")
-    end,
-    simulationTick = function(dt)
-        server.tachyonMuzzleLightTick(dt)
-    end,
-    deactivate = function()
-        server.tachyonMuzzleLightStop("tachyonLance")
-    end,
-})
-
 -- Compatibility component retained for the runtime contract. Current kinetic
 -- artillery uses the generic group runtime, so this stays inactive unless a
 -- future weapon explicitly opts into the legacy controller.
@@ -323,19 +253,46 @@ local function _registerController(controllerType, controller)
     end
 end
 
-_registerController("chargedSpinal", {
-    ownsHud = true,
-    ownsHold = true,
+-- chargedRay is a capability marker.  Its lifecycle is owned by the generic
+-- weapon-group runtime so X and T groups share one charge/release path.
+_registerController("chargedRay", {
+    delegatesToWeaponGroup = true,
     requestFire = function()
-        server.xSlotStateSetRequestFire(true)
-        return true
+        return false, "chargedRay is handled by weapon-group runtime"
     end,
-    setHeld = function(context, held)
-        server.xSlotStateSetHoldRequested(held)
-        if not held then
-            server.xSlotStateSetReleaseRequested(true)
+})
+
+_register("specialized.chargedRayVisual", {
+    initOrder = 30,
+    rebuildResetOrder = 80,
+    simulationTickOrder = 20,
+    deactivateOrder = 20,
+    isActive = function(phase)
+        return phase ~= "simulationTick"
+            or server.weaponGroupUsesWeaponClass("chargedRay")
+    end,
+    init = function()
+        if server.xSlotRenderStateInit ~= nil then
+            server.xSlotRenderStateInit()
         end
-        return true, nil
+        if server.tachyonMuzzleLightInit ~= nil then
+            server.tachyonMuzzleLightInit()
+        end
+    end,
+    rebuildReset = function()
+        if server.tachyonMuzzleLightStop ~= nil then
+            server.tachyonMuzzleLightStop("tachyonLance")
+        end
+    end,
+    simulationTick = function(dt)
+        if server.tachyonMuzzleLightTick ~= nil then
+            server.tachyonMuzzleLightTick(dt)
+        end
+    end,
+    deactivate = function()
+        if server.tachyonMuzzleLightStop ~= nil then
+            server.tachyonMuzzleLightStop("tachyonLance")
+        end
     end,
 })
 

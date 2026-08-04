@@ -107,7 +107,10 @@ local function _validateConfigurationShape(definition, configuration, loadout)
         local weaponType = tostring((loadout or {})[groupId]
             or (loadout or {})[slotType] or "")
         local weaponDefinition = (weaponData or {})[weaponType] or {}
-        local profileName = tostring(weaponDefinition.mountProfile or "")
+        local profileName = shipDefinitionGetGroupMountProfileName(
+            groupId,
+            weaponDefinition.mountProfile
+        )
         local profile = ((definition.weaponMountProfiles or {})[profileName]) or {}
         if slotType == "" or count <= 0 then
             return false, "invalid slot group"
@@ -145,8 +148,10 @@ local function _rebuildResolvedDefinition(shipType)
     for _, group in ipairs(configuration.slotGroups or {}) do
         local slotType = tostring(group.slotType or "")
         local groupId = tostring(group.groupId or "")
-        local collectionName = string.lower(slotType) .. "Slots"
-        if groupId == "lSlot2" then collectionName = "lSlot2Slots" end
+        local collectionName = shipDefinitionGetGroupMountCollection(
+            groupId,
+            slotType
+        )
         resolved.weaponGroups[#resolved.weaponGroups + 1] = {
             groupId = tostring(group.groupId or ""),
             slotType = slotType,

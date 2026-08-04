@@ -35,3 +35,15 @@ end
 function client.toggleShipXSlotFireMode(shipBodyId)
     _api.toggleXSlotFireMode(shipBodyId)
 end
+
+function client.setShipWeaponFireMode(shipBodyId, mode)
+    _api.setWeaponFireMode(shipBodyId, mode)
+end
+
+function client.getShipWeaponFireMode(shipBodyId)
+    return _api.getWeaponFireMode(shipBodyId)
+end
+
+function client.toggleShipWeaponFireMode(shipBodyId)
+    _api.toggleWeaponFireMode(shipBodyId)
+end

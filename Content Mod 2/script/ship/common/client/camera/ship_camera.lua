@@ -231,20 +231,18 @@ local function _shipCameraResolveWeaponConfig(shipBodyId)
     return defs.tachyonLance or {}, "xSlot"
 end
 
-local function _shipCameraResolveXSlotFireOriginLocal(shipBodyId)
-    local xSlots = client.getShipWeaponMounts(shipBodyId, "xSlot")
+local function _shipCameraResolveChargedRayFireOriginLocal(shipBodyId, mode)
+    local mounts = client.getShipWeaponMounts(shipBodyId, mode or "xSlot")
     local sx, sy, sz = 0.0, 0.0, 0.0
     local count = 0
 
-    for i = 1, #xSlots do
-        local slot = xSlots[i] or {}
-        if tostring(slot.weaponType or "tachyonLance") == "tachyonLance" then
-            local firePos = slot.firePosOffset or {}
-            sx = sx + (tonumber(firePos.x) or 0.0)
-            sy = sy + (tonumber(firePos.y) or 0.0)
-            sz = sz + (tonumber(firePos.z) or -4.0)
-            count = count + 1
-        end
+    for i = 1, #mounts do
+        local slot = mounts[i] or {}
+        local firePos = slot.firePosOffset or {}
+        sx = sx + (tonumber(firePos.x) or 0.0)
+        sy = sy + (tonumber(firePos.y) or 0.0)
+        sz = sz + (tonumber(firePos.z) or -4.0)
+        count = count + 1
     end
 
     if count <= 0 then
@@ -254,21 +252,30 @@ local function _shipCameraResolveXSlotFireOriginLocal(shipBodyId)
     return Vec(sx / count, sy / count, sz / count)
 end
 
-local function _shipCameraResolveLockedXTargetLocal(shipBodyId, shipTransform)
-    if client.getShipMainWeaponMode == nil or client.getShipMainWeaponMode(shipBodyId) ~= "xSlot" then
+local function _shipCameraResolveLockedChargedRayTargetLocal(shipBodyId, shipTransform)
+    if client.getShipMainWeaponMode == nil then
         return nil
     end
-    if client.getShipXSlotFireMode == nil or client.getShipXSlotFireMode(shipBodyId) ~= "lock" then
+    local mode = client.getShipMainWeaponMode(shipBodyId)
+    local definition = client.getShipWeaponDefinition ~= nil
+        and client.getShipWeaponDefinition(shipBodyId, mode) or {}
+    if tostring(definition.weaponClass or "") ~= "chargedRay" then
         return nil
     end
-    if client.xSlotTargetingGetLockedTargetWorld == nil then
+    if client.getShipWeaponFireMode == nil
+        or client.getShipWeaponFireMode(shipBodyId) ~= "lock" then
         return nil
     end
-    local targetWorld = client.xSlotTargetingGetLockedTargetWorld(shipBodyId)
+    local getLockedTargetWorld = client.chargedRayTargetingGetLockedTargetWorld
+        or client.xSlotTargetingGetLockedTargetWorld
+    if getLockedTargetWorld == nil then
+        return nil
+    end
+    local targetWorld = getLockedTargetWorld(shipBodyId)
     if targetWorld == nil then
         return nil
     end
-    local fireOriginLocal = _shipCameraResolveXSlotFireOriginLocal(shipBodyId)
+    local fireOriginLocal = _shipCameraResolveChargedRayFireOriginLocal(shipBodyId, mode)
     local localPoint = TransformToLocalPoint(shipTransform, targetWorld)
     local localDir = VecSub(localPoint, fireOriginLocal)
     return _safeNormalize(localDir, Vec(0, 0, -1))
@@ -770,7 +777,7 @@ function client.shipCameraTick(dt)
     pitchError = pitchError + steerPitch
 
     local weaponConfig, currentMode = _shipCameraResolveWeaponConfig(body)
-    local lockedTargetLocalDir = _shipCameraResolveLockedXTargetLocal(body, shipTransform)
+    local lockedTargetLocalDir = _shipCameraResolveLockedChargedRayTargetLocal(body, shipTransform)
     -- 武器数据决定能否倾角瞄准及角度上限；飞船不再按槽位筛选。
     local weaponAimActive = (cam.rearFreelookActive or cam.frontFreelookActive or lockedTargetLocalDir ~= nil)
         and tostring(weaponConfig.aimControlMode or "fixed") == "camera_limited"

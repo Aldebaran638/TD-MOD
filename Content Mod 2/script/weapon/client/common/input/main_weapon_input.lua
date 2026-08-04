@@ -44,7 +44,21 @@ local function _releaseHeldWeapon(state)
 end
 
 local function _lockedTargetForWeapon(shipBody, definition)
-    if tostring((definition or {}).targetingMode or "") ~= "target_lock" then
+    local weapon = definition or {}
+    local hasLockedTarget = client.chargedRayTargetingHasLockedTarget
+        or client.xSlotTargetingHasLockedTarget
+    local getLockedTargetIds = client.chargedRayTargetingGetLockedTargetIds
+        or client.xSlotTargetingGetLockedTargetIds
+    if tostring(weapon.weaponClass or "") == "chargedRay"
+        and hasLockedTarget ~= nil
+        and hasLockedTarget(shipBody) then
+        local vehicleId, bodyId = 0, 0
+        if getLockedTargetIds ~= nil then
+            vehicleId, bodyId = getLockedTargetIds(shipBody)
+        end
+        return math.floor(vehicleId or 0), math.floor(bodyId or 0)
+    end
+    if tostring(weapon.targetingMode or "") ~= "target_lock" then
         return 0, 0
     end
     if client.guidedTargetingCanFire == nil
@@ -96,15 +110,27 @@ function client.mainWeaponInputTick(dt)
         client.shipRequestMainWeaponToggle(shipBody, 1)
         return
     end
-    if currentMode == "xSlot" and InputPressed("b")
-        and client.toggleShipXSlotFireMode ~= nil then
-        client.toggleShipXSlotFireMode(shipBody)
+    local currentDefinition = client.getShipWeaponDefinition ~= nil
+        and client.getShipWeaponDefinition(shipBody, currentMode) or {}
+    local isChargedRay = tostring(currentDefinition.weaponClass or "") == "chargedRay"
+    if isChargedRay and InputPressed("b") then
+        if client.toggleShipWeaponFireMode ~= nil then
+            client.toggleShipWeaponFireMode(shipBody)
+        elseif client.toggleShipXSlotFireMode ~= nil then
+            client.toggleShipXSlotFireMode(shipBody)
+        end
     end
 
-    local definition = client.getShipWeaponDefinition ~= nil
-        and client.getShipWeaponDefinition(shipBody, currentMode) or {}
+    local definition = currentDefinition
     local targetVehicleId, targetBodyId =
         _lockedTargetForWeapon(shipBody, definition)
+    local fireMode = client.getShipWeaponFireMode ~= nil
+        and client.getShipWeaponFireMode(shipBody) or "aim"
+    if isChargedRay and fireMode == "lock"
+        and targetVehicleId == 0 and targetBodyId == 0 then
+        _releaseHeldWeapon(state)
+        return
+    end
     local wantsFire = InputDown("lmb")
     local changed = state.holdShipBody ~= shipBody
         or state.holdMode ~= currentMode

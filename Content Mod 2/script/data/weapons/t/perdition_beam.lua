@@ -18,6 +18,9 @@ weaponDefineRay({
     shieldFix = 0.75,
     armorFix = 1.5,
     bodyFix = 1.25,
+    controllerType = "chargedRay",
+    weaponClass = "chargedRay",
+    targetingMode = "camera_limited",
     chargeDuration = 1.50,
     launchDuration = 0.50,
     fireProfile = {

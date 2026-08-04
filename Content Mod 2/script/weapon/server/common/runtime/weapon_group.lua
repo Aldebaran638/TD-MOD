@@ -23,6 +23,30 @@ local function _weaponGroupBreakCloak(shipBodyId)
     end
 end
 
+local function _weaponGroupIsChargedRay(weaponDefinition)
+    local definition = weaponDefinition or {}
+    return tostring(definition.weaponClass or "") == "chargedRay"
+        or tostring(definition.controllerType or "") == "chargedRay"
+end
+
+local function _weaponGroupPushChargedRayEvent(context, eventType, payload)
+    local source = context or {}
+    local event = payload or {}
+    event.eventType = eventType
+    event.weaponType = tostring(source.weaponType or "")
+    event.slotIndex = math.floor(source.mountIndex or 1)
+    event.firePoint = event.firePoint or select(1,
+        server.weaponBehaviorResolveFireTransform(source)
+    )
+
+    local slotType = tostring(source.slotType or "")
+    if slotType == "T" and server.tSlotRenderPushEvent ~= nil then
+        server.tSlotRenderPushEvent(source.shipBodyId, event)
+    elseif server.xSlotRenderPushEvent ~= nil then
+        server.xSlotRenderPushEvent(source.shipBodyId, event)
+    end
+end
+
 local function _buildState(group, shipType)
     local groupId = tostring((group or {}).groupId or "")
     local shipDef = _resolveShipDefinition(shipType)
@@ -97,7 +121,8 @@ end
 local function _pushHud(state, force)
     local weaponType, weaponDef = _resolveWeapon(state)
     local controller = server.weaponControllerResolve(weaponDef)
-    if controller ~= nil and controller.ownsHud then return end
+    if controller ~= nil and not controller.delegatesToWeaponGroup
+        and controller.ownsHud then return end
     local cooldown = math.max(0.0, tonumber((weaponDef or {}).cooldown) or 0.0)
     local overheatThreshold = math.max(0.0, tonumber((weaponDef or {}).overheatThreshold) or 0.0)
     local usesHeat = overheatThreshold > 0.0
@@ -217,7 +242,8 @@ function server.weaponGroupSetFireHeld(groupId, active, request)
     if state == nil then return false, "unknown weapon group" end
     local weaponType, weaponDef = _resolveWeapon(state)
     local controller = server.weaponControllerResolve(weaponDef)
-    if controller ~= nil and controller.ownsHold and type(controller.setHeld) == "function" then
+    if controller ~= nil and not controller.delegatesToWeaponGroup
+        and controller.ownsHold and type(controller.setHeld) == "function" then
         if active then
             _weaponGroupBreakCloak((request or {}).shipBodyId)
         end
@@ -271,6 +297,17 @@ function server.weaponGroupUsesController(controllerType)
     return false
 end
 
+function server.weaponGroupUsesWeaponClass(weaponClass)
+    local requested = tostring(weaponClass or "")
+    for _, state in pairs(server.weaponGroupStateById or {}) do
+        local _, definition = _resolveWeapon(state)
+        if tostring((definition or {}).weaponClass or "") == requested then
+            return true
+        end
+    end
+    return false
+end
+
 function server.weaponGroupNeedsTick()
     local body = server.shipContextGetBody()
     if body ~= 0 and server.shipRuntimeGetDriverPlayerId(body) > 0 then
@@ -296,7 +333,8 @@ function server.weaponGroupSyncHud(groupId, force)
     if state == nil then return false end
     local weaponType, weaponDef = _resolveWeapon(state)
     local controller = server.weaponControllerResolve(weaponDef)
-    if controller ~= nil and type(controller.onSelected) == "function" then
+    if controller ~= nil and not controller.delegatesToWeaponGroup
+        and type(controller.onSelected) == "function" then
         controller.onSelected({
             groupId = state.groupId,
             state = state,
@@ -410,9 +448,14 @@ function server.weaponGroupRequestFire(groupId, request)
         and not _requestWithinSensorAndWeaponRange(normalizedRequest, weaponDef) then
         return false, "target outside sensor or weapon range"
     end
+    if _weaponGroupIsChargedRay(weaponDef)
+        and _requestHasTarget(normalizedRequest)
+        and not _requestWithinSensorAndWeaponRange(normalizedRequest, weaponDef) then
+        return false, "charged ray target outside sensor or weapon range"
+    end
 
     local controller = server.weaponControllerResolve(weaponDef)
-    if controller ~= nil then
+    if controller ~= nil and not controller.delegatesToWeaponGroup then
         local fired = controller.requestFire({
             groupId = id,
             state = state,
@@ -454,15 +497,14 @@ function server.weaponGroupRequestFire(groupId, request)
     local cooldown = math.max(0.0, tonumber(weaponDef.cooldown) or 0.0)
     if chargeDuration > 0.0 then
         _weaponGroupBreakCloak(normalizedRequest.shipBodyId)
-        -- T 槽只复用旧泰坦的渲染事件协议；发射和伤害仍完全走通用武器组。
-        if weaponDef.family == "perdition_beam" and server.tSlotRenderPushEvent ~= nil then
-            local origin = select(1, server.weaponBehaviorResolveFireTransform(contexts[1]))
-            server.tSlotRenderPushEvent(normalizedRequest.shipBodyId, {
-                eventType = "charging_start",
-                slotIndex = contexts[1].mountIndex,
-                weaponType = weaponType,
-                firePoint = origin,
-            })
+        if _weaponGroupIsChargedRay(weaponDef) then
+            _weaponGroupPushChargedRayEvent(
+                contexts[1],
+                "charging_start"
+            )
+            if server.tachyonMuzzleLightBeginCharge ~= nil then
+                server.tachyonMuzzleLightBeginCharge(weaponType)
+            end
         end
         state.pending = {
             remaining = chargeDuration,
@@ -552,14 +594,15 @@ function server.weaponGroupTick(dt)
                             0.0,
                             tonumber(((weaponDef or {}).salvoProfile or {}).interval) or 0.0
                         )
-                    elseif weaponDef.family == "perdition_beam"
-                        and server.tSlotRenderPushEvent ~= nil then
+                    elseif _weaponGroupIsChargedRay(weaponDef) then
                         local context = (pending.contexts or {})[1] or {}
-                        local origin = select(1, server.weaponBehaviorResolveFireTransform(context))
-                        server.tSlotRenderPushEvent(
-                            context.shipBodyId,
-                            { eventType = "charge_cancel", weaponType = weaponType, firePoint = origin }
+                        _weaponGroupPushChargedRayEvent(
+                            context,
+                            "charge_cancel"
                         )
+                        if server.tachyonMuzzleLightStop ~= nil then
+                            server.tachyonMuzzleLightStop(context.weaponType)
+                        end
                     end
                     state.pending = nil
                     state.releaseRequested = false

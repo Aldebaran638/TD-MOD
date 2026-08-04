@@ -94,11 +94,12 @@ function weaponDefineRay(definition)
     _fillMissing(definition, {
         behaviorType = "raycast",
         targetingMode = "camera_limited",
+        weaponClass = "directRay",
         projectileProfile = { mode = "none" },
         environmentExplosionSize = 0.35,
     })
     definition.fireProfile = definition.fireProfile or {
-        mode = chargeDuration > 0.0 and "charged" or "instant",
+        mode = chargeDuration > 0.0 and "charged_release" or "instant",
         chargeDuration = chargeDuration,
         launchDuration = tonumber(definition.launchDuration)
             or (chargeDuration > 0.0 and 0.20 or 0.10),

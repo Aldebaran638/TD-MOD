@@ -35,6 +35,36 @@ function shipDefinitionFindConfiguration(definition, configurationId)
     return fallback
 end
 
+-- Slot groups are identified by their groupId.  A numbered group such as
+-- lSlot2 uses the same weapon family as lSlot, but resolves to its own mount
+-- collection and numbered mount profile.  Keeping this rule here prevents
+-- loadout validation and runtime resolution from drifting apart.
+function shipDefinitionGetGroupMountCollection(groupId, slotType)
+    local requestedGroup = tostring(groupId or "")
+    local normalizedGroup = string.lower(requestedGroup)
+    local requestedType = string.lower(tostring(slotType or ""))
+    local base, index = normalizedGroup:match("^(.-)slot(%d*)$")
+    if base ~= nil and base ~= "" and requestedType ~= "" then
+        if index == "" then
+            return requestedType .. "Slots"
+        end
+        return requestedType .. "Slot" .. index .. "Slots"
+    end
+    return string.lower(requestedGroup) .. "Slots"
+end
+
+function shipDefinitionGetGroupMountProfileName(groupId, baseProfileName)
+    local profileName = tostring(baseProfileName or "")
+    if profileName == "" then return "" end
+
+    local normalizedGroup = string.lower(tostring(groupId or ""))
+    local _, index = normalizedGroup:match("^(.-)slot(%d*)$")
+    if index ~= nil and index ~= "" then
+        return profileName .. index
+    end
+    return profileName
+end
+
 function shipDefinitionResolveMounts(
     shipType,
     configurationId,
@@ -63,10 +93,10 @@ function shipDefinitionResolveMounts(
             or defaults[tostring(group.slotType or "")] or "")
     end
     local weapon = (weaponData or {})[typeId] or {}
-    local profileName = tostring(weapon.mountProfile or "")
-    if requestedGroup == "lSlot2" and profileName ~= "" then
-        profileName = profileName .. "2"
-    end
+    local profileName = shipDefinitionGetGroupMountProfileName(
+        requestedGroup,
+        weapon.mountProfile
+    )
     local profile = ((definition.weaponMountProfiles or {})[profileName]) or {}
     local count = math.max(0, math.floor(tonumber(group.count) or 0))
     local mounts = {}

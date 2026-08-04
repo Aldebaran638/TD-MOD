@@ -488,8 +488,7 @@ foreach ($apiName in $forbiddenEntryLifecycleCalls) {
     }
 }
 foreach ($componentId in @(
-    "specialized.mainWeaponControl", "specialized.chargedSpinal",
-    "specialized.chargedSpinalRenderState", "specialized.chargedSpinalMuzzleLight",
+    "specialized.mainWeaponControl", "specialized.chargedRayVisual",
     "specialized.kineticArtillery", "specialized.guidedProjectile",
     "specialized.guidedSalvo", "specialized.torpedoSalvo",
     "specialized.strikeCraft", "weapon.group",
@@ -685,10 +684,11 @@ if ($groupRuntime -notmatch 'mount\.overheated' -or
 if ($crosshair -notmatch 'weaponConfigUiIsOpen') {
     Add-Issue "crosshair is not hidden while the independent UI is open"
 }
-if ([string]$weaponSourceById.focusedArcEmitter -notmatch '(?s)bodyFix\s*=\s*1\.0.*?chargeDuration\s*=\s*0\.50.*?controllerType\s*=\s*"chargedSpinal"' -or
-    $xSlotState -notmatch 'weaponDef\.chargeDuration\s+or\s+fireProfile\.chargeDuration' -or
-    $xSlotControl -notmatch '(?s)elseif\s+activeState\s*==\s*"charged"\s+then.*?if\s+releaseRequested\s+then.*?elseif\s+not\s+holdRequested\s+then' -or
-    $xSlotControl -match 'if\s+holdRequested\s+or\s+releaseRequested\s+then') {
+if ([string]$weaponSourceById.focusedArcEmitter -notmatch '(?s)bodyFix\s*=\s*1\.0.*?chargeDuration\s*=\s*0\.50.*?controllerType\s*=\s*"chargedRay"' -or
+    [string]$weaponSourceById.tachyonLance -notmatch 'weaponClass\s*=\s*"chargedRay"' -or
+    [string]$weaponSourceById.perditionBeam -notmatch 'weaponClass\s*=\s*"chargedRay"' -or
+    $groupRuntime -notmatch 'mode\s*==\s*"charged_release"' -or
+    $groupRuntime -notmatch 'weaponClass\s*or\s+""\)\s*==\s*"chargedRay"') {
     Add-Issue "Focused Arc Emitter does not share the Tachyon Lance charge/fire lifecycle"
 }
 if ($xSlotMuzzleLight -notmatch 'weaponTypes\.tachyonLance\s*=\s*true' -or

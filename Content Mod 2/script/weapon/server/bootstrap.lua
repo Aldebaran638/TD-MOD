@@ -20,10 +20,8 @@
 
 #include "common/runtime/main_weapon_control.lua"
 #include "common/runtime/main_weapon_control_api.lua"
-#include "slots/x/tachyon_lance/state.lua"
 #include "slots/x/tachyon_lance/render_state.lua"
 #include "slots/x/tachyon_lance/muzzle_light.lua"
-#include "slots/x/tachyon_lance/control.lua"
 #include "guided/runtime.lua"
 #include "guided/movement.lua"
 #include "guided/collider.lua"

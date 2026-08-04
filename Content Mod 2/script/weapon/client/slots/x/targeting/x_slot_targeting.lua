@@ -39,8 +39,10 @@ local function _xSlotResolveTargetingConfig(shipBody, baseConfig)
     local base = baseConfig or {}
     local resolved = {}
     for key, value in pairs(base) do resolved[key] = value end
+    local currentMode = client.getShipMainWeaponMode ~= nil
+        and client.getShipMainWeaponMode(shipBody) or "xSlot"
     local weapon = client.getShipWeaponDefinition ~= nil
-        and client.getShipWeaponDefinition(shipBody, "xSlot") or {}
+        and client.getShipWeaponDefinition(shipBody, currentMode) or {}
     local weaponRange = tonumber(weapon.maxRange) or 0.0
     local sensor = client.getShipSensorProfile ~= nil
         and client.getShipSensorProfile(shipBody) or {}
@@ -165,13 +167,13 @@ local function _safeNormalize(v, fallback)
     return VecScale(v, 1.0 / len)
 end
 
-local function _resolveXSlotFireOriginLocal(shipBody)
-    local xSlots = client.getShipWeaponMounts(shipBody, "xSlot")
+local function _resolveChargedRayFireOriginLocal(shipBody, mode)
+    local mounts = client.getShipWeaponMounts(shipBody, mode or "xSlot")
     local sx, sy, sz = 0.0, 0.0, 0.0
     local count = 0
 
-    for i = 1, #xSlots do
-        local slot = xSlots[i] or {}
+    for i = 1, #mounts do
+        local slot = mounts[i] or {}
         if tostring(slot.weaponType or "none") ~= "none" then
             local firePos = slot.firePosOffset or {}
             sx = sx + (tonumber(firePos.x) or 0.0)
@@ -188,9 +190,12 @@ local function _resolveXSlotFireOriginLocal(shipBody)
     return Vec(sx / count, sy / count, sz / count)
 end
 
-local function _shipForwardAngleAllows(shipBody, targetPos, aimLimitDeg)
+local function _shipForwardAngleAllows(shipBody, targetPos, aimLimitDeg, mode)
     local shipT = GetBodyTransform(shipBody)
-    local fireOriginWorld = TransformToParentPoint(shipT, _resolveXSlotFireOriginLocal(shipBody))
+    local fireOriginWorld = TransformToParentPoint(
+        shipT,
+        _resolveChargedRayFireOriginLocal(shipBody, mode)
+    )
     local shipForward = _safeNormalize(TransformToParentVec(shipT, Vec(0, 0, -1)), Vec(0, 0, -1))
     local toTarget = VecSub(targetPos, fireOriginWorld)
     local distance = VecLength(toTarget)
@@ -202,14 +207,14 @@ local function _shipForwardAngleAllows(shipBody, targetPos, aimLimitDeg)
     return VecDot(shipForward, dir) >= minCos
 end
 
-local function _resolveXSlotAimLimit(shipBody)
-    local xWeapon = client.getShipWeaponDefinition ~= nil
-        and client.getShipWeaponDefinition(shipBody, "xSlot")
+local function _resolveChargedRayAimLimit(shipBody, mode)
+    local weapon = client.getShipWeaponDefinition ~= nil
+        and client.getShipWeaponDefinition(shipBody, mode or "xSlot")
         or ((weaponData or {}).tachyonLance or {})
-    return tonumber(xWeapon.aimLimitDeg) or 0.0
+    return tonumber(weapon.aimLimitDeg) or 0.0
 end
 
-local function _evaluateVehicleTarget(vehicleId, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg)
+local function _evaluateVehicleTarget(vehicleId, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg, mode)
     if vehicleId == nil or vehicleId == 0 then
         return nil
     end
@@ -238,7 +243,7 @@ local function _evaluateVehicleTarget(vehicleId, shipBody, aimOrigin, aimForward
     if VecDot(aimForward, dir) < minCos then
         return nil
     end
-    if not _shipForwardAngleAllows(shipBody, targetPos, aimLimitDeg) then
+    if not _shipForwardAngleAllows(shipBody, targetPos, aimLimitDeg, mode) then
         return nil
     end
 
@@ -264,7 +269,8 @@ local function _evaluateExternalBodyTarget(
     centerLocal,
     camT,
     cfg,
-    aimLimitDeg
+    aimLimitDeg,
+    mode
 )
     local targetBody = math.floor(bodyId or 0)
     if targetBody == 0 or targetBody == shipBody
@@ -282,7 +288,7 @@ local function _evaluateExternalBodyTarget(
     local dir = VecScale(toTarget, 1.0 / distance)
     local minCos = math.cos(math.rad(cfg.lockHalfAngleDeg or 0.0))
     if VecDot(aimForward, dir) < minCos then return nil end
-    if not _shipForwardAngleAllows(shipBody, targetPos, aimLimitDeg) then
+    if not _shipForwardAngleAllows(shipBody, targetPos, aimLimitDeg, mode) then
         return nil
     end
     local offsetSq = _getProjectedOffsetSq(targetPos, centerLocal, camT)
@@ -296,11 +302,11 @@ local function _evaluateExternalBodyTarget(
     }
 end
 
-local function _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg)
+local function _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg, mode)
     local vehicles = FindVehicles("", true) or {}
     local best = nil
     for i = 1, #vehicles do
-        local entry = _evaluateVehicleTarget(vehicles[i], shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg)
+        local entry = _evaluateVehicleTarget(vehicles[i], shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg, mode)
         if entry ~= nil and (best == nil or entry.score < best.score) then
             best = entry
         end
@@ -315,7 +321,8 @@ local function _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLoc
                 centerLocal,
                 camT,
                 cfg,
-                aimLimitDeg
+                aimLimitDeg,
+                mode
             )
             if entry ~= nil and (best == nil or entry.score < best.score) then
                 best = entry
@@ -325,7 +332,7 @@ local function _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLoc
     return best
 end
 
-local function _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg)
+local function _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg, mode)
     local stickyVehicleId = 0
     if state.state == "locked" and state.lockedVehicleId ~= 0 then
         stickyVehicleId = state.lockedVehicleId
@@ -334,7 +341,7 @@ local function _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, cent
     end
 
     if stickyVehicleId ~= 0 then
-        local sticky = _evaluateVehicleTarget(stickyVehicleId, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg)
+        local sticky = _evaluateVehicleTarget(stickyVehicleId, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg, mode)
         if sticky ~= nil then
             return sticky
         end
@@ -349,11 +356,12 @@ local function _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, cent
             centerLocal,
             camT,
             cfg,
-            aimLimitDeg
+            aimLimitDeg,
+            mode
         )
         if sticky ~= nil then return sticky end
     end
-    return _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg)
+    return _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg, mode)
 end
 
 function client.xSlotTargetingTick(dt)
@@ -361,8 +369,14 @@ function client.xSlotTargetingTick(dt)
     local cfg = client.xSlotTargetingConfig
     local shipBody = _resolveControlledShipBody()
     local currentMode = (client.getShipMainWeaponMode ~= nil and shipBody ~= 0) and client.getShipMainWeaponMode(shipBody) or "xSlot"
-    local fireMode = (client.getShipXSlotFireMode ~= nil and shipBody ~= 0) and client.getShipXSlotFireMode(shipBody) or "aim"
-    if shipBody == 0 or currentMode ~= "xSlot" or fireMode ~= "lock" then
+    local currentWeapon = client.getShipWeaponDefinition ~= nil
+        and client.getShipWeaponDefinition(shipBody, currentMode) or {}
+    local fireMode = (client.getShipWeaponFireMode ~= nil and shipBody ~= 0)
+        and client.getShipWeaponFireMode(shipBody)
+        or ((client.getShipXSlotFireMode ~= nil and shipBody ~= 0)
+            and client.getShipXSlotFireMode(shipBody) or "aim")
+    if shipBody == 0 or tostring(currentWeapon.weaponClass or "") ~= "chargedRay"
+        or fireMode ~= "lock" then
         _xSlotResetState(state)
         return
     end
@@ -402,8 +416,8 @@ function client.xSlotTargetingTick(dt)
     end
     state.lockCenterWorld = centerWorld
 
-    local aimLimitDeg = _resolveXSlotAimLimit(shipBody)
-    local target = _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg)
+    local aimLimitDeg = _resolveChargedRayAimLimit(shipBody, currentMode)
+    local target = _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg, aimLimitDeg, currentMode)
     if target == nil then
         if state.candidateVehicleId ~= 0 or state.lockedVehicleId ~= 0
             or state.candidateBodyId ~= 0 or state.lockedBodyId ~= 0 then
@@ -468,9 +482,27 @@ function client.xSlotTargetingHasLockedTarget(shipBodyId)
         and state.lockedBodyId ~= 0
 end
 
+function client.xSlotTargetingGetLockedTargetIds(shipBodyId)
+    local state = client.xSlotTargetingState
+    if not client.xSlotTargetingHasLockedTarget(shipBodyId) then
+        return 0, 0
+    end
+    return state.lockedVehicleId or 0, state.lockedBodyId or 0
+end
+
 function client.xSlotTargetingGetLockedTargetWorld(shipBodyId)
     if not client.xSlotTargetingHasLockedTarget(shipBodyId) then
         return nil
     end
     return client.xSlotTargetingState.targetWorldPos
 end
+
+-- Public capability API. The xSlot names above remain compatibility aliases
+-- for older HUD/effect modules, while weapon input and camera code use this
+-- slot-independent charged-ray contract.
+client.chargedRayTargetingConfig = client.xSlotTargetingConfig
+client.chargedRayTargetingTick = client.xSlotTargetingTick
+client.chargedRayTargetingGetHudState = client.xSlotTargetingGetHudState
+client.chargedRayTargetingHasLockedTarget = client.xSlotTargetingHasLockedTarget
+client.chargedRayTargetingGetLockedTargetIds = client.xSlotTargetingGetLockedTargetIds
+client.chargedRayTargetingGetLockedTargetWorld = client.xSlotTargetingGetLockedTargetWorld

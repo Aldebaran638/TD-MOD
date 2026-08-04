@@ -36,6 +36,9 @@ end
 
 local function _fireRaycast(context)
     local definition = context.weaponDefinition or {}
+    local isChargedRay = tostring(definition.weaponClass or "") == "chargedRay"
+    local usesDedicatedEnergyLanceFx = isChargedRay
+        and tostring(definition.family or "") == "energy_lance"
     local origin, direction = server.weaponBehaviorResolveFireTransform(context)
     local range = math.max(1.0, tonumber(definition.maxRange) or 500.0)
     QueryRequire("physical")
@@ -82,17 +85,19 @@ local function _fireRaycast(context)
             context.weaponType
         )
     end
-    ClientCall(
-        0, "client.playWeaponSound",
-        context.weaponType, "fire",
-        origin[1], origin[2], origin[3]
-    )
-    if hit then
+    if not isChargedRay then
         ClientCall(
             0, "client.playWeaponSound",
-            context.weaponType, "hit",
-            endpoint[1], endpoint[2], endpoint[3]
+            context.weaponType, "fire",
+            origin[1], origin[2], origin[3]
         )
+        if hit then
+            ClientCall(
+                0, "client.playWeaponSound",
+                context.weaponType, "hit",
+                endpoint[1], endpoint[2], endpoint[3]
+            )
+        end
     end
     if hit and not didHitShield and not suppressPhysicalExplosion then
         local explosionSize = math.max(0.0, tonumber(definition.environmentExplosionSize) or 0.0)
@@ -106,17 +111,22 @@ local function _fireRaycast(context)
             end
         end
     end
-    ClientCall(
-        0, "client.spawnGenericRaycastWeaponFx",
-        context.weaponType, tostring(definition.fxProfile or "energyBeam"),
-        origin[1], origin[2], origin[3],
-        endpoint[1], endpoint[2], endpoint[3],
-        normal and normal[1] or 0.0, normal and normal[2] or 1.0, normal and normal[3] or 0.0,
-        hit and 1 or 0,
-        impactLayer or "none"
-    )
-    if definition.family == "perdition_beam" and server.tSlotRenderPushEvent ~= nil then
-        server.tSlotRenderPushEvent(context.shipBodyId, {
+    if not usesDedicatedEnergyLanceFx then
+        ClientCall(
+            0, "client.spawnGenericRaycastWeaponFx",
+            context.weaponType, tostring(definition.fxProfile or "energyBeam"),
+            origin[1], origin[2], origin[3],
+            endpoint[1], endpoint[2], endpoint[3],
+            normal and normal[1] or 0.0, normal and normal[2] or 1.0, normal and normal[3] or 0.0,
+            hit and 1 or 0,
+            impactLayer or "none"
+        )
+    end
+    if isChargedRay then
+        if server.tachyonMuzzleLightTrigger ~= nil then
+            server.tachyonMuzzleLightTrigger(context.weaponType)
+        end
+        local event = {
             eventType = "launch_start",
             incrementShotId = 1,
             slotIndex = context.mountIndex,
@@ -129,7 +139,13 @@ local function _fireRaycast(context)
             hitTargetBodyId = hitBody,
             normal = normal,
             impactLayer = impactLayer,
-        })
+        }
+        if tostring(context.slotType or "") == "T"
+            and server.tSlotRenderPushEvent ~= nil then
+            server.tSlotRenderPushEvent(context.shipBodyId, event)
+        elseif server.xSlotRenderPushEvent ~= nil then
+            server.xSlotRenderPushEvent(context.shipBodyId, event)
+        end
     end
     return true
 end

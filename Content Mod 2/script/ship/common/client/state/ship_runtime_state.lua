@@ -33,7 +33,7 @@ local function _getOrCreateState(shipBodyId)
     if state == nil then
         state = {
             currentMainWeapon = _defaultWeaponGroup(),
-            xSlotFireMode = "aim",
+            weaponFireMode = "aim",
         }
         _stateByShip[body] = state
     end
@@ -59,34 +59,40 @@ function _runtimeAPI.getMainWeaponMode(shipBodyId)
     return mode ~= "" and mode or _defaultWeaponGroup()
 end
 
-function _runtimeAPI.setXSlotFireMode(shipBodyId, mode)
+function _runtimeAPI.setWeaponFireMode(shipBodyId, mode)
     local state = _getOrCreateState(shipBodyId)
     if state == nil then return end
     
     if mode == "lock" then
-        state.xSlotFireMode = "lock"
+        state.weaponFireMode = "lock"
     else
-        state.xSlotFireMode = "aim"
+        state.weaponFireMode = "aim"
     end
 end
 
-function _runtimeAPI.getXSlotFireMode(shipBodyId)
+function _runtimeAPI.getWeaponFireMode(shipBodyId)
     local state = _getOrCreateState(shipBodyId)
     if state == nil then return "aim" end
-    if state.xSlotFireMode == "lock" then
+    if state.weaponFireMode == "lock" then
         return "lock"
     end
     return "aim"
 end
 
-function _runtimeAPI.toggleXSlotFireMode(shipBodyId)
-    local current = _runtimeAPI.getXSlotFireMode(shipBodyId)
+function _runtimeAPI.toggleWeaponFireMode(shipBodyId)
+    local current = _runtimeAPI.getWeaponFireMode(shipBodyId)
     if current == "lock" then
-        _runtimeAPI.setXSlotFireMode(shipBodyId, "aim")
+        _runtimeAPI.setWeaponFireMode(shipBodyId, "aim")
     else
-        _runtimeAPI.setXSlotFireMode(shipBodyId, "lock")
+        _runtimeAPI.setWeaponFireMode(shipBodyId, "lock")
     end
 end
+
+-- Compatibility aliases for older X-slot callers.  The stored state is now
+-- weapon-generic so T-slot charged rays can use the same mode.
+_runtimeAPI.setXSlotFireMode = _runtimeAPI.setWeaponFireMode
+_runtimeAPI.getXSlotFireMode = _runtimeAPI.getWeaponFireMode
+_runtimeAPI.toggleXSlotFireMode = _runtimeAPI.toggleWeaponFireMode
 
 -- 将API导出到client表，供API文件使用
 client._shipRuntimeStateAPI = _runtimeAPI
