@@ -194,10 +194,15 @@ local function _ensureDraft()
     for _, group in ipairs(configuration.slotGroups or {}) do
         local slotType = tostring(group.slotType or "")
         local key = tostring(group.groupId or slotType)
+        local loadoutKey = shipDefinitionGetGroupLoadoutKey(key, slotType)
         local current = state.loadout[key]
+        if current == nil or current == "" then
+            current = state.loadout[loadoutKey]
+        end
         if current == nil or current == "" then current = state.loadout[slotType] end
         if not _weaponAllowed(slotType, current) then
-            current = defaults[key] or defaults[slotType] or ""
+            current = defaults[key] or defaults[loadoutKey]
+                or defaults[slotType] or ""
         end
         state.loadout[key] = tostring(current or "")
     end

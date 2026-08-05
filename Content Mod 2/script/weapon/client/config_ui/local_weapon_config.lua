@@ -6,6 +6,20 @@ client = client or {}
 local _weaponConfigRegistryRoot = "level.stellarisships.weaponconfig"
 local _weaponConfigSlots = { "T", "X", "L", "L2", "M", "G", "H", "P" }
 
+local function _weaponConfigLoadoutKeys(configuration)
+    local result = {}
+    local seen = {}
+    for _, group in ipairs((configuration or {}).slotGroups or {}) do
+        local key = shipDefinitionGetGroupLoadoutKey(group.groupId, group.slotType)
+        if key ~= "" and not seen[key] then
+            seen[key] = true
+            result[#result + 1] = key
+        end
+    end
+    if #result == 0 then return _weaponConfigSlots end
+    return result
+end
+
 local function _weaponConfigSafeId(value)
     return string.lower(tostring(value or "")):gsub("[^a-z0-9._-]", "")
 end
@@ -34,8 +48,11 @@ local function _weaponConfigDefault(shipType)
     local configuration = _weaponConfigFindConfiguration(definition, configurationId)
     local defaults = (configuration or {}).defaultLoadout or {}
     local loadout = {}
-    for _, slotType in ipairs(_weaponConfigSlots) do
-        loadout[slotType] = tostring(defaults[slotType] or "")
+    for _, group in ipairs((configuration or {}).slotGroups or {}) do
+        local slotType = tostring(group.slotType or "")
+        local key = shipDefinitionGetGroupLoadoutKey(group.groupId, slotType)
+        loadout[key] = tostring(defaults[tostring(group.groupId or "")]
+            or defaults[key] or defaults[slotType] or "")
     end
     return {
         configurationId = tostring((configuration or {}).configurationId or configurationId),
@@ -52,15 +69,18 @@ function client.weaponLocalConfigRead(shipType)
         return _weaponConfigDefault(resolvedType)
     end
 
-    local loadout = {}
-    for _, slotType in ipairs(_weaponConfigSlots) do
-        loadout[slotType] = GetString(root .. "." .. string.lower(slotType))
-    end
-    local componentLoadout = {}
     local configuration = _weaponConfigFindConfiguration(
         definition,
         GetString(root .. ".configuration")
     )
+    if configuration == nil then return _weaponConfigDefault(resolvedType) end
+    local loadout = {}
+    for _, loadoutKey in ipairs(_weaponConfigLoadoutKeys(configuration)) do
+        loadout[loadoutKey] = GetString(
+            root .. "." .. string.lower(loadoutKey)
+        )
+    end
+    local componentLoadout = {}
     local defaults = (configuration or {}).defaultComponentLoadout or {}
     for _, group in ipairs(shipComponentSlotGroups(configuration)) do
         local slotType = group.slotType
@@ -86,11 +106,14 @@ function client.weaponLocalConfigWrite(shipType, configurationId, loadout, compo
     local root = _weaponConfigShipRoot(shipType)
     local selected = loadout or {}
     SetString(root .. ".configuration", tostring(configurationId or ""))
-    for _, slotType in ipairs(_weaponConfigSlots) do
-        SetString(root .. "." .. string.lower(slotType), tostring(selected[slotType] or ""))
-    end
     local definition = (shipTypeRegistryData or {})[tostring(shipType or "")] or {}
     local configuration = _weaponConfigFindConfiguration(definition, configurationId)
+    for _, loadoutKey in ipairs(_weaponConfigLoadoutKeys(configuration)) do
+        SetString(
+            root .. "." .. string.lower(loadoutKey),
+            tostring(selected[loadoutKey] or "")
+        )
+    end
     local selectedComponents = componentLoadout or {}
     for _, group in ipairs(shipComponentSlotGroups(configuration)) do
         local slotType = group.slotType

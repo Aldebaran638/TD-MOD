@@ -11,6 +11,7 @@ client.weaponConfigurationBindingState = client.weaponConfigurationBindingState 
     complete = false,
     requestPending = false,
     retryRemain = 0.0,
+    lastError = "",
 }
 
 function client.weaponConfigurationBindingInit(shipType, shipBody)
@@ -23,6 +24,7 @@ function client.weaponConfigurationBindingInit(shipType, shipBody)
     state.complete = definition.playerConfigurable == false
     state.requestPending = false
     state.retryRemain = 0.0
+    state.lastError = ""
 end
 
 local function _weaponConfigurationIsLocalDriver(shipBody)
@@ -36,13 +38,19 @@ local function _weaponConfigurationIsLocalDriver(shipBody)
     return true, playerId
 end
 
-function client.weaponConfigurationBindingResult(shipBody, resultCode)
+function client.weaponConfigurationBindingResult(shipBody, resultCode, errorMessage)
     local state = client.weaponConfigurationBindingState
     if math.floor(shipBody or 0) ~= math.floor(state.shipBody or 0) then return end
     state.requestPending = false
     if math.floor(resultCode or 0) ~= 0 then
         state.complete = true
+        state.lastError = ""
     else
+        local nextError = tostring(errorMessage or "configuration rejected")
+        if nextError ~= state.lastError then
+            DebugPrint("[weaponConfig] bind failed: " .. nextError)
+        end
+        state.lastError = nextError
         state.retryRemain = 0.5
     end
 end

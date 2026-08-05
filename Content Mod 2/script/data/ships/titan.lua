@@ -89,7 +89,7 @@ shipDefinitionRegister({
                 },
                 auxiliary = {
                     "reactorBooster3", "reactorBooster3",
-                    "shieldCapacitor", "shieldCapacitor",
+                    "reactorBooster3", "shieldCapacitor",
                 },
                 thruster = { "darkMatterThrusters" }, sensor = { "tachyonSensors" }, reactor = { "darkMatterReactor" },
             },

@@ -147,12 +147,18 @@ function server.shipWeaponApplyConfiguration(shipType, configurationId, requeste
     return true, nil
 end
 
-local function _shipWeaponBindingResult(playerId, shipBody, resultCode)
+local function _shipWeaponBindingResult(
+    playerId,
+    shipBody,
+    resultCode,
+    errorMessage
+)
     ClientCall(
         math.floor(playerId or 0),
         "client.weaponConfigurationBindingResult",
         math.floor(shipBody or 0),
-        math.floor(resultCode or 0)
+        math.floor(resultCode or 0),
+        tostring(errorMessage or "")
     )
 end
 
@@ -175,37 +181,39 @@ function server.shipWeaponBindLocalConfiguration(
     local body = math.floor(shipBody or 0)
     if IsPlayerValid ~= nil and not IsPlayerValid(pid) then return false end
     if body == 0 or body ~= server.shipContextGetBody() then
-        _shipWeaponBindingResult(pid, body, 0)
+        _shipWeaponBindingResult(pid, body, 0, "ship body mismatch")
         return false
     end
 
     local vehicle = GetPlayerVehicle(pid)
     if vehicle == nil or vehicle == 0 or GetVehicleBody(vehicle) ~= body then
-        _shipWeaponBindingResult(pid, body, 0)
+        _shipWeaponBindingResult(pid, body, 0, "player is not aboard this ship")
         return false
     end
     if IsPlayerVehicleDriver ~= nil and not IsPlayerVehicleDriver(vehicle, pid) then
-        _shipWeaponBindingResult(pid, body, 0)
+        _shipWeaponBindingResult(pid, body, 0, "player is not the ship driver")
         return false
     end
     if tostring(shipType or "") ~= server.shipContextGetType() then
-        _shipWeaponBindingResult(pid, body, 0)
+        _shipWeaponBindingResult(pid, body, 0, "ship type mismatch")
         return false
     end
 
     if server.weaponLocalConfigurationBound then
-        _shipWeaponBindingResult(pid, body, -1)
+        _shipWeaponBindingResult(pid, body, -1, "")
         return true
     end
 
     local resolvedType = tostring(shipType or server.shipContextGetType())
     local requestedComponents = nil
-    requestedComponents = shipComponentDecodeLoadout(componentPayload)
+    local componentDecodeError = nil
+    requestedComponents, componentDecodeError =
+        shipComponentDecodeLoadout(componentPayload)
     if requestedComponents == nil then
-        _shipWeaponBindingResult(pid, body, 0)
+        _shipWeaponBindingResult(pid, body, 0, componentDecodeError)
         return false
     end
-    local weaponSnapshot = server.shipSlotLoadoutValidateSnapshot(
+    local weaponSnapshot, weaponError = server.shipSlotLoadoutValidateSnapshot(
         resolvedType,
         tostring(configurationId or ""),
         {
@@ -220,10 +228,10 @@ function server.shipWeaponBindLocalConfiguration(
         }
     )
     if weaponSnapshot == nil then
-        _shipWeaponBindingResult(pid, body, 0)
+        _shipWeaponBindingResult(pid, body, 0, weaponError)
         return false
     end
-    local componentLoadout, componentProfile =
+    local componentLoadout, componentProfile, componentError =
         server.shipComponentPrepareLoadout(
             resolvedType,
             tostring(configurationId or ""),
@@ -231,21 +239,21 @@ function server.shipWeaponBindLocalConfiguration(
             weaponSnapshot.loadout
         )
     if componentLoadout == nil then
-        _shipWeaponBindingResult(pid, body, 0)
+        _shipWeaponBindingResult(pid, body, 0, componentError)
         return false
     end
 
     if not server.shipSlotLoadoutApplySnapshot(weaponSnapshot) then
-        _shipWeaponBindingResult(pid, body, 0)
+        _shipWeaponBindingResult(pid, body, 0, "weapon snapshot apply failed")
         return false
     end
-    local ok = server.shipComponentApplyPrepared(
+    local ok, applyError = server.shipComponentApplyPrepared(
         componentLoadout,
         componentProfile,
         true
     )
     if not ok then
-        _shipWeaponBindingResult(pid, body, 0)
+        _shipWeaponBindingResult(pid, body, 0, applyError)
         return false
     end
     _rebuildWeaponRuntime(resolvedType)
@@ -253,6 +261,6 @@ function server.shipWeaponBindLocalConfiguration(
 
     server.weaponLocalConfigurationBound = true
     server.weaponLocalConfigurationPlayerId = pid
-    _shipWeaponBindingResult(pid, body, 1)
+    _shipWeaponBindingResult(pid, body, 1, "")
     return true
 end
