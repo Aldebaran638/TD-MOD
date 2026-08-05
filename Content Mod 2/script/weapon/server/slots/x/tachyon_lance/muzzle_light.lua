@@ -244,3 +244,13 @@ function server.tachyonMuzzleLightTick(dt)
 
     _tachyonLightSetIntensities(0.0, 0.0, 0.0)
 end
+
+local ok, err = server.chargedRayVisualRegister("tachyon", {
+    defaultWeaponType = "tachyonLance",
+    init = server.tachyonMuzzleLightInit,
+    beginCharge = server.tachyonMuzzleLightBeginCharge,
+    trigger = server.tachyonMuzzleLightTrigger,
+    stop = server.tachyonMuzzleLightStop,
+    tick = server.tachyonMuzzleLightTick,
+})
+if not ok then error("charged-ray visual registration failed: " .. tostring(err)) end

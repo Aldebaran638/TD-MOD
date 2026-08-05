@@ -99,6 +99,10 @@ function weaponDefineRay(definition)
         projectileProfile = { mode = "none" },
         environmentExplosionSize = 0.35,
     })
+    if tostring(definition.weaponClass or "") == "chargedRay"
+        and definition.muzzleLightProfile == nil then
+        definition.muzzleLightProfile = "tachyon"
+    end
     definition.fireProfile = definition.fireProfile or {
         mode = chargeDuration > 0.0 and "charged_release" or "instant",
         chargeDuration = chargeDuration,

@@ -100,6 +100,8 @@ $weaponFxResources = Read-Required "script\weapon\client\common\effects\weapon_f
 $chargedRayBeamRenderer = Read-Required "script\weapon\client\common\effects\charged_ray_beam_renderer.lua"
 $perditionBeamFx = Read-Required "script\weapon\client\slots\t\perdition_beam\effects\beam_fx.lua"
 $perditionImpactFx = Read-Required "script\weapon\client\slots\t\perdition_beam\effects\impact_fx.lua"
+$tSlotRenderState = Read-Required "script\weapon\client\slots\t\perdition_beam\effects\render_state.lua"
+$chargedRayVisual = Read-Required "script\weapon\server\common\runtime\charged_ray_visual.lua"
 $guidedRuntime = Read-Required "script\weapon\server\guided\runtime.lua"
 $guidedMovement = Read-Required "script\weapon\server\guided\movement.lua"
 $guidedCollider = Read-Required "script\weapon\server\guided\collider.lua"
@@ -519,6 +521,11 @@ if ($groupRuntime -notmatch 'function\s+server\.weaponGroupSetFireHeld\s*\(' -or
 if ($loadoutApi -notmatch 'function\s+server\.shipWeaponApplyConfiguration\s*\(') {
     Add-Issue "shipWeaponApplyConfiguration API is missing"
 }
+if ($groupRuntime -match 'fallbackWeapon' -or
+    $groupRuntime -notmatch 'resolved ship loadout is unavailable' -or
+    $groupRuntime -notmatch 'resolved mount collection') {
+    Add-Issue "weapon group runtime must consume resolved loadout mounts without default fallback"
+}
 if ($loadoutApi -notmatch 'server\.weaponRuntimeRebuild\(shipType\)' -or
     $loadoutApi -match 'server\.(?:xSlotState|lSlotState|mSlotControl|gSlotControl|hSlotState|guidedProjectileRuntime|projectileManager|tachyonMuzzleLight)(?:Init|ResetRuntime|Reset|Stop)\(') {
     Add-Issue "loadout rebuild bypasses the unified weapon runtime lifecycle"
@@ -697,6 +704,16 @@ if ([string]$weaponSourceById.focusedArcEmitter -notmatch '(?s)bodyFix\s*=\s*1\.
     $groupRuntime -notmatch 'weaponClass\s*or\s+""\)\s*==\s*"chargedRay"') {
     Add-Issue "Focused Arc Emitter does not share the Tachyon Lance charge/fire lifecycle"
 }
+if ($weaponBootstrap -notmatch 'common/runtime/charged_ray_visual\.lua' -or
+    $chargedRayVisual -notmatch 'function\s+server\.chargedRayVisualRegister\s*\(' -or
+    $chargedRayVisual -notmatch 'function\s+server\.chargedRayVisualBeginCharge\s*\(' -or
+    $chargedRayVisual -notmatch 'function\s+server\.chargedRayVisualTrigger\s*\(' -or
+    $chargedRayVisual -notmatch 'function\s+server\.chargedRayVisualStopAll\s*\(' -or
+    $groupRuntime -match 'tachyonMuzzleLight(?:BeginCharge|Stop)' -or
+    $raycastBehavior -match 'tachyonMuzzleLightTrigger' -or
+    $specializedControllerAdapters -match 'tachyonMuzzleLight(?:Init|Tick|Stop)') {
+    Add-Issue "charged-ray runtime must select visual profiles through the shared visual service"
+}
 if ($xSlotMuzzleLight -notmatch 'weaponTypes\.tachyonLance\s*=\s*true' -or
     $xSlotMuzzleLight -notmatch 'weaponTypes\.focusedArcEmitter\s*=\s*true' -or
     $xSlotMuzzleLight -notmatch 'function\s+_tachyonLightResolveHandle\s*\(' -or
@@ -758,6 +775,14 @@ if ([string]$weaponSourceById.perditionBeam -notmatch 'behaviorType\s*=\s*"infer
     $raycastBehavior -notmatch 'server\.weaponRaycastResolve\(context\)') {
     Add-Issue "Perdition Beam must use isolated inferno raycasting with safe ship damage and capped world destruction"
 }
+if ([string]$weaponSourceById.perditionBeam -notmatch 'infernoWorldProfile\s*=\s*\{' -or
+    [string]$weaponSourceById.perditionBeam -notmatch 'muzzleLightProfile\s*=\s*""' -or
+    [string]$weaponSourceById.perditionBeam -notmatch 'hudOwner\s*=\s*"weaponGroup"' -or
+    $infernoRaycastBehavior -notmatch 'infernoWorldProfile' -or
+    $infernoRaycastBehavior -notmatch 'event\.profile' -or
+    $infernoRaycastBehavior -notmatch 'infernoPulseMaxRadius') {
+    Add-Issue "Perdition Beam world effects, HUD ownership, and aftershock radius must be profile-driven"
+}
 if ($weaponDamageRuntime -notmatch 'function\s+server\.weaponDamageApplyRolledToShip\s*\(' -or
     $chargedRayBeamRenderer -notmatch 'QuatAlignXZ\(' -or
     $perditionBeamFx -notmatch 'width = 96\.0' -or
@@ -768,6 +793,13 @@ if ($weaponDamageRuntime -notmatch 'function\s+server\.weaponDamageApplyRolledTo
     $client -notmatch 'perdition_beam/effects/beam_fx\.lua' -or
     $client -notmatch 'perdition_beam/effects/impact_fx\.lua') {
     Add-Issue "Perdition Beam needs bounded layered beam and moving-ship impact FX"
+}
+if ($mainWeaponHud -notmatch 'weaponDefinition\.hudOwner' -or
+    $mainWeaponHud -match 'local usesGenericRuntime\s*=\s*currentMode\s*==\s*"tSlot"' -or
+    $tSlotRenderState -notmatch 'tSlotRenderEventQueueByShip' -or
+    $tSlotRenderState -notmatch 'function\s+client\.tSlotRenderGetEvents\s*\(' -or
+    $tSlotRenderState -notmatch 'maxTSlotRenderEvents') {
+    Add-Issue "HUD ownership and T-slot render events must be capability-based and queue-bounded"
 }
 if ([string]$weaponSourceById.phaseDisruptor -notmatch 'fxProfile\s*=\s*"arcBeam"' -or
     $genericRaycastFx -notmatch 'arcBeam\s*=\s*\{\s*color\s*=\s*\{\s*0\.18,\s*1\.0,\s*0\.32\s*\}') {

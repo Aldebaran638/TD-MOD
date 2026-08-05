@@ -3,6 +3,7 @@
 
 server = server or {}
 server.weaponGroupStateById = server.weaponGroupStateById or {}
+server.weaponGroupDebugEnabled = server.weaponGroupDebugEnabled or false
 
 -- 空闲批量更新优化：无人驾驶时降低tick频率。用秒数而不是帧数，避免
 -- 不同帧率下冷却、热量和蓄力推进速度不一致。
@@ -11,8 +12,7 @@ local _idleAccumulatedDelta = 0.0
 
 local function _resolveShipDefinition(shipType)
     if server.shipSlotLoadoutResolveShipDefinition ~= nil then
-        local resolved = server.shipSlotLoadoutResolveShipDefinition(shipType)
-        if resolved ~= nil then return resolved end
+        return server.shipSlotLoadoutResolveShipDefinition(shipType)
     end
     return shipDefinitionGet(shipType, server.shipContextGetType())
 end
@@ -50,31 +50,16 @@ end
 local function _buildState(group, shipType)
     local groupId = tostring((group or {}).groupId or "")
     local shipDef = _resolveShipDefinition(shipType)
+    if shipDef == nil then
+        return nil, "resolved ship loadout is unavailable"
+    end
     local mountCollection = tostring((group or {}).mountCollection or "")
     local mounts = shipDef[mountCollection] or {}
     local configuredCount = math.max(0, math.floor(tonumber((group or {}).count) or 0))
-
-    -- A resolved loadout normally provides the collection directly.  Keep a
-    -- second resolution path here because a ship can be rebuilt while its
-    -- loadout snapshot is still being refreshed; otherwise missing mounts
-    -- silently collapse the HUD and salvo to fewer barrels.
-    if #mounts < configuredCount and shipDefinitionResolveMounts ~= nil then
-        local configurationId = tostring(shipDef.defaultSlotConfigurationId or "")
-        local configuration = shipDefinitionFindConfiguration ~= nil
-            and shipDefinitionFindConfiguration(shipDef, configurationId) or nil
-        local fallbackWeapon = ""
-        for _, candidate in ipairs((configuration or {}).slotGroups or {}) do
-            if tostring(candidate.groupId or "") == groupId then
-                local defaults = (configuration or {}).defaultLoadout or {}
-                fallbackWeapon = tostring(defaults[groupId]
-                    or defaults[tostring(candidate.slotType or "")] or "")
-                break
-            end
-        end
-        local resolved = shipDefinitionResolveMounts(
-            shipType, configurationId, groupId, fallbackWeapon
-        )
-        if #resolved > #mounts then mounts = resolved end
+    if #mounts < configuredCount then
+        return nil, "resolved mount collection " .. mountCollection
+            .. " has " .. tostring(#mounts) .. " mounts, expected "
+            .. tostring(configuredCount)
     end
     local state = {
         groupId = groupId,
@@ -100,7 +85,7 @@ local function _buildState(group, shipType)
             overheated = false,
         }
     end
-    if state.groupId == "tSlot" then
+    if server.weaponGroupDebugEnabled and state.groupId == "tSlot" then
         DebugPrint("[perditionHud] server mounts=" .. tostring(#state.mounts)
             .. " configured=" .. tostring(configuredCount)
             .. " collection=" .. mountCollection)
@@ -203,7 +188,7 @@ local function _pushHud(state, force)
     local shipBody = server.shipContextGetBody()
     local playerId = server.netResolveShipDriver(shipBody)
     if playerId <= 0 then return end
-    if state.groupId == "tSlot" and maximums[2] <= 0.0 then
+    if server.weaponGroupDebugEnabled and state.groupId == "tSlot" and maximums[2] <= 0.0 then
         DebugPrint("[perditionHud] server missing T2 HUD mount; mounts="
             .. tostring(#(state.mounts or {})))
     end
@@ -230,21 +215,32 @@ function server.weaponGroupInit(shipType)
     end
     local valid = true
     local definition = _resolveShipDefinition(resolvedType)
+    if definition == nil then
+        DebugPrint("[weaponGroup] resolved ship loadout is unavailable")
+        return false
+    end
     for _, group in ipairs(definition.weaponGroups or {}) do
         local groupId = tostring(group.groupId or "")
-        local state = _buildState(group, resolvedType)
-        server.weaponGroupStateById[groupId] = state
-        local weaponType, definition = _resolveWeapon(state)
-        if weaponType ~= "none" and definition ~= nil then
-            local ok, err = server.weaponBehaviorValidateDefinition(definition)
-            if not ok then
-                valid = false
-                DebugPrint("[weaponGroup] " .. groupId .. ": " .. tostring(err))
-            end
-            ok, err = server.weaponControllerValidateDefinition(definition)
-            if not ok then
-                valid = false
-                DebugPrint("[weaponGroup] " .. groupId .. ": " .. tostring(err))
+        local state, stateError = _buildState(group, resolvedType)
+        if state == nil then
+            valid = false
+            DebugPrint("[weaponGroup] " .. groupId .. ": " .. tostring(stateError or "invalid state"))
+        else
+            server.weaponGroupStateById[groupId] = state
+        end
+        if state ~= nil then
+            local weaponType, weaponDefinition = _resolveWeapon(state)
+            if weaponType ~= "none" and weaponDefinition ~= nil then
+                local ok, err = server.weaponBehaviorValidateDefinition(weaponDefinition)
+                if not ok then
+                    valid = false
+                    DebugPrint("[weaponGroup] " .. groupId .. ": " .. tostring(err))
+                end
+                ok, err = server.weaponControllerValidateDefinition(weaponDefinition)
+                if not ok then
+                    valid = false
+                    DebugPrint("[weaponGroup] " .. groupId .. ": " .. tostring(err))
+                end
             end
         end
     end
@@ -535,9 +531,7 @@ function server.weaponGroupRequestFire(groupId, request)
                 contexts[1],
                 "charging_start"
             )
-            if server.tachyonMuzzleLightBeginCharge ~= nil then
-                server.tachyonMuzzleLightBeginCharge(weaponType)
-            end
+            server.chargedRayVisualBeginCharge(weaponType, weaponDef)
         end
         state.pending = {
             remaining = chargeDuration,
@@ -633,9 +627,7 @@ function server.weaponGroupTick(dt)
                             context,
                             "charge_cancel"
                         )
-                        if server.tachyonMuzzleLightStop ~= nil then
-                            server.tachyonMuzzleLightStop(context.weaponType)
-                        end
+                        server.chargedRayVisualStop(context.weaponType, weaponDef)
                     end
                     state.pending = nil
                     state.releaseRequested = false

@@ -272,27 +272,17 @@ _register("specialized.chargedRayVisual", {
             or server.weaponGroupUsesWeaponClass("chargedRay")
     end,
     init = function()
-        if server.xSlotRenderStateInit ~= nil then
-            server.xSlotRenderStateInit()
-        end
-        if server.tachyonMuzzleLightInit ~= nil then
-            server.tachyonMuzzleLightInit()
-        end
+        if server.xSlotRenderStateInit ~= nil then server.xSlotRenderStateInit() end
+        server.chargedRayVisualInit()
     end,
     rebuildReset = function()
-        if server.tachyonMuzzleLightStop ~= nil then
-            server.tachyonMuzzleLightStop("tachyonLance")
-        end
+        server.chargedRayVisualStopAll()
     end,
     simulationTick = function(dt)
-        if server.tachyonMuzzleLightTick ~= nil then
-            server.tachyonMuzzleLightTick(dt)
-        end
+        server.chargedRayVisualTick(dt)
     end,
     deactivate = function()
-        if server.tachyonMuzzleLightStop ~= nil then
-            server.tachyonMuzzleLightStop("tachyonLance")
-        end
+        server.chargedRayVisualStopAll()
     end,
 })
 

@@ -18,6 +18,9 @@ local ShieldConfig = {
     hexHoldTime = 0.24,
     hexStartScale = 0.85,
     hexColor = { 0.16, 0.82, 1.45 },
+    perditionHexColor = { 1.75, 0.08, 0.02 },
+    perditionTintMin = 3,
+    perditionTintMax = 6,
     hexAlpha = 0.88,
 
     flashLifetime = 0.14,
@@ -142,6 +145,24 @@ local function _buildHexCells(startTime, maxRing, directionalCaps)
     return cells
 end
 
+local function _tintPerditionHexes(hexes, seed)
+    local count = #hexes
+    if count == 0 then return end
+    local minimum = math.min(count, ShieldConfig.perditionTintMin)
+    local maximum = math.min(count, math.max(minimum, ShieldConfig.perditionTintMax))
+    local selectedCount = minimum + (math.abs(seed) % (maximum - minimum + 1))
+    local remaining = {}
+    for index = 1, count do remaining[index] = index end
+
+    local value = math.abs(seed) % 2147483647
+    for _ = 1, selectedCount do
+        value = (value * 48271 + 1) % 2147483647
+        local pick = (value % #remaining) + 1
+        hexes[remaining[pick]].perditionTint = true
+        table.remove(remaining, pick)
+    end
+end
+
 local function _hexEnvelope(now, cell)
     local age = now - cell.spawnTime
     if age < 0.0 or now >= cell.endTime then return nil end
@@ -244,6 +265,11 @@ local function _startShieldBurst(shipBodyId, hitTargetBodyId, hitPointWorld, sho
         + math.floor((localHit[2] or 0.0) * 31.0)
         + math.floor((localHit[3] or 0.0) * 47.0)
     local directionalCaps = _buildDirectionalRingCaps(maxRing, seed)
+    local hexes = _buildHexCells(now, maxRing, directionalCaps)
+    if tostring(weaponType or "") == "perditionBeam" and #hexes > 0 then
+        -- Stable per impact, yet visually varied across separate shots.
+        _tintPerditionHexes(hexes, seed)
+    end
 
     _trimBurstLimit()
     _spawnImpactSparks(hitPointWorld, hitNormalWorld)
@@ -259,7 +285,7 @@ local function _startShieldBurst(shipBodyId, hitTargetBodyId, hitPointWorld, sho
         weaponType = tostring(weaponType or ""),
         maxRing = maxRing,
         directionalCaps = directionalCaps,
-        hexes = _buildHexCells(now, maxRing, directionalCaps),
+        hexes = hexes,
     })
 end
 
@@ -279,14 +305,15 @@ local function _drawShieldBurst(burst, now)
         if scale ~= nil and client.weaponFxTakeSprite(1) then
             local position, cellNormal, cellRight = _projectCellToShield(center, hitPoint, hitNormal, right, up, radius, cell)
             local edge = ShieldConfig.hexEdgeLength * scale
+            local color = cell.perditionTint and ShieldConfig.perditionHexColor or ShieldConfig.hexColor
             DrawSprite(
                 assets.hex,
                 Transform(position, QuatAlignXZ(cellRight, cellNormal)),
                 SQRT3 * edge,
                 2.0 * edge,
-                ShieldConfig.hexColor[1],
-                ShieldConfig.hexColor[2],
-                ShieldConfig.hexColor[3],
+                color[1],
+                color[2],
+                color[3],
                 alpha,
                 true,
                 true,

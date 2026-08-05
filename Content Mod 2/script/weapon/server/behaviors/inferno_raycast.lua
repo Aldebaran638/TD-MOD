@@ -23,11 +23,17 @@ local function _rayHitsTaggedTarget(ray, tag)
         or (body ~= 0 and HasTag(body, targetTag))
 end
 
-local function _worldExplosionCount(ray, definition)
+local function _worldExplosionCount(ray, definition, profile)
     local def = definition or {}
-    local count = math.max(1, math.floor(tonumber(def.infernoWorldExplosionCount) or 5))
-    if _rayHitsTaggedTarget(ray, def.infernoDragonTargetTag) then
-        count = math.max(1, math.floor(tonumber(def.infernoDragonExplosionCount) or count))
+    local world = profile or {}
+    local count = math.max(1, math.floor(
+        tonumber(world.explosionCount) or tonumber(def.infernoWorldExplosionCount) or 5
+    ))
+    local dragonTag = world.dragonTag or def.infernoDragonTargetTag
+    if _rayHitsTaggedTarget(ray, dragonTag) then
+        count = math.max(1, math.floor(
+            tonumber(world.dragonExplosionCount) or tonumber(def.infernoDragonExplosionCount) or count
+        ))
     end
     return math.min(16, count)
 end
@@ -90,17 +96,22 @@ local function _applyShipPulse(context, center, radius, rawDamage)
     end
 end
 
-local function _applyDynamicImpulse(center)
-    local radius = 28.0
+local function _applyDynamicImpulse(center, profile)
+    local impulse = (profile or {}).impulse or {}
+    local radius = math.max(0.0, tonumber(impulse.radius) or 28.0)
+    local maxBodies = math.max(0, math.floor(tonumber(impulse.maxBodies) or 20))
+    local maxMass = math.max(0.0, tonumber(impulse.maxMass) or 250.0)
+    local strength = tonumber(impulse.strength) or 420.0
+    local massScale = math.max(0.001, tonumber(impulse.massScale) or 0.08)
     local extent = Vec(radius, radius, radius)
     QueryRequire("physical")
     local bodies = QueryAabbBodies(VecSub(center, extent), VecAdd(center, extent)) or {}
     local applied = 0
     for _, bodyId in ipairs(bodies) do
-        if applied >= 20 then break end
+        if applied >= maxBodies then break end
         if bodyId ~= 0 and not _isRegisteredShip(bodyId) and IsBodyDynamic(bodyId) then
             local mass = math.max(0.001, tonumber(GetBodyMass(bodyId)) or 0.0)
-            if mass <= 250.0 then
+            if mass <= maxMass then
                 local bodyCenter = _bodyCenter(bodyId)
                 if bodyCenter ~= nil then
                     local offset = VecSub(bodyCenter, center)
@@ -108,7 +119,10 @@ local function _applyDynamicImpulse(center)
                     if distance <= radius then
                         local direction = _safeNormalize(offset, Vec(0, 1, 0))
                         local scale = (1.0 - distance / radius) * (1.0 - distance / radius)
-                        ApplyBodyImpulse(bodyId, bodyCenter, VecScale(direction, 420.0 * scale / math.max(1.0, mass * 0.08)))
+                        ApplyBodyImpulse(bodyId, bodyCenter, VecScale(
+                            direction,
+                            strength * scale / math.max(1.0, mass * massScale)
+                        ))
                         applied = applied + 1
                     end
                 end
@@ -119,23 +133,32 @@ end
 
 local function _startWorldEvent(ray, definition)
     if not server.weaponEffectBudgetTakeWorld(2.0) then return end
+    local world = (definition or {}).infernoWorldProfile or {}
+    local entrance = world.entranceHole or { 11.0, 9.0, 7.0 }
+    local tunnelCount = math.max(0, math.floor(tonumber(world.tunnelNodeCount) or 3))
+    local tunnelSpacing = tonumber(world.tunnelNodeSpacing) or 10.0
+    local tunnelStart = tonumber(world.tunnelStartRadius) or 8.0
+    local tunnelStep = tonumber(world.tunnelRadiusStep) or -1.7
+    local tunnelVoxelOffset = tonumber(world.tunnelVoxelOffset) or -1.5
+    local tunnelMaterialOffset = tonumber(world.tunnelMaterialOffset) or -3.0
     local endpoint, direction = ray.endpoint, ray.direction
-    MakeHole(endpoint, 11.0, 9.0, 7.0)
-    for node = 1, 3 do
-        local point = VecAdd(endpoint, VecScale(direction, node * 10.0))
-        local size = 8.0 - node * 1.7
-        MakeHole(point, size, math.max(2.0, size - 1.5), math.max(1.0, size - 3.0))
+    MakeHole(endpoint, entrance[1] or 11.0, entrance[2] or 9.0, entrance[3] or 7.0)
+    for node = 1, tunnelCount do
+        local point = VecAdd(endpoint, VecScale(direction, node * tunnelSpacing))
+        local size = tunnelStart + node * tunnelStep
+        MakeHole(point, size, math.max(2.0, size + tunnelVoxelOffset),
+            math.max(1.0, size + tunnelMaterialOffset))
     end
     -- The first impact point receives a configured concentrated detonation.
     -- This branch is only reached for ordinary world geometry; registered
     -- ships never enter it and therefore never receive physical explosions.
-    for _ = 1, _worldExplosionCount(ray, definition) do
+    for _ = 1, _worldExplosionCount(ray, definition, world) do
         Explosion(endpoint, 4.0)
     end
-    _applyDynamicImpulse(endpoint)
+    _applyDynamicImpulse(endpoint, world)
     server.infernoRaycastState.worldEvents[#server.infernoRaycastState.worldEvents + 1] = {
         point = endpoint, direction = direction, shape = ray.shape or 0, age = 0.0,
-        pulse = 0.0, secondary = false, fires = 0,
+        pulse = 0.0, secondary = false, fires = 0, profile = world,
     }
 end
 
@@ -170,28 +193,36 @@ local function _tickWorldEvents(dt)
     local events = server.infernoRaycastState.worldEvents
     for index = #events, 1, -1 do
         local event = events[index]
+        local profile = event.profile or {}
         event.age = event.age + dt
         event.pulse = event.pulse + dt
-        if event.pulse >= 0.16 and event.age < 0.70 then
-            event.pulse = event.pulse - 0.16
+        local interval = math.max(0.001, tonumber(profile.residualInterval) or 0.16)
+        local duration = math.max(0.0, tonumber(profile.residualDuration) or 0.70)
+        if event.pulse >= interval and event.age < duration then
+            event.pulse = event.pulse - interval
             if server.weaponEffectBudgetTakeWorld(0.35) then
-                local radius = 3.5 + event.age * 4.0
-                MakeHole(event.point, radius, math.max(1.0, radius - 1.0), math.max(0.5, radius - 2.0))
+                local radius = (tonumber(profile.residualStartRadius) or 3.5)
+                    + event.age * (tonumber(profile.residualRadiusGrowth) or 4.0)
+                MakeHole(event.point, radius,
+                    math.max(1.0, radius + (tonumber(profile.residualVoxelOffset) or -1.0)),
+                    math.max(0.5, radius + (tonumber(profile.residualMaterialOffset) or -2.0)))
                 if event.shape ~= 0 and (IsHandleValid == nil or IsHandleValid(event.shape)) then
                     AddHeat(event.shape, event.point, 1.0)
                 end
-                PaintRGBA(event.point, radius * 1.4, 0.12, 0.025, 0.005, 0.75)
-                if event.fires < 6 then
+                PaintRGBA(event.point, radius * (tonumber(profile.residualPaintScale) or 1.4), 0.12, 0.025, 0.005, 0.75)
+                if event.fires < math.max(0, math.floor(tonumber(profile.residualFireCount) or 6)) then
                     SpawnFire(VecAdd(event.point, VecScale(event.direction, event.fires * 1.2)))
                     event.fires = event.fires + 1
                 end
             end
         end
-        if not event.secondary and event.age >= 0.34 then
+        if not event.secondary and event.age >= (tonumber(profile.secondaryDelay) or 0.34) then
             event.secondary = true
-            if server.weaponEffectBudgetTakeWorld(1.0) then Explosion(event.point, 2.0) end
+            if server.weaponEffectBudgetTakeWorld(1.0) then
+                Explosion(event.point, tonumber(profile.secondaryExplosionSize) or 2.0)
+            end
         end
-        if event.age >= 0.70 then table.remove(events, index) end
+        if event.age >= duration then table.remove(events, index) end
     end
 end
 
@@ -204,7 +235,8 @@ local function _tickShipEvents(dt)
         if not event.aftershock and event.age >= delay then
             event.aftershock = true
             local scale = math.max(0.0, tonumber((event.context.weaponDefinition or {}).infernoAftershockScale) or 0.16)
-            _applyShipPulse(event.context, event.point, 60.0, event.rawDamage * scale)
+            local maximum = tonumber((event.context.weaponDefinition or {}).infernoPulseMaxRadius) or 60.0
+            _applyShipPulse(event.context, event.point, maximum, event.rawDamage * scale)
         end
         if event.aftershock then table.remove(events, index) end
     end

@@ -83,6 +83,7 @@ client.gSlotHudStateByShip = client.gSlotHudStateByShip or {}
 client.hSlotHudStateByShip = client.hSlotHudStateByShip or {}
 client.weaponGroupHudStateByShip = client.weaponGroupHudStateByShip or {}
 client.mainWeaponHudDebugState = client.mainWeaponHudDebugState or { tSlotSignature = "" }
+client.mainWeaponHudDebugEnabled = client.mainWeaponHudDebugEnabled or false
 client.hSlotDebugState = client.hSlotDebugState or {
     active = 0,
     lastReason = "none",
@@ -231,7 +232,7 @@ function client.updateWeaponGroupHudState(
         },
     }
 
-    if tostring(groupId or "") == "tSlot" then
+    if client.mainWeaponHudDebugEnabled and tostring(groupId or "") == "tSlot" then
         local debug = client.mainWeaponHudDebugState
         local signature = string.format(
             "%d|%s|%.2f/%.2f|%.2f/%.2f|%s/%s",
@@ -709,10 +710,9 @@ function client.mainWeaponHudDraw()
     local currentMode = state.currentMainWeapon or "xSlot"
     local weaponDefinition = client.getShipWeaponDefinition ~= nil
         and client.getShipWeaponDefinition(state.shipBody, currentMode) or {}
-    -- Charged rays are implemented by weapon_group.lua even though their
-    -- definition declares a controller type.  T slots must therefore use the
-    -- generic group HUD instead of the legacy specialised-controller branch.
-    local usesGenericRuntime = currentMode == "tSlot"
+    -- HUD ownership is a weapon capability.  Slot type is only a layout
+    -- choice, so a future T-slot controller can own its own HUD normally.
+    local usesGenericRuntime = tostring(weaponDefinition.hudOwner or "") == "weaponGroup"
         or tostring(weaponDefinition.controllerType or "") == ""
 
     local topFill, topText = _resolveXSlotTopStatus(state)

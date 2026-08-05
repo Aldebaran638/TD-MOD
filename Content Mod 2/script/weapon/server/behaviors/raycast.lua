@@ -71,9 +71,7 @@ local function _fireRaycast(context)
         )
     end
     if isChargedRay then
-        if server.tachyonMuzzleLightTrigger ~= nil then
-            server.tachyonMuzzleLightTrigger(context.weaponType)
-        end
+        server.chargedRayVisualTrigger(context.weaponType, definition)
         local event = {
             eventType = "launch_start",
             incrementShotId = 1,
