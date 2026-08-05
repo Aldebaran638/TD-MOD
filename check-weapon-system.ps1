@@ -137,6 +137,7 @@ $shipRoll = Read-Required "script\ship\common\client\hud\ship_roll_error.lua"
 $bodyMove = Read-Required "script\ship\common\client\input\body_move_input.lua"
 $shipRegistryServer = Read-Required "script\ship\common\server\registry\ship_registry.lua"
 $shipComponents = Read-Required "script\ship\common\server\components\ship_components.lua"
+$shipHealthBar = Read-Required "script\ship\common\client\hud\ship_health_bar.lua"
 $shipCloak = Read-Required "script\ship\common\server\lifecycle\ship_cloak.lua"
 $speedLimit = Read-Required "script\ship\common\server\movement\body_combat_speed_limit.lua"
 $shipDamage = Read-Required "script\ship\common\server\damage\ship_damage.lua"
@@ -360,6 +361,17 @@ foreach ($iconMatch in $generatedIconMatches) {
     $generatedIconName = $iconMatch.Groups[1].Value
     if (-not (Test-Path -LiteralPath (Join-Path $stellarisIconRoot ($generatedIconName + '.png')) -PathType Leaf)) {
         Add-Issue "generated Stellaris weapon icon is missing: $generatedIconName.png"
+    }
+}
+$staticIconPattern = 'iconPath\s*=\s*"(MOD/gfx/ui/weapon_icons/[^"%]+\.png)"'
+foreach ($weaponFile in $weaponDefinitionFiles) {
+    $sourceText = [IO.File]::ReadAllText($weaponFile.FullName)
+    foreach ($iconMatch in [Regex]::Matches($sourceText, $staticIconPattern)) {
+        $reference = $iconMatch.Groups[1].Value
+        $relative = $reference.Substring(4).Replace("/", [IO.Path]::DirectorySeparatorChar)
+        if (-not (Test-Path -LiteralPath (Join-Path $modRoot $relative) -PathType Leaf)) {
+            Add-Issue "$($weaponFile.FullName) references missing weapon icon: $reference"
+        }
     }
 }
 
@@ -811,8 +823,31 @@ if ([string]$weaponSourceById.perditionBeam -notmatch 'infernoWorldProfile\s*=\s
     $infernoRaycastBehavior -notmatch 'infernoPulseMaxRadius') {
     Add-Issue "Perdition Beam world effects, HUD ownership, and aftershock radius must be profile-driven"
 }
-if ([string]$weaponSourceById.perditionBeam -notmatch 'iconPath\s*=\s*"MOD/gfx/ui/weapon_icons/stellaris/energy_lens_beam\.png"') {
-    Add-Issue "Perdition Beam must use the Stellaris energy lens icon"
+if ([string]$weaponSourceById.perditionBeam -notmatch 'iconPath\s*=\s*"MOD/gfx/ui/weapon_icons/stellaris/perdition_beam\.png"') {
+    Add-Issue "Perdition Beam must use the official Stellaris Perdition icon"
+}
+if ($weaponSoundCatalog -notmatch 'perdition_beam_windup_mix\.ogg' -or
+    $weaponSoundCatalog -notmatch 'perdition_beam_fire_mix\.ogg' -or
+    $weaponSoundCatalog -notmatch 'distance_perdition_beam_fire_mix\.ogg' -or
+    $weaponSoundCatalog -match 'titan_laser_(?:windup|fire)' -or
+    $soundService -notmatch '_randomPick\(handles\)') {
+    Add-Issue "Perdition Beam must use its pre-mixed official Stellaris sound layers"
+}
+$perditionSoundNames = @(
+    "perdition_beam_windup_01.ogg", "perdition_beam_windup_02.ogg",
+    "perdition_beam_fire_01.ogg", "perdition_beam_fire_02.ogg",
+    "perdition_beam_fire_03.ogg", "perdition_beam_hit_01.ogg",
+    "distance_perdition_beam_fire_01.ogg",
+    "distance_perdition_beam_fire_02.ogg",
+    "distance_perdition_beam_fire_03.ogg",
+    "distance_perdition_beam_hit_01.ogg",
+    "perdition_beam_windup_mix.ogg", "perdition_beam_fire_mix.ogg",
+    "distance_perdition_beam_fire_mix.ogg"
+)
+foreach ($soundName in $perditionSoundNames) {
+    if (-not (Test-Path -LiteralPath (Join-Path $modRoot ("sound\" + $soundName)) -PathType Leaf)) {
+        Add-Issue "official Perdition Beam sound is missing: $soundName"
+    }
 }
 if ($weaponDamageRuntime -notmatch 'function\s+server\.weaponDamageApplyRolledToShip\s*\(' -or
     $chargedRayBeamRenderer -notmatch 'QuatAlignXZ\(' -or
@@ -962,6 +997,37 @@ if ($hSlotControl -notmatch 'debugEnabled\s*=\s*false' -or
     $hSlotControl -notmatch 'debugInterval\s*=\s*1\.0' -or
     $hSlotControl -match '(?s)netClientCall\(\s*"debug\.hslot",\s*0') {
     Add-Issue "H-slot HUD/debug synchronization is not safely throttled"
+}
+if ($titanDefinition -notmatch 'maxBodyHP\s*=\s*40000' -or
+    $titanDefinition -match 'baseHullHP\s*=' -or
+    $titanDefinition -notmatch 'groupId\s*=\s*"hSlot",\s*slotType\s*=\s*"H",\s*count\s*=\s*4' -or
+    $titanDefinition -notmatch 'slotType\s*=\s*"largeUtility",\s*count\s*=\s*20' -or
+    $titanDefinition -notmatch 'slotType\s*=\s*"auxiliary",\s*count\s*=\s*4' -or
+    $titanMounts -notmatch '(?s)hHangar\s*=\s*\{.*?x\s*=\s*6.*?x\s*=\s*-6.*?y\s*=\s*6.*?y\s*=\s*-6' -or
+    $componentCatalog -notmatch 'maxBodyHP\s*=\s*tonumber\(\(definition\s+or\s+\{\}\)\.maxBodyHP\)' -or
+    $shipHealthBar -notmatch '_paradoxTitanTheoreticalMaxHP\s*=\s*102595') {
+    Add-Issue "Titan hull, 4H mounts, 20L/4A protection slots, or health-bar scale contract is incomplete"
+}
+if ($mainWeaponHud -notmatch 'hSlotFill4\s*=\s*1\.0' -or
+    $mainWeaponHud -notmatch 'state\.hSlotCount\s*=\s*math\.min\(4,\s*#hMounts\)' -or
+    $hSlotControl -notmatch 'for\s+i\s*=\s*1,\s*4\s+do' -or
+    $hSlotControl -notmatch '(?s)cooldowns\[4\].*maximums\[4\].*activeFlags\[4\]') {
+    Add-Issue "H-slot HUD synchronization must support up to four configured hangars"
+}
+if ($mainWeaponHud -match 'local\s+candidates\s*=\s*\{' -or
+    $mainWeaponHud -notmatch 'local\s+function\s+appendItem\(' -or
+    $mainWeaponHud -notmatch '(?s)appendItem\("tSlot".*?appendItem\("xSlot"') {
+    Add-Issue "weapon wheel items must be appended without sparse-array truncation"
+}
+if ($shipSchema -notmatch 'function\s+shipDefinitionGetGroupLoadoutKey' -or
+    $loadoutRuntime -notmatch 'requestedLoadout\[loadoutKey\]' -or
+    $loadoutRuntime -notmatch 'result\[loadoutKey\]\s*=\s*tostring\(candidate\)' -or
+    $componentCatalog -notmatch '\(weaponLoadout\s+or\s+\{\}\)\[loadoutKey\]') {
+    Add-Issue "numbered slot groups must share one canonical loadout-key resolver"
+}
+if ($configUi -match 'local\s+clicked\s*=\s*enabled\s+and\s+UiBlankButton' -or
+    $configUi -match 'local\s+clicked\s*=\s*UiBlankButton\(cardW,\s*cardH\)') {
+    Add-Issue "weapon configuration ship/frame switching must trigger on mouse press only"
 }
 if ($inputSnapshot -notmatch 'activeInterval\s*=\s*0\.05' -or
     $inputSnapshot -notmatch 'idleInterval\s*=\s*0\.20' -or

@@ -76,8 +76,13 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     gSlotFill4 = 1.0,
     hSlotFill1 = 1.0,
     hSlotFill2 = 1.0,
+    hSlotFill3 = 1.0,
+    hSlotFill4 = 1.0,
     hSlotActive1 = false,
     hSlotActive2 = false,
+    hSlotActive3 = false,
+    hSlotActive4 = false,
+    hSlotCount = 0,
     genericFill1 = 1.0,
     genericFill2 = 1.0,
     genericFill3 = 1.0,
@@ -423,10 +428,16 @@ local function _getOrCreateHSlotHudState(shipBodyId)
         hud = {
             cd1 = 0.0,
             cd2 = 0.0,
+            cd3 = 0.0,
+            cd4 = 0.0,
             maxCd1 = 1.0,
             maxCd2 = 1.0,
+            maxCd3 = 1.0,
+            maxCd4 = 1.0,
             active1 = false,
             active2 = false,
+            active3 = false,
+            active4 = false,
             dbgReason = "none",
             dbgS1State = "none",
             dbgS1Life = -1.0,
@@ -444,10 +455,16 @@ function client.updateHSlotHudState(
     shipBodyId,
     cd1,
     cd2,
+    cd3,
+    cd4,
     maxCd1,
     maxCd2,
+    maxCd3,
+    maxCd4,
     active1,
     active2,
+    active3,
+    active4,
     dbgReason,
     dbgS1State,
     dbgS1Life,
@@ -463,10 +480,16 @@ function client.updateHSlotHudState(
 
     hud.cd1 = math.max(0.0, tonumber(cd1) or 0.0)
     hud.cd2 = math.max(0.0, tonumber(cd2) or 0.0)
+    hud.cd3 = math.max(0.0, tonumber(cd3) or 0.0)
+    hud.cd4 = math.max(0.0, tonumber(cd4) or 0.0)
     hud.maxCd1 = math.max(0.0, tonumber(maxCd1) or 0.0)
     hud.maxCd2 = math.max(0.0, tonumber(maxCd2) or 0.0)
+    hud.maxCd3 = math.max(0.0, tonumber(maxCd3) or 0.0)
+    hud.maxCd4 = math.max(0.0, tonumber(maxCd4) or 0.0)
     hud.active1 = math.floor(active1 or 0) ~= 0
     hud.active2 = math.floor(active2 or 0) ~= 0
+    hud.active3 = math.floor(active3 or 0) ~= 0
+    hud.active4 = math.floor(active4 or 0) ~= 0
     hud.dbgReason = tostring(dbgReason or hud.dbgReason or "none")
     hud.dbgS1State = tostring(dbgS1State or hud.dbgS1State or "none")
     hud.dbgS1Life = tonumber(dbgS1Life) or hud.dbgS1Life or -1.0
@@ -543,10 +566,11 @@ local function _mainWeaponHudResolveDefinition(shipBodyId, groupId)
 end
 
 local function _mainWeaponHudBuildWheelItems(shipBodyId, cfg)
-    local function item(groupId, label, color)
+    local result = {}
+    local function appendItem(groupId, label, color)
         local definition = _mainWeaponHudResolveDefinition(shipBodyId, groupId)
-        if definition == nil then return nil end
-        return {
+        if definition == nil then return end
+        result[#result + 1] = {
             id = groupId,
             label = label,
             iconPath = tostring(definition.iconPath or ""),
@@ -554,19 +578,13 @@ local function _mainWeaponHudBuildWheelItems(shipBodyId, cfg)
         }
     end
 
-    local candidates = {
-        item("tSlot", "T", cfg.tSlotColor),
-        item("xSlot", "X", cfg.xSlotColor),
-        item("lSlot", "L1", cfg.lSlotColor),
-        item("lSlot2", "L2", cfg.lSlot2Color),
-        item("mSlot", "M", cfg.mSlotColor),
-        item("gSlot", "G", cfg.gSlotColor),
-        item("hSlot", "H", cfg.hSlotColor),
-    }
-    local result = {}
-    for _, candidate in ipairs(candidates) do
-        if candidate ~= nil then result[#result + 1] = candidate end
-    end
+    appendItem("tSlot", "T", cfg.tSlotColor)
+    appendItem("xSlot", "X", cfg.xSlotColor)
+    appendItem("lSlot", "L1", cfg.lSlotColor)
+    appendItem("lSlot2", "L2", cfg.lSlot2Color)
+    appendItem("mSlot", "M", cfg.mSlotColor)
+    appendItem("gSlot", "G", cfg.gSlotColor)
+    appendItem("hSlot", "H", cfg.hSlotColor)
     return result
 end
 
@@ -590,14 +608,13 @@ function client.mainWeaponHudTick(dt)
         state.targetGuidedProgress = 0.0
         state.guidedProgress = 0.0
         state.guidedStatus = "NO TARGET"
+        state.hSlotCount = 0
         if state.wheelState ~= nil and client.radialWeaponWheelReset ~= nil then
             client.radialWeaponWheelReset(state.wheelState)
         end
-        state.hSlotFill1 = 1.0
-        state.hSlotFill2 = 1.0
-        state.hSlotActive1 = false
-        state.hSlotActive2 = false
         for i = 1, 4 do
+            state["hSlotFill" .. tostring(i)] = 1.0
+            state["hSlotActive" .. tostring(i)] = false
             state["genericFill" .. tostring(i)] = 1.0
             state["genericPhase" .. tostring(i)] = "idle"
         end
@@ -680,33 +697,27 @@ function client.mainWeaponHudTick(dt)
     _updateGuidedSlotFills(state, "m", client.mSlotHudStateByShip[body])
     _updateGuidedSlotFills(state, "g", client.gSlotHudStateByShip[body])
 
-    local hHud = client.hSlotHudStateByShip[body] or {
-        cd1 = 0.0,
-        cd2 = 0.0,
-        maxCd1 = 1.0,
-        maxCd2 = 1.0,
-        active1 = false,
-        active2 = false,
-    }
-
-    if hHud.active1 then
-        state.hSlotFill1 = 0.0
-    elseif (hHud.maxCd1 or 0.0) > 0.0001 then
-        state.hSlotFill1 = _mainWeaponHudClamp(1.0 - ((hHud.cd1 or 0.0) / (hHud.maxCd1 or 1.0)), 0.0, 1.0)
-    else
-        state.hSlotFill1 = 1.0
+    local hHud = client.hSlotHudStateByShip[body] or {}
+    local hMounts = client.getShipWeaponMounts ~= nil
+        and client.getShipWeaponMounts(body, "hSlot") or {}
+    state.hSlotCount = math.min(4, #hMounts)
+    for i = 1, 4 do
+        local active = hHud["active" .. tostring(i)] and true or false
+        local maximum = tonumber(hHud["maxCd" .. tostring(i)]) or 1.0
+        local cooldown = tonumber(hHud["cd" .. tostring(i)]) or 0.0
+        if active then
+            state["hSlotFill" .. tostring(i)] = 0.0
+        elseif maximum > 0.0001 then
+            state["hSlotFill" .. tostring(i)] = _mainWeaponHudClamp(
+                1.0 - (cooldown / maximum),
+                0.0,
+                1.0
+            )
+        else
+            state["hSlotFill" .. tostring(i)] = 1.0
+        end
+        state["hSlotActive" .. tostring(i)] = active
     end
-
-    if hHud.active2 then
-        state.hSlotFill2 = 0.0
-    elseif (hHud.maxCd2 or 0.0) > 0.0001 then
-        state.hSlotFill2 = _mainWeaponHudClamp(1.0 - ((hHud.cd2 or 0.0) / (hHud.maxCd2 or 1.0)), 0.0, 1.0)
-    else
-        state.hSlotFill2 = 1.0
-    end
-
-    state.hSlotActive1 = hHud.active1 and true or false
-    state.hSlotActive2 = hHud.active2 and true or false
 
 end
 
@@ -846,8 +857,17 @@ function client.mainWeaponHudDraw()
         end
         modeText = "Main Weapon: G-Slot"
     elseif currentMode == "hSlot" then
-        local anyActive = state.hSlotActive1 or state.hSlotActive2
-        topFill = anyActive and 0.0 or math.max(state.hSlotFill1 or 0.0, state.hSlotFill2 or 0.0)
+        local anyActive = false
+        topFill = 0.0
+        for i = 1, state.hSlotCount or 0 do
+            anyActive = anyActive
+                or state["hSlotActive" .. tostring(i)] == true
+            topFill = math.max(
+                topFill,
+                tonumber(state["hSlotFill" .. tostring(i)]) or 0.0
+            )
+        end
+        if anyActive then topFill = 0.0 end
         topText = anyActive and "STRIKE CRAFT DEPLOYED" or "HANGAR READY"
         topColor = cfg.hSlotColor
         modeText = "Main Weapon: H-Slot"
@@ -949,8 +969,19 @@ function client.mainWeaponHudDraw()
             _drawWeaponCooldownBar(178, 108, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill3"], label .. "3", cfg, color)
             _drawWeaponCooldownBar(178 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 108, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill4"], label .. "4", cfg, color)
         elseif currentMode == "hSlot" then
-            _drawWeaponCooldownBar(178, 88, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill1, state.hSlotActive1 and "H1*" or "H1", cfg, cfg.hSlotColor)
-            _drawWeaponCooldownBar(178 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 88, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill2, state.hSlotActive2 and "H2*" or "H2", cfg, cfg.hSlotColor)
+            for i = 1, state.hSlotCount or 0 do
+                local column = (i - 1) % 2
+                local row = math.floor((i - 1) / 2)
+                local barX = 178 + column * (24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap)
+                local barY = 88 + row * 20
+                local active = state["hSlotActive" .. tostring(i)]
+                _drawWeaponCooldownBar(
+                    barX, barY, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight,
+                    state["hSlotFill" .. tostring(i)],
+                    active and ("H" .. tostring(i) .. "*") or ("H" .. tostring(i)),
+                    cfg, cfg.hSlotColor
+                )
+            end
         else
             UiPush()
                 UiTranslate(178, 88)

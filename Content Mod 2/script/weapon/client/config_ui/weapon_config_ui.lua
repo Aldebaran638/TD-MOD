@@ -382,12 +382,7 @@ local function _button(x, y, width, height, label, primary, enabled)
         UiRect(width, height)
         UiColor(primary and 0.30 or 0.12, primary and 0.84 or 0.48, primary and 0.72 or 0.48, 1)
         UiRectOutline(width, height, primary and 2 or 1)
-        local clicked = enabled and UiBlankButton(width, height)
-        -- Keep the action usable on builds where UiBlankButton does not report
-        -- a click after a preceding custom draw operation.
-        if enabled and not clicked and hover and InputPressed("lmb") then
-            clicked = true
-        end
+        local clicked = enabled and hover and InputPressed("lmb")
         UiAlign("center middle")
         UiTranslate(width * 0.5, height * 0.5)
         _text(label, 16, 0.90, 0.98, 0.96, enabled and 1 or 0.45)
@@ -969,7 +964,7 @@ local function _drawFramePicker()
                 UiColor(selected and 0.28 or 0.10, selected and 0.82 or 0.44,
                     selected and 0.66 or 0.40, 1)
                 UiRectOutline(cardW, cardH, selected and 3 or 1)
-                local clicked = UiBlankButton(cardW, cardH)
+                local clicked = hover and InputPressed("lmb")
                 local label = _frameLabel(candidate)
                 UiTranslate(22, 22)
                 _bilingual(label.zh, label.en, 24, 11,

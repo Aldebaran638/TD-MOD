@@ -65,6 +65,18 @@ function shipDefinitionGetGroupMountProfileName(groupId, baseProfileName)
     return profileName
 end
 
+-- Configuration snapshots use slot keys (L2), while runtime definitions use
+-- group ids (lSlot2). Resolve that translation once at the data boundary.
+function shipDefinitionGetGroupLoadoutKey(groupId, slotType)
+    local normalizedGroup = string.lower(tostring(groupId or ""))
+    local requestedType = string.upper(tostring(slotType or ""))
+    local _, index = normalizedGroup:match("^(.-)slot(%d*)$")
+    if index ~= nil and index ~= "" then
+        return requestedType .. index
+    end
+    return requestedType
+end
+
 -- Slot configuration values are normalized once at the ship-data boundary.
 -- Runtime weapon scheduling consumes this canonical integer and does not
 -- reinterpret raw configuration values.
@@ -108,7 +120,12 @@ function shipDefinitionResolveMounts(
     local typeId = tostring(weaponType or "")
     if typeId == "" then
         local defaults = (configuration or {}).defaultLoadout or {}
+        local loadoutKey = shipDefinitionGetGroupLoadoutKey(
+            requestedGroup,
+            group.slotType
+        )
         typeId = tostring(defaults[requestedGroup]
+            or defaults[loadoutKey]
             or defaults[tostring(group.slotType or "")] or "")
     end
     local weapon = (weaponData or {})[typeId] or {}

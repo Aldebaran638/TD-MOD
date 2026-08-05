@@ -3,11 +3,13 @@
 
 client = client or {}
 
+local _paradoxTitanTheoreticalMaxHP = 102595
+
 client.shipHealthBarConfig = client.shipHealthBarConfig or {
     minWidth = 360,
     maxWidth = 2052,
     minWidthHP = 8000,
-    maxWidthHP = 60000,
+    maxWidthHP = _paradoxTitanTheoreticalMaxHP,
     height = 20,
     bottomOffset = 90,
     segmentGap = 0,

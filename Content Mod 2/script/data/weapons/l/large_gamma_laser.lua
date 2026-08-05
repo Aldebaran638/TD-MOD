@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineRay({
+    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/laser_5.png",
     weaponType = "largeGammaLaser",
     displayName = "大型伽马激光",
     englishName = "Large Gamma Laser",

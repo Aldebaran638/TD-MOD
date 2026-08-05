@@ -7,7 +7,7 @@ shipDefinitionRegister({
     displayName = "泰坦",
     maxShieldHP = 0,
     maxArmorHP = 0,
-    maxBodyHP = 20000,
+    maxBodyHP = 40000,
     shieldRadius = 15,
     flightProfile = {
         gravityCompensation = 10, forwardAcceleration = 30, backwardAcceleration = 24,
@@ -40,7 +40,7 @@ shipDefinitionRegister({
         rearDefaultPitch = 0, fov = 70,
     },
     regen = { tickInterval = 0.1, shieldPerSecond = 0, armorPerSecond = 0, bodyPerSecond = 0, shieldNoDamageDelay = 2, armorNoDamageDelay = 4, bodyNoDamageDelay = 6 },
-    componentProfile = { baseShieldHP = 0, baseArmorHP = 0, baseHullHP = 20000, baseArmorRegenPercent = 0.001, baseHullRegenPercent = 0.001 },
+    componentProfile = { baseArmorRegenPercent = 0.001, baseHullRegenPercent = 0.001 },
     componentPools = {
         largeUtility = { "dragonScaleArmor", "darkMatterDeflector" },
         auxiliary = { "advancedAfterburners", "shieldCapacitor", "naniteRepairSystem", "advancedShieldHardener", "livingReactiveArmor", "reactorBooster3", "darkMatterCloakingField" },
@@ -52,39 +52,45 @@ shipDefinitionRegister({
         T = { "perditionBeam" },
         L = { "largeGammaLaser", "largePlasmaCannon", "largeGaussCannon", "kineticArtillery", "largeStormfireAutocannon" },
         M = { "mediumGammaLaser", "mediumPlasmaCannon", "phaseDisruptor", "mediumGaussCannon", "mediumStormfireAutocannon", "swarmerMissile" },
+        H = { "gammaStrikeCraft" },
     },
     weaponMountProfiles = shipMountProfileData.titan,
     defaultSlotConfigurationId = "titan_core",
     slotConfigurations = {
         {
             configurationId = "titan_core",
-            label = "2T 4L + 4L 4M",
+            label = "2T 4L + 4L 4M 4H",
             slotGroups = {
                 { groupId = "tSlot", slotType = "T", count = 2 },
                 -- Each original Titan L battery is a four-mount volley.
                 { groupId = "lSlot", slotType = "L", count = 4, salvoGroupSize = 4 },
                 { groupId = "lSlot2", slotType = "L", count = 4, salvoGroupSize = 4 },
                 { groupId = "mSlot", slotType = "M", count = 4 },
+                { groupId = "hSlot", slotType = "H", count = 4 },
             },
             defaultLoadout = {
                 T = "perditionBeam", L = "kineticArtillery", L2 = "largeGammaLaser",
-                M = "mediumGammaLaser",
+                M = "mediumGammaLaser", H = "gammaStrikeCraft",
             },
-            -- Standard Titan sections provide 12 large and 3 auxiliary utility slots.
             componentSlots = {
-                { slotType = "largeUtility", count = 12 },
-                { slotType = "auxiliary", count = 3 },
+                { slotType = "largeUtility", count = 20 },
+                { slotType = "auxiliary", count = 4 },
                 { slotType = "thruster", count = 1 },
                 { slotType = "sensor", count = 1 },
                 { slotType = "reactor", count = 1 },
             },
             defaultComponentLoadout = {
                 largeUtility = {
-                    "dragonScaleArmor", "darkMatterDeflector", "dragonScaleArmor", "darkMatterDeflector",
-                    "dragonScaleArmor", "darkMatterDeflector", "dragonScaleArmor", "darkMatterDeflector",
-                    "dragonScaleArmor", "darkMatterDeflector", "dragonScaleArmor", "darkMatterDeflector",
+                    "dragonScaleArmor", "dragonScaleArmor", "dragonScaleArmor", "dragonScaleArmor",
+                    "dragonScaleArmor", "dragonScaleArmor", "dragonScaleArmor", "dragonScaleArmor",
+                    "dragonScaleArmor", "dragonScaleArmor", "dragonScaleArmor", "dragonScaleArmor",
+                    "dragonScaleArmor", "darkMatterDeflector", "darkMatterDeflector", "darkMatterDeflector",
+                    "darkMatterDeflector", "darkMatterDeflector", "darkMatterDeflector", "darkMatterDeflector",
                 },
-                auxiliary = { "advancedAfterburners", "reactorBooster3", "naniteRepairSystem" },
+                auxiliary = {
+                    "reactorBooster3", "reactorBooster3",
+                    "shieldCapacitor", "shieldCapacitor",
+                },
                 thruster = { "darkMatterThrusters" }, sensor = { "tachyonSensors" }, reactor = { "darkMatterReactor" },
             },
         },

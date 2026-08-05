@@ -325,12 +325,12 @@ function shipComponentResolveProfile(
     local base = (definition or {}).componentProfile or {}
     local regen = (definition or {}).regen or {}
     local protection = {
-        maxShieldHP = tonumber(base.baseShieldHP)
-            or tonumber((definition or {}).maxShieldHP) or 0.0,
-        maxArmorHP = tonumber(base.baseArmorHP)
-            or tonumber((definition or {}).maxArmorHP) or 0.0,
-        maxBodyHP = tonumber(base.baseHullHP)
-            or tonumber((definition or {}).maxBodyHP) or 0.0,
+        maxShieldHP = tonumber((definition or {}).maxShieldHP)
+            or tonumber(base.baseShieldHP) or 0.0,
+        maxArmorHP = tonumber((definition or {}).maxArmorHP)
+            or tonumber(base.baseArmorHP) or 0.0,
+        maxBodyHP = tonumber((definition or {}).maxBodyHP)
+            or tonumber(base.baseHullHP) or 0.0,
         shieldHardening = 0.0,
         armorHardening = 0.0,
         shieldRegenPerSecond = tonumber(regen.shieldPerSecond) or 0.0,
@@ -444,9 +444,16 @@ function shipComponentResolveProfile(
     local weaponPowerUse = 0.0
     for _, group in ipairs((configuration or {}).slotGroups or {}) do
         local slotType = tostring(group.slotType or "")
+        local groupId = tostring(group.groupId or "")
+        local loadoutKey = shipDefinitionGetGroupLoadoutKey(groupId, slotType)
         local count = math.max(0, math.floor(tonumber(group.count) or 0))
-        local weaponId = tostring((weaponLoadout or {})[slotType]
-            or ((configuration or {}).defaultLoadout or {})[slotType] or "")
+        local defaults = (configuration or {}).defaultLoadout or {}
+        local weaponId = tostring((weaponLoadout or {})[groupId]
+            or (weaponLoadout or {})[loadoutKey]
+            or (weaponLoadout or {})[slotType]
+            or defaults[groupId]
+            or defaults[loadoutKey]
+            or defaults[slotType] or "")
         local weapon = (weaponData or {})[weaponId] or {}
         weaponPowerUse = weaponPowerUse
             + count * math.max(0.0, tonumber(weapon.powerUse) or 0.0)

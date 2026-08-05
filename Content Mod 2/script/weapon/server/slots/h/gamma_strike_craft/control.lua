@@ -888,7 +888,7 @@ local function _hSlotBuildHudSignature(state)
         and server.shipRuntimeGetCurrentMainWeapon(server.shipContextGetBody())
         or ""
     local values = { tostring(currentMode) }
-    for i = 1, 2 do
+    for i = 1, 4 do
         local runtime = ((launchers[i] or {}).runtime or {})
         values[#values + 1] = active[i] ~= nil and "1" or "0"
         values[#values + 1] = string.format(
@@ -955,12 +955,14 @@ function server.hSlotControlSyncHud(dt, force)
     state.debugSync.age = (state.debugSync.age or 0.0)
         + math.max(0.0, tonumber(dt) or 0.0)
 
-    local cd1 = ((launchers[1] or {}).runtime or {}).cooldownRemain or 0.0
-    local cd2 = ((launchers[2] or {}).runtime or {}).cooldownRemain or 0.0
-    local max1 = ((launchers[1] or {}).config or {}).cooldown or 1.0
-    local max2 = ((launchers[2] or {}).config or {}).cooldown or 1.0
-    local active1 = activeCrafts[1] ~= nil and 1 or 0
-    local active2 = activeCrafts[2] ~= nil and 1 or 0
+    local cooldowns = {}
+    local maximums = {}
+    local activeFlags = {}
+    for i = 1, 4 do
+        cooldowns[i] = ((launchers[i] or {}).runtime or {}).cooldownRemain or 0.0
+        maximums[i] = ((launchers[i] or {}).config or {}).cooldown or 1.0
+        activeFlags[i] = activeCrafts[i] ~= nil and 1 or 0
+    end
 
     local d = server.hSlotDebugState or {}
     local c1 = activeCrafts[1]
@@ -994,12 +996,9 @@ function server.hSlotControlSyncHud(dt, force)
             playerId,
             "client.updateHSlotHudState",
             shipBody,
-            cd1,
-            cd2,
-            max1,
-            max2,
-            active1,
-            active2,
+            cooldowns[1], cooldowns[2], cooldowns[3], cooldowns[4],
+            maximums[1], maximums[2], maximums[3], maximums[4],
+            activeFlags[1], activeFlags[2], activeFlags[3], activeFlags[4],
             dbgReason,
             dbgS1State,
             dbgS1Life,
@@ -1022,7 +1021,7 @@ function server.hSlotControlSyncHud(dt, force)
         and state.debugSync.age >= debugInterval then
         _hSlotWriteDebugSnapshot(
             shipBody,
-            active1, active2,
+            activeFlags[1], activeFlags[2],
             dbgReason,
             dbgS1State, dbgS1Attack, dbgS1Life, dbgS1Return, dbgS1Fire,
             dbgS2State, dbgS2Attack, dbgS2Life, dbgS2Return, dbgS2Fire
@@ -1031,7 +1030,7 @@ function server.hSlotControlSyncHud(dt, force)
             "debug.hslot",
             playerId,
             "client.receiveHSlotDebugState",
-            active1 + active2,
+            activeFlags[1] + activeFlags[2] + activeFlags[3] + activeFlags[4],
             dbgReason,
             dbgS1State,
             dbgS1Life,

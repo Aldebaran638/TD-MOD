@@ -76,12 +76,17 @@ local function _buildResolvedLoadout(definition, configuration, requestedLoadout
         local slotType = tostring(group.slotType or "")
         if slotType ~= "" then
             local groupId = tostring(group.groupId or "")
+            local loadoutKey = shipDefinitionGetGroupLoadoutKey(groupId, slotType)
             local candidate = requestedLoadout and requestedLoadout[groupId] or nil
+            if candidate == nil or candidate == "" then
+                candidate = requestedLoadout and requestedLoadout[loadoutKey] or nil
+            end
             if candidate == nil or candidate == "" then
                 candidate = requestedLoadout and requestedLoadout[slotType] or nil
             end
             if candidate == nil or candidate == "" then
-                candidate = defaults[groupId] or defaults[slotType]
+                candidate = defaults[groupId] or defaults[loadoutKey]
+                    or defaults[slotType]
             end
             if candidate == nil or candidate == "" then
                 return nil, "missing weapon for slot group " .. slotType
@@ -90,6 +95,7 @@ local function _buildResolvedLoadout(definition, configuration, requestedLoadout
                 return nil, "weapon " .. tostring(candidate) .. " is not allowed for slot group " .. slotType
             end
             result[groupId] = tostring(candidate)
+            result[loadoutKey] = tostring(candidate)
             if result[slotType] == nil then result[slotType] = tostring(candidate) end
         end
     end
@@ -104,7 +110,9 @@ local function _validateConfigurationShape(definition, configuration, loadout)
         local slotType = tostring(group.slotType or "")
         local count = math.max(0, math.floor(tonumber(group.count) or 0))
         local groupId = tostring(group.groupId or "")
+        local loadoutKey = shipDefinitionGetGroupLoadoutKey(groupId, slotType)
         local weaponType = tostring((loadout or {})[groupId]
+            or (loadout or {})[loadoutKey]
             or (loadout or {})[slotType] or "")
         local weaponDefinition = (weaponData or {})[weaponType] or {}
         local profileName = shipDefinitionGetGroupMountProfileName(
@@ -178,7 +186,9 @@ local function _rebuildResolvedDefinition(shipType)
             shipType,
             configuration.configurationId,
             group.groupId,
-            loadout[groupId] or loadout[slotType]
+            loadout[groupId]
+                or loadout[shipDefinitionGetGroupLoadoutKey(groupId, slotType)]
+                or loadout[slotType]
         )
         resolved[collectionName] = mounts
     end

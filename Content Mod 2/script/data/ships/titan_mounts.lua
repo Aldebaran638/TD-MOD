@@ -22,6 +22,12 @@ shipMountProfileData.titan = {
         { firePosOffset = { x = 2.7, y = -1.4, z = -1.2 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
         { firePosOffset = { x = -2.7, y = -1.4, z = -1.2 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
     },
+    hHangar = {
+        { firePosOffset = { x = 6, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        { firePosOffset = { x = -6, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        { firePosOffset = { x = 0, y = 6, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        { firePosOffset = { x = 0, y = -6, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+    },
 }
 
 -- Titan weapon pools use the shared size-specific profile names.  Keep the

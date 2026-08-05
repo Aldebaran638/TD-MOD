@@ -68,14 +68,14 @@ try {
     [IO.File]::WriteAllText(
         $perditionBeamPath,
         $perditionBeamText.Replace(
-            'energy_lens_beam.png',
+            'perdition_beam.png',
             'tachyonLance.png'
         ),
         (New-Object Text.UTF8Encoding($false))
     )
     $invalidPerditionIcon = Invoke-Checker
     Assert-True ($invalidPerditionIcon.ExitCode -eq 1) "rejects a Perdition Beam using the Tachyon Lance icon"
-    Assert-True ($invalidPerditionIcon.Output -match "energy lens icon") "reports the Stellaris Perdition Beam icon contract"
+    Assert-True ($invalidPerditionIcon.Output -match "official Stellaris Perdition icon") "reports the Stellaris Perdition Beam icon contract"
     [IO.File]::WriteAllText(
         $perditionBeamPath,
         $perditionBeamText,

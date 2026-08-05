@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineRay({
+    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/arc_emitter_2.png",
     weaponType = "focusedArcEmitter",
     displayName = "聚能电弧发射器",
     englishName = "Focused Arc Emitter",

@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineRocket({
+    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/torpedo_3.png",
     weaponType = "devastatorTorpedoes",
     displayName = "毁灭者鱼雷",
     englishName = "Devastator Torpedoes",

@@ -59,26 +59,10 @@ end
 
 client.weaponSoundCatalog = {
     perditionBeam = {
-        windupNear = _append(
-            _direct("perdition_beam_windup_02.ogg"),
-            _direct("titan_laser_windup_02.ogg")
-        ),
-        windupFar = _append(
-            _direct("perdition_beam_windup_02.ogg"),
-            _direct("titan_laser_windup_02.ogg")
-        ),
-        fireNear = _append(
-            _append(
-                _direct("perdition_beam_fire_01.ogg"),
-                _direct("perdition_beam_fire_03.ogg")
-            ),
-            _direct("titan_laser_fire_01.ogg")
-        ),
-        fireFar = {
-            "MOD/sound/distance_perdition_beam_fire_01.ogg",
-            "MOD/sound/distance_perdition_beam_fire_02.ogg",
-            "MOD/sound/distance_perdition_beam_fire_03.ogg",
-        },
+        windupNear = _direct("perdition_beam_windup_mix.ogg"),
+        windupFar = _direct("perdition_beam_windup_mix.ogg"),
+        fireNear = _direct("perdition_beam_fire_mix.ogg"),
+        fireFar = _direct("distance_perdition_beam_fire_mix.ogg"),
         hitNear = _direct("perdition_beam_hit_01.ogg"),
         hitFar = _direct("distance_perdition_beam_hit_01.ogg"),
     },

@@ -117,7 +117,12 @@ function client.getShipWeaponType(shipBodyId, groupId)
     for _, group in ipairs((configuration or {}).slotGroups or {}) do
         if tostring(group.groupId or "") == mode then
             local defaults = (configuration or {}).defaultLoadout or {}
+            local loadoutKey = shipDefinitionGetGroupLoadoutKey(
+                group.groupId,
+                group.slotType
+            )
             return tostring(defaults[tostring(group.groupId or "")]
+                or defaults[loadoutKey]
                 or defaults[tostring(group.slotType or "")] or "")
         end
     end

@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineProjectile({
+    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/energy_torpedo_2.png",
     weaponType = "neutronLauncher",
     displayName = "中子发射器",
     englishName = "Neutron Launchers",

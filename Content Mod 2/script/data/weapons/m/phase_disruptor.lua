@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineRay({
+    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/disruptor_3.png",
     weaponType = "phaseDisruptor",
     displayName = "相位裂解炮",
     englishName = "Phase Disruptor",

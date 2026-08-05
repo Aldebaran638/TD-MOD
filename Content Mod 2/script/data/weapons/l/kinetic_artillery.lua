@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineProjectile({
+    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/kinetic_artillery_2.png",
     weaponType = "kineticArtillery",
     displayName = "先进动能火炮",
     englishName = "Kinetic Artillery",
