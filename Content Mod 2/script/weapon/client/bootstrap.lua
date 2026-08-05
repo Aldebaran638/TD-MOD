@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 #include "common/state/weapon_loadout.lua"
+#include "../common/targeting_policy.lua"
 #include "common/targeting/target_catalog.lua"
 #include "slots/x/state/render_state.lua"
 #include "slots/x/state/render_state_api.lua"

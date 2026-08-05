@@ -71,6 +71,12 @@ local function _finish(definition)
         armorPenetration = 0.0,
         powerUse = 0.0,
     })
+    if definition.requiresTargetLock == nil then
+        definition.requiresTargetLock = tostring(definition.targetingMode or "")
+            == "target_lock"
+    else
+        definition.requiresTargetLock = definition.requiresTargetLock == true
+    end
     definition.salvoProfile = definition.salvoProfile or {
         groupSize = 1,
         sequence = "sequential",

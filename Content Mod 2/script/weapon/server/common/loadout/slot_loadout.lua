@@ -102,7 +102,7 @@ local function _validateConfigurationShape(definition, configuration, loadout)
     for i = 1, #groups do
         local group = groups[i] or {}
         local slotType = tostring(group.slotType or "")
-        local count = tonumber(group.count) or 0
+        local count = math.max(0, math.floor(tonumber(group.count) or 0))
         local groupId = tostring(group.groupId or "")
         local weaponType = tostring((loadout or {})[groupId]
             or (loadout or {})[slotType] or "")
@@ -117,6 +117,13 @@ local function _validateConfigurationShape(definition, configuration, loadout)
         end
         if tostring(group.groupId or "") == "" then
             return false, "slot group " .. slotType .. " is missing groupId"
+        end
+        local _, salvoError = shipDefinitionNormalizeSalvoGroupSize(
+            group.salvoGroupSize,
+            count
+        )
+        if salvoError ~= nil then
+            return false, "slot group " .. groupId .. ": " .. salvoError
         end
         if profileName == "" or #profile < count then
             return false, "mount profile " .. profileName .. " has "
@@ -152,12 +159,20 @@ local function _rebuildResolvedDefinition(shipType)
             groupId,
             slotType
         )
+        local count = math.max(0, math.floor(tonumber(group.count) or 0))
+        local salvoGroupSize, salvoError =
+            shipDefinitionNormalizeSalvoGroupSize(group.salvoGroupSize, count)
+        if salvoError ~= nil then
+            DebugPrint("[slotLoadout] " .. groupId .. ": " .. salvoError)
+            return nil
+        end
         resolved.weaponGroups[#resolved.weaponGroups + 1] = {
             groupId = tostring(group.groupId or ""),
             slotType = slotType,
-            count = math.max(0, math.floor(tonumber(group.count) or 0)),
+            count = count,
             mountCollection = collectionName,
             automatic = group.automatic and true or false,
+            salvoGroupSize = salvoGroupSize,
         }
         local mounts = shipDefinitionResolveMounts(
             shipType,
@@ -335,10 +350,19 @@ end
 function _loadoutAPI.applySnapshot(snapshot)
     local resolved = snapshot or {}
     local shipType = tostring(resolved.shipType or server.shipContextGetType())
+    local validated, validationError = _loadoutAPI.validateSnapshot(
+        shipType,
+        resolved.configurationId,
+        resolved.loadout or {}
+    )
+    if validated == nil then
+        DebugPrint("[slotLoadout] snapshot rejected: " .. tostring(validationError))
+        return false
+    end
     _stateByType[shipType] = {
         shipType = shipType,
-        configurationId = tostring(resolved.configurationId or ""),
-        loadout = _cloneTable(resolved.loadout or {}),
+        configurationId = validated.configurationId,
+        loadout = _cloneTable(validated.loadout or {}),
     }
     return _rebuildResolvedDefinition(shipType) ~= nil
 end

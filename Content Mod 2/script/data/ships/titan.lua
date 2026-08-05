@@ -61,8 +61,9 @@ shipDefinitionRegister({
             label = "2T 4L + 4L 4M",
             slotGroups = {
                 { groupId = "tSlot", slotType = "T", count = 2 },
-                { groupId = "lSlot", slotType = "L", count = 4 },
-                { groupId = "lSlot2", slotType = "L", count = 4 },
+                -- Each original Titan L battery is a four-mount volley.
+                { groupId = "lSlot", slotType = "L", count = 4, salvoGroupSize = 4 },
+                { groupId = "lSlot2", slotType = "L", count = 4, salvoGroupSize = 4 },
                 { groupId = "mSlot", slotType = "M", count = 4 },
             },
             defaultLoadout = {

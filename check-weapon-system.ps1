@@ -52,6 +52,8 @@ $strikeCraftDefinition = Read-Required "script\data\ships\advanced_strike_craft.
 $interceptorShipDefinitions = Read-Required "script\data\ships\interceptor_projectiles.lua"
 $componentCatalog = Read-Required "script\data\components\component_catalog.lua"
 $shipMounts = Read-Required "script\data\ships\battlecruiser_mounts.lua"
+$titanDefinition = Read-Required "script\data\ships\titan.lua"
+$titanMounts = Read-Required "script\data\ships\titan_mounts.lua"
 $ship = $shipDefinition + "`n" + $shipMounts
 $entry = Read-Required "script\shipMain.lua"
 $weaponBootstrap = Read-Required "script\weapon\server\bootstrap.lua"
@@ -81,6 +83,7 @@ $serverRequests = (Read-Required "script\ship\common\server\network\request_auth
     "`n" + (Read-Required "script\ship\common\server\network\control_snapshot_endpoint.lua") +
     "`n" + (Read-Required "script\weapon\server\network\weapon_command_endpoint.lua")
 $groupRuntime = Read-Required "script\weapon\server\common\runtime\weapon_group.lua"
+$targetingPolicy = Read-Required "script\weapon\common\targeting_policy.lua"
 $weaponDamageRuntime = Read-Required "script\weapon\server\common\runtime\damage.lua"
 $weaponRuntime = Read-Required "script\weapon\server\common\runtime\weapon_runtime.lua"
 $controllerRegistry = Read-Required "script\weapon\server\common\runtime\controller_registry.lua"
@@ -704,6 +707,23 @@ if ([string]$weaponSourceById.focusedArcEmitter -notmatch '(?s)bodyFix\s*=\s*1\.
     $groupRuntime -notmatch 'weaponClass\s*or\s+""\)\s*==\s*"chargedRay"') {
     Add-Issue "Focused Arc Emitter does not share the Tachyon Lance charge/fire lifecycle"
 }
+if ($targetingPolicy -notmatch 'function\s+weaponTargetingPolicy\.requiresTargetLock\s*\(' -or
+    $targetingPolicy -notmatch 'requiresTargetLock\s*~=\s*nil' -or
+    $weaponSchema -notmatch 'requiresTargetLock\s*=\s*tostring\(definition\.targetingMode' -or
+    $weaponSchema -match 'function\s+weaponDefinitionRequiresTargetLock\s*\(' -or
+    $weaponBootstrap -notmatch '#include\s+"\.\./common/targeting_policy\.lua"' -or
+    $clientWeaponBootstrap -notmatch '#include\s+"\.\./common/targeting_policy\.lua"' -or
+    $mainWeaponInput -notmatch '_requiresTargetLock\s*\(' -or
+    $mainWeaponInput -match 'isChargedRay\s+and\s+fireMode\s*==\s*"lock"' -or
+    $groupRuntime -notmatch '_weaponGroupRequiresTargetLock\s*\(weaponDefinition\)' -or
+    $groupRuntime -match 'weaponDefinitionRequiresTargetLock') {
+    Add-Issue "charged-ray lock policy must be data-driven and shared by client/server"
+}
+if ($groupRuntime -notmatch 'local\s+function\s+_weaponGroupValidateRequest\s*\(' -or
+    $groupRuntime -notmatch '(?s)function\s+server\.weaponGroupSetFireHeld.*?_weaponGroupValidateRequest' -or
+    $groupRuntime -notmatch '(?s)function\s+server\.weaponGroupRequestFire.*?_weaponGroupValidateRequest') {
+    Add-Issue "all weapon hold and fire requests must use the shared server validation boundary"
+}
 if ($weaponBootstrap -notmatch 'common/runtime/charged_ray_visual\.lua' -or
     $chargedRayVisual -notmatch 'function\s+server\.chargedRayVisualRegister\s*\(' -or
     $chargedRayVisual -notmatch 'function\s+server\.chargedRayVisualBeginCharge\s*\(' -or
@@ -879,6 +899,16 @@ foreach ($profile in @(
 if ($loadoutRuntime -notmatch 'weaponMountProfiles' -or
     $loadoutRuntime -notmatch 'weaponDefinition\.mountProfile') {
     Add-Issue "loadout resolver does not select mounts by weapon profile"
+}
+if ($titanDefinition -notmatch '(?s)groupId\s*=\s*"lSlot"\s*,\s*slotType\s*=\s*"L"\s*,\s*count\s*=\s*4\s*,\s*salvoGroupSize\s*=\s*4' -or
+    $titanDefinition -notmatch '(?s)groupId\s*=\s*"lSlot2"\s*,\s*slotType\s*=\s*"L"\s*,\s*count\s*=\s*4\s*,\s*salvoGroupSize\s*=\s*4' -or
+    $titanMounts -notmatch '(?s)lTitanic\s*=\s*\{.*?x\s*=\s*6\s*,\s*y\s*=\s*0\s*,\s*z\s*=\s*-4.*?x\s*=\s*-6\s*,\s*y\s*=\s*0\s*,\s*z\s*=\s*-4.*?x\s*=\s*0\s*,\s*y\s*=\s*6\s*,\s*z\s*=\s*-4.*?x\s*=\s*0\s*,\s*y\s*=\s*-6\s*,\s*z\s*=\s*-4' -or
+    $titanMounts -notmatch '(?s)lTitanic2\s*=\s*\{.*?x\s*=\s*6\s*,\s*y\s*=\s*0\s*,\s*z\s*=\s*-1.*?x\s*=\s*-6\s*,\s*y\s*=\s*0\s*,\s*z\s*=\s*-1.*?x\s*=\s*0\s*,\s*y\s*=\s*6\s*,\s*z\s*=\s*-1.*?x\s*=\s*0\s*,\s*y\s*=\s*-6\s*,\s*z\s*=\s*-1' -or
+    $shipSchema -notmatch 'function\s+shipDefinitionNormalizeSalvoGroupSize\s*\(' -or
+    $loadoutRuntime -notmatch 'shipDefinitionNormalizeSalvoGroupSize' -or
+    $groupRuntime -notmatch 'salvoGroupSize\s*=\s*\(group\s+or\s+\{\}\)\.salvoGroupSize' -or
+    $groupRuntime -match 'tonumber\(state\.salvoGroupSize\)') {
+    Add-Issue "Titan L batteries must preserve the original four-mount layout and fire each group as one salvo"
 }
 if ($shipDefinition -match '(?m)^\s*mounts\s*=' -or
     $shipDefinition -match '(?m)^\s*[xlmgh]Slots\s*=' -or

@@ -20,6 +20,7 @@ weaponDefineRay({
     controllerType = "chargedRay",
     weaponClass = "chargedRay",
     targetingMode = "camera_limited",
+    requiresTargetLock = false,
     fireProfile = {
         mode = "charged_release",
         chargeDuration = 0.50,

@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 -- 服务端武器组合根。飞船入口只加载本文件，不直接认识任何具体武器。
+#include "../common/targeting_policy.lua"
 #include "common/runtime/weapon_runtime.lua"
 #include "common/loadout/slot_loadout.lua"
 #include "common/loadout/slot_loadout_api.lua"

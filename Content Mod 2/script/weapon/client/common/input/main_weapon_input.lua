@@ -43,6 +43,10 @@ local function _releaseHeldWeapon(state)
     state.holdTargetBodyId = 0
 end
 
+local function _requiresTargetLock(definition)
+    return weaponTargetingPolicy.requiresTargetLock(definition)
+end
+
 local function _lockedTargetForWeapon(shipBody, definition)
     local weapon = definition or {}
     local hasLockedTarget = client.chargedRayTargetingHasLockedTarget
@@ -58,7 +62,7 @@ local function _lockedTargetForWeapon(shipBody, definition)
         end
         return math.floor(vehicleId or 0), math.floor(bodyId or 0)
     end
-    if tostring(weapon.targetingMode or "") ~= "target_lock" then
+    if not _requiresTargetLock(weapon) then
         return 0, 0
     end
     if client.guidedTargetingCanFire == nil
@@ -124,9 +128,7 @@ function client.mainWeaponInputTick(dt)
     local definition = currentDefinition
     local targetVehicleId, targetBodyId =
         _lockedTargetForWeapon(shipBody, definition)
-    local fireMode = client.getShipWeaponFireMode ~= nil
-        and client.getShipWeaponFireMode(shipBody) or "aim"
-    if isChargedRay and fireMode == "lock"
+    if _requiresTargetLock(definition)
         and targetVehicleId == 0 and targetBodyId == 0 then
         _releaseHeldWeapon(state)
         return

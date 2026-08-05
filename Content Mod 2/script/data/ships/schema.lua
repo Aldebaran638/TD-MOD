@@ -65,6 +65,25 @@ function shipDefinitionGetGroupMountProfileName(groupId, baseProfileName)
     return profileName
 end
 
+-- Slot configuration values are normalized once at the ship-data boundary.
+-- Runtime weapon scheduling consumes this canonical integer and does not
+-- reinterpret raw configuration values.
+function shipDefinitionNormalizeSalvoGroupSize(value, count)
+    if value == nil then return nil, nil end
+
+    local numeric = tonumber(value)
+    if numeric == nil or numeric ~= numeric then
+        return nil, "salvoGroupSize must be numeric"
+    end
+
+    local normalized = math.floor(numeric)
+    local limit = math.max(0, math.floor(tonumber(count) or 0))
+    if normalized < 1 or normalized > limit then
+        return nil, "salvoGroupSize must be between 1 and " .. tostring(limit)
+    end
+    return normalized, nil
+end
+
 function shipDefinitionResolveMounts(
     shipType,
     configurationId,

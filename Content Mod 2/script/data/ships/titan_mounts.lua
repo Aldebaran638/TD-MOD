@@ -5,20 +5,16 @@ shipMountProfileData.titan = {
         { firePosOffset = { x = 0, y = 0, z = -3.5 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
     },
     lTitanic = {
-        { firePosOffset = { x = 5.5, y = 2.2, z = -6.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        { firePosOffset = { x = -5.5, y = 2.2, z = -6.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        { firePosOffset = { x = 5.5, y = -2.2, z = -6.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        { firePosOffset = { x = -5.5, y = -2.2, z = -6.0 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        { firePosOffset = { x = 4.2, y = 0, z = 2.8 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        { firePosOffset = { x = -4.2, y = 0, z = 2.8 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        { firePosOffset = { x = 3.2, y = 1.8, z = 5.2 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        { firePosOffset = { x = -3.2, y = 1.8, z = 5.2 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        { firePosOffset = { x = 6, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        { firePosOffset = { x = -6, y = 0, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        { firePosOffset = { x = 0, y = 6, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        { firePosOffset = { x = 0, y = -6, z = -4 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
     },
     lTitanic2 = {
-        { firePosOffset = { x = 4.2, y = 0, z = 2.8 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        { firePosOffset = { x = -4.2, y = 0, z = 2.8 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        { firePosOffset = { x = 3.2, y = 1.8, z = 5.2 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
-        { firePosOffset = { x = -3.2, y = 1.8, z = 5.2 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        { firePosOffset = { x = 6, y = 0, z = -1 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        { firePosOffset = { x = -6, y = 0, z = -1 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        { firePosOffset = { x = 0, y = 6, z = -1 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
+        { firePosOffset = { x = 0, y = -6, z = -1 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
     },
     mTitanic = {
         { firePosOffset = { x = 2.7, y = 1.4, z = -1.2 }, fireDirRelative = { x = 0, y = 0, z = -1 } },
@@ -29,7 +25,7 @@ shipMountProfileData.titan = {
 }
 
 -- Titan weapon pools use the shared size-specific profile names.  Keep the
--- Titan's eight L and four M hardpoints as the canonical geometry while
+-- two groups of four L and four M hardpoints as the canonical geometry while
 -- exposing those names to the normal loadout resolver.
 local titanLargeMounts = shipMountProfileData.titan.lTitanic
 local titanLargeMounts2 = shipMountProfileData.titan.lTitanic2

@@ -29,6 +29,10 @@ local function _weaponGroupIsChargedRay(weaponDefinition)
         or tostring(definition.controllerType or "") == "chargedRay"
 end
 
+local function _weaponGroupRequiresTargetLock(weaponDefinition)
+    return weaponTargetingPolicy.requiresTargetLock(weaponDefinition)
+end
+
 local function _weaponGroupPushChargedRayEvent(context, eventType, payload)
     local source = context or {}
     local event = payload or {}
@@ -61,11 +65,14 @@ local function _buildState(group, shipType)
             .. " has " .. tostring(#mounts) .. " mounts, expected "
             .. tostring(configuredCount)
     end
+    -- slot_loadout has already normalized this ship-owned override.
+    local salvoGroupSize = (group or {}).salvoGroupSize
     local state = {
         groupId = groupId,
         slotType = tostring((group or {}).slotType or ""),
         mountCollection = mountCollection,
         shipType = shipType,
+        salvoGroupSize = salvoGroupSize,
         nextMountIndex = 1,
         mounts = {},
         pending = nil,
@@ -97,7 +104,11 @@ local function _pickReadyMounts(state, weaponDef)
     local count = #(state.mounts or {})
     if count == 0 then return nil, nil end
     local profile = (weaponDef or {}).salvoProfile or {}
-    local groupSize = math.max(1, math.min(count, math.floor(tonumber(profile.groupSize) or 1)))
+    local groupSize = state.salvoGroupSize
+    if groupSize == nil then
+        groupSize = math.floor(tonumber(profile.groupSize) or 1)
+    end
+    groupSize = math.max(1, math.min(count, groupSize))
     local groupCount = math.ceil(count / groupSize)
     local startMount = math.max(1, math.min(count, math.floor(state.nextMountIndex or 1)))
     local startGroup = math.floor((startMount - 1) / groupSize) + 1
@@ -266,15 +277,120 @@ function server.weaponGroupReset()
     end
 end
 
+local function _weaponGroupNormalizeRequest(groupId, weaponType, request)
+    local source = request or {}
+    local normalized = {
+        shipBodyId = math.floor(
+            tonumber(source.shipBodyId) or tonumber(server.shipContextGetBody()) or 0
+        ),
+        targetVehicleId = math.floor(tonumber(source.targetVehicleId) or 0),
+        targetBodyId = math.floor(tonumber(source.targetBodyId) or 0),
+        groupId = tostring(groupId or ""),
+        weaponType = tostring(weaponType or "none"),
+    }
+    return normalized
+end
+
+local function _requestHasTarget(request)
+    local targetBodyId = math.floor((request or {}).targetBodyId or 0)
+    if targetBodyId ~= 0 and IsHandleValid(targetBodyId) then return true end
+    local targetVehicleId = math.floor((request or {}).targetVehicleId or 0)
+    if targetVehicleId == 0 then return false end
+    local vehicleBodyId = math.floor(GetVehicleBody(targetVehicleId) or 0)
+    return vehicleBodyId ~= 0 and IsHandleValid(vehicleBodyId)
+end
+
+local function _requestTargetPosition(request)
+    local targetBodyId = math.floor((request or {}).targetBodyId or 0)
+    if targetBodyId ~= 0 and IsHandleValid(targetBodyId) then
+        local transform = GetBodyTransform(targetBodyId)
+        return TransformToParentPoint(transform, GetBodyCenterOfMass(targetBodyId))
+    end
+    local targetVehicleId = math.floor((request or {}).targetVehicleId or 0)
+    if targetVehicleId ~= 0 then
+        local bodyId = math.floor(GetVehicleBody(targetVehicleId) or 0)
+        if bodyId ~= 0 and IsHandleValid(bodyId) then
+            local transform = GetBodyTransform(bodyId)
+            return TransformToParentPoint(transform, GetBodyCenterOfMass(bodyId))
+        end
+        local vehicleTransform = GetVehicleTransform(targetVehicleId)
+        return vehicleTransform and vehicleTransform.pos or nil
+    end
+    return nil
+end
+
+local function _requestWithinSensorAndWeaponRange(request, weaponDefinition)
+    local targetPosition = _requestTargetPosition(request)
+    local shipBodyId = math.floor((request or {}).shipBodyId or 0)
+    if targetPosition == nil or shipBodyId == 0 or not IsHandleValid(shipBodyId) then
+        return false
+    end
+    local shipTransform = GetBodyTransform(shipBodyId)
+    local shipPosition = TransformToParentPoint(
+        shipTransform,
+        GetBodyCenterOfMass(shipBodyId)
+    )
+    local distance = VecLength(VecSub(targetPosition, shipPosition))
+    local weaponRange = tonumber((weaponDefinition or {}).maxRange) or 0.0
+    if weaponRange > 0.0 and distance > weaponRange then
+        return false
+    end
+    local sensor = ((server.shipComponentProfile or {}).sensor or {})
+    local sensorRange = tonumber(sensor.range) or 0.0
+    return sensorRange <= 0.0 or distance <= sensorRange
+end
+
+local function _weaponGroupValidateRequest(
+    groupId,
+    weaponType,
+    weaponDefinition,
+    request
+)
+    if weaponDefinition == nil or weaponType == "none" then
+        return false, "weapon not found", nil
+    end
+
+    local normalized = _weaponGroupNormalizeRequest(groupId, weaponType, request)
+    local hasTarget = _requestHasTarget(normalized)
+    local requiresTargetLock = _weaponGroupRequiresTargetLock(weaponDefinition)
+    if requiresTargetLock and not hasTarget then
+        return false, "target lock required", nil
+    end
+    if (requiresTargetLock or _weaponGroupIsChargedRay(weaponDefinition))
+        and hasTarget
+        and not _requestWithinSensorAndWeaponRange(normalized, weaponDefinition) then
+        if requiresTargetLock then
+            return false, "target outside sensor or weapon range", nil
+        end
+        return false, "charged ray target outside sensor or weapon range", nil
+    end
+    return true, nil, normalized
+end
+
 function server.weaponGroupSetFireHeld(groupId, active, request)
     local state = server.weaponGroupStateById[tostring(groupId or "")]
     if state == nil then return false, "unknown weapon group" end
     local weaponType, weaponDef = _resolveWeapon(state)
+    local normalizedRequest = _weaponGroupNormalizeRequest(
+        state.groupId,
+        weaponType,
+        request
+    )
+    if active then
+        local valid, validationError, normalized = _weaponGroupValidateRequest(
+            state.groupId,
+            weaponType,
+            weaponDef,
+            normalizedRequest
+        )
+        if not valid then return false, validationError end
+        normalizedRequest = normalized
+    end
     local controller = server.weaponControllerResolve(weaponDef)
     if controller ~= nil and not controller.delegatesToWeaponGroup
         and controller.ownsHold and type(controller.setHeld) == "function" then
         if active then
-            _weaponGroupBreakCloak((request or {}).shipBodyId)
+            _weaponGroupBreakCloak(normalizedRequest.shipBodyId)
         end
         state.fireHeld = false
         state.heldRequest = nil
@@ -283,17 +399,16 @@ function server.weaponGroupSetFireHeld(groupId, active, request)
             state = state,
             weaponType = weaponType,
             weaponDefinition = weaponDef,
-            request = request or {},
+            request = normalizedRequest,
         }, active and true or false)
     end
     state.fireHeld = active and true or false
     if state.fireHeld then
         state.releaseRequested = false
-        local source = request or {}
         state.heldRequest = {
-            shipBodyId = math.floor(source.shipBodyId or server.shipContextGetBody()),
-            targetVehicleId = math.floor(source.targetVehicleId or 0),
-            targetBodyId = math.floor(source.targetBodyId or 0),
+            shipBodyId = normalizedRequest.shipBodyId,
+            targetVehicleId = normalizedRequest.targetVehicleId,
+            targetBodyId = normalizedRequest.targetBodyId,
         }
         -- A short click can be pressed and released between two server ticks.
         -- Fire the first shot immediately; weaponGroupTick owns held refire.
@@ -376,55 +491,6 @@ function server.weaponGroupSyncHud(groupId, force)
     return true
 end
 
-local function _requestHasTarget(request)
-    local targetBodyId = math.floor((request or {}).targetBodyId or 0)
-    if targetBodyId ~= 0 and IsHandleValid(targetBodyId) then return true end
-    local targetVehicleId = math.floor((request or {}).targetVehicleId or 0)
-    if targetVehicleId == 0 then return false end
-    local vehicleBodyId = math.floor(GetVehicleBody(targetVehicleId) or 0)
-    return vehicleBodyId ~= 0 and IsHandleValid(vehicleBodyId)
-end
-
-local function _requestTargetPosition(request)
-    local targetBodyId = math.floor((request or {}).targetBodyId or 0)
-    if targetBodyId ~= 0 and IsHandleValid(targetBodyId) then
-        local transform = GetBodyTransform(targetBodyId)
-        return TransformToParentPoint(transform, GetBodyCenterOfMass(targetBodyId))
-    end
-    local targetVehicleId = math.floor((request or {}).targetVehicleId or 0)
-    if targetVehicleId ~= 0 then
-        local bodyId = math.floor(GetVehicleBody(targetVehicleId) or 0)
-        if bodyId ~= 0 and IsHandleValid(bodyId) then
-            local transform = GetBodyTransform(bodyId)
-            return TransformToParentPoint(transform, GetBodyCenterOfMass(bodyId))
-        end
-        local vehicleTransform = GetVehicleTransform(targetVehicleId)
-        return vehicleTransform and vehicleTransform.pos or nil
-    end
-    return nil
-end
-
-local function _requestWithinSensorAndWeaponRange(request, weaponDefinition)
-    local targetPosition = _requestTargetPosition(request)
-    local shipBodyId = math.floor((request or {}).shipBodyId or 0)
-    if targetPosition == nil or shipBodyId == 0 or not IsHandleValid(shipBodyId) then
-        return false
-    end
-    local shipTransform = GetBodyTransform(shipBodyId)
-    local shipPosition = TransformToParentPoint(
-        shipTransform,
-        GetBodyCenterOfMass(shipBodyId)
-    )
-    local distance = VecLength(VecSub(targetPosition, shipPosition))
-    local weaponRange = tonumber((weaponDefinition or {}).maxRange) or 0.0
-    if weaponRange > 0.0 and distance > weaponRange then
-        return false
-    end
-    local sensor = ((server.shipComponentProfile or {}).sensor or {})
-    local sensorRange = tonumber(sensor.range) or 0.0
-    return sensorRange <= 0.0 or distance <= sensorRange
-end
-
 local function _fireContexts(behavior, contexts, mounts, cooldown)
     local fired = false
     for i = 1, #contexts do
@@ -460,28 +526,13 @@ function server.weaponGroupRequestFire(groupId, request)
     if weaponDef == nil or weaponType == "none" then return false, "weapon not found" end
     if (tonumber(state.fireDelay) or 0.0) > 0.0 then return false, "weapon group pacing" end
 
-    local normalizedRequest = request or {}
-    normalizedRequest.shipBodyId = math.floor(
-        normalizedRequest.shipBodyId or server.shipContextGetBody()
+    local valid, validationError, normalizedRequest = _weaponGroupValidateRequest(
+        id,
+        weaponType,
+        weaponDef,
+        request
     )
-    normalizedRequest.targetVehicleId = math.floor(normalizedRequest.targetVehicleId or 0)
-    normalizedRequest.targetBodyId = math.floor(normalizedRequest.targetBodyId or 0)
-    normalizedRequest.groupId = id
-    normalizedRequest.weaponType = weaponType
-
-    if tostring(weaponDef.targetingMode or "") == "target_lock"
-        and not _requestHasTarget(normalizedRequest) then
-        return false, "target lock required"
-    end
-    if tostring(weaponDef.targetingMode or "") == "target_lock"
-        and not _requestWithinSensorAndWeaponRange(normalizedRequest, weaponDef) then
-        return false, "target outside sensor or weapon range"
-    end
-    if _weaponGroupIsChargedRay(weaponDef)
-        and _requestHasTarget(normalizedRequest)
-        and not _requestWithinSensorAndWeaponRange(normalizedRequest, weaponDef) then
-        return false, "charged ray target outside sensor or weapon range"
-    end
+    if not valid then return false, validationError end
 
     local controller = server.weaponControllerResolve(weaponDef)
     if controller ~= nil and not controller.delegatesToWeaponGroup then

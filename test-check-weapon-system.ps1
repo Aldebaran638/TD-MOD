@@ -44,6 +44,63 @@ try {
     $valid = Invoke-Checker
     Assert-True ($valid.ExitCode -eq 0) "accepts the complete weapon system contract"
 
+    $targetingPolicyPath = Join-Path $fixtureMod "script\weapon\common\targeting_policy.lua"
+    $targetingPolicyText = [IO.File]::ReadAllText($targetingPolicyPath)
+    [IO.File]::WriteAllText(
+        $targetingPolicyPath,
+        $targetingPolicyText.Replace(
+            'if weapon.requiresTargetLock ~= nil then',
+            'if weapon.requiresTargetLock == true then'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidTargetingPolicy = Invoke-Checker
+    Assert-True ($invalidTargetingPolicy.ExitCode -eq 1) "rejects a targeting policy without an explicit override"
+    Assert-True ($invalidTargetingPolicy.Output -match "lock policy") "reports the shared targeting policy contract"
+    [IO.File]::WriteAllText(
+        $targetingPolicyPath,
+        $targetingPolicyText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    $groupRuntimePath = Join-Path $fixtureMod "script\weapon\server\common\runtime\weapon_group.lua"
+    $groupRuntimeText = [IO.File]::ReadAllText($groupRuntimePath)
+    [IO.File]::WriteAllText(
+        $groupRuntimePath,
+        $groupRuntimeText.Replace(
+            'local function _weaponGroupValidateRequest(',
+            'local function _weaponGroupValidateRequestBroken('
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidRequestBoundary = Invoke-Checker
+    Assert-True ($invalidRequestBoundary.ExitCode -eq 1) "rejects weapon hold/fire paths without a shared request validator"
+    Assert-True ($invalidRequestBoundary.Output -match "shared server validation boundary") "reports the shared request validation contract"
+    [IO.File]::WriteAllText(
+        $groupRuntimePath,
+        $groupRuntimeText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    $shipSchemaPath = Join-Path $fixtureMod "script\data\ships\schema.lua"
+    $shipSchemaText = [IO.File]::ReadAllText($shipSchemaPath)
+    [IO.File]::WriteAllText(
+        $shipSchemaPath,
+        $shipSchemaText.Replace(
+            'function shipDefinitionNormalizeSalvoGroupSize(value, count)',
+            'function shipDefinitionNormalizeSalvoGroupSizeBroken(value, count)'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidSalvoNormalization = Invoke-Checker
+    Assert-True ($invalidSalvoNormalization.ExitCode -eq 1) "rejects Titan salvo configuration without schema normalization"
+    Assert-True ($invalidSalvoNormalization.Output -match "Titan L batteries") "reports the canonical salvo normalization contract"
+    [IO.File]::WriteAllText(
+        $shipSchemaPath,
+        $shipSchemaText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
     $generatedCatalogPath = Join-Path $fixtureMod "script\data\weapons\stellaris_generated_4_4_6.lua"
     $generatedCatalogText = [IO.File]::ReadAllText($generatedCatalogPath)
     [IO.File]::WriteAllText(
