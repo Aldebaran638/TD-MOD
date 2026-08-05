@@ -3,6 +3,7 @@
 #include "common/state/weapon_loadout.lua"
 #include "../common/targeting_policy.lua"
 #include "common/targeting/target_catalog.lua"
+#include "common/hud/radial_weapon_wheel.lua"
 #include "slots/x/state/render_state.lua"
 #include "slots/x/state/render_state_api.lua"
 #include "slots/x/targeting/x_slot_targeting.lua"

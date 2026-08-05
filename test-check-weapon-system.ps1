@@ -44,6 +44,61 @@ try {
     $valid = Invoke-Checker
     Assert-True ($valid.ExitCode -eq 0) "accepts the complete weapon system contract"
 
+    $radialWeaponWheelPath = Join-Path $fixtureMod "script\weapon\client\common\hud\radial_weapon_wheel.lua"
+    $radialWeaponWheelText = [IO.File]::ReadAllText($radialWeaponWheelPath)
+    [IO.File]::WriteAllText(
+        $radialWeaponWheelPath,
+        $radialWeaponWheelText.Replace(
+            'function client.radialWeaponWheelDraw(',
+            'function client.radialWeaponWheelDrawBroken('
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidRadialWeaponWheel = Invoke-Checker
+    Assert-True ($invalidRadialWeaponWheel.ExitCode -eq 1) "rejects a HUD without the shared radial weapon wheel"
+    Assert-True ($invalidRadialWeaponWheel.Output -match "radial weapon wheel") "reports the shared radial weapon wheel contract"
+    [IO.File]::WriteAllText(
+        $radialWeaponWheelPath,
+        $radialWeaponWheelText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    $perditionBeamPath = Join-Path $fixtureMod "script\data\weapons\t\perdition_beam.lua"
+    $perditionBeamText = [IO.File]::ReadAllText($perditionBeamPath)
+    [IO.File]::WriteAllText(
+        $perditionBeamPath,
+        $perditionBeamText.Replace(
+            'energy_lens_beam.png',
+            'tachyonLance.png'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidPerditionIcon = Invoke-Checker
+    Assert-True ($invalidPerditionIcon.ExitCode -eq 1) "rejects a Perdition Beam using the Tachyon Lance icon"
+    Assert-True ($invalidPerditionIcon.Output -match "energy lens icon") "reports the Stellaris Perdition Beam icon contract"
+    [IO.File]::WriteAllText(
+        $perditionBeamPath,
+        $perditionBeamText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    [IO.File]::WriteAllText(
+        $radialWeaponWheelPath,
+        $radialWeaponWheelText.Replace(
+            'UiColor(1.0, 1.0, 1.0, alpha)',
+            'UiColor(0.8, 0.8, 0.8, alpha)'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidTintedRadialWeaponWheel = Invoke-Checker
+    Assert-True ($invalidTintedRadialWeaponWheel.ExitCode -eq 1) "rejects a radial wheel that tints source weapon icons"
+    Assert-True ($invalidTintedRadialWeaponWheel.Output -match "radial weapon wheel") "reports the icon color preservation contract"
+    [IO.File]::WriteAllText(
+        $radialWeaponWheelPath,
+        $radialWeaponWheelText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
     $targetingPolicyPath = Join-Path $fixtureMod "script\weapon\common\targeting_policy.lua"
     $targetingPolicyText = [IO.File]::ReadAllText($targetingPolicyPath)
     [IO.File]::WriteAllText(
@@ -245,6 +300,19 @@ try {
     $invalidUiServerCall = Invoke-Checker
     Assert-True ($invalidUiServerCall.ExitCode -eq 1) "rejects server-coupled configuration UI"
     Assert-True ($invalidUiServerCall.Output -match "must not communicate with the server") "reports the local-only UI contract"
+    [IO.File]::WriteAllText($configUiPath, $configUiText, (New-Object Text.UTF8Encoding($false)))
+
+    [IO.File]::WriteAllText(
+        $configUiPath,
+        $configUiText.Replace(
+            'local function _drawFooter(configuration)',
+            'local function _drawFooterBroken(configuration)'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidConfigFooter = Invoke-Checker
+    Assert-True ($invalidConfigFooter.ExitCode -eq 1) "rejects configuration UI without shared footer actions"
+    Assert-True ($invalidConfigFooter.Output -match "shared footer actions") "reports the configuration footer contract"
     [IO.File]::WriteAllText($configUiPath, $configUiText, (New-Object Text.UTF8Encoding($false)))
 
     $bindingPath = Join-Path $fixtureMod "script\ship\common\client\config\weapon_configuration_binding.lua"

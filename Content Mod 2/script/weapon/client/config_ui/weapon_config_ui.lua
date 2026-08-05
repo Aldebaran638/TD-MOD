@@ -55,22 +55,45 @@ local _componentSlotLabels = {
     reactor = { zh = "反应堆槽", en = "REACTOR", mark = "R" },
 }
 
+local function _shipDefinition()
+    return (shipTypeRegistryData or {})[client.weaponConfigUiState.shipType] or {}
+end
+
+local function _canonicalLoadout(source)
+    local selected = source or {}
+
+    local function pick(groupId, slotType)
+        local value = tostring(selected[groupId] or "")
+        if value ~= "" then return value end
+        return tostring(selected[slotType] or "")
+    end
+
+    local largeSecond = pick("lSlot2", "L2")
+    if largeSecond == "" then largeSecond = pick("lSlot", "L") end
+    return {
+        T = pick("tSlot", "T"),
+        X = pick("xSlot", "X"),
+        L = pick("lSlot", "L"),
+        L2 = largeSecond,
+        M = pick("mSlot", "M"),
+        G = pick("gSlot", "G"),
+        H = pick("hSlot", "H"),
+        P = pick("pSlot", "P"),
+    }
+end
+
 local function _componentProfile(configuration)
     local state = client.weaponConfigUiState
     return shipComponentResolveProfile(
         _shipDefinition(),
         state.componentLoadout,
         configuration,
-        state.loadout
+        _canonicalLoadout(state.loadout)
     )
 end
 
 local function _uiRegistryKey()
     return client.weaponLocalConfigUiOpenKey()
-end
-
-local function _shipDefinition()
-    return (shipTypeRegistryData or {})[client.weaponConfigUiState.shipType] or {}
 end
 
 local function _shipLabel()
@@ -289,11 +312,12 @@ function client.weaponConfiguratorSaveTemplate(
 )
     local definition = (shipTypeRegistryData or {})[tostring(shipType or "")] or {}
     local configuration = shipComponentFindConfiguration(definition, configurationId)
+    local canonicalLoadout = _canonicalLoadout(loadout)
     local profile = shipComponentResolveProfile(
         definition,
         componentLoadout,
         configuration,
-        loadout
+        canonicalLoadout
     )
     if not ((profile.energy or {}).valid) then
         local state = client.weaponConfigUiState
@@ -301,20 +325,10 @@ function client.weaponConfiguratorSaveTemplate(
         state.message = "能源必须为正 / POSITIVE POWER BALANCE REQUIRED"
         return false
     end
-    local selected = loadout or {}
     client.weaponLocalConfigWrite(
         tostring(shipType or ""),
         tostring(configurationId or ""),
-        {
-            T = tostring(selected.tSlot or selected.T or ""),
-            X = tostring(selected.xSlot or selected.X or ""),
-            L = tostring(selected.lSlot or selected.L or ""),
-            L2 = tostring(selected.lSlot2 or selected.L2 or selected.lSlot or selected.L or ""),
-            M = tostring(selected.mSlot or selected.M or ""),
-            G = tostring(selected.gSlot or selected.G or ""),
-            H = tostring(selected.hSlot or selected.H or ""),
-            P = tostring(selected.pSlot or selected.P or ""),
-        },
+        canonicalLoadout,
         componentLoadout
     )
     local state = client.weaponConfigUiState
@@ -402,51 +416,6 @@ local function _drawHeader()
     if _button(_panelWidth - 54, 14, 38, 38, "X", false, true) then
         _close()
     end
-
-    -- Kept deliberately identical to the verified footer-position probe:
-    -- a single direct draw in the header pass, without nested UI helpers.
-    UiPush()
-        UiTranslate(772, 884)
-        UiColor(0.03, 0.12, 0.14, 1.0)
-        UiRect(170, 38)
-        UiAlign("center middle")
-        UiTranslate(85, 19)
-        _text("恢复默认 / RESET", 14, 0.90, 0.98, 0.96, 1.0)
-    UiPop()
-    UiPush()
-        UiTranslate(772, 884)
-        if UiIsMouseInRect(170, 38) and InputPressed("lmb") then
-            client.weaponConfigUiState.pendingHeaderFooterAction = "reset"
-        end
-    UiPop()
-    UiPush()
-        UiTranslate(954, 884)
-        UiColor(0.06, 0.34, 0.30, 1.0)
-        UiRect(170, 38)
-        UiAlign("center middle")
-        UiTranslate(85, 19)
-        _text("保存设计 / SAVE", 14, 0.90, 0.98, 0.96, 1.0)
-    UiPop()
-    UiPush()
-        UiTranslate(954, 884)
-        if UiIsMouseInRect(170, 38) and InputPressed("lmb") then
-            client.weaponConfigUiState.pendingHeaderFooterAction = "save"
-        end
-    UiPop()
-    UiPush()
-        UiTranslate(1136, 884)
-        UiColor(0.03, 0.12, 0.14, 1.0)
-        UiRect(130, 38)
-        UiAlign("center middle")
-        UiTranslate(65, 19)
-        _text("关闭 / CLOSE", 14, 0.90, 0.98, 0.96, 1.0)
-    UiPop()
-    UiPush()
-        UiTranslate(1136, 884)
-        if UiIsMouseInRect(130, 38) and InputPressed("lmb") then
-            client.weaponConfigUiState.pendingHeaderFooterAction = "close"
-        end
-    UiPop()
 end
 
 local function _drawShipSidebar(configuration)
@@ -1047,6 +1016,63 @@ local function _resetDraft()
     _ensureDraft()
 end
 
+local function _drawFooter(configuration)
+    local state = client.weaponConfigUiState
+    local footerWidth = _panelWidth - 28
+    local profile = _componentProfile(configuration) or {}
+    local energy = profile.energy or {}
+    local designValid = energy.valid and true or false
+    local balance = tonumber(energy.balance) or 0.0
+    local message = tostring(state.message or "")
+    if not designValid then
+        message = "能源不足 / POSITIVE POWER BALANCE REQUIRED"
+    end
+
+    UiPush()
+        UiTranslate(14, _footerY)
+        UiColor(0.008, 0.050, 0.054, 1.0)
+        UiRect(footerWidth, 104)
+        UiColor(0.12, 0.62, 0.52, 0.82)
+        UiRect(footerWidth, 2)
+        UiPush()
+            UiTranslate(16, 12)
+            _text("设计状态 / DESIGN STATUS", 11, 0.48, 0.78, 0.72, 1)
+            UiTranslate(0, 21)
+            _text(message, 14, designValid and 0.82 or 1.0,
+                designValid and 0.94 or 0.36,
+                designValid and 0.88 or 0.24, 1)
+            UiTranslate(0, 24)
+            _text(string.format("POWER BALANCE %+0.0f", balance), 11,
+                designValid and 0.42 or 0.96,
+                designValid and 0.84 or 0.32,
+                designValid and 0.72 or 0.20, 1)
+        UiPop()
+
+        local resetX = footerWidth - 494
+        local saveX = resetX + 182
+        local closeX = saveX + 182
+        if _button(resetX, 48, 170, 38,
+            "恢复默认 / RESET", false, not state.pending) then
+            _resetDraft()
+            configuration = _ensureDraft() or configuration
+        end
+        if _button(saveX, 48, 170, 38,
+            "保存设计 / SAVE", designValid, not state.pending) then
+            client.weaponConfiguratorSaveTemplate(
+                state.shipType,
+                state.configurationId,
+                _copyLoadout(state.loadout),
+                _copyComponentLoadout(state.componentLoadout)
+            )
+        end
+        if _button(closeX, 48, 130, 38,
+            "关闭 / CLOSE", false, true) then
+            _close()
+        end
+    UiPop()
+    return configuration
+end
+
 function client.weaponConfigUiDraw()
     local state = client.weaponConfigUiState
     if not state.open then return end
@@ -1076,22 +1102,6 @@ function client.weaponConfigUiDraw()
         UiRectOutline(_panelWidth, _panelHeight, 2)
         _drawHeader()
 
-        local action = state.pendingHeaderFooterAction
-        state.pendingHeaderFooterAction = nil
-        if action == "reset" then
-            _resetDraft()
-            configuration = _ensureDraft() or configuration
-        elseif action == "save" then
-            client.weaponConfiguratorSaveTemplate(
-                state.shipType,
-                state.configurationId,
-                _copyLoadout(state.loadout),
-                _copyComponentLoadout(state.componentLoadout)
-            )
-        elseif action == "close" then
-            _close()
-        end
-
         UiTranslate(14, 88)
         if state.selectedDefenseType ~= "" then
             _drawDefenseSidebar(state.selectedDefenseType)
@@ -1109,6 +1119,11 @@ function client.weaponConfigUiDraw()
             configuration,
             centerX + centerWidth + _contentGap
         )
+
+        UiPush()
+            UiTranslate(-14, -88)
+            configuration = _drawFooter(configuration)
+        UiPop()
 
         if state.framePickerOpen then
             UiPush()

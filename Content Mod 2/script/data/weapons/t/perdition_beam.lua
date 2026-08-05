@@ -9,7 +9,7 @@ weaponDefineRay({
     slotTypes = { "T" },
     fxProfile = "perditionBeam",
     soundProfileId = "perditionBeam",
-    iconPath = "MOD/gfx/ui/weapon_icons/tachyonLance.png",
+    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/energy_lens_beam.png",
     damageMin = 5000,
     damageMax = 10000,
     powerUse = 500.0,

@@ -74,6 +74,7 @@ $configUi = Read-Required "script\weapon\client\config_ui\weapon_config_ui.lua"
 $localWeaponConfig = Read-Required "script\weapon\client\config_ui\local_weapon_config.lua"
 $configurationBinding = Read-Required "script\ship\common\client\config\weapon_configuration_binding.lua"
 $mainWeaponHud = Read-Required "script\weapon\client\common\hud\main_weapon_hud.lua"
+$radialWeaponWheel = Read-Required "script\weapon\client\common\hud\radial_weapon_wheel.lua"
 $crosshair = Read-Required "script\weapon\client\common\hud\ship_crosshair.lua"
 $projectileVisual = Read-Required "script\weapon\client\slots\l\kinetic_artillery\effects\projectile_visual.lua"
 $shieldHitFx = Read-Required "script\weapon\client\common\effects\shield_hit_fx.lua"
@@ -639,6 +640,13 @@ if ($configUi -notmatch 'client\.weaponLocalConfigRead' -or
     $configUi -notmatch 'client\.weaponLocalConfigWrite') {
     Add-Issue "weapon configuration UI does not use the single local registry source"
 }
+if ($configUi -notmatch 'local function _drawFooter\s*\(' -or
+    $configUi -notmatch 'configuration\s*=\s*_drawFooter\s*\(' -or
+    $configUi -notmatch 'local function _canonicalLoadout\s*\(' -or
+    $configUi -notmatch 'local canonicalLoadout\s*=\s*_canonicalLoadout' -or
+    $configUi -match 'pendingHeaderFooterAction') {
+    Add-Issue "weapon configuration UI must use the shared footer actions and canonical loadout mapping"
+}
 if ($groupRuntime -notmatch 'client\.updateWeaponGroupHudState' -or
     $mainWeaponHud -notmatch 'function\s+client\.updateWeaponGroupHudState\s*\(') {
     Add-Issue "generic weapon charge/cooldown HUD synchronization is missing"
@@ -803,6 +811,9 @@ if ([string]$weaponSourceById.perditionBeam -notmatch 'infernoWorldProfile\s*=\s
     $infernoRaycastBehavior -notmatch 'infernoPulseMaxRadius') {
     Add-Issue "Perdition Beam world effects, HUD ownership, and aftershock radius must be profile-driven"
 }
+if ([string]$weaponSourceById.perditionBeam -notmatch 'iconPath\s*=\s*"MOD/gfx/ui/weapon_icons/stellaris/energy_lens_beam\.png"') {
+    Add-Issue "Perdition Beam must use the Stellaris energy lens icon"
+}
 if ($weaponDamageRuntime -notmatch 'function\s+server\.weaponDamageApplyRolledToShip\s*\(' -or
     $chargedRayBeamRenderer -notmatch 'QuatAlignXZ\(' -or
     $perditionBeamFx -notmatch 'width = 96\.0' -or
@@ -820,6 +831,18 @@ if ($mainWeaponHud -notmatch 'weaponDefinition\.hudOwner' -or
     $tSlotRenderState -notmatch 'function\s+client\.tSlotRenderGetEvents\s*\(' -or
     $tSlotRenderState -notmatch 'maxTSlotRenderEvents') {
     Add-Issue "HUD ownership and T-slot render events must be capability-based and queue-bounded"
+}
+if ($clientWeaponBootstrap -notmatch '#include\s+"common/hud/radial_weapon_wheel\.lua"' -or
+    $mainWeaponHud -notmatch 'client\.radialWeaponWheelDraw\s*\(' -or
+    $mainWeaponHud -notmatch 'client\.getShipWeaponType\s*\(' -or
+    $mainWeaponHud -notmatch 'candidate\s*~=\s*nil' -or
+    $radialWeaponWheel -notmatch 'function\s+client\.radialWeaponWheelCreateState\s*\(' -or
+    $radialWeaponWheel -notmatch 'function\s+client\.radialWeaponWheelUpdate\s*\(' -or
+    $radialWeaponWheel -notmatch 'function\s+client\.radialWeaponWheelDraw\s*\(' -or
+    $radialWeaponWheel -notmatch 'UiImageBox\(' -or
+    $radialWeaponWheel -notmatch 'UiColor\(1\.0,\s*1\.0,\s*1\.0,\s*alpha\)' -or
+    $radialWeaponWheel -notmatch 'math\.exp\(') {
+    Add-Issue "main weapon HUD must use the shared smooth radial weapon wheel"
 }
 if ([string]$weaponSourceById.phaseDisruptor -notmatch 'fxProfile\s*=\s*"arcBeam"' -or
     $genericRaycastFx -notmatch 'arcBeam\s*=\s*\{\s*color\s*=\s*\{\s*0\.18,\s*1\.0,\s*0\.32\s*\}') {

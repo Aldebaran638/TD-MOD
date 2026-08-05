@@ -4,23 +4,28 @@
 client = client or {}
 
 client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
-    panelWidth = 420,
-    panelHeight = 118,
+    panelWidth = 460,
+    panelHeight = 154,
     rightOffset = 24,
     topOffset = 566,
     helpPanelGap = 14,
-    topBarWidth = 280,
+    topBarWidth = 150,
     topBarHeight = 12,
     topBarOffsetY = 12,
     xCooldownBarWidth = 72,
     xCooldownBarHeight = 8,
     xCooldownBarGap = 12,
-    iconSize = 26,
-    labelSize = 18,
-    valueSize = 14,
+    labelSize = 17,
+    valueSize = 13,
     smoothSpeed = 8.0,
+    wheelCenterX = 84,
+    wheelCenterY = 77,
+    wheelRadius = 56,
+    wheelItemSize = 24,
+    wheelSelectedItemSize = 46,
+    wheelHubSize = 22,
 
-    bgColor = { 0.06, 0.07, 0.09, 0.78 },
+    bgColor = { 0.025, 0.045, 0.055, 0.88 },
     borderColor = { 1.0, 1.0, 1.0, 0.30 },
     textColor = { 0.95, 0.96, 0.98, 1.0 },
     subTextColor = { 0.78, 0.82, 0.86, 0.92 },
@@ -37,6 +42,13 @@ client.mainWeaponHudConfig = client.mainWeaponHudConfig or {
     heatOverColor = { 1.0, 0.22, 0.10, 0.98 },
     lockFillColor = { 1.0, 0.82, 0.24, 0.96 },
     lockReadyColor = { 1.0, 0.24, 0.18, 0.98 },
+    outerRingColor = { 0.12, 0.74, 0.70, 0.52 },
+    innerRingColor = { 0.54, 0.90, 0.82, 0.34 },
+    tickColor = { 0.62, 0.92, 0.86, 0.46 },
+    hubColor = { 0.64, 0.94, 0.88, 0.76 },
+    accentColor = { 0.54, 0.90, 0.82, 0.80 },
+    selectedFrameColor = { 0.72, 0.98, 0.90, 0.94 },
+    missingItemColor = { 0.32, 0.42, 0.44, 0.80 },
 }
 
 client.mainWeaponHudState = client.mainWeaponHudState or {
@@ -74,6 +86,8 @@ client.mainWeaponHudState = client.mainWeaponHudState or {
     genericPhase2 = "idle",
     genericPhase3 = "idle",
     genericPhase4 = "idle",
+    wheelState = nil,
+    wheelItems = {},
 }
 
 client.lSlotHudStateByShip = client.lSlotHudStateByShip or {}
@@ -516,6 +530,46 @@ local function _updateGuidedSlotFills(state, prefix, hud)
     end
 end
 
+local function _mainWeaponHudResolveDefinition(shipBodyId, groupId)
+    -- The wheel is a view of the active ship configuration, not a list of
+    -- every slot type supported by the weapon system.  An empty weapon type
+    -- means this group does not exist on the current hull/configuration.
+    if client.getShipWeaponType ~= nil then
+        local weaponType = tostring(client.getShipWeaponType(shipBodyId, groupId) or "")
+        if weaponType == "" then return nil end
+    end
+    if client.getShipWeaponDefinition == nil then return {} end
+    return client.getShipWeaponDefinition(shipBodyId, groupId) or {}
+end
+
+local function _mainWeaponHudBuildWheelItems(shipBodyId, cfg)
+    local function item(groupId, label, color)
+        local definition = _mainWeaponHudResolveDefinition(shipBodyId, groupId)
+        if definition == nil then return nil end
+        return {
+            id = groupId,
+            label = label,
+            iconPath = tostring(definition.iconPath or ""),
+            color = color,
+        }
+    end
+
+    local candidates = {
+        item("tSlot", "T", cfg.tSlotColor),
+        item("xSlot", "X", cfg.xSlotColor),
+        item("lSlot", "L1", cfg.lSlotColor),
+        item("lSlot2", "L2", cfg.lSlot2Color),
+        item("mSlot", "M", cfg.mSlotColor),
+        item("gSlot", "G", cfg.gSlotColor),
+        item("hSlot", "H", cfg.hSlotColor),
+    }
+    local result = {}
+    for _, candidate in ipairs(candidates) do
+        if candidate ~= nil then result[#result + 1] = candidate end
+    end
+    return result
+end
+
 function client.mainWeaponHudTick(dt)
     local cfg = client.mainWeaponHudConfig
     local state = client.mainWeaponHudState
@@ -536,6 +590,9 @@ function client.mainWeaponHudTick(dt)
         state.targetGuidedProgress = 0.0
         state.guidedProgress = 0.0
         state.guidedStatus = "NO TARGET"
+        if state.wheelState ~= nil and client.radialWeaponWheelReset ~= nil then
+            client.radialWeaponWheelReset(state.wheelState)
+        end
         state.hSlotFill1 = 1.0
         state.hSlotFill2 = 1.0
         state.hSlotActive1 = false
@@ -553,6 +610,18 @@ function client.mainWeaponHudTick(dt)
         state.currentMainWeapon = client.getShipMainWeaponMode(body)
     else
         state.currentMainWeapon = "xSlot"
+    end
+    if state.wheelState == nil and client.radialWeaponWheelCreateState ~= nil then
+        state.wheelState = client.radialWeaponWheelCreateState()
+    end
+    state.wheelItems = _mainWeaponHudBuildWheelItems(body, cfg)
+    if state.wheelState ~= nil and client.radialWeaponWheelUpdate ~= nil then
+        client.radialWeaponWheelUpdate(
+            state.wheelState,
+            state.wheelItems,
+            state.currentMainWeapon,
+            dt
+        )
     end
     state.xSlotFireMode = client.getShipWeaponFireMode ~= nil
         and client.getShipWeaponFireMode(body)
@@ -641,19 +710,27 @@ function client.mainWeaponHudTick(dt)
 
 end
 
-local function _drawWeaponIcon(x, y, size, fillColor, label, selected, cfg)
-    UiPush()
-        UiTranslate(x, y)
-        UiColor(fillColor[1], fillColor[2], fillColor[3], selected and fillColor[4] or 0.35)
-        UiRect(size, size)
-        UiColor(cfg.borderColor[1], cfg.borderColor[2], cfg.borderColor[3], selected and 0.75 or 0.22)
-        UiRectOutline(size, size, 2)
-        UiColor(1, 1, 1, selected and 1.0 or 0.72)
-        UiFont("regular.ttf", math.floor(size * 0.48))
-        UiAlign("center middle")
-        UiTranslate(size * 0.5, size * 0.54)
-        UiText(label)
-    UiPop()
+local function _drawWeaponWheel(state, cfg)
+    if state.wheelState == nil or client.radialWeaponWheelDraw == nil then return end
+    client.radialWeaponWheelDraw(
+        state.wheelState,
+        state.wheelItems,
+        cfg.wheelCenterX,
+        cfg.wheelCenterY,
+        {
+            radius = cfg.wheelRadius,
+            itemSize = cfg.wheelItemSize,
+            selectedItemSize = cfg.wheelSelectedItemSize,
+            hubSize = cfg.wheelHubSize,
+            outerRingColor = cfg.outerRingColor,
+            innerRingColor = cfg.innerRingColor,
+            tickColor = cfg.tickColor,
+            hubColor = cfg.hubColor,
+            accentColor = cfg.accentColor,
+            selectedFrameColor = cfg.selectedFrameColor,
+            missingItemColor = cfg.missingItemColor,
+        }
+    )
 end
 
 local function _drawTopBar(x, y, width, height, fillFraction, fillColor, text, cfg)
@@ -795,18 +872,11 @@ function client.mainWeaponHudDraw()
         UiColor(cfg.borderColor[1], cfg.borderColor[2], cfg.borderColor[3], cfg.borderColor[4])
         UiRectOutline(panelW, panelH, 2)
 
-        _drawTopBar(12, cfg.topBarOffsetY, cfg.topBarWidth, cfg.topBarHeight, topFill, topColor, topText, cfg)
-
-        _drawWeaponIcon(12, 36, cfg.iconSize, cfg.tSlotColor, "T", currentMode == "tSlot", cfg)
-        _drawWeaponIcon(46, 36, cfg.iconSize, cfg.xSlotColor, "X", currentMode == "xSlot", cfg)
-        _drawWeaponIcon(80, 36, cfg.iconSize, cfg.lSlotColor, "L1", currentMode == "lSlot", cfg)
-        _drawWeaponIcon(114, 36, cfg.iconSize, cfg.lSlot2Color, "L2", currentMode == "lSlot2", cfg)
-        _drawWeaponIcon(148, 36, cfg.iconSize, cfg.mSlotColor, "M", currentMode == "mSlot", cfg)
-        _drawWeaponIcon(182, 36, cfg.iconSize, cfg.gSlotColor, "G", currentMode == "gSlot", cfg)
-        _drawWeaponIcon(216, 36, cfg.iconSize, cfg.hSlotColor, "H", currentMode == "hSlot", cfg)
+        _drawTopBar(178, cfg.topBarOffsetY, cfg.topBarWidth, cfg.topBarHeight, topFill, topColor, topText, cfg)
+        _drawWeaponWheel(state, cfg)
 
         UiPush()
-            UiTranslate(258, 30)
+            UiTranslate(178, 31)
             UiColor(cfg.textColor[1], cfg.textColor[2], cfg.textColor[3], cfg.textColor[4])
             UiFont("regular.ttf", cfg.labelSize)
             UiText(titleText)
@@ -814,7 +884,7 @@ function client.mainWeaponHudDraw()
 
         if englishNameText ~= "" then
             UiPush()
-                UiTranslate(258, 44)
+                UiTranslate(178, 47)
                 UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4] * 0.8)
                 UiFont("regular.ttf", cfg.valueSize - 2)
                 UiText(englishNameText)
@@ -822,7 +892,7 @@ function client.mainWeaponHudDraw()
         end
 
         UiPush()
-            UiTranslate(258, 56)
+            UiTranslate(178, 62)
             UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
             UiFont("regular.ttf", cfg.valueSize)
             UiText(modeText)
@@ -852,8 +922,8 @@ function client.mainWeaponHudDraw()
             for i = 1, barCount do
                 local column = (i - 1) % 2
                 local row = math.floor((i - 1) / 2)
-                local barX = 12 + column * (24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap)
-                local barY = 76 + row * 20
+                local barX = 178 + column * (24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap)
+                local barY = 88 + row * 20
                 local phase = tostring(state["genericPhase" .. tostring(i)] or "")
                 local barColor = slotColor
                 if phase == "overheated" then
@@ -868,22 +938,22 @@ function client.mainWeaponHudDraw()
                 )
             end
         elseif currentMode == "xSlot" then
-            _drawWeaponCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill1, "X1", cfg, cfg.xSlotColor)
-            _drawWeaponCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill2, "X2", cfg, cfg.xSlotColor)
+            _drawWeaponCooldownBar(178, 88, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill1, "X1", cfg, cfg.xSlotColor)
+            _drawWeaponCooldownBar(178 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 88, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.xSlotFill2, "X2", cfg, cfg.xSlotColor)
         elseif currentMode == "mSlot" or currentMode == "gSlot" then
             local prefix = currentMode == "mSlot" and "m" or "g"
             local label = currentMode == "mSlot" and "M" or "G"
             local color = currentMode == "mSlot" and cfg.mSlotColor or cfg.gSlotColor
-            _drawWeaponCooldownBar(12, 76, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill1"], label .. "1", cfg, color)
-            _drawWeaponCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 76, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill2"], label .. "2", cfg, color)
-            _drawWeaponCooldownBar(12, 96, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill3"], label .. "3", cfg, color)
-            _drawWeaponCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 96, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill4"], label .. "4", cfg, color)
+            _drawWeaponCooldownBar(178, 88, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill1"], label .. "1", cfg, color)
+            _drawWeaponCooldownBar(178 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 88, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill2"], label .. "2", cfg, color)
+            _drawWeaponCooldownBar(178, 108, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill3"], label .. "3", cfg, color)
+            _drawWeaponCooldownBar(178 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 108, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state[prefix .. "SlotFill4"], label .. "4", cfg, color)
         elseif currentMode == "hSlot" then
-            _drawWeaponCooldownBar(12, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill1, state.hSlotActive1 and "H1*" or "H1", cfg, cfg.hSlotColor)
-            _drawWeaponCooldownBar(12 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 82, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill2, state.hSlotActive2 and "H2*" or "H2", cfg, cfg.hSlotColor)
+            _drawWeaponCooldownBar(178, 88, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill1, state.hSlotActive1 and "H1*" or "H1", cfg, cfg.hSlotColor)
+            _drawWeaponCooldownBar(178 + 24 + cfg.xCooldownBarWidth + cfg.xCooldownBarGap, 88, cfg.xCooldownBarWidth, cfg.xCooldownBarHeight, state.hSlotFill2, state.hSlotActive2 and "H2*" or "H2", cfg, cfg.hSlotColor)
         else
             UiPush()
-                UiTranslate(12, 84)
+                UiTranslate(178, 88)
                 UiColor(cfg.subTextColor[1], cfg.subTextColor[2], cfg.subTextColor[3], cfg.subTextColor[4])
                 UiFont("regular.ttf", cfg.valueSize)
                 UiText("Thermal battery active")
