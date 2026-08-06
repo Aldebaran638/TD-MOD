@@ -826,12 +826,17 @@ if ([string]$weaponSourceById.perditionBeam -notmatch 'infernoWorldProfile\s*=\s
 if ([string]$weaponSourceById.perditionBeam -notmatch 'iconPath\s*=\s*"MOD/gfx/ui/weapon_icons/stellaris/perdition_beam\.png"') {
     Add-Issue "Perdition Beam must use the official Stellaris Perdition icon"
 }
-if ($weaponSoundCatalog -notmatch 'perdition_beam_windup_mix\.ogg' -or
-    $weaponSoundCatalog -notmatch 'perdition_beam_fire_mix\.ogg' -or
-    $weaponSoundCatalog -notmatch 'distance_perdition_beam_fire_mix\.ogg' -or
+if ($weaponSoundCatalog -notmatch 'perdition_beam_windup_01\.ogg' -or
+    $weaponSoundCatalog -notmatch 'perdition_beam_windup_02\.ogg' -or
+    $weaponSoundCatalog -notmatch 'perdition_beam_fire_01\.ogg' -or
+    $weaponSoundCatalog -notmatch 'perdition_beam_fire_02\.ogg' -or
+    $weaponSoundCatalog -notmatch 'perdition_beam_fire_03\.ogg' -or
+    $weaponSoundCatalog -notmatch 'distance_perdition_beam_fire_01\.ogg' -or
+    $weaponSoundCatalog -notmatch 'distance_perdition_beam_fire_02\.ogg' -or
+    $weaponSoundCatalog -notmatch 'distance_perdition_beam_fire_03\.ogg' -or
     $weaponSoundCatalog -match 'titan_laser_(?:windup|fire)' -or
     $soundService -notmatch '_randomPick\(handles\)') {
-    Add-Issue "Perdition Beam must use its pre-mixed official Stellaris sound layers"
+    Add-Issue "Perdition Beam must use its official layered Stellaris sound catalog"
 }
 $perditionSoundNames = @(
     "perdition_beam_windup_01.ogg", "perdition_beam_windup_02.ogg",
@@ -840,9 +845,7 @@ $perditionSoundNames = @(
     "distance_perdition_beam_fire_01.ogg",
     "distance_perdition_beam_fire_02.ogg",
     "distance_perdition_beam_fire_03.ogg",
-    "distance_perdition_beam_hit_01.ogg",
-    "perdition_beam_windup_mix.ogg", "perdition_beam_fire_mix.ogg",
-    "distance_perdition_beam_fire_mix.ogg"
+    "distance_perdition_beam_hit_01.ogg"
 )
 foreach ($soundName in $perditionSoundNames) {
     if (-not (Test-Path -LiteralPath (Join-Path $modRoot ("sound\" + $soundName)) -PathType Leaf)) {

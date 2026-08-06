@@ -82,6 +82,14 @@ try {
         (New-Object Text.UTF8Encoding($false))
     )
 
+    $perditionSoundPath = Join-Path $fixtureMod "sound\perdition_beam_fire_01.ogg"
+    $perditionSoundBytes = [IO.File]::ReadAllBytes($perditionSoundPath)
+    Remove-Item -LiteralPath $perditionSoundPath -Force
+    $invalidPerditionSound = Invoke-Checker
+    Assert-True ($invalidPerditionSound.ExitCode -eq 1) "rejects a Perdition Beam missing a layered fire sound"
+    Assert-True ($invalidPerditionSound.Output -match "official Perdition Beam sound is missing: perdition_beam_fire_01\.ogg") "reports the missing Perdition Beam layered sound"
+    [IO.File]::WriteAllBytes($perditionSoundPath, $perditionSoundBytes)
+
     [IO.File]::WriteAllText(
         $radialWeaponWheelPath,
         $radialWeaponWheelText.Replace(
