@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineProjectile({
-    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/mass_accelerator_2.png",
+    iconPath = "MOD/gfx/ui/weapon_icons/mass_accelerator_2.png",
     weaponType = "gigaCannon",
     displayName = "千兆级加农炮",
     englishName = "Giga Cannon",

@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineRay({
-    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/energy_lance_2.png",
+    iconPath = "MOD/gfx/ui/weapon_icons/energy_lance_2.png",
     weaponType = "tachyonLance",
     displayName = "快子光矛",
     englishName = "Tachyon Lance",

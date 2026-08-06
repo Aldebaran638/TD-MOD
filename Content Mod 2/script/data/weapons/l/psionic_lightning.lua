@@ -8,7 +8,7 @@ weaponDefineRay({
     fxProfile = "psionicArcBeam",
     impactFxProfile = "focusedArcImpact",
     soundProfileId = "focusedArcEmitter",
-    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/psionic_lightning.png",
+    iconPath = "MOD/gfx/ui/weapon_icons/psionic_lightning.png",
     damageMin = 1,
     damageMax = 139,
     powerUse = 70.0,

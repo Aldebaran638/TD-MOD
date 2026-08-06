@@ -5,7 +5,7 @@ weaponDefineRay({
     displayName = "守护者点防御",
     englishName = "Guardian Point-Defense",
     slotTypes = { "P" },
-    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/point_defense_3.png",
+    iconPath = "MOD/gfx/ui/weapon_icons/point_defense_3.png",
     damageMin = 4.0,
     damageMax = 8.0,
     cooldown = 0.45,

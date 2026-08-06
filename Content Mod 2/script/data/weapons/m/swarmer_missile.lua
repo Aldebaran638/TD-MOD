@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineGuided({
-    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/swarmer_missile_2.png",
+    iconPath = "MOD/gfx/ui/weapon_icons/swarmer_missile_2.png",
     weaponType = "swarmerMissile",
     displayName = "旋风导弹",
     englishName = "Whirlwind Missiles",

@@ -104,7 +104,7 @@ local _generatedSizes = {
 }
 
 local function _generatedIcon(name)
-    return "MOD/gfx/ui/weapon_icons/stellaris/" .. tostring(name) .. ".png"
+    return "MOD/gfx/ui/weapon_icons/" .. tostring(name) .. ".png"
 end
 
 local function _generatedDefineRay(definition)

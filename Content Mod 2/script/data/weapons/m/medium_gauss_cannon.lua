@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineProjectile({
-    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/mass_driver_5.png",
+    iconPath = "MOD/gfx/ui/weapon_icons/mass_driver_5.png",
     weaponType = "mediumGaussCannon",
     displayName = "中型高斯炮",
     englishName = "Medium Gauss Cannon",

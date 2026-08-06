@@ -347,7 +347,7 @@ if ($stellarisGeneratedCatalog -notmatch '(?m)^\s*local\s+_generatedSizes\s*=\s*
     Add-Issue "generated Stellaris catalog is not self-contained across Teardown include scopes"
 }
 
-$stellarisIconRoot = Join-Path $modRoot "gfx\ui\weapon_icons\stellaris"
+$stellarisIconRoot = Join-Path $modRoot "gfx\ui\weapon_icons"
 $requiredIconNames = @(
     'laser_1', 'laser_2', 'laser_3', 'laser_4', 'laser_5',
     'mass_driver_1', 'mass_driver_2', 'mass_driver_3', 'mass_driver_4', 'mass_driver_5',
@@ -831,7 +831,7 @@ if ([string]$weaponSourceById.perditionBeam -notmatch 'infernoWorldProfile\s*=\s
     $infernoRaycastBehavior -notmatch 'infernoPulseMaxRadius') {
     Add-Issue "Perdition Beam world effects, HUD ownership, and aftershock radius must be profile-driven"
 }
-if ([string]$weaponSourceById.perditionBeam -notmatch 'iconPath\s*=\s*"MOD/gfx/ui/weapon_icons/stellaris/perdition_beam\.png"') {
+if ([string]$weaponSourceById.perditionBeam -notmatch 'iconPath\s*=\s*"MOD/gfx/ui/weapon_icons/perdition_beam\.png"') {
     Add-Issue "Perdition Beam must use the official Stellaris Perdition icon"
 }
 if ($weaponSoundCatalog -notmatch 'perdition_beam_windup_01\.ogg' -or

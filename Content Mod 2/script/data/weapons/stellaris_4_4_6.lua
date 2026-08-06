@@ -30,7 +30,7 @@ local _sizes = {
 local _sizeOrder = { "S", "M", "L" }
 
 local function _icon(name)
-    return "MOD/gfx/ui/weapon_icons/stellaris/" .. tostring(name) .. ".png"
+    return "MOD/gfx/ui/weapon_icons/" .. tostring(name) .. ".png"
 end
 
 local function _defineRay(definition)

@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineProjectile({
-    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/autocannon_3.png",
+    iconPath = "MOD/gfx/ui/weapon_icons/autocannon_3.png",
     weaponType = "mediumStormfireAutocannon",
     displayName = "中型火风暴机关炮",
     englishName = "Medium Stormfire Autocannon",

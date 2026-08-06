@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineStrikeCraft({
-    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/strike_craft_fighter_3.png",
+    iconPath = "MOD/gfx/ui/weapon_icons/strike_craft_fighter_3.png",
     weaponType = "gammaStrikeCraft",
     displayName = "先进型舰载机",
     englishName = "Advanced Strike Craft",

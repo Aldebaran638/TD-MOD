@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 weaponDefineProjectile({
-    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/plasma_3.png",
+    iconPath = "MOD/gfx/ui/weapon_icons/plasma_3.png",
     weaponType = "mediumPlasmaCannon",
     displayName = "中型等离子加农炮",
     englishName = "Medium Plasma Cannon",

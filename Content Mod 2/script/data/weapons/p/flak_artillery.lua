@@ -5,7 +5,7 @@ weaponDefineRay({
     displayName = "高射炮",
     englishName = "Flak Artillery",
     slotTypes = { "P" },
-    iconPath = "MOD/gfx/ui/weapon_icons/stellaris/flak_batteries_3.png",
+    iconPath = "MOD/gfx/ui/weapon_icons/flak_batteries_3.png",
     damageMin = 4.0,
     damageMax = 8.0,
     cooldown = 0.30,
