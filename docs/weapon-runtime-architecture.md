@@ -29,6 +29,6 @@
 2. 填写 `targetingMode`、`fireProfile`、`projectileProfile`、`fxProfile` 和伤害数据。
 3. 将武器加入目标飞船的 `slotWeaponPools`。
 4. 复用既有行为；只有全新发射机制才注册新的行为控制器。
-5. 运行五类 Harness：Lua 语法、XML 语法、Teardown API、蓄力武器和非蓄力激光检查。
+5. 运行六类 Harness：Lua 语法、XML 语法、Teardown API、蓄力武器、非蓄力激光和弹道武器检查。
 
 飞船控制器不得根据具体 `weaponType` 添加分支。

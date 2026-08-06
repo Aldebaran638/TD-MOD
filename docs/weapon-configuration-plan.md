@@ -71,9 +71,11 @@
 - `harness/check-xml.ps1`
 - `harness/check-charged-weapons.ps1`
 - `harness/check-noncharged-lasers.ps1`
+- `harness/check-ballistic-weapons.ps1`
 - `harness/test-check-xml.ps1`
 - `harness/test-check-charged-weapons.ps1`
 - `harness/test-check-noncharged-lasers.ps1`
+- `harness/test-check-ballistic-weapons.ps1`
 
 检查内容：
 
@@ -246,11 +248,13 @@ Content Mod 2/script/weapon/client/config_ui/
 .\harness\check-xml.ps1 -Path ".\Content Mod 2"
 .\harness\check-charged-weapons.ps1 -Path ".\Content Mod 2"
 .\harness\check-noncharged-lasers.ps1 -Path ".\Content Mod 2"
+.\harness\check-ballistic-weapons.ps1 -Path ".\Content Mod 2"
 .\harness\test-check-lua.ps1
 .\harness\test-check-teardown-api.ps1
 .\harness\test-check-xml.ps1
 .\harness\test-check-charged-weapons.ps1
 .\harness\test-check-noncharged-lasers.ps1
+.\harness\test-check-ballistic-weapons.ps1
 ```
 
 涉及运行逻辑、生命周期或 include 路径变化时，还必须进入 Teardown 进行实机验证。

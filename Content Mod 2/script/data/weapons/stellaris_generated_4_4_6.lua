@@ -123,6 +123,71 @@ local function _generatedDefineCraft(definition)
     if weaponData[definition.weaponType] == nil then weaponDefineStrikeCraft(definition) end
 end
 
+-- The source catalog retains Stellaris categories for import traceability. Turn
+-- projectile rows into complete CM2 contracts before any runtime definition is made.
+local function _generatedNormalizeBallisticMetadata(item)
+    local family = tostring(item.family or "")
+    local component = tostring(item.component or "")
+    local isGauss = component == "SMALL_MASS_DRIVER_5"
+        or component == "MEDIUM_MASS_DRIVER_5"
+        or component == "LARGE_MASS_DRIVER_5"
+    local isKineticArtillery = component == "KINETIC_ARTILLERY_1"
+        or component == "KINETIC_ARTILLERY_2"
+    local isGiga = family == "mass_accelerator"
+    local isPlasma = family == "plasma"
+    local isEnergyTorpedo = family == "energy_torpedo"
+    local isAutocannon = family == "autocannon"
+    local isKinetic = family == "kinetic"
+    if not (isPlasma or isEnergyTorpedo or isAutocannon or isKinetic or isGiga) then return end
+
+    local large = item.slot == "L"
+    item.behaviorType = "projectile"
+    item.projectileSpeed = isEnergyTorpedo and 420.0 or 170.0
+    item.projectileRadius = isPlasma and 0.55 or 0.35
+
+    if isPlasma then
+        item.fxProfile = "plasmaProjectile"
+        item.muzzleFxProfile = large and "plasmaLarge" or "plasmaMedium"
+        item.impactFxProfile = large and "plasmaLarge" or "plasmaMedium"
+        item.projectileFxVariant = large and "plasmaLarge" or "plasmaMedium"
+        item.soundProfileId = large and "largePlasmaCannon" or "mediumPlasmaCannon"
+    elseif isEnergyTorpedo then
+        item.fxProfile = "neutronProjectile"
+        item.muzzleFxProfile = "neutronCompression"
+        item.impactFxProfile = "neutronImpact"
+        item.projectileFxVariant = "neutron"
+        item.soundProfileId = "neutronLauncher"
+    elseif isGiga then
+        item.fxProfile = "gigaCannonProjectile"
+        item.muzzleFxProfile = "gigaMagneticLaunch"
+        item.impactFxProfile = "gigaPenetration"
+        item.projectileFxVariant = "gigaCannon"
+        item.soundProfileId = "gigaCannon"
+    elseif isGauss then
+        item.fxProfile = "kineticProjectile"
+        item.muzzleFxProfile = large and "gaussLarge" or "gaussMedium"
+        item.impactFxProfile = large and "gaussLarge" or "gaussMedium"
+        item.projectileFxVariant = large and "gaussLarge" or "gaussMedium"
+        item.soundProfileId = large and "largeGaussCannon" or "mediumGaussCannon"
+    elseif isAutocannon then
+        item.fxProfile = "autocannonProjectile"
+        item.muzzleFxProfile = large and "autocannonLarge" or "autocannonMedium"
+        item.impactFxProfile = large and "autocannonLarge" or "autocannonMedium"
+        item.projectileFxVariant = large and "autocannonLarge" or "autocannonMedium"
+        item.soundProfileId = large and "largeStormfireAutocannon" or "mediumStormfireAutocannon"
+    else
+        item.fxProfile = "kineticProjectile"
+        item.muzzleFxProfile = "kineticArtillery"
+        item.impactFxProfile = "kineticArtillery"
+        item.projectileFxVariant = "kineticArtillery"
+        item.soundProfileId = "kineticArtillery"
+    end
+end
+
+for _, item in ipairs(_generatedStellarisWeapons) do
+    _generatedNormalizeBallisticMetadata(item)
+end
+
 for _, item in ipairs(_generatedStellarisWeapons) do
     local existing = nil
     for weaponType, definition in pairs(weaponData) do
@@ -141,7 +206,9 @@ for _, item in ipairs(_generatedStellarisWeapons) do
             chargeFxProfile = item.chargeFxProfile,
             fxProfile = item.fxProfile, muzzleFxProfile = item.muzzleFxProfile,
             impactFxProfile = item.impactFxProfile, soundProfileId = item.soundProfileId,
-            officialComponentId = item.component, catalogTier = 10, family = item.family,
+            projectileFxVariant = item.projectileFxVariant,
+            projectileSpeed = item.projectileSpeed, projectileRadius = item.projectileRadius,
+            officialComponentId = item.component, catalogTier = 10,
             aimControlMode = item.slot == "H" and "fixed" or "camera_limited",
             aimLimitDeg = item.slot == "H" and 0.0 or 70.0,
             aimPitchOffsetDeg = item.slot == "H" and 0.0 or 6.0,
@@ -174,20 +241,13 @@ for _, item in ipairs(_generatedStellarisWeapons) do
             common.soundProfileId = "swarmerMissile"; common.fxProfile = "guidedMissile"
             common.projectileFxVariant = "swarmerMissile"; common.fxColor = item.color
             _generatedDefineGuided(common)
-        elseif item.family == "plasma" or item.family == "energy_torpedo"
-            or item.family == "kinetic" or item.family == "autocannon"
-            or item.family == "mass_accelerator" then
+        elseif item.behaviorType == "projectile" then
             common.cooldown = 0.0
             common.maxRange = item.slot == "X" and 750.0 or (size.kineticRange or 430.0)
-            common.projectileSpeed = item.family == "energy_torpedo" and 420.0 or 170.0
             common.mountProfile = item.slot == "X" and "xSpinal"
                 or (item.slot == "G" and "gNeutron"
                 or (item.slot == "L" and "lKinetic" or "mKinetic"))
-            common.fxProfile = item.family == "plasma" and "plasmaProjectile"
-                or (item.family == "energy_torpedo" and "neutronProjectile"
-                or (item.family == "mass_accelerator" and "gigaCannonProjectile" or "kineticProjectile"))
-            common.projectileFxVariant = common.fxProfile; common.fxColor = item.color
-            common.soundProfileId = item.family == "energy_torpedo" and "neutronLauncher" or "kineticArtillery"
+            common.fxColor = item.color
             _generatedDefineProjectile(common)
         else
             common.cooldown = 1.2

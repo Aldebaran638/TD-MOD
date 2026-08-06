@@ -113,6 +113,7 @@ function client.spawnProjectileVisual(projectileId, weaponType, px, py, pz, vx, 
         nextTrailDistance = 0.0, nextPulseDistance = 20.0, randomState = numericProjectileId * 977 + 131,
         weaponType = tostring(weaponType or ""), fxProfile = tostring(definition.fxProfile or "kineticProjectile"),
         fxVariant = tostring(definition.projectileFxVariant or definition.fxProfile or "kineticProjectile"),
+        impactFxProfile = tostring(definition.impactFxProfile or ""),
         fxColor = definition.fxColor,
     }
     client.spawnWeaponMuzzleFx(weaponType, px, py, pz, vx, vy, vz)
@@ -120,8 +121,9 @@ end
 
 local function _spawnKineticImpact(position, projectile, impactNormal, impactLayer)
     local direction, right, up = projectile.direction, projectile.rightAxis, projectile.upAxis
-    local gauss = projectile.fxVariant == "gaussLarge" or projectile.fxVariant == "gaussMedium"
-    local autocannon = projectile.fxVariant == "autocannonLarge" or projectile.fxVariant == "autocannonMedium"
+    local impactProfile = projectile.impactFxProfile or ""
+    local gauss = impactProfile == "gaussLarge" or impactProfile == "gaussMedium"
+    local autocannon = impactProfile == "autocannonLarge" or impactProfile == "autocannonMedium"
     local r0, g0, b0 = gauss and 0.45 or 1.0, gauss and 0.82 or 0.82, gauss and 1.0 or 0.16
     if impactLayer == "shield" then r0, g0, b0 = 0.20, 0.85, 1.0 end
     ParticleReset(); ParticleType("plain")
@@ -294,7 +296,7 @@ local function _updateProjectileImpacts(dt)
         local impact = impacts[index]
         local previousAge = impact.age or 0
         impact.age = previousAge + (dt or 0)
-        if impact.fxProfile == "plasmaProjectile" then
+        if impact.impactFxProfile == "plasmaLarge" or impact.impactFxProfile == "plasmaMedium" then
             _spawnPlasmaImpactParticles(impact)
             local t = math.min(1, impact.age / impact.lifetime)
             local ease = 1 - (1 - t) ^ 3
@@ -303,7 +305,7 @@ local function _updateProjectileImpacts(dt)
             _drawBillboard(a.impactGlow, impact.position, size, size, 0.02, 0.55, 0.08, alpha * 0.55)
             _drawBillboard(a.plasmaCore, impact.position, size * 0.42, size * 0.42, 0.75, 1.3, 0.70, alpha)
             if _cameraDistance(impact.position) <= 300 then _pointLight(impact.position, 0.10, 1.0, 0.18, 16 * alpha) end
-        elseif impact.fxProfile == "neutronProjectile" then
+        elseif impact.impactFxProfile == "neutronImpact" then
             if not impact.firstRingSpawned then impact.firstRingSpawned = true; _spawnNeutronImpactRing(impact, 14, 0.25, 14, 0.28, 0.65, 0.92, 1.0, 0.02, 0.16, 0.85) end
             if not impact.secondRingSpawned and previousAge < 0.075 and impact.age >= 0.075 then impact.secondRingSpawned = true; _spawnNeutronImpactRing(impact, 12, 0.15, 9, 0.30, 0.25, 0.70, 1.0, 0.02, 0.08, 0.55) end
             if impact.age <= 0.06 then
@@ -326,13 +328,19 @@ function client.finishProjectileVisual(projectileId, mode, hitX, hitY, hitZ, nx,
     if mode ~= "impact" or projectile == nil then return end
     local position = Vec(hitX or 0, hitY or 0, hitZ or 0)
     local impactNormal = _safeNormalize(Vec(nx or 0, ny or 1, nz or 0), Vec(0, 1, 0))
-    if projectile.fxProfile == "plasmaProjectile" then
-        _queueImpact({ fxProfile = "plasmaProjectile", fxColor = projectile.fxColor, position = position, direction = projectile.direction, rightAxis = projectile.rightAxis, upAxis = projectile.upAxis, age = 0, lifetime = 0.65, randomState = projectile.randomState, initialParticlesSpawned = false })
-    elseif projectile.fxProfile == "neutronProjectile" then
-        _queueImpact({ fxProfile = "neutronProjectile", fxColor = projectile.fxColor, position = position, direction = projectile.direction, rightAxis = projectile.rightAxis, upAxis = projectile.upAxis, age = 0, lifetime = 0.42, randomState = projectile.randomState, firstRingSpawned = false, secondRingSpawned = false })
-    elseif projectile.fxProfile == "gigaCannonProjectile" then
+    local impactProfile = projectile.impactFxProfile
+    if impactProfile == "" then
+        impactProfile = projectile.fxProfile == "plasmaProjectile" and "plasmaLarge"
+            or (projectile.fxProfile == "neutronProjectile" and "neutronImpact" or "kineticArtillery")
+    end
+    if impactProfile == "plasmaLarge" or impactProfile == "plasmaMedium" then
+        _queueImpact({ impactFxProfile = impactProfile, fxColor = projectile.fxColor, position = position, direction = projectile.direction, rightAxis = projectile.rightAxis, upAxis = projectile.upAxis, age = 0, lifetime = 0.65, randomState = projectile.randomState, initialParticlesSpawned = false })
+    elseif impactProfile == "neutronImpact" then
+        _queueImpact({ impactFxProfile = impactProfile, fxColor = projectile.fxColor, position = position, direction = projectile.direction, rightAxis = projectile.rightAxis, upAxis = projectile.upAxis, age = 0, lifetime = 0.42, randomState = projectile.randomState, firstRingSpawned = false, secondRingSpawned = false })
+    elseif impactProfile == "gigaPenetration" then
         _spawnGigaImpact(position, projectile)
     else
+        projectile.impactFxProfile = impactProfile
         _spawnKineticImpact(position, projectile, impactNormal, impactLayer)
     end
 end

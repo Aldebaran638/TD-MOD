@@ -19,7 +19,7 @@ record, not a replacement for the project check scripts.
 
 1. Static contract: the charged-weapon and non-charged-laser checkers validate
    their data profile contracts and runtime dispatch boundaries.
-2. Checker self-test: each of the five Harness self-tests rejects intentional
+2. Checker self-test: each of the six Harness self-tests rejects intentional
    fixture violations in its own category.
 3. Runtime fixture: isolated Lua state proves loadout resolution, requests,
    cooldowns, and synchronization payloads.

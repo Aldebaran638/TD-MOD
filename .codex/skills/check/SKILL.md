@@ -1,6 +1,6 @@
 ---
 name: check
-description: 依次运行 Teardown 模组的 Lua、XML、Teardown API、蓄力武器、非蓄力激光检查及自测试。用户要求检查项目、运行 Harness、验证代码、执行主动检查，或显式调用 $check 时使用。
+description: 依次运行 Teardown 模组的 Lua、XML、Teardown API、蓄力武器、非蓄力激光、弹道武器检查及自测试。用户要求检查项目、运行 Harness、验证代码、执行主动检查，或显式调用 $check 时使用。
 ---
 
 # 项目检查
@@ -13,11 +13,13 @@ if ($?) { .\harness\check-teardown-api.ps1 -Path ".\Content Mod 2\script" }
 if ($?) { .\harness\check-xml.ps1 -Path ".\Content Mod 2" }
 if ($?) { .\harness\check-charged-weapons.ps1 -Path ".\Content Mod 2" }
 if ($?) { .\harness\check-noncharged-lasers.ps1 -Path ".\Content Mod 2" }
+if ($?) { .\harness\check-ballistic-weapons.ps1 -Path ".\Content Mod 2" }
 if ($?) { .\harness\test-check-lua.ps1 }
 if ($?) { .\harness\test-check-teardown-api.ps1 }
 if ($?) { .\harness\test-check-xml.ps1 }
 if ($?) { .\harness\test-check-charged-weapons.ps1 }
 if ($?) { .\harness\test-check-noncharged-lasers.ps1 }
+if ($?) { .\harness\test-check-ballistic-weapons.ps1 }
 ```
 
 所有命令成功时，明确报告“全部检查通过”。

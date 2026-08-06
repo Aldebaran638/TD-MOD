@@ -56,6 +56,15 @@ weaponChargeFxProfiles = weaponChargeFxProfiles or {
 }
 weaponImpactFxProfiles = weaponImpactFxProfiles or {
     none = true,
+    kineticArtillery = true,
+    gaussLarge = true,
+    gaussMedium = true,
+    autocannonLarge = true,
+    autocannonMedium = true,
+    plasmaLarge = true,
+    plasmaMedium = true,
+    gigaPenetration = true,
+    neutronImpact = true,
     gammaLarge = true,
     gammaMedium = true,
     disruptorImplosion = true,
@@ -78,6 +87,7 @@ weaponSoundProfiles = weaponSoundProfiles or {
     largeGaussCannon = true,
     mediumGaussCannon = true,
     kineticArtillery = true,
+    gigaCannon = true,
     largeStormfireAutocannon = true,
     mediumStormfireAutocannon = true,
     swarmerMissile = true,
@@ -205,23 +215,31 @@ end
 
 function weaponDefineProjectile(definition)
     local speed = math.max(0.001, tonumber(definition.projectileSpeed) or 1.0)
-    local isPlasma = tostring(definition.fxProfile or "") == "plasmaProjectile"
     _fillMissing(definition, {
         behaviorType = "projectile",
         targetingMode = "camera_limited",
         fireProfile = { mode = "single", burstCount = 1, burstInterval = 0.0 },
         projectileLifetime = (tonumber(definition.maxRange) or 0.0) / speed,
-        projectileRadius = isPlasma and 0.55 or 0.35,
-        projectileGravityScale = 0.0,
-        explosionRadius = isPlasma and 1.4 or 0.8,
-        explosionStrength = isPlasma and 0.8 or 0.35,
     })
-    definition.projectileProfile = definition.projectileProfile or {
-        mode = isPlasma and "energy" or "ballistic",
-        speed = speed,
-        radius = isPlasma and 0.55 or 0.35,
-        gravityScale = 0.0,
-    }
+    local fxProfile = tostring(definition.fxProfile or "")
+    local muzzleFxProfile = tostring(definition.muzzleFxProfile or "")
+    local impactFxProfile = tostring(definition.impactFxProfile or "")
+    local soundProfileId = tostring(definition.soundProfileId or "")
+    if not weaponFxProfiles[fxProfile] then
+        error("projectile " .. tostring(definition.weaponType) .. " has invalid fxProfile")
+    end
+    if not weaponMuzzleFxProfiles[muzzleFxProfile] then
+        error("projectile " .. tostring(definition.weaponType) .. " has invalid muzzleFxProfile")
+    end
+    if not weaponImpactFxProfiles[impactFxProfile] then
+        error("projectile " .. tostring(definition.weaponType) .. " has invalid impactFxProfile")
+    end
+    if not weaponSoundProfiles[soundProfileId] then
+        error("projectile " .. tostring(definition.weaponType) .. " has invalid soundProfileId")
+    end
+    if definition.projectileSpeed == nil or definition.projectileRadius == nil then
+        error("projectile " .. tostring(definition.weaponType) .. " requires projectileSpeed and projectileRadius")
+    end
     definition.CD = definition.CD or definition.cooldown
     return _finish(definition)
 end

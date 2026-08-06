@@ -127,18 +127,21 @@ local _kineticTiers = {
 for tierIndex, tier in ipairs(_kineticTiers) do
     for sizeIndex, slot in ipairs(_sizeOrder) do
         local size, damage = _sizes[slot], tier.damage[sizeIndex]
+        local isGauss = tier.component == "MASS_DRIVER_5"
         _defineProjectile({
             weaponType = _sizedId(slot, tier.suffix, tier.ids),
             displayName = size.zh .. tier.zh,
             englishName = size.en .. " " .. tier.en,
-            slotTypes = { slot }, fxProfile = "kineticProjectile",
-            muzzleFxProfile = slot == "L" and "gaussLarge" or "gaussMedium",
-            projectileFxVariant = "gauss" .. size.en,
-            soundProfileId = slot == "L" and "largeGaussCannon" or "mediumGaussCannon",
+            slotTypes = { slot }, behaviorType = "projectile", fxProfile = "kineticProjectile",
+            muzzleFxProfile = isGauss and (slot == "L" and "gaussLarge" or "gaussMedium") or "kineticArtillery",
+            impactFxProfile = isGauss and (slot == "L" and "gaussLarge" or "gaussMedium") or "kineticArtillery",
+            projectileFxVariant = isGauss and (slot == "L" and "gaussLarge" or "gaussMedium") or "kineticArtillery",
+            soundProfileId = isGauss and (slot == "L" and "largeGaussCannon" or "mediumGaussCannon") or "kineticArtillery",
             iconPath = _icon(tier.icon),
             damageMin = damage[1], damageMax = damage[2], powerUse = tier.power[sizeIndex],
             cooldown = 0.0, maxRange = size.kineticRange,
             projectileSpeed = slot == "L" and 155.0 or (slot == "M" and 170.0 or 190.0),
+            projectileRadius = 0.35,
             shieldFix = 1.5, armorFix = 0.5, bodyFix = 1.0,
             heatPerShot = 12.0, heatDissipationPerSecond = 10.0,
             overheatThreshold = 100.0, recoverThreshold = 60.0,
@@ -146,7 +149,7 @@ for tierIndex, tier in ipairs(_kineticTiers) do
             salvoProfile = { groupSize = slot == "S" and 1 or 2, sequence = slot == "S" and "sequential" or "grouped", interval = 0.10 },
             aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
             officialComponentId = size.official .. "_" .. tier.component,
-            catalogTier = tierIndex, family = "mass_driver",
+            catalogTier = tierIndex,
         })
     end
 end
@@ -164,13 +167,15 @@ for tierIndex, tier in ipairs(_plasmaTiers) do
             weaponType = _sizedId(slot, tier.suffix, tier.ids),
             displayName = size.zh .. tier.zh,
             englishName = size.en .. " " .. tier.en,
-            slotTypes = { slot }, fxProfile = "plasmaProjectile", fxColor = tier.color,
+            slotTypes = { slot }, behaviorType = "projectile", fxProfile = "plasmaProjectile", fxColor = tier.color,
             muzzleFxProfile = slot == "L" and "plasmaLarge" or "plasmaMedium",
+            impactFxProfile = slot == "L" and "plasmaLarge" or "plasmaMedium",
             projectileFxVariant = "plasma" .. size.en,
             soundProfileId = slot == "L" and "largePlasmaCannon" or "mediumPlasmaCannon",
             iconPath = _icon(tier.icon),
             damageMin = damage[1], damageMax = damage[2], powerUse = tier.power[sizeIndex],
             cooldown = 0.0, maxRange = size.plasmaRange, projectileSpeed = 115.0,
+            projectileRadius = 0.55,
             shieldFix = 0.25, armorFix = 2.0, bodyFix = 1.5,
             heatPerShot = 12.0, heatDissipationPerSecond = 10.0,
             overheatThreshold = 100.0, recoverThreshold = 60.0,
@@ -178,7 +183,7 @@ for tierIndex, tier in ipairs(_plasmaTiers) do
             salvoProfile = { groupSize = slot == "S" and 1 or 2, sequence = slot == "S" and "sequential" or "grouped", interval = 0.10 },
             aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
             officialComponentId = size.official .. "_" .. tier.component,
-            catalogTier = tierIndex, family = "plasma",
+            catalogTier = tierIndex,
         })
     end
 end
@@ -227,13 +232,15 @@ for tierIndex, tier in ipairs(_autocannonTiers) do
             weaponType = _sizedId(slot, tier.suffix, tier.ids),
             displayName = size.zh .. tier.zh,
             englishName = size.en .. " " .. tier.en,
-            slotTypes = { slot }, fxProfile = "autocannonProjectile",
+            slotTypes = { slot }, behaviorType = "projectile", fxProfile = "autocannonProjectile",
             muzzleFxProfile = slot == "L" and "autocannonLarge" or "autocannonMedium",
-            projectileFxVariant = "autocannon" .. size.en,
+            impactFxProfile = slot == "L" and "autocannonLarge" or "autocannonMedium",
+            projectileFxVariant = slot == "L" and "autocannonLarge" or "autocannonMedium",
             soundProfileId = slot == "L" and "largeStormfireAutocannon" or "mediumStormfireAutocannon",
             iconPath = _icon(tier.icon),
             damageMin = damage[1], damageMax = damage[2], powerUse = tier.power[sizeIndex],
             cooldown = 0.0, maxRange = size.autocannonRange, projectileSpeed = 240.0,
+            projectileRadius = 0.35,
             shieldFix = 1.5, armorFix = 0.25, bodyFix = 1.25,
             heatPerShot = 4.0, heatDissipationPerSecond = 32.0,
             overheatThreshold = 100.0, recoverThreshold = 45.0,
@@ -241,21 +248,21 @@ for tierIndex, tier in ipairs(_autocannonTiers) do
             salvoProfile = { groupSize = slot == "S" and 1 or 2, sequence = slot == "S" and "sequential" or "grouped", interval = 0.04 },
             aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
             officialComponentId = size.official .. "_" .. tier.component,
-            catalogTier = tierIndex, family = "autocannon",
+            catalogTier = tierIndex,
         })
     end
 end
 
 _defineProjectile({
     weaponType = "kineticBattery", displayName = "动能火炮", englishName = "Kinetic Battery",
-    slotTypes = { "L" }, fxProfile = "kineticProjectile", muzzleFxProfile = "kineticArtillery",
-    projectileFxVariant = "kineticArtillery", soundProfileId = "kineticArtillery",
+    slotTypes = { "L" }, behaviorType = "projectile", fxProfile = "kineticProjectile", muzzleFxProfile = "kineticArtillery",
+    impactFxProfile = "kineticArtillery", projectileFxVariant = "kineticArtillery", soundProfileId = "kineticArtillery",
     iconPath = _icon("kinetic_artillery_1"), damageMin = 150, damageMax = 450,
-    powerUse = 70.0, cooldown = 0.1, maxRange = 750.0, projectileSpeed = 450.0,
+    powerUse = 70.0, cooldown = 0.1, maxRange = 750.0, projectileSpeed = 450.0, projectileRadius = 0.35,
     shieldFix = 2.0, armorFix = 0.5, bodyFix = 1.0,
     mountProfile = "lKinetic", salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.18 },
     aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
-    officialComponentId = "KINETIC_ARTILLERY_1", catalogTier = 1, family = "kinetic_artillery",
+    officialComponentId = "KINETIC_ARTILLERY_1", catalogTier = 1,
 })
 
 _defineRay({
@@ -289,16 +296,16 @@ _defineRay({
 
 _defineProjectile({
     weaponType = "megaCannon", displayName = "兆级加农炮", englishName = "Mega Cannon",
-    slotTypes = { "X" }, fxProfile = "gigaCannonProjectile", fxColor = { 0.95, 0.25, 0.12 },
-    muzzleFxProfile = "gigaMagneticLaunch", projectileFxVariant = "megaCannon",
+    slotTypes = { "X" }, behaviorType = "projectile", fxProfile = "gigaCannonProjectile", fxColor = { 0.95, 0.25, 0.12 },
+    muzzleFxProfile = "gigaMagneticLaunch", impactFxProfile = "gigaPenetration", projectileFxVariant = "megaCannon",
     soundProfileId = "gigaCannon", iconPath = _icon("mass_accelerator_1"),
     damageMin = 700, damageMax = 2000, powerUse = 200.0, cooldown = 3.5,
-    maxRange = 750.0, projectileSpeed = 520.0,
+    maxRange = 750.0, projectileSpeed = 520.0, projectileRadius = 0.35,
     shieldFix = 1.5, armorFix = 0.75, bodyFix = 1.0,
-    explosionRadius = 4.0, explosionStrength = 0.35, physicalExplosionCount = 2,
+    explosionRadius = 4.0, physicalExplosionCount = 2,
     mountProfile = "xSpinal", salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.18 },
     aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
-    officialComponentId = "MASS_ACCELERATOR_1", catalogTier = 1, family = "mass_accelerator",
+    officialComponentId = "MASS_ACCELERATOR_1", catalogTier = 1,
 })
 
 local _missiles = {
@@ -353,16 +360,15 @@ end
 local function _defineEnergyLauncher(id, zh, en, component, iconName, power, minimum, maximum, color, tier)
     _defineProjectile({
         weaponType = id, displayName = zh, englishName = en,
-        slotTypes = { "G" }, fxProfile = "neutronProjectile", fxColor = color,
-        muzzleFxProfile = "neutronCompression", projectileFxVariant = "neutron",
+        slotTypes = { "G" }, behaviorType = "projectile", fxProfile = "neutronProjectile", fxColor = color,
+        muzzleFxProfile = "neutronCompression", impactFxProfile = "neutronImpact", projectileFxVariant = "neutron",
         soundProfileId = "neutronLauncher", iconPath = _icon(iconName),
         damageMin = minimum, damageMax = maximum, powerUse = power,
-        cooldown = 4.5, maxRange = 1150.0, projectileSpeed = 420.0,
-        projectileProfile = { mode = "energy", speed = 420.0, radius = 0.35, gravityScale = 0.0 },
+        cooldown = 4.5, maxRange = 1150.0, projectileSpeed = 420.0, projectileRadius = 0.35,
         shieldFix = 0.5, armorFix = 1.5, bodyFix = 1.75,
         mountProfile = "gNeutron", salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.16 },
         aimControlMode = "camera_limited", aimLimitDeg = 360.0, aimPitchOffsetDeg = 6.0,
-        officialComponentId = component, catalogTier = tier, family = component == "PSIONIC_TORPEDO" and "psionic_torpedo" or "energy_torpedo",
+        officialComponentId = component, catalogTier = tier,
     })
 end
 
