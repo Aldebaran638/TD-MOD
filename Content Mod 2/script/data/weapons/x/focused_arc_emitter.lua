@@ -6,9 +6,11 @@ weaponDefineRay({
     displayName = "聚能电弧发射器",
     englishName = "Focused Arc Emitter",
     slotTypes = { "X" },
+    chargeFxProfile = "focusedArcEmitter",
     fxProfile = "focusedArcBeam",
     muzzleFxProfile = "focusedArcDischarge",
     impactFxProfile = "focusedArcImpact",
+    soundProfileId = "focusedArcEmitter",
     projectileFxVariant = "none",
     damageMin = 2,
     damageMax = 1690,
@@ -37,5 +39,4 @@ weaponDefineRay({
     aimLimitDeg = 70.0,
     aimPitchOffsetDeg = 6.0,
     officialComponentId = "ARC_EMITTER_2",
-    family = "arc_emitter",
 })

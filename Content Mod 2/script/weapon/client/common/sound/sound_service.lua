@@ -87,7 +87,7 @@ local function _xSlotEventTick(shipBodyId)
 
     local weaponType = tostring(render.weaponType or "")
     local definition = (weaponData or {})[weaponType] or {}
-    if definition.family ~= "energy_lance" and definition.family ~= "arc_emitter" then return end
+    if tostring(definition.soundProfileId or "") == "" then return end
     local firePoint = _tableToVec(render.firePoint)
     local eventType = tostring(render.eventType or "")
     if eventType == "charging_start" then
@@ -104,7 +104,10 @@ end
 local function _tSlotEventTick(shipBodyId)
     if client.tSlotRenderGetEvent == nil then return end
     local render = client.tSlotRenderGetEvent(shipBodyId)
-    if render == nil or tostring(render.weaponType or "") ~= "perditionBeam" then return end
+    if render == nil then return end
+    local weaponType = tostring(render.weaponType or "")
+    local definition = (weaponData or {})[weaponType] or {}
+    if tostring(definition.soundProfileId or "") == "" then return end
 
     local state = client.soundModuleState
     local sequence = render.seq or -1
@@ -113,12 +116,12 @@ local function _tSlotEventTick(shipBodyId)
     if sequence ~= (state.lastTSlotSequenceByShip[shipBodyId] or -1) then
         state.lastTSlotSequenceByShip[shipBodyId] = sequence
         if eventType == "charging_start" then
-            client.playWeaponSound("perditionBeam", "windup", firePoint[1], firePoint[2], firePoint[3])
+            client.playWeaponSound(weaponType, "windup", firePoint[1], firePoint[2], firePoint[3])
         elseif eventType == "launch_start" then
-            client.playWeaponSound("perditionBeam", "fire", firePoint[1], firePoint[2], firePoint[3])
+            client.playWeaponSound(weaponType, "fire", firePoint[1], firePoint[2], firePoint[3])
             if (render.didHit or 0) == 1 then
                 local hitPoint = _tableToVec(render.hitPoint)
-                client.playWeaponSound("perditionBeam", "hit", hitPoint[1], hitPoint[2], hitPoint[3])
+                client.playWeaponSound(weaponType, "hit", hitPoint[1], hitPoint[2], hitPoint[3])
             end
         end
     end

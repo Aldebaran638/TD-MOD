@@ -8,7 +8,7 @@ local function _fireRaycast(context)
     local definition = context.weaponDefinition or {}
     local isChargedRay = tostring(definition.controllerType or "") == "chargedRay"
     local usesDedicatedEnergyLanceFx = isChargedRay
-        and tostring(definition.family or "") == "energy_lance"
+        and tostring(definition.fxProfile or "") == "tachyonLance"
     local ray = server.weaponRaycastResolve(context)
     local origin, direction = ray.origin, ray.direction
     local hit, distance, normal, endpoint = ray.hit, ray.distance, ray.normal, ray.endpoint

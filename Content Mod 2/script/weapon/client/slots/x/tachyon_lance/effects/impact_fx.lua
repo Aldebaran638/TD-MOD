@@ -318,7 +318,7 @@ function client.tachyonImpactFxTick(dt)
                 if seq ~= lastSeq then
                     local definition = (weaponData or {})[tostring(render.weaponType or "")] or {}
                     if render.eventType == "launch_start"
-                        and definition.family == "energy_lance"
+                        and tostring(definition.impactFxProfile or "") == "tachyonLance"
                         and render.didHit == 1 then
                         local pos = _tableToVec(render.hitPoint)
                         local firePoint = _tableToVec(render.firePoint)

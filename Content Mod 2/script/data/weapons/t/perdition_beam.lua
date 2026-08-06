@@ -7,7 +7,9 @@ weaponDefineRay({
     displayName = "炼狱射线",
     englishName = "Perdition Beam",
     slotTypes = { "T" },
+    chargeFxProfile = "perditionBeam",
     fxProfile = "perditionBeam",
+    impactFxProfile = "perditionImpact",
     soundProfileId = "perditionBeam",
     iconPath = "MOD/gfx/ui/weapon_icons/perdition_beam.png",
     damageMin = 5000,
@@ -79,5 +81,4 @@ weaponDefineRay({
     aimLimitDeg = 90.0,
     aimPitchOffsetDeg = 4.0,
     officialComponentId = "PERDITION_BEAM_TITAN",
-    family = "perdition_beam",
 })

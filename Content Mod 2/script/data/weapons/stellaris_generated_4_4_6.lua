@@ -46,10 +46,10 @@ local _generatedStellarisWeapons = {
     { id = "stellarisSmallNvWeapon", component = "SMALL_NV_WEAPON", slot = "S", zh = "小型太虚光束", en = "Small Null Void Beam", family = "energy", icon = "null_void_weapon", damageMin = 6, damageMax = 16, powerUse = 7, bodyFix = 0.25, shieldFix = 5, shieldPenetration = 0, armorFix = 0.25, armorPenetration = 0, color = nil },
     { id = "stellarisMediumNvWeapon", component = "MEDIUM_NV_WEAPON", slot = "M", zh = "中型太虚光束", en = "Medium Null Void Beam", family = "energy", icon = "null_void_weapon", damageMin = 15, damageMax = 40, powerUse = 13, bodyFix = 0.25, shieldFix = 5, shieldPenetration = 0, armorFix = 0.25, armorPenetration = 0, color = nil },
     { id = "stellarisLargeNvWeapon", component = "LARGE_NV_WEAPON", slot = "L", zh = "大型太虚光束", en = "Large Null Void Beam", family = "energy", icon = "null_void_weapon", damageMin = 36, damageMax = 95, powerUse = 26, bodyFix = 0.25, shieldFix = 5, shieldPenetration = 0, armorFix = 0.25, armorPenetration = 0, color = nil },
-    { id = "stellarisEnergyLance1", component = "ENERGY_LANCE_1", slot = "X", zh = "粒子光矛", en = "Particle Lance", family = "energy", icon = "energy_lance_1", damageMin = 600, damageMax = 1500, powerUse = 200, bodyFix = 1.5, shieldFix = 0.5, shieldPenetration = 0, armorFix = 2, armorPenetration = 0, color = nil },
-    { id = "stellarisEnergyLance2", component = "ENERGY_LANCE_2", slot = "X", zh = "快子光矛", en = "Tachyon Lance", family = "energy", icon = "energy_lance_2", damageMin = 780, damageMax = 1950, powerUse = 260, bodyFix = 1.5, shieldFix = 0.5, shieldPenetration = 0, armorFix = 2, armorPenetration = 0, color = nil },
-    { id = "stellarisArcEmitter1", component = "ARC_EMITTER_1", slot = "X", zh = "电弧发射器", en = "Arc Emitter", family = "arc", icon = "arc_emitter_1", damageMin = 1, damageMax = 1300, powerUse = 200, bodyFix = 1, shieldFix = 1, shieldPenetration = 1, armorFix = 1, armorPenetration = 1, color = { 0.35, 0.75, 1.0 } },
-    { id = "stellarisArcEmitter2", component = "ARC_EMITTER_2", slot = "X", zh = "聚能电弧发射器", en = "Focused Arc Emitter", family = "arc", icon = "arc_emitter_2", damageMin = 2, damageMax = 1690, powerUse = 260, bodyFix = 1, shieldFix = 1, shieldPenetration = 1, armorFix = 1, armorPenetration = 1, color = { 0.35, 0.75, 1.0 } },
+    { id = "stellarisEnergyLance1", component = "ENERGY_LANCE_1", slot = "X", zh = "粒子光矛", en = "Particle Lance", family = "energy", chargeFxProfile = "tachyonLance", fxProfile = "tachyonLance", impactFxProfile = "tachyonLance", soundProfileId = "tachyonLance", icon = "energy_lance_1", damageMin = 600, damageMax = 1500, powerUse = 200, bodyFix = 1.5, shieldFix = 0.5, shieldPenetration = 0, armorFix = 2, armorPenetration = 0, color = nil },
+    { id = "stellarisEnergyLance2", component = "ENERGY_LANCE_2", slot = "X", zh = "快子光矛", en = "Tachyon Lance", family = "energy", chargeFxProfile = "tachyonLance", fxProfile = "tachyonLance", impactFxProfile = "tachyonLance", soundProfileId = "tachyonLance", icon = "energy_lance_2", damageMin = 780, damageMax = 1950, powerUse = 260, bodyFix = 1.5, shieldFix = 0.5, shieldPenetration = 0, armorFix = 2, armorPenetration = 0, color = nil },
+    { id = "stellarisArcEmitter1", component = "ARC_EMITTER_1", slot = "X", zh = "电弧发射器", en = "Arc Emitter", family = "arc", chargeFxProfile = "focusedArcEmitter", fxProfile = "arcBeam", impactFxProfile = "focusedArcImpact", soundProfileId = "focusedArcEmitter", icon = "arc_emitter_1", damageMin = 1, damageMax = 1300, powerUse = 200, bodyFix = 1, shieldFix = 1, shieldPenetration = 1, armorFix = 1, armorPenetration = 1, color = { 0.35, 0.75, 1.0 } },
+    { id = "stellarisArcEmitter2", component = "ARC_EMITTER_2", slot = "X", zh = "聚能电弧发射器", en = "Focused Arc Emitter", family = "arc", chargeFxProfile = "focusedArcEmitter", fxProfile = "focusedArcBeam", impactFxProfile = "focusedArcImpact", soundProfileId = "focusedArcEmitter", icon = "arc_emitter_2", damageMin = 2, damageMax = 1690, powerUse = 260, bodyFix = 1, shieldFix = 1, shieldPenetration = 1, armorFix = 1, armorPenetration = 1, color = { 0.35, 0.75, 1.0 } },
     { id = "stellarisMassAccelerator1", component = "MASS_ACCELERATOR_1", slot = "X", zh = "兆级加农炮", en = "Mega Cannon", family = "mass_accelerator", icon = "mass_accelerator_1", damageMin = 700, damageMax = 2000, powerUse = 200, bodyFix = 1, shieldFix = 1.5, shieldPenetration = 0, armorFix = 0.75, armorPenetration = 0, color = nil },
     { id = "stellarisMassAccelerator2", component = "MASS_ACCELERATOR_2", slot = "X", zh = "千兆级加农炮", en = "Giga Cannon", family = "mass_accelerator", icon = "mass_accelerator_2", damageMin = 910, damageMax = 2600, powerUse = 260, bodyFix = 1, shieldFix = 1.5, shieldPenetration = 0, armorFix = 0.75, armorPenetration = 0, color = nil },
     { id = "stellarisMissile1", component = "MISSILE_1", slot = "G", zh = "核导弹", en = "Nuclear Missiles", family = "missile", icon = "missile_1", damageMin = 16, damageMax = 24, powerUse = 5, bodyFix = 1, shieldFix = 1, shieldPenetration = 1, armorFix = 1, armorPenetration = 0, color = nil },
@@ -136,6 +136,8 @@ for _, item in ipairs(_generatedStellarisWeapons) do
             damageMin = item.damageMin, damageMax = item.damageMax, powerUse = item.powerUse,
             shieldFix = item.shieldFix, armorFix = item.armorFix, bodyFix = item.bodyFix,
             shieldPenetration = item.shieldPenetration, armorPenetration = item.armorPenetration,
+            chargeFxProfile = item.chargeFxProfile, fxProfile = item.fxProfile,
+            impactFxProfile = item.impactFxProfile, soundProfileId = item.soundProfileId,
             officialComponentId = item.component, catalogTier = 10, family = item.family,
             aimControlMode = item.slot == "H" and "fixed" or "camera_limited",
             aimLimitDeg = item.slot == "H" and 0.0 or 70.0,
@@ -182,9 +184,9 @@ for _, item in ipairs(_generatedStellarisWeapons) do
             common.maxRange = item.slot == "X" and 520.0 or (size.laserRange or 390.0)
             common.mountProfile = item.slot == "X" and "xSpinal"
                 or (item.slot == "L" and "lEnergy" or "mEnergy")
-            common.fxProfile = item.family == "arc" and "psionicArcBeam" or "energyBeam"
+            common.fxProfile = common.fxProfile or (item.family == "arc" and "psionicArcBeam" or "energyBeam")
             common.fxColor = item.color
-            common.soundProfileId = item.family == "arc" and "focusedArcEmitter" or "mediumGammaLaser"
+            common.soundProfileId = common.soundProfileId or (item.family == "arc" and "focusedArcEmitter" or "mediumGammaLaser")
             _generatedDefineRay(common)
         end
     end

@@ -193,7 +193,8 @@ function client.perditionChargingFxTick(dt)
         if client.registryShipExists(shipBodyId) then
             local render = client.tSlotRenderGetEvent(shipBodyId)
             if render ~= nil and state.lastRenderSeqByShip[shipBodyId] ~= render.seq then
-                if render.weaponType == "perditionBeam"
+                local definition = (weaponData or {})[tostring(render.weaponType or "")] or {}
+                if tostring(definition.chargeFxProfile or "") == "perditionBeam"
                     and (render.eventType == "charging_start" or render.eventType == "charged_hold") then
                     _beginChargeState(shipBodyId, render)
                 else

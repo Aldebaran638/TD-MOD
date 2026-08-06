@@ -253,7 +253,8 @@ _defineProjectile({
 
 _defineRay({
     weaponType = "particleLance", displayName = "粒子光矛", englishName = "Particle Lance",
-    slotTypes = { "X" }, fxProfile = "tachyonLance", fxPalette = "particleLance",
+    slotTypes = { "X" }, chargeFxProfile = "tachyonLance", fxProfile = "tachyonLance", fxPalette = "particleLance",
+    impactFxProfile = "tachyonLance",
     soundProfileId = "tachyonLance", iconPath = _icon("energy_lance_1"),
     damageMin = 600, damageMax = 1500, powerUse = 200.0, cooldown = 6.0, maxRange = 500.0,
     shieldFix = 0.5, armorFix = 2.0, bodyFix = 1.5,
@@ -261,12 +262,12 @@ _defineRay({
     environmentExplosionSize = 4.0, physicalExplosionCount = 2,
     mountProfile = "xSpinal", salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.05 },
     aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
-    officialComponentId = "ENERGY_LANCE_1", catalogTier = 1, family = "energy_lance",
+    officialComponentId = "ENERGY_LANCE_1", catalogTier = 1,
 })
 
 _defineRay({
     weaponType = "arcEmitter", displayName = "电弧发射器", englishName = "Arc Emitter",
-    slotTypes = { "X" }, fxProfile = "arcBeam", muzzleFxProfile = "focusedArcDischarge",
+    slotTypes = { "X" }, chargeFxProfile = "focusedArcEmitter", fxProfile = "arcBeam", muzzleFxProfile = "focusedArcDischarge",
     impactFxProfile = "focusedArcImpact", soundProfileId = "focusedArcEmitter",
     iconPath = _icon("arc_emitter_1"), damageMin = 1, damageMax = 1300,
     powerUse = 200.0, cooldown = 6.0, maxRange = 520.0,
@@ -276,7 +277,7 @@ _defineRay({
     environmentExplosionSize = 4.0, physicalExplosionCount = 2,
     mountProfile = "xSpinal", salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.05 },
     aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
-    officialComponentId = "ARC_EMITTER_1", catalogTier = 1, family = "arc_emitter",
+    officialComponentId = "ARC_EMITTER_1", catalogTier = 1,
 })
 
 _defineProjectile({

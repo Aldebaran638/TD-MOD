@@ -386,10 +386,9 @@ end
 function server.xSlot_broadcastLaunchingStart(shipBodyId, slotIndex, weaponType, firePointWorld, hitPointWorld, didHit, didHitStellarisBody, didHitShield, hitTargetBodyId, normal, impactLayer)
     server.tachyonMuzzleLightTrigger(weaponType)
     local definition = (weaponData or {})[tostring(weaponType or "")] or {}
-    if definition.family == "arc_emitter" then
+    local fxProfile = tostring(definition.fxProfile or "")
+    if fxProfile == "arcBeam" or fxProfile == "focusedArcBeam" then
         local hitNormal = normal or Vec(0, 1, 0)
-        local fxProfile = tostring(weaponType or "") == "focusedArcEmitter"
-            and "focusedArcBeam" or (definition.fxProfile or "arcBeam")
         ClientCall(
             0, "client.spawnGenericRaycastWeaponFx",
             weaponType, fxProfile,

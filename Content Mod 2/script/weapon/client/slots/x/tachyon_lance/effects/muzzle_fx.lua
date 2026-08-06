@@ -90,7 +90,8 @@ function client.tachyonMuzzleFxTick(dt)
             if seq ~= state.lastRenderSeq then
                 state.lastRenderSeq = seq
                 local definition = _tachyonMuzzleDefinition(render.weaponType)
-                if render.eventType == "launch_start" and definition.family == "energy_lance" then
+                if render.eventType == "launch_start"
+                    and tostring(definition.fxProfile or "") == "tachyonLance" then
                     state.age = 0.0
                     state.weaponType = tostring(render.weaponType or "tachyonLance")
                 end

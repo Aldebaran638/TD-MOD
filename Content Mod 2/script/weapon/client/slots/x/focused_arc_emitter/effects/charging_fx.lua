@@ -142,8 +142,9 @@ function client.focusedArcChargingFxTick(dt)
         if client.registryShipExists(shipBodyId) then
             local render = client.xSlotRenderGetEvent(shipBodyId)
             if render ~= nil then
+                local definition = (weaponData or {})[tostring(render.weaponType or "")] or {}
                 local isArcCharging = render.eventType == "charging_start"
-                    and tostring(render.weaponType or "") == "focusedArcEmitter"
+                    and tostring(definition.chargeFxProfile or "") == "focusedArcEmitter"
                 if isArcCharging then
                     _focusedArcStartOrUpdate(
                         shipBodyId,

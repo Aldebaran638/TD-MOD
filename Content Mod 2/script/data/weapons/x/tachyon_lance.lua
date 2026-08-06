@@ -6,7 +6,10 @@ weaponDefineRay({
     displayName = "快子光矛",
     englishName = "Tachyon Lance",
     slotTypes = { "X" },
+    chargeFxProfile = "tachyonLance",
     fxProfile = "tachyonLance",
+    impactFxProfile = "tachyonLance",
+    soundProfileId = "tachyonLance",
     damageMin = 780,
     damageMax = 1950,
     powerUse = 260.0,
@@ -35,5 +38,4 @@ weaponDefineRay({
     aimLimitDeg = 70.0,
     aimPitchOffsetDeg = 6.0,
     officialComponentId = "ENERGY_LANCE_2",
-    family = "energy_lance",
 })

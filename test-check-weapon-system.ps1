@@ -44,6 +44,25 @@ try {
     $valid = Invoke-Checker
     Assert-True ($valid.ExitCode -eq 0) "accepts the complete weapon system contract"
 
+    $tachyonChargeProfilePath = Join-Path $fixtureMod "script\data\weapons\x\tachyon_lance.lua"
+    $tachyonChargeProfileText = [IO.File]::ReadAllText($tachyonChargeProfilePath)
+    [IO.File]::WriteAllText(
+        $tachyonChargeProfilePath,
+        $tachyonChargeProfileText.Replace(
+            'chargeFxProfile = "tachyonLance",',
+            ''
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidChargeProfile = Invoke-Checker
+    Assert-True ($invalidChargeProfile.ExitCode -eq 1) "rejects a charged ray without chargeFxProfile"
+    Assert-True ($invalidChargeProfile.Output -match "uniform four-profile contract|chargeFxProfile") "reports the charged-ray profile contract"
+    [IO.File]::WriteAllText(
+        $tachyonChargeProfilePath,
+        $tachyonChargeProfileText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
     $radialWeaponWheelPath = Join-Path $fixtureMod "script\weapon\client\common\hud\radial_weapon_wheel.lua"
     $radialWeaponWheelText = [IO.File]::ReadAllText($radialWeaponWheelPath)
     [IO.File]::WriteAllText(

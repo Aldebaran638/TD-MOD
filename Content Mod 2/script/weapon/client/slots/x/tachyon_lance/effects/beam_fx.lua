@@ -133,7 +133,8 @@ function client.tachyonBeamFxTick(dt)
             if seq ~= state.lastRenderSeq then
                 state.lastRenderSeq = seq
                 local definition = _tachyonBeamDefinition(render.weaponType)
-                if render.eventType == "launch_start" and definition.family == "energy_lance" then
+                if render.eventType == "launch_start"
+                    and tostring(definition.fxProfile or "") == "tachyonLance" then
                     state.beamStart, state.beamEnd = _tachyonBeamResolveEndpoints(render, shipBody, config)
                     state.launchAge = 0.0
                     state.weaponType = tostring(render.weaponType or "tachyonLance")

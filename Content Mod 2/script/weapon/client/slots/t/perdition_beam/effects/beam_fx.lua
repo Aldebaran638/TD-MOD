@@ -33,7 +33,9 @@ function client.perditionBeamFxTick(dt)
         local event = client.tSlotRenderGetEvent(shipBodyId)
         if event ~= nil and state.lastSeq[shipBodyId] ~= event.seq then
             state.lastSeq[shipBodyId] = event.seq
-            if event.weaponType == "perditionBeam" and event.eventType == "launch_start" then
+            local definition = (weaponData or {})[tostring(event.weaponType or "")] or {}
+            if tostring(definition.fxProfile or "") == "perditionBeam"
+                and event.eventType == "launch_start" then
                 state.beams[#state.beams + 1] = {
                     age = 0.0, startPoint = client.chargedRayTableToVec(event.firePoint),
                     endPoint = client.chargedRayTableToVec(event.hitPoint),

@@ -97,7 +97,9 @@ function client.perditionImpactFxTick(dt)
         local event = client.tSlotRenderGetEvent(shipBodyId)
         if event ~= nil and state.lastSeq[shipBodyId] ~= event.seq then
             state.lastSeq[shipBodyId] = event.seq
-            if event.weaponType == "perditionBeam" and event.eventType == "launch_start" and event.didHit == 1 then _spawnImpact(event) end
+            local definition = (weaponData or {})[tostring(event.weaponType or "")] or {}
+            if tostring(definition.impactFxProfile or "") == "perditionImpact"
+                and event.eventType == "launch_start" and event.didHit == 1 then _spawnImpact(event) end
         end
     end
     for index = #state.impacts, 1, -1 do

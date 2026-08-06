@@ -197,6 +197,7 @@ $expectedEnglishNames = [ordered]@{
     neutronLauncher = "Neutron Launchers"
     gammaStrikeCraft = "Advanced Strike Craft"
 }
+$chargedRayIds = @("tachyonLance", "focusedArcEmitter")
 
 foreach ($item in $expected.GetEnumerator()) {
     $id = [Regex]::Escape($item.Key)
@@ -207,7 +208,8 @@ foreach ($item in $expected.GetEnumerator()) {
     if ($ship -notmatch "`"$id`"") {
         Add-Issue "weapon $($item.Key) is absent from battlecruiser weapon pools"
     }
-    if ($weaponSource -notmatch "(?s)officialComponentId\s*=\s*`"[A-Z0-9_]+`".*?family\s*=\s*`"[a-z0-9_]+`"") {
+    if ($chargedRayIds -notcontains $item.Key -and
+        $weaponSource -notmatch "(?s)officialComponentId\s*=\s*`"[A-Z0-9_]+`".*?family\s*=\s*`"[a-z0-9_]+`"") {
         Add-Issue "weapon $($item.Key) has no official component/family metadata"
     }
     $iconRelative = "gfx\ui\weapon_icons\$($item.Key).png"
@@ -226,6 +228,27 @@ foreach ($item in $expected.GetEnumerator()) {
         @(Get-ChildItem -LiteralPath $soundDirectory -Filter "*.ogg" -File -ErrorAction SilentlyContinue).Count -eq 0) {
         Add-Issue "weapon $($item.Key) has no dedicated OGG assets: $soundRelative"
     }
+}
+
+ $chargedDefinitions = @{
+    tachyonLance = [string]$weaponSourceById.tachyonLance
+    focusedArcEmitter = [string]$weaponSourceById.focusedArcEmitter
+    perditionBeam = [string]$weaponSourceById.perditionBeam
+}
+foreach ($chargedId in $chargedDefinitions.Keys) {
+    $chargedSource = $chargedDefinitions[$chargedId]
+    if ($chargedSource -notmatch 'controllerType\s*=\s*"chargedRay"' -or
+        $chargedSource -notmatch 'chargeFxProfile\s*=\s*"[A-Za-z0-9_]+"' -or
+        $chargedSource -notmatch 'soundProfileId\s*=\s*"[A-Za-z0-9_]+"' -or
+        $chargedSource -notmatch 'fxProfile\s*=\s*"[A-Za-z0-9_]+"' -or
+        $chargedSource -notmatch 'impactFxProfile\s*=\s*"[A-Za-z0-9_]+"' -or
+        $chargedSource -match 'family\s*=') {
+        Add-Issue "charged weapon $chargedId must use the uniform four-profile contract without family"
+    }
+}
+if ($stellaris446Catalog -notmatch '(?s)weaponType\s*=\s*"particleLance".*?chargeFxProfile\s*=\s*"tachyonLance".*?impactFxProfile\s*=\s*"tachyonLance"' -or
+    $stellaris446Catalog -notmatch '(?s)weaponType\s*=\s*"arcEmitter".*?chargeFxProfile\s*=\s*"focusedArcEmitter".*?impactFxProfile\s*=\s*"focusedArcImpact"') {
+    Add-Issue "Stellaris charged-ray variants are missing the uniform four-profile metadata"
 }
 
 foreach ($item in $expectedEnglishNames.GetEnumerator()) {
@@ -618,7 +641,7 @@ if ($client -notmatch 'effects/engine_thruster_fx\.lua' -or
 }
 if ($arcChargingFx -notmatch 'focusedArcChargingFxRender' -or
     $arcChargingFx -notmatch '_focusedArcDrawBridge' -or
-    $xSlotChargingFx -notmatch '(?s)definition\.family\s*~=\s*"energy_lance".*emittersByShip' -or
+    $xSlotChargingFx -notmatch '(?s)tostring\(definition\.chargeFxProfile\s*or\s*""\)\s*~=\s*"tachyonLance".*emittersByShip' -or
     $xSlotMuzzleLight -notmatch 'arcMuzzleLightLeft' -or
     $xSlotMuzzleLight -notmatch 'arcMuzzleLightRight' -or
     $xSlotMuzzleLight -notmatch '_tachyonLightOverloadWave') {
@@ -896,10 +919,10 @@ if ([string]$weaponSourceById.phaseDisruptor -notmatch 'fxProfile\s*=\s*"arcBeam
 }
 if ([string]$weaponSourceById.focusedArcEmitter -notmatch '(?s)fxProfile\s*=\s*"focusedArcBeam".*?chargeDuration\s*=\s*0\.50' -or
     $genericRaycastFx -notmatch 'focusedArcBeam\s*=\s*\{\s*color\s*=\s*\{\s*0\.72,\s*0\.22,\s*1\.0\s*\}' -or
-    $xSlotControl -notmatch '(?s)tostring\(weaponType or ""\) == "focusedArcEmitter".*focusedArcBeam' -or
+    $xSlotControl -notmatch '(?s)fxProfile\s*==\s*"arcBeam"\s*or\s*fxProfile\s*==\s*"focusedArcBeam"' -or
     $client -notmatch 'focused_arc_emitter/effects/charging_fx\.lua' -or
     $arcChargingFx -notmatch 'focusedArcChargingFxRender' -or
-    $xSlotChargingFx -notmatch '(?s)definition\.family\s*~=\s*"energy_lance".*?_clearEffectsByShip' -or
+    $xSlotChargingFx -notmatch '(?s)tostring\(definition\.chargeFxProfile\s*or\s*""\)\s*~=\s*"tachyonLance".*?_clearEffectsByShip' -or
     $xSlotChargingFx -match 'ParticleColor\(0\.82,\s*0\.24,\s*1\.0' -or
     $xSlotMuzzleLight -notmatch 'SetLightColor\(center,\s*0\.72,\s*0\.22,\s*1\.0\)') {
     Add-Issue "Focused Arc Emitter must use independent purple charge/beam/light FX"

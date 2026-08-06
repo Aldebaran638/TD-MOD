@@ -64,7 +64,7 @@ end
 
 local function _startOrUpdateChargingEmitter(shipBodyId, firePointWorld, weaponType)
     local definition = _chargingDefinition(weaponType)
-    if definition.family ~= "energy_lance" then
+    if tostring(definition.chargeFxProfile or "") ~= "tachyonLance" then
         client.tachyonChargingFxState.emittersByShip[shipBodyId] = nil
         _clearEffectsByShip(shipBodyId)
         return

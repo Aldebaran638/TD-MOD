@@ -11,6 +11,7 @@ weaponBehaviorProfiles = weaponBehaviorProfiles or {
 }
 weaponFxProfiles = weaponFxProfiles or {
     tachyonLance = true,
+    perditionBeam = true,
     gammaBeam = true,
     redBeam = true,
     blueBeam = true,
@@ -28,6 +29,17 @@ weaponFxProfiles = weaponFxProfiles or {
     guidedMissile = true,
     energyTorpedo = true,
     strikeCraft = true,
+}
+weaponChargeFxProfiles = weaponChargeFxProfiles or {
+    none = true,
+    tachyonLance = true,
+    focusedArcEmitter = true,
+    perditionBeam = true,
+}
+weaponImpactFxProfiles = weaponImpactFxProfiles or {
+    tachyonLance = true,
+    focusedArcImpact = true,
+    perditionImpact = true,
 }
 
 local function _fillMissing(target, defaults)
@@ -117,6 +129,24 @@ function weaponDefineRay(definition)
             or definition.fxProfile == "focusedArcBeam"
             or definition.fxProfile == "psionicArcBeam") and "arc" or "beam",
     }
+    if tostring(definition.controllerType or "") == "chargedRay" then
+        local chargeFxProfile = tostring(definition.chargeFxProfile or "")
+        local soundProfileId = tostring(definition.soundProfileId or "")
+        local beamFxProfile = tostring(definition.fxProfile or "")
+        local impactFxProfile = tostring(definition.impactFxProfile or "")
+        if chargeFxProfile == "" or not weaponChargeFxProfiles[chargeFxProfile] then
+            error("charged ray " .. tostring(definition.weaponType) .. " has invalid chargeFxProfile")
+        end
+        if soundProfileId == "" then
+            error("charged ray " .. tostring(definition.weaponType) .. " is missing soundProfileId")
+        end
+        if beamFxProfile == "" or not weaponFxProfiles[beamFxProfile] then
+            error("charged ray " .. tostring(definition.weaponType) .. " has invalid fxProfile")
+        end
+        if impactFxProfile == "" or not weaponImpactFxProfiles[impactFxProfile] then
+            error("charged ray " .. tostring(definition.weaponType) .. " has invalid impactFxProfile")
+        end
+    end
     definition.damageMin = definition.damageMin or definition.damage
     definition.damageMax = definition.damageMax or definition.damage
     definition.CD = definition.CD or definition.cooldown
