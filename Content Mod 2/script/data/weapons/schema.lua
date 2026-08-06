@@ -101,11 +101,10 @@ function weaponDefineRay(definition)
     _fillMissing(definition, {
         behaviorType = "raycast",
         targetingMode = "camera_limited",
-        weaponClass = "directRay",
         projectileProfile = { mode = "none" },
         environmentExplosionSize = 0.35,
     })
-    if tostring(definition.weaponClass or "") == "chargedRay"
+    if tostring(definition.controllerType or "") == "chargedRay"
         and definition.muzzleLightProfile == nil then
         definition.muzzleLightProfile = "tachyon"
     end

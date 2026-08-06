@@ -53,7 +53,7 @@ local function _lockedTargetForWeapon(shipBody, definition)
         or client.xSlotTargetingHasLockedTarget
     local getLockedTargetIds = client.chargedRayTargetingGetLockedTargetIds
         or client.xSlotTargetingGetLockedTargetIds
-    if tostring(weapon.weaponClass or "") == "chargedRay"
+    if tostring(weapon.controllerType or "") == "chargedRay"
         and hasLockedTarget ~= nil
         and hasLockedTarget(shipBody) then
         local vehicleId, bodyId = 0, 0
@@ -116,7 +116,7 @@ function client.mainWeaponInputTick(dt)
     end
     local currentDefinition = client.getShipWeaponDefinition ~= nil
         and client.getShipWeaponDefinition(shipBody, currentMode) or {}
-    local isChargedRay = tostring(currentDefinition.weaponClass or "") == "chargedRay"
+    local isChargedRay = tostring(currentDefinition.controllerType or "") == "chargedRay"
     if isChargedRay and InputPressed("b") then
         if client.toggleShipWeaponFireMode ~= nil then
             client.toggleShipWeaponFireMode(shipBody)

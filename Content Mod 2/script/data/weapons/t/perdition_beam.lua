@@ -20,7 +20,6 @@ weaponDefineRay({
     bodyFix = 1.25,
     controllerType = "chargedRay",
     hudOwner = "weaponGroup",
-    weaponClass = "chargedRay",
     behaviorType = "infernoRaycast",
     targetingMode = "camera_limited",
     requiresTargetLock = false,

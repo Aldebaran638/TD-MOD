@@ -271,7 +271,7 @@ _register("specialized.chargedRayVisual", {
     deactivateOrder = 20,
     isActive = function(phase)
         return phase ~= "simulationTick"
-            or server.weaponGroupUsesWeaponClass("chargedRay")
+            or server.weaponGroupUsesController("chargedRay")
     end,
     init = function()
         if server.xSlotRenderStateInit ~= nil then server.xSlotRenderStateInit() end

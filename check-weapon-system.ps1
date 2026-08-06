@@ -47,6 +47,7 @@ foreach ($weaponFile in $weaponDefinitionFiles) {
 $catalog = Read-Required "script\data\weapons\weapon_catalog.lua"
 $stellaris446Catalog = Read-Required "script\data\weapons\stellaris_4_4_6.lua"
 $stellarisGeneratedCatalog = Read-Required "script\data\weapons\stellaris_generated_4_4_6.lua"
+$psionicLightningDefinition = Read-Required "script\data\weapons\l\psionic_lightning.lua"
 $shipDefinition = Read-Required "script\data\ships\battlecruiser.lua"
 $strikeCraftDefinition = Read-Required "script\data\ships\advanced_strike_craft.lua"
 $interceptorShipDefinitions = Read-Required "script\data\ships\interceptor_projectiles.lua"
@@ -316,8 +317,9 @@ $requiredCatalogTokens = @(
     'LARGE_SCOUT_HANGAR_1', 'STRIKE_CRAFT_HANGAR_1', 'STRIKE_CRAFT_HANGAR_2',
     'STRIKE_CRAFT_SKRAND', 'PSIONIC_STRIKE_CRAFT'
 )
+$officialCatalogSources = $stellaris446Catalog + "`n" + $psionicLightningDefinition
 foreach ($token in $requiredCatalogTokens) {
-    if ($stellaris446Catalog -notmatch [Regex]::Escape($token)) {
+    if ($officialCatalogSources -notmatch [Regex]::Escape($token)) {
         Add-Issue "Stellaris 4.4.6 mechanical catalog is missing official component token: $token"
     }
 }
@@ -328,6 +330,12 @@ if ($catalog -notmatch '#include\s+"stellaris_4_4_6\.lua"' -or
     $stellarisGeneratedCatalog -match '(?:component|id)\s*=\s*"[^"]*(?:BIO|HIVE|TOXIC|AMOEBA|METEOROID|GG_STRIKE|AI_STRIKE|DRONE_STRIKE|CARAVANEER|LENS_FLARE|SOLARFLARE)' -or
     $shipDefinition -notmatch 'pairs\(stellarisWeaponPoolData\s+or\s+\{\}\)') {
     Add-Issue "complete Stellaris X/L/M/S/G/H catalog is not loaded into the battlecruiser weapon pools"
+}
+if ($catalog -notmatch '#include\s+"l/psionic_lightning\.lua"' -or
+    $psionicLightningDefinition -notmatch 'weaponType\s*=\s*"psionicLightning"' -or
+    $psionicLightningDefinition -notmatch 'slotTypes\s*=\s*\{\s*"L"\s*\}' -or
+    $stellaris446Catalog -match 'weaponType\s*=\s*"psionicLightning"') {
+    Add-Issue "Psionic Lightning must be a dedicated L-slot weapon definition"
 }
 if ($stellarisGeneratedCatalog -notmatch '(?m)^\s*local\s+_generatedSizes\s*=\s*\{' -or
     $stellarisGeneratedCatalog -notmatch '(?m)^\s*local\s+function\s+_generatedIcon\s*\(' -or
@@ -721,10 +729,10 @@ if ($crosshair -notmatch 'weaponConfigUiIsOpen') {
     Add-Issue "crosshair is not hidden while the independent UI is open"
 }
 if ([string]$weaponSourceById.focusedArcEmitter -notmatch '(?s)bodyFix\s*=\s*1\.0.*?chargeDuration\s*=\s*0\.50.*?controllerType\s*=\s*"chargedRay"' -or
-    [string]$weaponSourceById.tachyonLance -notmatch 'weaponClass\s*=\s*"chargedRay"' -or
-    [string]$weaponSourceById.perditionBeam -notmatch 'weaponClass\s*=\s*"chargedRay"' -or
+    [string]$weaponSourceById.tachyonLance -notmatch 'controllerType\s*=\s*"chargedRay"' -or
+    [string]$weaponSourceById.perditionBeam -notmatch 'controllerType\s*=\s*"chargedRay"' -or
     $groupRuntime -notmatch 'mode\s*==\s*"charged_release"' -or
-    $groupRuntime -notmatch 'weaponClass\s*or\s+""\)\s*==\s*"chargedRay"') {
+    $groupRuntime -notmatch 'controllerType\s*or\s+""\)\s*==\s*"chargedRay"') {
     Add-Issue "Focused Arc Emitter does not share the Tachyon Lance charge/fire lifecycle"
 }
 if ($targetingPolicy -notmatch 'function\s+weaponTargetingPolicy\.requiresTargetLock\s*\(' -or

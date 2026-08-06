@@ -259,7 +259,7 @@ local function _shipCameraResolveLockedChargedRayTargetLocal(shipBodyId, shipTra
     local mode = client.getShipMainWeaponMode(shipBodyId)
     local definition = client.getShipWeaponDefinition ~= nil
         and client.getShipWeaponDefinition(shipBodyId, mode) or {}
-    if tostring(definition.weaponClass or "") ~= "chargedRay" then
+    if tostring(definition.controllerType or "") ~= "chargedRay" then
         return nil
     end
     if client.getShipWeaponFireMode == nil

@@ -257,7 +257,7 @@ _defineRay({
     soundProfileId = "tachyonLance", iconPath = _icon("energy_lance_1"),
     damageMin = 600, damageMax = 1500, powerUse = 200.0, cooldown = 6.0, maxRange = 500.0,
     shieldFix = 0.5, armorFix = 2.0, bodyFix = 1.5,
-        chargeDuration = 0.50, launchDuration = 0.20, controllerType = "chargedRay", weaponClass = "chargedRay", targetingMode = "camera_limited",
+        chargeDuration = 0.50, launchDuration = 0.20, controllerType = "chargedRay", targetingMode = "camera_limited",
     environmentExplosionSize = 4.0, physicalExplosionCount = 2,
     mountProfile = "xSpinal", salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.05 },
     aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
@@ -272,7 +272,7 @@ _defineRay({
     powerUse = 200.0, cooldown = 6.0, maxRange = 520.0,
     shieldFix = 1.0, armorFix = 1.0, bodyFix = 1.0,
     shieldPenetration = 1.0, armorPenetration = 1.0,
-        chargeDuration = 0.50, launchDuration = 0.20, controllerType = "chargedRay", weaponClass = "chargedRay", targetingMode = "camera_limited",
+        chargeDuration = 0.50, launchDuration = 0.20, controllerType = "chargedRay", targetingMode = "camera_limited",
     environmentExplosionSize = 4.0, physicalExplosionCount = 2,
     mountProfile = "xSpinal", salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.05 },
     aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
@@ -362,18 +362,6 @@ _defineEnergyLauncher("protonLauncher", "质子发射器", "Proton Launchers", "
 _defineEnergyLauncher("zroLauncher", "泽珞发射器", "Zro Launchers", "PSIONIC_TORPEDO", "zro_launchers", 118, 130, 280, { 0.72, 0.18, 1.0 }, 3)
 weaponData.zroLauncher.shieldPenetration = 0.50
 weaponData.zroLauncher.armorPenetration = 0.50
-
-_defineRay({
-    weaponType = "psionicLightning", displayName = "灵能闪电", englishName = "Psionic Lightning",
-    slotTypes = { "L" }, fxProfile = "psionicArcBeam", impactFxProfile = "focusedArcImpact",
-    soundProfileId = "focusedArcEmitter", iconPath = _icon("psionic_lightning"),
-    damageMin = 1, damageMax = 139, powerUse = 70.0, cooldown = 1.6, maxRange = 490.0,
-    shieldFix = 1.0, armorFix = 1.0, bodyFix = 1.0,
-    shieldPenetration = 1.0, armorPenetration = 1.0,
-    mountProfile = "lEnergy", salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.12 },
-    aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
-    officialComponentId = "PSIONIC_LIGHTNING", catalogTier = 5, family = "psionic_lightning",
-})
 
 for _, item in ipairs({
     { slot = "S", id = "smallPsionicDisruptor", component = "SMALL_PSIONIC_DISRUPTOR", zh = "小型灵能裂解炮", en = "Small Psionic Disruptor", power = 23, maximum = 25 },

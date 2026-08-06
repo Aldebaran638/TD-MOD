@@ -12,6 +12,7 @@ weaponData = weaponData or {}
 #include "l/large_gauss_cannon.lua"
 #include "l/kinetic_artillery.lua"
 #include "l/large_stormfire_autocannon.lua"
+#include "l/psionic_lightning.lua"
 #include "m/medium_gamma_laser.lua"
 #include "m/medium_plasma_cannon.lua"
 #include "m/phase_disruptor.lua"

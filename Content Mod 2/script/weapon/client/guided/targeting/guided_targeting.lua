@@ -316,7 +316,7 @@ function client.guidedTargetingTick(dt)
     local requiresTargetLock = weaponTargetingPolicy ~= nil
         and weaponTargetingPolicy.requiresTargetLock(weapon)
     if shipBody == 0 or not requiresTargetLock
-        or tostring(weapon.weaponClass or "") == "chargedRay" then
+        or tostring(weapon.controllerType or "") == "chargedRay" then
         _guidedTargetingResetState(state)
         return
     end

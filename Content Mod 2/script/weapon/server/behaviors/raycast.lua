@@ -6,7 +6,7 @@ local _resolveShieldEndpoint = server.weaponRaycastResolveShieldEndpoint
 
 local function _fireRaycast(context)
     local definition = context.weaponDefinition or {}
-    local isChargedRay = tostring(definition.weaponClass or "") == "chargedRay"
+    local isChargedRay = tostring(definition.controllerType or "") == "chargedRay"
     local usesDedicatedEnergyLanceFx = isChargedRay
         and tostring(definition.family or "") == "energy_lance"
     local ray = server.weaponRaycastResolve(context)

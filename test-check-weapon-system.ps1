@@ -82,6 +82,25 @@ try {
         (New-Object Text.UTF8Encoding($false))
     )
 
+    $weaponCatalogPath = Join-Path $fixtureMod "script\data\weapons\weapon_catalog.lua"
+    $weaponCatalogText = [IO.File]::ReadAllText($weaponCatalogPath)
+    [IO.File]::WriteAllText(
+        $weaponCatalogPath,
+        $weaponCatalogText.Replace(
+            '#include "l/psionic_lightning.lua"',
+            '#include "m/psionic_lightning.lua"'
+        ),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $invalidPsionicLightningLocation = Invoke-Checker
+    Assert-True ($invalidPsionicLightningLocation.ExitCode -eq 1) "rejects a Psionic Lightning definition outside the L-slot catalog"
+    Assert-True ($invalidPsionicLightningLocation.Output -match "dedicated L-slot weapon definition") "reports the Psionic Lightning L-slot location contract"
+    [IO.File]::WriteAllText(
+        $weaponCatalogPath,
+        $weaponCatalogText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
     $perditionSoundPath = Join-Path $fixtureMod "sound\perdition_beam_fire_01.ogg"
     $perditionSoundBytes = [IO.File]::ReadAllBytes($perditionSoundPath)
     Remove-Item -LiteralPath $perditionSoundPath -Force

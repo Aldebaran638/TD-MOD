@@ -11,7 +11,7 @@ function client.xSlotLockHudDraw()
         or tostring((client.getShipWeaponDefinition(
             body,
             client.getShipMainWeaponMode(body)
-        ) or {}).weaponClass or "") ~= "chargedRay"
+        ) or {}).controllerType or "") ~= "chargedRay"
         or client.getShipWeaponFireMode == nil
         or client.getShipWeaponFireMode(body) ~= "lock" then
         return

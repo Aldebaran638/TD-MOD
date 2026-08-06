@@ -25,8 +25,7 @@ end
 
 local function _weaponGroupIsChargedRay(weaponDefinition)
     local definition = weaponDefinition or {}
-    return tostring(definition.weaponClass or "") == "chargedRay"
-        or tostring(definition.controllerType or "") == "chargedRay"
+    return tostring(definition.controllerType or "") == "chargedRay"
 end
 
 local function _weaponGroupRequiresTargetLock(weaponDefinition)
@@ -435,17 +434,6 @@ function server.weaponGroupUsesController(controllerType)
     for _, state in pairs(server.weaponGroupStateById or {}) do
         local _, definition = _resolveWeapon(state)
         if tostring((definition or {}).controllerType or "") == requested then
-            return true
-        end
-    end
-    return false
-end
-
-function server.weaponGroupUsesWeaponClass(weaponClass)
-    local requested = tostring(weaponClass or "")
-    for _, state in pairs(server.weaponGroupStateById or {}) do
-        local _, definition = _resolveWeapon(state)
-        if tostring((definition or {}).weaponClass or "") == requested then
             return true
         end
     end

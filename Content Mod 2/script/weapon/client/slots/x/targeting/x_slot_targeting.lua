@@ -375,7 +375,7 @@ function client.xSlotTargetingTick(dt)
         and client.getShipWeaponFireMode(shipBody)
         or ((client.getShipXSlotFireMode ~= nil and shipBody ~= 0)
             and client.getShipXSlotFireMode(shipBody) or "aim")
-    if shipBody == 0 or tostring(currentWeapon.weaponClass or "") ~= "chargedRay"
+    if shipBody == 0 or tostring(currentWeapon.controllerType or "") ~= "chargedRay"
         or fireMode ~= "lock" then
         _xSlotResetState(state)
         return
