@@ -311,7 +311,12 @@ function client.guidedTargetingTick(dt)
 
     local shipBody = _resolveControlledShipBody()
     local currentMode = (client.getShipMainWeaponMode ~= nil and shipBody ~= 0) and client.getShipMainWeaponMode(shipBody) or "xSlot"
-    if shipBody == 0 or (currentMode ~= "mSlot" and currentMode ~= "gSlot" and currentMode ~= "hSlot") then
+    local weapon = client.getShipWeaponDefinition ~= nil
+        and client.getShipWeaponDefinition(shipBody, currentMode) or {}
+    local requiresTargetLock = weaponTargetingPolicy ~= nil
+        and weaponTargetingPolicy.requiresTargetLock(weapon)
+    if shipBody == 0 or not requiresTargetLock
+        or tostring(weapon.weaponClass or "") == "chargedRay" then
         _guidedTargetingResetState(state)
         return
     end
@@ -320,7 +325,7 @@ function client.guidedTargetingTick(dt)
     state.shipBody = shipBody
 
     local modeCfg = cfg
-    if currentMode == "hSlot" then
+    if string.lower(tostring(currentMode or "")):match("^hslot%d*$") ~= nil then
         modeCfg = {
             lockDistance = (cfg.lockDistance or 0.0) * 2.0,
             lockHalfAngleDeg = cfg.lockHalfAngleDeg,
@@ -339,7 +344,7 @@ function client.guidedTargetingTick(dt)
     local useCameraCone = client.shipCamera ~= nil
         and (client.shipCamera.rearFreelookActive
             or client.shipCamera.viewMode == "front")
-        and (currentMode == "mSlot" or currentMode == "gSlot" or currentMode == "hSlot")
+        and requiresTargetLock
 
     local aimOrigin = shipPos
     local aimForward = shipForward

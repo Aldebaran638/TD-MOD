@@ -99,6 +99,25 @@ function server.shipWeaponSyncConfiguration(shipType, recipientPlayerId)
         tonumber(cloak.shieldReduction) or 0.0,
         math.floor(tonumber(cloak.shipLimit) or 0)
     )
+
+    -- The legacy configuration packet carries the original fixed slot set.
+    -- Send the resolved groups separately so numbered groups of every slot
+    -- type (X2, G3, and so on) stay visible to clients as well.
+    local resolved = server.shipSlotLoadoutResolveShipDefinition(resolvedType) or {}
+    for _, group in ipairs(resolved.weaponGroups or {}) do
+        local groupId = tostring(group.groupId or "")
+        if groupId ~= "" then
+            local slotType = tostring(group.slotType or "")
+            local loadoutKey = shipDefinitionGetGroupLoadoutKey(groupId, slotType)
+            ClientCall(
+                math.floor(recipientPlayerId or 0),
+                "client.updateShipWeaponGroupConfiguration",
+                server.shipContextGetBody(),
+                groupId,
+                tostring(loadout[groupId] or loadout[loadoutKey] or loadout[slotType] or "")
+            )
+        end
+    end
 end
 
 local function _rebuildWeaponRuntime(shipType)

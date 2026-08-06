@@ -59,6 +59,14 @@ local function _shipDefinition()
     return (shipTypeRegistryData or {})[client.weaponConfigUiState.shipType] or {}
 end
 
+local function _groupDisplaySlot(group)
+    local entry = group or {}
+    local key = shipDefinitionGetGroupLoadoutKey(entry.groupId, entry.slotType)
+    if key == "" then key = string.upper(tostring(entry.slotType or "?")) end
+    if not key:match("%d+$") then key = key .. "1" end
+    return key
+end
+
 local function _canonicalLoadout(source)
     local selected = source or {}
 
@@ -534,7 +542,7 @@ local function _drawWeaponSidebar(groupId)
     group = group or { groupId = groupId, slotType = groupId }
     local slotType = tostring(group.slotType or "")
     local loadoutKey = tostring(group.groupId or slotType)
-    local displaySlot = loadoutKey == "lSlot2" and "L2" or slotType
+    local displaySlot = _groupDisplaySlot(group)
     local slot = _slotLabels[displaySlot] or _slotLabels[slotType] or _slotLabels.M
     _panel(0, 0, _leftWidth, _mainHeight, true)
     UiPush()
@@ -670,7 +678,7 @@ local function _drawGroupCard(x, y, width, height, group)
     local state = client.weaponConfigUiState
     local slotType = tostring(group.slotType or "")
     local loadoutKey = tostring(group.groupId or slotType)
-    local displaySlot = loadoutKey == "lSlot2" and "L2" or slotType
+    local displaySlot = _groupDisplaySlot(group)
     local slot = _slotLabels[displaySlot] or _slotLabels[slotType] or _slotLabels.M
     local weaponType = tostring(state.loadout[loadoutKey] or "")
     local weapon = (weaponData or {})[weaponType] or {}
@@ -846,7 +854,7 @@ local function _drawSummary(configuration, x)
     for _, group in ipairs(_activeGroups(configuration)) do
         local slotType = tostring(group.slotType or "")
         local loadoutKey = tostring(group.groupId or slotType)
-        local displaySlot = loadoutKey == "lSlot2" and "L2" or slotType
+        local displaySlot = _groupDisplaySlot(group)
         local slot = _slotLabels[displaySlot] or _slotLabels[slotType] or _slotLabels.M
         local weaponType = tostring(state.loadout[loadoutKey] or "")
         local weapon = (weaponData or {})[weaponType] or {}

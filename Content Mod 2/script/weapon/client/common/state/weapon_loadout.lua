@@ -70,12 +70,23 @@ function client.updateShipWeaponConfiguration(
         gSlot = tostring(gWeapon or ""),
         hSlot = tostring(hWeapon or ""),
         pSlot = tostring(pWeapon or ""),
+        groupWeapons = {},
         serverProfile = serverProfile,
     }
     local binding = client.weaponConfigurationBindingState
     if binding ~= nil and math.floor(binding.shipBody or 0) == body then
         binding.serverProfile = serverProfile
     end
+end
+
+function client.updateShipWeaponGroupConfiguration(shipBodyId, groupId, weaponType)
+    local body = math.floor(shipBodyId or 0)
+    local id = tostring(groupId or "")
+    if body == 0 or id == "" then return end
+    local state = client.weaponLoadoutStateByShip[body] or {}
+    state.groupWeapons = state.groupWeapons or {}
+    state.groupWeapons[id] = tostring(weaponType or "")
+    client.weaponLoadoutStateByShip[body] = state
 end
 
 function client.getShipSensorProfile(shipBodyId)
@@ -104,6 +115,8 @@ end
 function client.getShipWeaponType(shipBodyId, groupId)
     local state = client.weaponLoadoutStateByShip[math.floor(shipBodyId or 0)] or {}
     local mode = tostring(groupId or "")
+    local synchronized = tostring((state.groupWeapons or {})[mode] or "")
+    if synchronized ~= "" then return synchronized end
     local configured = tostring(state[mode] or "")
     if configured ~= "" then return configured end
 

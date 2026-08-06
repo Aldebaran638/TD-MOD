@@ -175,6 +175,18 @@ function server.guidedSlotGroupInit(mode, mountCollection, hudCallback, shipType
     return state
 end
 
+function server.guidedSlotGroupEnsure(mode, mountCollection, shipType)
+    local id = tostring(mode or "")
+    local state = server.guidedSlotGroupStateByMode[id]
+    if state ~= nil then return state end
+    return server.guidedSlotGroupInit(
+        id,
+        tostring(mountCollection or ""),
+        "client.updateMSlotHudState",
+        shipType
+    )
+end
+
 function server.guidedSlotGroupReset(mode)
     local state = server.guidedSlotGroupStateByMode[tostring(mode or "")]
     if state == nil then return end
@@ -230,6 +242,13 @@ function server.guidedSlotGroupNeedsTick(mode)
     return body ~= 0
         and server.shipRuntimeGetDriverPlayerId(body) > 0
         and server.shipRuntimeGetCurrentMainWeapon(body) == tostring(mode or "")
+end
+
+function server.guidedSlotGroupNeedsAnyTick()
+    for mode in pairs(server.guidedSlotGroupStateByMode or {}) do
+        if server.guidedSlotGroupNeedsTick(mode) then return true end
+    end
+    return false
 end
 
 function server.guidedSlotGroupTick(mode, dt)
@@ -288,5 +307,17 @@ function server.guidedSlotGroupTick(mode, dt)
         runtime.cooldownRemain = math.max(0.0, tonumber(config.cooldown) or 0.0)
         state.hudSync.dirty = true
         _guidedGroupMaybePushHud(state, 0.0, true)
+    end
+end
+
+function server.guidedSlotGroupTickAll(dt)
+    for mode in pairs(server.guidedSlotGroupStateByMode or {}) do
+        server.guidedSlotGroupTick(mode, dt)
+    end
+end
+
+function server.guidedSlotGroupResetAll()
+    for mode in pairs(server.guidedSlotGroupStateByMode or {}) do
+        server.guidedSlotGroupReset(mode)
     end
 end

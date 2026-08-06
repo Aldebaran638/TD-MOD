@@ -26,22 +26,12 @@ end
 
 local function _resolveCrosshairRangeByMode(mode)
     local defs = weaponData or {}
-    if mode == "lSlot" or mode == "lSlot2" then
-        local lWeapon = client.getShipWeaponDefinition ~= nil
-            and client.getShipWeaponDefinition(client.shipContextGetBody(), mode)
-            or (defs.kineticArtillery or {})
-        local maxRange = tonumber(lWeapon.maxRange) or 0.0
-        if maxRange > 0.0 then
-            return maxRange
-        end
-    elseif mode == "xSlot" then
-        local xWeapon = client.getShipWeaponDefinition ~= nil
-            and client.getShipWeaponDefinition(client.shipContextGetBody(), "xSlot")
-            or (defs.tachyonLance or {})
-        local maxRange = tonumber(xWeapon.maxRange) or 0.0
-        if maxRange > 0.0 then
-            return maxRange
-        end
+    local weapon = client.getShipWeaponDefinition ~= nil
+        and client.getShipWeaponDefinition(client.shipContextGetBody(), mode)
+        or (defs.tachyonLance or {})
+    local maxRange = tonumber(weapon.maxRange) or 0.0
+    if maxRange > 0.0 then
+        return maxRange
     end
     return _resolveCrosshairRange()
 end

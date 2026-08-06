@@ -565,26 +565,57 @@ local function _mainWeaponHudResolveDefinition(shipBodyId, groupId)
     return client.getShipWeaponDefinition(shipBodyId, groupId) or {}
 end
 
+local function _mainWeaponHudSlotLabel(groupId, slotType)
+    local key = shipDefinitionGetGroupLoadoutKey(groupId, slotType)
+    if key == "" then key = string.upper(tostring(slotType or "?")) end
+    if not key:match("%d+$") then key = key .. "1" end
+    return key
+end
+
+local function _mainWeaponHudSlotColor(cfg, slotType, groupId)
+    local typeId = string.upper(tostring(slotType or ""))
+    if typeId == "T" then return cfg.tSlotColor end
+    if typeId == "X" then return cfg.xSlotColor end
+    if typeId == "L" then
+        return _mainWeaponHudSlotLabel(groupId, slotType) == "L2"
+            and cfg.lSlot2Color or cfg.lSlotColor
+    end
+    if typeId == "M" then return cfg.mSlotColor end
+    if typeId == "G" then return cfg.gSlotColor end
+    if typeId == "H" then return cfg.hSlotColor end
+    return cfg.xSlotColor
+end
+
 local function _mainWeaponHudBuildWheelItems(shipBodyId, cfg)
     local result = {}
-    local function appendItem(groupId, label, color)
+    -- The old fixed list was appendItem("tSlot", ...) followed by
+    -- appendItem("xSlot", ...); the configuration loop below is its generic
+    -- replacement and still preserves the candidate ~= nil filtering rule.
+    local function appendItem(groupId, slotType)
         local definition = _mainWeaponHudResolveDefinition(shipBodyId, groupId)
         if definition == nil then return end
         result[#result + 1] = {
             id = groupId,
-            label = label,
+            label = _mainWeaponHudSlotLabel(groupId, slotType),
             iconPath = tostring(definition.iconPath or ""),
-            color = color,
+            color = _mainWeaponHudSlotColor(cfg, slotType, groupId),
         }
     end
 
-    appendItem("tSlot", "T", cfg.tSlotColor)
-    appendItem("xSlot", "X", cfg.xSlotColor)
-    appendItem("lSlot", "L1", cfg.lSlotColor)
-    appendItem("lSlot2", "L2", cfg.lSlot2Color)
-    appendItem("mSlot", "M", cfg.mSlotColor)
-    appendItem("gSlot", "G", cfg.gSlotColor)
-    appendItem("hSlot", "H", cfg.hSlotColor)
+    local state = client.weaponLoadoutStateByShip[math.floor(shipBodyId or 0)] or {}
+    local shipType = client.registryShipGetShipType ~= nil
+        and client.registryShipGetShipType(shipBodyId) or ""
+    if shipType == "" then shipType = client.shipContextGetType() end
+    local definition = shipDefinitionGet(shipType, shipType)
+    local configuration = shipDefinitionFindConfiguration(
+        definition,
+        state.configurationId or definition.defaultSlotConfigurationId
+    )
+    for _, group in ipairs((configuration or {}).slotGroups or {}) do
+        if not group.automatic then
+            appendItem(tostring(group.groupId or ""), tostring(group.slotType or ""))
+        end
+    end
     return result
 end
 
@@ -802,6 +833,7 @@ function client.mainWeaponHudDraw()
     -- choice, so a future T-slot controller can own its own HUD normally.
     local usesGenericRuntime = tostring(weaponDefinition.hudOwner or "") == "weaponGroup"
         or tostring(weaponDefinition.controllerType or "") == ""
+        or tostring(currentMode):match("slot%d+$") ~= nil
 
     local topFill, topText = _resolveXSlotTopStatus(state)
     local topColor = cfg.xSlotColor
@@ -919,13 +951,9 @@ function client.mainWeaponHudDraw()
         UiPop()
 
         if usesGenericRuntime then
-            local slotLabel = string.upper(string.sub(currentMode, 1, 1))
-            local slotColor = cfg.xSlotColor
-            if currentMode == "tSlot" then slotColor = cfg.tSlotColor end
-            if currentMode == "lSlot" then slotColor = cfg.lSlotColor end
-            if currentMode == "lSlot2" then slotColor = cfg.lSlot2Color end
-            if currentMode == "mSlot" then slotColor = cfg.mSlotColor end
-            if currentMode == "gSlot" then slotColor = cfg.gSlotColor end
+            local slotType = string.upper(tostring(currentMode):match("^([^s]+)slot") or "")
+            local slotLabel = _mainWeaponHudSlotLabel(currentMode, slotType)
+            local slotColor = _mainWeaponHudSlotColor(cfg, slotType, currentMode)
             local barCount = 0
             local groupHud = ((client.weaponGroupHudStateByShip[state.shipBody] or {})[currentMode]) or {}
             for i = 1, 4 do

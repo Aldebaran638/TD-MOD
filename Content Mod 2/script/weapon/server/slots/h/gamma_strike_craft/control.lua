@@ -361,14 +361,17 @@ local function _hSlotConsumeFireRequested()
     return requested
 end
 
-local function _hSlotPickReadyLauncher(state)
+local function _hSlotPickReadyLauncher(state, groupId)
     local launchers = state.launchers or {}
     local activeCrafts = state.activeCrafts or {}
 
     for i = 1, #launchers do
         local launcher = launchers[i]
         local runtime = launcher and launcher.runtime or nil
-        if runtime ~= nil and (runtime.cooldownRemain or 0.0) <= 0.0 and activeCrafts[i] == nil then
+        if runtime ~= nil
+            and (groupId == nil or tostring(launcher.groupId or "") == tostring(groupId))
+            and (runtime.cooldownRemain or 0.0) <= 0.0
+            and activeCrafts[i] == nil then
             return i, launcher
         end
     end
@@ -808,12 +811,17 @@ function server.hSlotStateInit(shipType)
         },
     }
 
-    local slotDefs = shipDef.hSlots or {}
-    for i = 1, #slotDefs do
-        state.launchers[i] = {
-            config = _hSlotBuildLauncherConfig(slotDefs[i]),
-            runtime = _hSlotBuildLauncherRuntime(),
-        }
+    for _, group in ipairs(shipDef.weaponGroups or {}) do
+        if tostring(group.slotType or "") == "H" then
+            local collection = tostring(group.mountCollection or "hSlots")
+            for _, slotDef in ipairs(shipDef[collection] or {}) do
+                state.launchers[#state.launchers + 1] = {
+                    groupId = tostring(group.groupId or ""),
+                    config = _hSlotBuildLauncherConfig(slotDef),
+                    runtime = _hSlotBuildLauncherRuntime(),
+                }
+            end
+        end
     end
 
     server.hSlotState = state
@@ -1206,7 +1214,7 @@ function server.hSlotControlTick(dt)
         return
     end
 
-    local slotIndex, launcher = _hSlotPickReadyLauncher(state)
+    local slotIndex, launcher = _hSlotPickReadyLauncher(state, request.groupId)
     if slotIndex == nil or launcher == nil then
         _hSlotSetDebugReason(0, "fire_requested_but_no_ready_launcher", nil)
         _hSlotSetDebugStage("no_ready_launcher")

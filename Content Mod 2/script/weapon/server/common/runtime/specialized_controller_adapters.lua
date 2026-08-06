@@ -84,26 +84,28 @@ _register("specialized.guidedSalvo", {
         return phase ~= "simulationTick"
             or (
                 server.weaponGroupUsesController("guidedSalvo")
-                and server.guidedSlotGroupNeedsTick("mSlot")
+                and server.guidedSlotGroupNeedsAnyTick()
             )
     end,
     init = function(shipType)
         server.mSlotControlInit(shipType)
     end,
     rebuildReset = function()
-        server.mSlotControlResetRuntime()
+        server.guidedSlotGroupResetAll()
     end,
     rebuildInit = function(shipType)
         server.mSlotControlInit(shipType)
     end,
     simulationTick = function(dt)
-        server.mSlotControlTick(dt)
+        server.guidedSlotGroupTickAll(dt)
     end,
     deactivate = function()
-        server.mSlotControlResetRuntime()
+        server.guidedSlotGroupResetAll()
     end,
     clearCommands = function()
-        server.guidedSlotGroupClearRequest("mSlot")
+        for mode in pairs(server.guidedSlotGroupStateByMode or {}) do
+            server.guidedSlotGroupClearRequest(mode)
+        end
     end,
 })
 
@@ -290,7 +292,13 @@ _registerController("guidedSalvo", {
     ownsHud = true,
     requestFire = function(context)
         local request = context.request or {}
-        return server.mSlotControlSetFireRequest(
+        server.guidedSlotGroupEnsure(
+            context.groupId,
+            ((context.state or {}).mountCollection),
+            server.shipContextGetType()
+        )
+        return server.guidedSlotGroupSetFireRequest(
+            context.groupId,
             request.shipBodyId,
             request.targetVehicleId,
             request.targetBodyId
@@ -301,7 +309,9 @@ _registerController("guidedSalvo", {
 _registerController("strikeCraft", {
     ownsHud = true,
     requestFire = function(context)
-        server.hSlotLastFireRequest = context.request or {}
+        local request = context.request or {}
+        request.groupId = context.groupId
+        server.hSlotLastFireRequest = request
         server.hSlotControlSetFireRequested(true)
         return true
     end,
