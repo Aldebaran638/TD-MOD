@@ -47,17 +47,20 @@ function client.gammaLaserFxInit()
     state.glowSprite = LoadSprite("MOD/gfx/weapons/projectiles/impact_glow.png")
 end
 
-function client.gammaLaserFxProfile(weaponType)
+function client.gammaLaserFxProfile(weaponType, profileId)
+    local configured = GammaProfiles[tostring(profileId or "")]
+    if configured ~= nil then return configured end
     if tostring(weaponType) == "gammaStrikeCraft" then return GammaProfiles.strikeGamma end
     return _profileForWeapon(weaponType)
 end
 
-function client.spawnGammaLaserMuzzleFx(weaponType, position, direction)
-    local profile = client.gammaLaserFxProfile(weaponType)
+function client.spawnGammaLaserMuzzleFx(weaponType, position, direction, profileId)
+    local profile = client.gammaLaserFxProfile(weaponType, profileId)
     local state = client.gammaLaserFxState
     if #state.muzzles >= (client.weaponFxBudgetConfig.maxActiveMuzzles or 128) then table.remove(state.muzzles, 1) end
     table.insert(state.muzzles, { position = position, direction = _normalize(direction), profile = profile, mode = "muzzle", age = 0.0 })
-    local count = tostring(weaponType) == "largeGammaLaser" and 8 or (tostring(weaponType) == "mediumGammaLaser" and 5 or 2)
+    local count = profile == GammaProfiles.gammaLarge and 8
+        or (profile == GammaProfiles.gammaMedium and 5 or 2)
     if not client.weaponFxTakeParticles(count, "normal") then return end
     local right = _normalize(VecCross(direction, Vec(0, 1, 0)), Vec(1, 0, 0))
     local up = _normalize(VecCross(right, direction), Vec(0, 1, 0))
@@ -70,8 +73,8 @@ function client.spawnGammaLaserMuzzleFx(weaponType, position, direction)
     end
 end
 
-function client.spawnGammaLaserImpactFx(weaponType, position, normal, impactLayer)
-    local profile = client.gammaLaserFxProfile(weaponType)
+function client.spawnGammaLaserImpactFx(weaponType, position, normal, impactLayer, profileId)
+    local profile = client.gammaLaserFxProfile(weaponType, profileId)
     local state = client.gammaLaserFxState
     if #state.impacts >= (client.weaponFxBudgetConfig.maxActiveImpacts or 128) then table.remove(state.impacts, 1) end
     table.insert(state.impacts, { position = position, normal = _normalize(normal, Vec(0, 1, 0)), profile = profile, mode = "impact", layer = tostring(impactLayer or "body"), age = 0.0 })

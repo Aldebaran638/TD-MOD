@@ -78,7 +78,11 @@ function client.spawnGenericRaycastWeaponFx(
     local profile = _profiles[profileId] or _profiles.energyBeam
     local definition = (weaponData or {})[tostring(weaponType or "")] or {}
     local fxColor = definition.fxColor
-    local life = profileId == "gammaBeam" and client.gammaLaserFxProfile(weaponType).life or profile.life
+    local muzzleFxProfile = tostring(definition.muzzleFxProfile or "none")
+    local impactFxProfile = tostring(definition.impactFxProfile or "none")
+    local gammaProfile = (muzzleFxProfile == "gammaLarge" or muzzleFxProfile == "gammaMedium")
+        and muzzleFxProfile or impactFxProfile
+    local life = profileId == "gammaBeam" and client.gammaLaserFxProfile(weaponType, gammaProfile).life or profile.life
     local endPos = Vec(ex or 0, ey or 0, ez or 0)
     local hitNormal = Vec(nx or 0, ny or 1, nz or 0)
     table.insert(client.genericRaycastFxState.beams, {
@@ -90,14 +94,21 @@ function client.spawnGenericRaycastWeaponFx(
         didHit = math.floor(didHit or 0) ~= 0,
         impactLayer = tostring(impactLayer or "none"),
         fxColor = fxColor,
+        gammaProfile = gammaProfile,
         life = life,
         maxLife = life,
     })
-    if profileId == "gammaBeam" then
-        client.spawnGammaLaserMuzzleFx(weaponType, Vec(sx or 0, sy or 0, sz or 0), VecSub(endPos, Vec(sx or 0, sy or 0, sz or 0)))
-        if math.floor(didHit or 0) ~= 0 then client.spawnGammaLaserImpactFx(weaponType, endPos, hitNormal, impactLayer) end
-    elseif math.floor(didHit or 0) ~= 0 and profileId ~= "perditionBeam" then
-        if not client.spawnWeaponImpactFx(weaponType, endPos, hitNormal, impactLayer) then
+    local startPos = Vec(sx or 0, sy or 0, sz or 0)
+    local direction = VecSub(endPos, startPos)
+    if muzzleFxProfile == "gammaLarge" or muzzleFxProfile == "gammaMedium" then
+        client.spawnGammaLaserMuzzleFx(weaponType, startPos, direction, muzzleFxProfile)
+    elseif muzzleFxProfile ~= "none" then
+        client.spawnWeaponMuzzleFx(weaponType, sx, sy, sz, direction[1], direction[2], direction[3])
+    end
+    if math.floor(didHit or 0) ~= 0 and profileId ~= "perditionBeam" then
+        if impactFxProfile == "gammaLarge" or impactFxProfile == "gammaMedium" then
+            client.spawnGammaLaserImpactFx(weaponType, endPos, hitNormal, impactLayer, impactFxProfile)
+        elseif not client.spawnWeaponImpactFx(weaponType, endPos, hitNormal, impactLayer) then
             _spawnImpactParticles(profile, endPos, hitNormal, fxColor)
         end
     end
@@ -130,7 +141,7 @@ function client.genericRaycastFxRender()
                 math.max(1.6, color[3] * 1.8),
             }
             if beam.profile == "gammaBeam" then
-                client.gammaLaserDrawBeam(beam.startPos, beam.endPos, client.gammaLaserFxProfile(beam.weaponType), (beam.maxLife - beam.life), beam.maxLife)
+                client.gammaLaserDrawBeam(beam.startPos, beam.endPos, client.gammaLaserFxProfile(beam.weaponType, beam.gammaProfile), (beam.maxLife - beam.life), beam.maxLife)
             elseif beam.profile == "arcBeam" or beam.profile == "focusedArcBeam"
                 or beam.profile == "psionicArcBeam" then
                 local axisA = _cameraAxis(direction, center)

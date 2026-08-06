@@ -4,6 +4,7 @@
 client = client or {}
 
 local Profiles = {
+    disruptor = { life = 0.08, size = 0.56, particles = 7, color = { 0.18, 1.0, 0.32 }, light = 6, distance = 220, lines = 0 },
     gaussLarge = { life = 0.09, size = 0.72, particles = 10, color = { 0.22, 0.65, 1.0 }, light = 7, distance = 260, lines = 2 },
     gaussMedium = { life = 0.07, size = 0.50, particles = 6, color = { 0.22, 0.65, 1.0 }, light = 4, distance = 170, lines = 2 },
     kineticArtillery = { life = 0.11, size = 0.88, particles = 14, color = { 1.0, 0.65, 0.16 }, light = 7, distance = 260, lines = 1 },

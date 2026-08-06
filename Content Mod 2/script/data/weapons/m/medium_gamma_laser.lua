@@ -6,9 +6,11 @@ weaponDefineRay({
     displayName = "中型伽马激光",
     englishName = "Medium Gamma Laser",
     slotTypes = { "M" },
+    behaviorType = "raycast",
     fxProfile = "gammaBeam",
     muzzleFxProfile = "gammaMedium",
     impactFxProfile = "gammaMedium",
+    soundProfileId = "mediumGammaLaser",
     projectileFxVariant = "none",
     damageMin = 43,
     damageMax = 115,
@@ -27,5 +29,4 @@ weaponDefineRay({
     aimLimitDeg = 70.0,
     aimPitchOffsetDeg = 6.0,
     officialComponentId = "MEDIUM_GAMMA_LASER",
-    family = "laser",
 })

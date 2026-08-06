@@ -5,7 +5,9 @@ weaponDefineRay({
     displayName = "灵能闪电",
     englishName = "Psionic Lightning",
     slotTypes = { "L" },
+    behaviorType = "raycast",
     fxProfile = "psionicArcBeam",
+    muzzleFxProfile = "none",
     impactFxProfile = "focusedArcImpact",
     soundProfileId = "focusedArcEmitter",
     iconPath = "MOD/gfx/ui/weapon_icons/psionic_lightning.png",
@@ -26,5 +28,4 @@ weaponDefineRay({
     aimPitchOffsetDeg = 6.0,
     officialComponentId = "PSIONIC_LIGHTNING",
     catalogTier = 5,
-    family = "psionic_lightning",
 })

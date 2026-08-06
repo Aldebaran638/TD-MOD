@@ -30,6 +30,24 @@ weaponFxProfiles = weaponFxProfiles or {
     energyTorpedo = true,
     strikeCraft = true,
 }
+weaponMuzzleFxProfiles = weaponMuzzleFxProfiles or {
+    none = true,
+    gammaLarge = true,
+    gammaMedium = true,
+    disruptor = true,
+    focusedArcDischarge = true,
+    gaussLarge = true,
+    gaussMedium = true,
+    kineticArtillery = true,
+    autocannonLarge = true,
+    autocannonMedium = true,
+    plasmaLarge = true,
+    plasmaMedium = true,
+    gigaMagneticLaunch = true,
+    neutronCompression = true,
+    swarmerLaunch = true,
+    torpedoLaunch = true,
+}
 weaponChargeFxProfiles = weaponChargeFxProfiles or {
     none = true,
     tachyonLance = true,
@@ -37,9 +55,34 @@ weaponChargeFxProfiles = weaponChargeFxProfiles or {
     perditionBeam = true,
 }
 weaponImpactFxProfiles = weaponImpactFxProfiles or {
+    none = true,
+    gammaLarge = true,
+    gammaMedium = true,
+    disruptorImplosion = true,
     tachyonLance = true,
     focusedArcImpact = true,
     perditionImpact = true,
+}
+weaponSoundProfiles = weaponSoundProfiles or {
+    none = true,
+    laser = true,
+    largeGammaLaser = true,
+    mediumGammaLaser = true,
+    tachyonLance = true,
+    focusedArcEmitter = true,
+    phaseDisruptor = true,
+    perditionBeam = true,
+    gammaStrikeCraft = true,
+    largePlasmaCannon = true,
+    mediumPlasmaCannon = true,
+    largeGaussCannon = true,
+    mediumGaussCannon = true,
+    kineticArtillery = true,
+    largeStormfireAutocannon = true,
+    mediumStormfireAutocannon = true,
+    swarmerMissile = true,
+    devastatorTorpedoes = true,
+    neutronLauncher = true,
 }
 
 local function _fillMissing(target, defaults)
@@ -129,22 +172,29 @@ function weaponDefineRay(definition)
             or definition.fxProfile == "focusedArcBeam"
             or definition.fxProfile == "psionicArcBeam") and "arc" or "beam",
     }
-    if tostring(definition.controllerType or "") == "chargedRay" then
+    local isChargedRay = tostring(definition.controllerType or "") == "chargedRay"
+    local isProfiledRay = tostring(definition.behaviorType or "") == "raycast"
+        and tostring(definition.fxProfile or "") ~= ""
+    if isChargedRay or isProfiledRay then
         local chargeFxProfile = tostring(definition.chargeFxProfile or "")
         local soundProfileId = tostring(definition.soundProfileId or "")
         local beamFxProfile = tostring(definition.fxProfile or "")
+        local muzzleFxProfile = tostring(definition.muzzleFxProfile or "")
         local impactFxProfile = tostring(definition.impactFxProfile or "")
-        if chargeFxProfile == "" or not weaponChargeFxProfiles[chargeFxProfile] then
+        if isChargedRay and (chargeFxProfile == "" or not weaponChargeFxProfiles[chargeFxProfile]) then
             error("charged ray " .. tostring(definition.weaponType) .. " has invalid chargeFxProfile")
         end
-        if soundProfileId == "" then
-            error("charged ray " .. tostring(definition.weaponType) .. " is missing soundProfileId")
+        if soundProfileId == "" or not weaponSoundProfiles[soundProfileId] then
+            error("ray " .. tostring(definition.weaponType) .. " has invalid soundProfileId")
         end
         if beamFxProfile == "" or not weaponFxProfiles[beamFxProfile] then
-            error("charged ray " .. tostring(definition.weaponType) .. " has invalid fxProfile")
+            error("ray " .. tostring(definition.weaponType) .. " has invalid fxProfile")
+        end
+        if not isChargedRay and (muzzleFxProfile == "" or not weaponMuzzleFxProfiles[muzzleFxProfile]) then
+            error("ray " .. tostring(definition.weaponType) .. " has invalid muzzleFxProfile")
         end
         if impactFxProfile == "" or not weaponImpactFxProfiles[impactFxProfile] then
-            error("charged ray " .. tostring(definition.weaponType) .. " has invalid impactFxProfile")
+            error("ray " .. tostring(definition.weaponType) .. " has invalid impactFxProfile")
         end
     end
     definition.damageMin = definition.damageMin or definition.damage

@@ -63,6 +63,36 @@ try {
         (New-Object Text.UTF8Encoding($false))
     )
 
+    $psionicLightningPath = Join-Path $fixtureMod "script\data\weapons\l\psionic_lightning.lua"
+    $psionicLightningText = [IO.File]::ReadAllText($psionicLightningPath)
+    [IO.File]::WriteAllText(
+        $psionicLightningPath,
+        $psionicLightningText.Replace('muzzleFxProfile = "none",', ''),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $missingMuzzleProfile = Invoke-Checker
+    Assert-True ($missingMuzzleProfile.ExitCode -eq 1) "rejects a non-charged ray without muzzleFxProfile"
+    Assert-True ($missingMuzzleProfile.Output -match "non-charged ray psionicLightning") "reports the non-charged ray profile contract"
+    [IO.File]::WriteAllText(
+        $psionicLightningPath,
+        $psionicLightningText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
+    [IO.File]::WriteAllText(
+        $psionicLightningPath,
+        $psionicLightningText.Replace('impactFxProfile = "focusedArcImpact",', 'impactFxProfile = "unknownImpact",'),
+        (New-Object Text.UTF8Encoding($false))
+    )
+    $unknownImpactProfile = Invoke-Checker
+    Assert-True ($unknownImpactProfile.ExitCode -eq 1) "rejects a non-charged ray with an unknown impact profile"
+    Assert-True ($unknownImpactProfile.Output -match "non-charged ray psionicLightning") "reports the unknown non-charged ray profile"
+    [IO.File]::WriteAllText(
+        $psionicLightningPath,
+        $psionicLightningText,
+        (New-Object Text.UTF8Encoding($false))
+    )
+
     $radialWeaponWheelPath = Join-Path $fixtureMod "script\weapon\client\common\hud\radial_weapon_wheel.lua"
     $radialWeaponWheelText = [IO.File]::ReadAllText($radialWeaponWheelPath)
     [IO.File]::WriteAllText(

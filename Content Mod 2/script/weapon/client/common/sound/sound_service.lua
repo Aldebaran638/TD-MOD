@@ -45,6 +45,7 @@ end
 function client.playWeaponSound(weaponType, eventType, x, y, z)
     local requested = tostring(weaponType or "")
     local definition = (weaponData or {})[requested] or {}
+    if tostring(definition.soundProfileId or "") == "none" then return end
     local profile = _weaponSoundHandles[requested]
         or _weaponSoundHandles[tostring(definition.soundProfileId or "")]
     if profile == nil then return end

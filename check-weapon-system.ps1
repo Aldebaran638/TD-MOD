@@ -198,6 +198,9 @@ $expectedEnglishNames = [ordered]@{
     gammaStrikeCraft = "Advanced Strike Craft"
 }
 $chargedRayIds = @("tachyonLance", "focusedArcEmitter")
+$profiledRayIds = @(
+    "tachyonLance", "focusedArcEmitter", "largeGammaLaser", "mediumGammaLaser", "phaseDisruptor"
+)
 
 foreach ($item in $expected.GetEnumerator()) {
     $id = [Regex]::Escape($item.Key)
@@ -208,7 +211,7 @@ foreach ($item in $expected.GetEnumerator()) {
     if ($ship -notmatch "`"$id`"") {
         Add-Issue "weapon $($item.Key) is absent from battlecruiser weapon pools"
     }
-    if ($chargedRayIds -notcontains $item.Key -and
+    if ($profiledRayIds -notcontains $item.Key -and
         $weaponSource -notmatch "(?s)officialComponentId\s*=\s*`"[A-Z0-9_]+`".*?family\s*=\s*`"[a-z0-9_]+`"") {
         Add-Issue "weapon $($item.Key) has no official component/family metadata"
     }
@@ -227,6 +230,74 @@ foreach ($item in $expected.GetEnumerator()) {
     if (-not (Test-Path -LiteralPath $soundDirectory -PathType Container) -or
         @(Get-ChildItem -LiteralPath $soundDirectory -Filter "*.ogg" -File -ErrorAction SilentlyContinue).Count -eq 0) {
         Add-Issue "weapon $($item.Key) has no dedicated OGG assets: $soundRelative"
+    }
+}
+
+$nonChargedRayDefinitions = @{
+    largeGammaLaser = @([string]$weaponSourceById.largeGammaLaser, "gammaBeam", "gammaLarge", "gammaLarge", "largeGammaLaser")
+    mediumGammaLaser = @([string]$weaponSourceById.mediumGammaLaser, "gammaBeam", "gammaMedium", "gammaMedium", "mediumGammaLaser")
+    psionicLightning = @([string]$weaponSourceById.psionicLightning, "psionicArcBeam", "none", "focusedArcImpact", "focusedArcEmitter")
+    phaseDisruptor = @([string]$weaponSourceById.phaseDisruptor, "arcBeam", "disruptor", "disruptorImplosion", "phaseDisruptor")
+    guardianPointDefense = @([string]$weaponSourceById.guardianPointDefense, "energyBeam", "none", "none", "none")
+}
+foreach ($rayId in $nonChargedRayDefinitions.Keys) {
+    $contract = $nonChargedRayDefinitions[$rayId]
+    $raySource = $contract[0]
+    if ($raySource -notmatch 'behaviorType\s*=\s*"raycast"' -or
+        $raySource -notmatch "fxProfile\s*=\s*`"$($contract[1])`"" -or
+        $raySource -notmatch "muzzleFxProfile\s*=\s*`"$($contract[2])`"" -or
+        $raySource -notmatch "impactFxProfile\s*=\s*`"$($contract[3])`"" -or
+        $raySource -notmatch "soundProfileId\s*=\s*`"$($contract[4])`"" -or
+        $raySource -match 'family\s*=') {
+        Add-Issue "non-charged ray $rayId must use the uniform four-profile contract without family"
+    }
+}
+
+if ($stellaris446Catalog -match 'family\s*=\s*"(?:laser|disruptor|psionic_disruptor)"' -or
+    $stellaris446Catalog -notmatch 'muzzleFxProfile\s*=\s*tier\.fx\s*==\s*"gammaBeam"' -or
+    $stellaris446Catalog -notmatch 'impactFxProfile\s*=\s*tier\.fx\s*==\s*"gammaBeam"' -or
+    $stellaris446Catalog -notmatch 'soundProfileId\s*=\s*tier\.fx\s*==\s*"gammaBeam"' -or
+    $stellaris446Catalog -notmatch 'muzzleFxProfile\s*=\s*"disruptor"' -or
+    $stellaris446Catalog -notmatch 'muzzleFxProfile\s*=\s*"none"') {
+    Add-Issue "Stellaris non-charged laser and arc definitions must use explicit four-profile metadata without family"
+}
+
+$generatedRayContracts = @{
+    PSIONIC_LIGHTNING = @("psionicArcBeam", "none", "focusedArcImpact", "focusedArcEmitter")
+    SMALL_PSIONIC_DISRUPTOR = @("psionicArcBeam", "none", "focusedArcImpact", "phaseDisruptor")
+    MEDIUM_PSIONIC_DISRUPTOR = @("psionicArcBeam", "none", "focusedArcImpact", "phaseDisruptor")
+    SMALL_RED_LASER = @("redBeam", "none", "none", "laser")
+    MEDIUM_RED_LASER = @("redBeam", "none", "none", "laser")
+    LARGE_RED_LASER = @("redBeam", "none", "none", "laser")
+    SMALL_BLUE_LASER = @("blueBeam", "none", "none", "laser")
+    MEDIUM_BLUE_LASER = @("blueBeam", "none", "none", "laser")
+    LARGE_BLUE_LASER = @("blueBeam", "none", "none", "laser")
+    SMALL_UV_LASER = @("uvBeam", "none", "none", "laser")
+    MEDIUM_UV_LASER = @("uvBeam", "none", "none", "laser")
+    LARGE_UV_LASER = @("uvBeam", "none", "none", "laser")
+    SMALL_XRAY_LASER = @("xrayBeam", "none", "none", "laser")
+    MEDIUM_XRAY_LASER = @("xrayBeam", "none", "none", "laser")
+    LARGE_XRAY_LASER = @("xrayBeam", "none", "none", "laser")
+    SMALL_GAMMA_LASER = @("gammaBeam", "gammaMedium", "gammaMedium", "mediumGammaLaser")
+    MEDIUM_GAMMA_LASER = @("gammaBeam", "gammaMedium", "gammaMedium", "mediumGammaLaser")
+    LARGE_GAMMA_LASER = @("gammaBeam", "gammaLarge", "gammaLarge", "largeGammaLaser")
+    SMALL_DISRUPTOR_1 = @("arcBeam", "disruptor", "disruptorImplosion", "phaseDisruptor")
+    MEDIUM_DISRUPTOR_1 = @("arcBeam", "disruptor", "disruptorImplosion", "phaseDisruptor")
+    SMALL_DISRUPTOR_2 = @("arcBeam", "disruptor", "disruptorImplosion", "phaseDisruptor")
+    MEDIUM_DISRUPTOR_2 = @("arcBeam", "disruptor", "disruptorImplosion", "phaseDisruptor")
+    SMALL_DISRUPTOR_3 = @("arcBeam", "disruptor", "disruptorImplosion", "phaseDisruptor")
+    MEDIUM_DISRUPTOR_3 = @("arcBeam", "disruptor", "disruptorImplosion", "phaseDisruptor")
+}
+foreach ($component in $generatedRayContracts.Keys) {
+    $profiles = $generatedRayContracts[$component]
+    $row = [Regex]::Match($stellarisGeneratedCatalog, "(?m)^.*component = `"$component`".*$").Value
+    if ($row -notmatch 'behaviorType = "raycast"' -or
+        $row -notmatch "fxProfile = `"$($profiles[0])`"" -or
+        $row -notmatch "muzzleFxProfile = `"$($profiles[1])`"" -or
+        $row -notmatch "impactFxProfile = `"$($profiles[2])`"" -or
+        $row -notmatch "soundProfileId = `"$($profiles[3])`"" -or
+        $row -match 'family =') {
+        Add-Issue "generated non-charged ray $component must use explicit four-profile metadata without family"
     }
 }
 
@@ -435,6 +506,24 @@ foreach ($profile in @(
     if ($standard -notmatch [Regex]::Escape("$profile = true")) {
         Add-Issue "FX profile is not registered: $profile"
     }
+}
+
+foreach ($profile in @("none", "gammaLarge", "gammaMedium", "disruptor", "focusedArcDischarge")) {
+    if ($weaponSchema -notmatch [Regex]::Escape("$profile = true")) {
+        Add-Issue "muzzle profile is not registered: $profile"
+    }
+}
+foreach ($profile in @("none", "gammaLarge", "gammaMedium", "disruptorImplosion", "focusedArcImpact")) {
+    if ($weaponSchema -notmatch [Regex]::Escape("$profile = true")) {
+        Add-Issue "impact profile is not registered: $profile"
+    }
+}
+if ($weaponSchema -notmatch 'weaponMuzzleFxProfiles' -or
+    $weaponSchema -notmatch 'weaponImpactFxProfiles' -or
+    $weaponSchema -notmatch 'weaponSoundProfiles' -or
+    $weaponSchema -notmatch 'has invalid muzzleFxProfile' -or
+    $weaponSchema -notmatch 'has invalid soundProfileId') {
+    Add-Issue "ray profile schema must validate muzzle, impact, and sound profile ids"
 }
 
 if ($stellaris446Catalog -notmatch 'fxPalette\s*=\s*"particleLance"' -or
@@ -916,6 +1005,16 @@ if ($clientWeaponBootstrap -notmatch '#include\s+"common/hud/radial_weapon_wheel
 if ([string]$weaponSourceById.phaseDisruptor -notmatch 'fxProfile\s*=\s*"arcBeam"' -or
     $genericRaycastFx -notmatch 'arcBeam\s*=\s*\{\s*color\s*=\s*\{\s*0\.18,\s*1\.0,\s*0\.32\s*\}') {
     Add-Issue "Phase Disruptor arc beam must use the green FX profile"
+}
+if ($genericRaycastFx -notmatch 'muzzleFxProfile\s*=\s*tostring\(definition\.muzzleFxProfile' -or
+    $genericRaycastFx -notmatch 'muzzleFxProfile\s*~=\s*"none"' -or
+    $genericRaycastFx -notmatch 'impactFxProfile\s*=\s*tostring\(definition\.impactFxProfile' -or
+    $genericRaycastFx -notmatch 'spawnGammaLaserMuzzleFx\(weaponType.*muzzleFxProfile' -or
+    $gammaLaserFx -notmatch 'function\s+client\.gammaLaserFxProfile\(weaponType,\s*profileId\)' -or
+    $weaponMuzzleFx -notmatch 'disruptor\s*=\s*\{' -or
+    $weaponSoundCatalog -notmatch 'laser\s*=\s*_genericLaserProfile\(\)' -or
+    $soundService -notmatch 'soundProfileId\s+or\s+""\)\s*==\s*"none"') {
+    Add-Issue "non-charged raycast FX and sound dispatch must use explicit profile fields"
 }
 if ([string]$weaponSourceById.focusedArcEmitter -notmatch '(?s)fxProfile\s*=\s*"focusedArcBeam".*?chargeDuration\s*=\s*0\.50' -or
     $genericRaycastFx -notmatch 'focusedArcBeam\s*=\s*\{\s*color\s*=\s*\{\s*0\.72,\s*0\.22,\s*1\.0\s*\}' -or

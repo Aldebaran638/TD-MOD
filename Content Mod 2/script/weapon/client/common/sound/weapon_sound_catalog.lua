@@ -39,6 +39,23 @@ local function _laserProfile(weaponType)
     }
 end
 
+local function _genericLaserProfile()
+    return {
+        fireNear = {
+            "MOD/sound/laser_fire_01.ogg",
+            "MOD/sound/laser_fire_02.ogg",
+            "MOD/sound/laser_fire_03.ogg",
+        },
+        fireFar = {
+            "MOD/sound/laser_fire_01.ogg",
+            "MOD/sound/laser_fire_02.ogg",
+            "MOD/sound/laser_fire_03.ogg",
+        },
+        hitNear = _direct("laser_hit_01.ogg"),
+        hitFar = _direct("laser_hit_01.ogg"),
+    }
+end
+
 local function _plasmaProfile(weaponType)
     return {
         fireNear = _paths(weaponType, "plasma_fire", 4),
@@ -58,6 +75,7 @@ local function _massDriverProfile(weaponType)
 end
 
 client.weaponSoundCatalog = {
+    laser = _genericLaserProfile(),
     perditionBeam = {
         windupNear = {
             "MOD/sound/perdition_beam_windup_01.ogg",

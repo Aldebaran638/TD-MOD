@@ -6,9 +6,11 @@ weaponDefineRay({
     displayName = "相位裂解炮",
     englishName = "Phase Disruptor",
     slotTypes = { "M" },
+    behaviorType = "raycast",
     fxProfile = "arcBeam",
     muzzleFxProfile = "disruptor",
     impactFxProfile = "disruptorImplosion",
+    soundProfileId = "phaseDisruptor",
     projectileFxVariant = "none",
     damageMin = 1,
     damageMax = 48,
@@ -30,5 +32,4 @@ weaponDefineRay({
     aimLimitDeg = 70.0,
     aimPitchOffsetDeg = 6.0,
     officialComponentId = "MEDIUM_DISRUPTOR_3",
-    family = "disruptor",
 })

@@ -95,8 +95,14 @@ for tierIndex, tier in ipairs(_laserTiers) do
             displayName = size.zh .. tier.zh,
             englishName = size.en .. " " .. tier.en,
             slotTypes = { slot },
+            behaviorType = "raycast",
             fxProfile = tier.fx,
-            soundProfileId = slot == "L" and "largeGammaLaser" or "mediumGammaLaser",
+            muzzleFxProfile = tier.fx == "gammaBeam"
+                and (slot == "L" and "gammaLarge" or "gammaMedium") or "none",
+            impactFxProfile = tier.fx == "gammaBeam"
+                and (slot == "L" and "gammaLarge" or "gammaMedium") or "none",
+            soundProfileId = tier.fx == "gammaBeam"
+                and (slot == "L" and "largeGammaLaser" or "mediumGammaLaser") or "laser",
             iconPath = _icon(tier.icon),
             damageMin = damage[1], damageMax = damage[2], powerUse = tier.power[slot],
             cooldown = size.laserCooldown, maxRange = size.laserRange,
@@ -105,7 +111,7 @@ for tierIndex, tier in ipairs(_laserTiers) do
             salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.10 },
             aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
             officialComponentId = size.official .. "_" .. tier.component,
-            catalogTier = tierIndex, family = "laser",
+            catalogTier = tierIndex,
         })
     end
 end
@@ -191,6 +197,7 @@ for tierIndex, tier in ipairs(_disruptorTiers) do
             displayName = size.zh .. tier.zh,
             englishName = size.en .. " " .. tier.en,
             slotTypes = { slot }, fxProfile = "arcBeam",
+            behaviorType = "raycast",
             muzzleFxProfile = "disruptor", impactFxProfile = "disruptorImplosion",
             soundProfileId = "phaseDisruptor", iconPath = _icon(tier.icon),
             damageMin = 1, damageMax = tier.maximum[sizeIndex], powerUse = tier.power[sizeIndex],
@@ -201,7 +208,7 @@ for tierIndex, tier in ipairs(_disruptorTiers) do
             salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.09 },
             aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
             officialComponentId = size.official .. "_" .. tier.component,
-            catalogTier = tierIndex, family = "disruptor",
+            catalogTier = tierIndex,
         })
     end
 end
@@ -371,8 +378,8 @@ for _, item in ipairs({
     local size = _sizes[item.slot]
     _defineRay({
         weaponType = item.id, displayName = item.zh, englishName = item.en,
-        slotTypes = { item.slot }, fxProfile = "psionicArcBeam",
-        impactFxProfile = "focusedArcImpact", soundProfileId = "phaseDisruptor",
+        slotTypes = { item.slot }, behaviorType = "raycast", fxProfile = "psionicArcBeam",
+        muzzleFxProfile = "none", impactFxProfile = "focusedArcImpact", soundProfileId = "phaseDisruptor",
         iconPath = _icon("psionic_disruptor"), damageMin = 1, damageMax = item.maximum,
         powerUse = item.power, cooldown = item.slot == "M" and 1.25 or 0.90,
         maxRange = size.disruptorRange, shieldFix = 1.25, armorFix = 1.0, bodyFix = 1.0,
@@ -380,7 +387,7 @@ for _, item in ipairs({
         mountProfile = size.mountEnergy, salvoProfile = { groupSize = 1, sequence = "sequential", interval = 0.09 },
         aimControlMode = "camera_limited", aimLimitDeg = 70.0, aimPitchOffsetDeg = 6.0,
         officialComponentId = item.component,
-        catalogTier = 4, family = "psionic_disruptor",
+        catalogTier = 4,
     })
 end
 

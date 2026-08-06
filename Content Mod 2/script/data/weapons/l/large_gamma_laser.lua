@@ -6,9 +6,11 @@ weaponDefineRay({
     displayName = "大型伽马激光",
     englishName = "Large Gamma Laser",
     slotTypes = { "L" },
+    behaviorType = "raycast",
     fxProfile = "gammaBeam",
     muzzleFxProfile = "gammaLarge",
     impactFxProfile = "gammaLarge",
+    soundProfileId = "largeGammaLaser",
     projectileFxVariant = "none",
     damageMin = 102,
     damageMax = 276,
@@ -27,5 +29,4 @@ weaponDefineRay({
     aimLimitDeg = 70.0,
     aimPitchOffsetDeg = 6.0,
     officialComponentId = "LARGE_GAMMA_LASER",
-    family = "laser",
 })
