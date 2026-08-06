@@ -36,28 +36,12 @@
 
 状态：已完成。
 
-### 编码检查
-
-脚本：
-
-- `check-encoding.ps1`
-- `test-check-encoding.ps1`
-
-检查内容：
-
-- UTF-8 BOM
-- UTF-16 LE/BE
-- 疑似无 BOM UTF-16
-- 损坏的 UTF-8
-- 可能的 ANSI/GBK 编码
-- 非 CRLF 换行符
-
 ### Lua 与 Include 检查
 
 脚本：
 
-- `check-lua.ps1`
-- `test-check-lua.ps1`
+- `harness/check-lua.ps1`
+- `harness/test-check-lua.ps1`
 
 检查内容：
 
@@ -67,6 +51,35 @@
 - 越出检查根目录的 include
 - 循环 include 调用链
 - Teardown 内置 `script/include/...` 特殊引用
+
+### Teardown API 检查
+
+脚本：
+
+- `harness/check-teardown-api.ps1`
+- `harness/test-check-teardown-api.ps1`
+
+检查内容：
+
+- Teardown 官方 API 符号、参数数量和参数类型。
+- API 调用所在 Lua 的 include 闭包。
+
+### XML 与武器检查
+
+脚本：
+
+- `harness/check-xml.ps1`
+- `harness/check-charged-weapons.ps1`
+- `harness/check-noncharged-lasers.ps1`
+- `harness/test-check-xml.ps1`
+- `harness/test-check-charged-weapons.ps1`
+- `harness/test-check-noncharged-lasers.ps1`
+
+检查内容：
+
+- 全量 XML 的可解析性。
+- 蓄力武器定义、profile 注册与运行时分派。
+- 非蓄力激光/弧射线定义、profile 注册与运行时分派。
 
 ## 第二阶段：整理文件夹结构
 
@@ -127,7 +140,7 @@ Content Mod 2/script/
 - 不包含 G 槽的框架切换武器时会跳过 G 槽。
 - M/G 请求不会进入对方的控制器。
 - M/G HUD 分别显示自己的冷却状态。
-- Lua 语法、include 调用链和编码检查全部通过。
+- Lua 语法、include 调用链、Teardown API、XML 与武器检查全部通过。
 - 在 Teardown 中分别验证 battleline 与 siege 框架的切换、锁定、开火和命中。
 
 ## 第四阶段：武器配置 UI MVP
@@ -228,10 +241,16 @@ Content Mod 2/script/weapon/client/config_ui/
 每次修改完成后必须运行：
 
 ```powershell
-.\check-encoding.ps1 -Path ".\Content Mod 2\script"
-.\check-lua.ps1 -Path ".\Content Mod 2\script"
-.\test-check-encoding.ps1
-.\test-check-lua.ps1
+.\harness\check-lua.ps1 -Path ".\Content Mod 2\script"
+.\harness\check-teardown-api.ps1 -Path ".\Content Mod 2\script"
+.\harness\check-xml.ps1 -Path ".\Content Mod 2"
+.\harness\check-charged-weapons.ps1 -Path ".\Content Mod 2"
+.\harness\check-noncharged-lasers.ps1 -Path ".\Content Mod 2"
+.\harness\test-check-lua.ps1
+.\harness\test-check-teardown-api.ps1
+.\harness\test-check-xml.ps1
+.\harness\test-check-charged-weapons.ps1
+.\harness\test-check-noncharged-lasers.ps1
 ```
 
 涉及运行逻辑、生命周期或 include 路径变化时，还必须进入 Teardown 进行实机验证。

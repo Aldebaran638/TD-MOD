@@ -1,14 +1,8 @@
 ﻿*
 !.gitignore
 !.gitattributes
-!check-encoding.ps1
-!test-check-encoding.ps1
-!check-lua.ps1
-!test-check-lua.ps1
-!check-weapon-system.ps1
-!test-check-weapon-system.ps1
-!check-strike-craft-motion.ps1
-!test-check-strike-craft-motion.ps1
+!harness/
+!harness/**
 !sync-cm2-to-global.ps1
 !docs/
 !docs/**

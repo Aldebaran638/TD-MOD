@@ -1,14 +1,20 @@
-# Teardown Lua syntax and #include chain checker
+# Teardown Lua syntax/#include checker and shared API validation engine.
 
 param(
     [string]$Path = ".\Content Mod 2\script",
     [string]$LuaExecutable = "",
     [string]$TeardownDataPath = "",
-    [switch]$SkipSemantic,
+    [ValidateSet("Syntax", "Api")]
+    [string]$Mode = "Syntax",
     [switch]$Verbose
 )
 
-Write-Host "=== Teardown Lua Syntax and Include Checker ===" -ForegroundColor Cyan
+if ($Mode -eq "Api") {
+    Write-Host "=== Teardown API Legality Checker ===" -ForegroundColor Cyan
+}
+else {
+    Write-Host "=== Teardown Lua Syntax and Include Checker ===" -ForegroundColor Cyan
+}
 Write-Host ""
 
 if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
@@ -97,12 +103,12 @@ if ($luaExe -eq $null) {
     exit 1
 }
 $teardownDataRoot = Find-TeardownDataPath -RequestedPath $TeardownDataPath
-if (-not $SkipSemantic -and $teardownDataRoot -eq $null) {
+if ($Mode -eq "Api" -and $teardownDataRoot -eq $null) {
     Write-Host "[ERROR] Teardown data directory not found; official API validation is unavailable." -ForegroundColor Red
     Write-Host "Pass -TeardownDataPath <Teardown install or data directory>." -ForegroundColor Yellow
     exit 1
 }
-if (-not $SkipSemantic -and [System.IO.Path]::GetFileName($luaExe) -notlike "lua-language-server*") {
+if ($Mode -eq "Api" -and [System.IO.Path]::GetFileName($luaExe) -notlike "lua-language-server*") {
     Write-Host "[ERROR] lua-language-server is required for semantic API validation." -ForegroundColor Red
     exit 1
 }
@@ -267,7 +273,7 @@ try {
 
     $tempFiles = @(Get-ChildItem -LiteralPath $tempRoot -Filter *.lua -Recurse -File)
     $syntaxIssue = $false
-    if ($tempFiles.Count -gt 0) {
+    if ($Mode -eq "Syntax" -and $tempFiles.Count -gt 0) {
         $expression = 'local failed=false; for i=4,#arg do local f,e=loadfile(arg[i]); if not f then io.stderr:write(e, string.char(10)); failed=true end end; if failed then os.exit(1) end'
         $arguments = @("-e", $expression, "--") + @($tempFiles.FullName)
         $syntaxOutput = & $luaExe @arguments 2>&1
@@ -286,7 +292,7 @@ try {
     }
 
     $semanticIssueCount = 0
-    if (-not $SkipSemantic -and $includeIssueCount -eq 0 -and $readIssueCount -eq 0 -and -not $syntaxIssue) {
+    if ($Mode -eq "Api" -and $includeIssueCount -eq 0 -and $readIssueCount -eq 0 -and -not $syntaxIssue) {
         $incomingCount = @{}
         foreach ($node in @($graph.Keys)) {
             $incomingCount[$node] = 0
@@ -461,14 +467,19 @@ function ServerCall(functionName, ...) end
     }
 
     Write-Host ""
-    Write-Host "Check complete: $($files.Count) Lua files, $externalIncludeCount engine includes, $semanticIssueCount semantic issues" -ForegroundColor Cyan
+    Write-Host "Check complete: $($files.Count) Lua files, $externalIncludeCount engine includes, $semanticIssueCount API issues" -ForegroundColor Cyan
 
     if ($includeIssueCount -eq 0 -and $readIssueCount -eq 0 -and -not $syntaxIssue -and $semanticIssueCount -eq 0) {
-        Write-Host "OK - Lua syntax, include closures, and Teardown API calls are valid." -ForegroundColor Green
+        if ($Mode -eq "Api") {
+            Write-Host "OK - Teardown API calls are valid." -ForegroundColor Green
+        }
+        else {
+            Write-Host "OK - Lua syntax and include closures are valid." -ForegroundColor Green
+        }
         exit 0
     }
 
-    Write-Host "FAILED - include issues: $includeIssueCount, read issues: $readIssueCount, syntax failure: $syntaxIssue, semantic issues: $semanticIssueCount" -ForegroundColor Red
+    Write-Host "FAILED - include issues: $includeIssueCount, read issues: $readIssueCount, syntax failure: $syntaxIssue, API issues: $semanticIssueCount" -ForegroundColor Red
     exit 1
 }
 finally {

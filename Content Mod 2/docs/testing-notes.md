@@ -17,10 +17,10 @@ record, not a replacement for the project check scripts.
 
 ## Test Levels
 
-1. Static contract: `check-weapon-system.ps1` catches data, includes, asset
-   references, and architecture boundaries.
-2. Checker self-test: `test-check-weapon-system.ps1` proves the checker rejects
-   intentional fixture violations.
+1. Static contract: the charged-weapon and non-charged-laser checkers validate
+   their data profile contracts and runtime dispatch boundaries.
+2. Checker self-test: each of the five Harness self-tests rejects intentional
+   fixture violations in its own category.
 3. Runtime fixture: isolated Lua state proves loadout resolution, requests,
    cooldowns, and synchronization payloads.
 4. In-game smoke test: validates engine physics, client/server ordering, sound,
@@ -137,11 +137,11 @@ Expected result: All required metadata resolves without fallback or missing
                 behavior and effects. Incompatible ships never offer it and
                 cannot use it. Defining `slotTypes` alone is insufficient: the
                 ship's `slotWeaponPools` must explicitly contain the weapon.
-Automation owner: Extend the existing weapon-system fixture when implementation
-                   begins to assert schema fields, registry references, pool
-                   membership, compatibility filtering, and duplicate-free
-                   catalog resolution. Keep `check-weapon-system.ps1` unchanged
-                   unless its contract is explicitly revised.
+Automation owner: Add a focused runtime fixture when implementation begins to
+                   assert pool membership, compatibility filtering, and
+                   duplicate-free catalog resolution. The Harness only checks
+                   Lua/XML/API legality plus charged and non-charged laser
+                   profile contracts.
 Manual validation: Configuration UI and firing pass across every compatible
                    ship, including a client/server session where applicable.
 Status: planned
