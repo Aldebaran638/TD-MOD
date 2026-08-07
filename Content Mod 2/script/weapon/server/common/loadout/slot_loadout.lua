@@ -46,23 +46,13 @@ local function _findConfiguration(definition, configurationId)
     return nil
 end
 
-local function _weaponAllowed(slotType, weaponType)
-    local pool = weaponCatalogGetSlotPool(slotType)
-    for i = 1, #pool do
-        if tostring(pool[i]) == tostring(weaponType) then
-            local weapon = (weaponData or {})[tostring(weaponType)]
-            if weapon == nil then return false end
-            local allowedSlots = weapon.slotTypes or {}
-            for slotIndex = 1, #allowedSlots do
-                if tostring(allowedSlots[slotIndex]) == tostring(slotType) then
-                    return weaponBehaviorProfiles ~= nil
-                        and weaponBehaviorProfiles[tostring(weapon.behaviorType or "")] == true
-                end
-            end
-            return false
-        end
-    end
-    return false
+local function _weaponAllowed(definition, configuration, group, weaponType)
+    return shipDefinitionWeaponFitsGroup(
+        definition,
+        configuration,
+        group,
+        weaponType
+    )
 end
 
 local function _buildResolvedLoadout(definition, configuration, requestedLoadout)
@@ -90,7 +80,7 @@ local function _buildResolvedLoadout(definition, configuration, requestedLoadout
             if candidate == nil or candidate == "" then
                 return nil, "missing weapon for slot group " .. slotType
             end
-            if not _weaponAllowed(slotType, candidate) then
+            if not _weaponAllowed(definition, configuration, group, candidate) then
                 return nil, "weapon " .. tostring(candidate) .. " is not allowed for slot group " .. slotType
             end
             result[groupId] = tostring(candidate)
@@ -113,28 +103,20 @@ local function _validateConfigurationShape(definition, configuration, loadout)
         local weaponType = tostring((loadout or {})[groupId]
             or (loadout or {})[loadoutKey]
             or (loadout or {})[slotType] or "")
-        local weaponDefinition = (weaponData or {})[weaponType] or {}
-        local profileName = shipDefinitionGetGroupMountProfileName(
-            groupId,
-            weaponDefinition.mountProfile
-        )
-        local profile = ((definition.weaponMountProfiles or {})[profileName]) or {}
         if slotType == "" or count <= 0 then
             return false, "invalid slot group"
         end
         if tostring(group.groupId or "") == "" then
             return false, "slot group " .. slotType .. " is missing groupId"
         end
-        local _, salvoError = shipDefinitionNormalizeSalvoGroupSize(
-            group.salvoGroupSize,
-            count
+        local fits, reason = shipDefinitionWeaponFitsGroup(
+            definition,
+            configuration,
+            group,
+            weaponType
         )
-        if salvoError ~= nil then
-            return false, "slot group " .. groupId .. ": " .. salvoError
-        end
-        if profileName == "" or #profile < count then
-            return false, "mount profile " .. profileName .. " has "
-                .. tostring(#profile) .. " mounts, expected " .. tostring(count)
+        if not fits then
+            return false, "slot group " .. groupId .. ": " .. tostring(reason)
         end
     end
     

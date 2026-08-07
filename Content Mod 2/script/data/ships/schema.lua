@@ -96,6 +96,57 @@ function shipDefinitionNormalizeSalvoGroupSize(value, count)
     return normalized, nil
 end
 
+function shipDefinitionFindSlotGroup(configuration, groupId)
+    local requested = tostring(groupId or "")
+    for _, group in ipairs((configuration or {}).slotGroups or {}) do
+        if tostring(group.groupId or "") == requested then return group end
+    end
+    return nil
+end
+
+-- Keep catalog eligibility and physical mount eligibility in one shared rule so
+-- the configurator never offers a weapon the runtime cannot construct.
+function shipDefinitionWeaponFitsGroup(definition, configuration, group, weaponType)
+    local ship = definition or {}
+    local slotGroup = group or {}
+    local slotType = string.upper(tostring(slotGroup.slotType or ""))
+    local typeId = tostring(weaponType or "")
+    local weapon = (weaponData or {})[typeId]
+    if slotType == "" or typeId == "" or weapon == nil then
+        return false, "weapon or slot group is missing"
+    end
+
+    local inCatalogPool = false
+    for _, candidate in ipairs(weaponCatalogGetSlotPool(slotType)) do
+        if tostring(candidate) == typeId then
+            inCatalogPool = true
+            break
+        end
+    end
+    if not inCatalogPool then return false, "weapon is not available for slot type" end
+    if weaponBehaviorProfiles == nil
+        or weaponBehaviorProfiles[tostring(weapon.behaviorType or "")] ~= true then
+        return false, "weapon behavior is not registered"
+    end
+
+    local count = math.max(0, math.floor(tonumber(slotGroup.count) or 0))
+    local profileName = shipDefinitionGetGroupMountProfileName(
+        slotGroup.groupId,
+        weapon.mountProfile
+    )
+    local profile = ((ship.weaponMountProfiles or {})[profileName]) or {}
+    if count <= 0 or profileName == "" or #profile < count then
+        return false, "mount profile does not cover slot group"
+    end
+
+    local _, salvoError = shipDefinitionNormalizeSalvoGroupSize(
+        slotGroup.salvoGroupSize,
+        count
+    )
+    if salvoError ~= nil then return false, salvoError end
+    return true, nil
+end
+
 function shipDefinitionResolveMounts(
     shipType,
     configurationId,
@@ -108,13 +159,7 @@ function shipDefinitionResolveMounts(
         configurationId or definition.defaultSlotConfigurationId
     )
     local requestedGroup = tostring(groupId or "")
-    local group = nil
-    for _, candidate in ipairs((configuration or {}).slotGroups or {}) do
-        if tostring(candidate.groupId or "") == requestedGroup then
-            group = candidate
-            break
-        end
-    end
+    local group = shipDefinitionFindSlotGroup(configuration, requestedGroup)
     if group == nil then return {} end
 
     local typeId = tostring(weaponType or "")
