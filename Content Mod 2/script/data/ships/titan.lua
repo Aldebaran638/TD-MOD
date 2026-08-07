@@ -48,12 +48,6 @@ shipDefinitionRegister({
         sensor = { "radarSystem", "graviticSensors", "subspaceSensors", "tachyonSensors" },
         reactor = { "fissionReactor", "fusionReactor", "coldFusionReactor", "antimatterReactor", "zeroPointReactor", "darkMatterReactor" },
     },
-    slotWeaponPools = {
-        T = { "perditionBeam" },
-        L = { "largeGammaLaser", "largePlasmaCannon", "largeGaussCannon", "kineticArtillery", "largeStormfireAutocannon" },
-        M = { "mediumGammaLaser", "mediumPlasmaCannon", "phaseDisruptor", "mediumGaussCannon", "mediumStormfireAutocannon", "swarmerMissile" },
-        H = { "gammaStrikeCraft" },
-    },
     weaponMountProfiles = shipMountProfileData.titan,
     defaultSlotConfigurationId = "titan_core",
     slotConfigurations = {

@@ -174,27 +174,6 @@ local battlecruiserDefinition = {
             baseParticleCount = 18,
         },
     },
-    slotWeaponPools = {
-        X = { "tachyonLance", "focusedArcEmitter", "gigaCannon" },
-        L = {
-            "largeGammaLaser",
-            "largePlasmaCannon",
-            "largeGaussCannon",
-            "kineticArtillery",
-            "largeStormfireAutocannon",
-        },
-        M = {
-            "mediumGammaLaser",
-            "mediumPlasmaCannon",
-            "phaseDisruptor",
-            "mediumGaussCannon",
-            "mediumStormfireAutocannon",
-            "swarmerMissile",
-        },
-        G = { "devastatorTorpedoes", "neutronLauncher" },
-        H = { "gammaStrikeCraft" },
-        P = { "flakArtillery", "guardianPointDefense" },
-    },
     weaponMountProfiles = shipMountProfileData.enigmaticCruiser,
     defaultSlotConfigurationId = "battleline_2x2l4m",
     slotConfigurations = {
@@ -283,9 +262,5 @@ local battlecruiserDefinition = {
         },
     },
 }
-
-for slotType, pool in pairs(stellarisWeaponPoolData or {}) do
-    battlecruiserDefinition.slotWeaponPools[slotType] = pool
-end
 
 shipDefinitionRegister(battlecruiserDefinition)

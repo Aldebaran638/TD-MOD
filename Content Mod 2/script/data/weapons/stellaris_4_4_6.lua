@@ -432,27 +432,3 @@ for _, item in ipairs(_crafts) do
 end
 
 #include "stellaris_generated_4_4_6.lua"
-
--- The battlecruiser UI consumes these sorted pools. Building them from the
--- catalog keeps every mechanical X/L/M/S/G/H weapon selectable without making
--- the ship definition duplicate the authoritative list.
-stellarisWeaponPoolData = {}
-for _, slot in ipairs({ "X", "L", "M", "S", "G", "H" }) do
-    stellarisWeaponPoolData[slot] = {}
-end
-for weaponType, definition in pairs(weaponData) do
-    for _, slot in ipairs(definition.slotTypes or {}) do
-        local pool = stellarisWeaponPoolData[slot]
-        if pool ~= nil then pool[#pool + 1] = weaponType end
-    end
-end
-for _, pool in pairs(stellarisWeaponPoolData) do
-    table.sort(pool, function(leftId, rightId)
-        local left = weaponData[leftId] or {}
-        local right = weaponData[rightId] or {}
-        local leftTier = tonumber(left.catalogTier) or 999
-        local rightTier = tonumber(right.catalogTier) or 999
-        if leftTier ~= rightTier then return leftTier < rightTier end
-        return tostring(left.englishName or leftId) < tostring(right.englishName or rightId)
-    end)
-end

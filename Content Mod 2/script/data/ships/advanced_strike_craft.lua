@@ -64,7 +64,6 @@ shipDefinitionRegister({
         componentId = "radarSystem",
     },
     componentPools = {},
-    slotWeaponPools = {},
     weaponMountProfiles = {},
     defaultSlotConfigurationId = "advanced_strike_craft_fixed",
     slotConfigurations = {

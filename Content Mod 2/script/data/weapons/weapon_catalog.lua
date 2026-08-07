@@ -27,4 +27,36 @@ weaponData = weaponData or {}
 #include "t/perdition_beam.lua"
 #include "stellaris_4_4_6.lua"
 
--- 可以在此处继续添加更多武器配置，例如：
+-- Every registered, runtime-ready weapon is discoverable by its declared slot
+-- types. Ship definitions only describe which slot groups physically exist.
+weaponSlotPools = {}
+
+for weaponType, definition in pairs(weaponData) do
+    local seenSlots = {}
+    if definition.runtimeReady ~= false
+        and weaponBehaviorProfiles[tostring(definition.behaviorType or "")] == true then
+        for _, slot in ipairs(definition.slotTypes or {}) do
+            local slotType = string.upper(tostring(slot or ""))
+            if slotType ~= "" and not seenSlots[slotType] then
+                seenSlots[slotType] = true
+                weaponSlotPools[slotType] = weaponSlotPools[slotType] or {}
+                weaponSlotPools[slotType][#weaponSlotPools[slotType] + 1] = weaponType
+            end
+        end
+    end
+end
+
+for _, pool in pairs(weaponSlotPools) do
+    table.sort(pool, function(leftId, rightId)
+        local left = weaponData[leftId] or {}
+        local right = weaponData[rightId] or {}
+        local leftTier = tonumber(left.catalogTier) or math.huge
+        local rightTier = tonumber(right.catalogTier) or math.huge
+        if leftTier ~= rightTier then return leftTier < rightTier end
+        return tostring(left.englishName or leftId) < tostring(right.englishName or rightId)
+    end)
+end
+
+function weaponCatalogGetSlotPool(slotType)
+    return weaponSlotPools[string.upper(tostring(slotType or ""))] or {}
+end

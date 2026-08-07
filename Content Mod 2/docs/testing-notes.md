@@ -115,16 +115,15 @@ Status: planned
 Scenario: Add one weapon definition and verify classification, values, effects,
           slot compatibility, configuration visibility, and actual firing.
 Risk: A definition appears valid in isolation but is missing an icon, numeric
-      value, behavior profile, FX profile, or explicit slot-pool registration;
+      value, behavior profile, FX profile, or a valid slotTypes declaration;
       compatible ships then show no weapon, show duplicates, or accept a weapon
       that the server cannot execute.
 Affected files/runtime layer: weapon catalog/schema, weapon data, behavior and
-      FX registries, ship slotWeaponPools, slot loadout validation, and UI cards.
+      FX registries, shared weapon slot pools, slot loadout validation, and UI cards.
 Setup: Create a uniquely named fixture weapon with a valid icon, numeric stats,
        behavior type, slotTypes, mount/slot values, and FX code. Register it in
-       every intended compatible ship's slotWeaponPools (or the shared pool),
-       and leave one ship with the slot type but without the pool entry as the
-       incompatible control.
+       the weapon catalog; a ship with a matching slot group is compatible, and
+       a ship without that slot group is the incompatible control.
 Action: Reload a fresh session. Verify catalog/checker loading, then open each
         compatible ship configuration and confirm one correctly labeled card,
         icon, values, slot, behavior, and FX. Select, save, reload, and fire it.
@@ -135,8 +134,8 @@ Expected result: All required metadata resolves without fallback or missing
                 references; each compatible configuration lists the weapon once,
                 preserves it across save/reload, and fires with the declared
                 behavior and effects. Incompatible ships never offer it and
-                cannot use it. Defining `slotTypes` alone is insufficient: the
-                ship's `slotWeaponPools` must explicitly contain the weapon.
+                cannot use it. A runtime-ready definition with `slotTypes` is
+                automatically available to every matching slot group.
 Automation owner: Add a focused runtime fixture when implementation begins to
                    assert pool membership, compatibility filtering, and
                    duplicate-free catalog resolution. The Harness only checks

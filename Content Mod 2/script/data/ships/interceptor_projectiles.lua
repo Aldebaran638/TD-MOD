@@ -20,7 +20,6 @@ local function registerInterceptorShip(definition)
         baseHullHP = tonumber(resolved.maxBodyHP) or 0.0,
     }
     resolved.componentPools = {}
-    resolved.slotWeaponPools = {}
     resolved.weaponMountProfiles = {}
     resolved.defaultSlotConfigurationId = resolved.shipType .. "_fixed"
     resolved.slotConfigurations = {

@@ -181,7 +181,7 @@ local function _copyComponentLoadout(source)
 end
 
 local function _weaponAllowed(slotType, weaponType)
-    local pool = ((_shipDefinition().slotWeaponPools or {})[slotType]) or {}
+    local pool = weaponCatalogGetSlotPool(slotType)
     for _, candidate in ipairs(pool) do
         if tostring(candidate) == tostring(weaponType or "") then return true end
     end
@@ -555,7 +555,7 @@ local function _drawWeaponSidebar(groupId)
         return
     end
 
-    local pool = ((_shipDefinition().slotWeaponPools or {})[slotType]) or {}
+    local pool = weaponCatalogGetSlotPool(slotType)
     local y = 104
     for _, weaponType in ipairs(pool) do
         if _drawWeaponOption(12, y, _leftWidth - 24, 74, slotType, loadoutKey, tostring(weaponType)) then

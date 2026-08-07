@@ -46,9 +46,8 @@ local function _findConfiguration(definition, configurationId)
     return nil
 end
 
-local function _weaponAllowed(definition, slotType, weaponType)
-    local pools = definition.slotWeaponPools or {}
-    local pool = pools[slotType] or {}
+local function _weaponAllowed(slotType, weaponType)
+    local pool = weaponCatalogGetSlotPool(slotType)
     for i = 1, #pool do
         if tostring(pool[i]) == tostring(weaponType) then
             local weapon = (weaponData or {})[tostring(weaponType)]
@@ -91,7 +90,7 @@ local function _buildResolvedLoadout(definition, configuration, requestedLoadout
             if candidate == nil or candidate == "" then
                 return nil, "missing weapon for slot group " .. slotType
             end
-            if not _weaponAllowed(definition, slotType, candidate) then
+            if not _weaponAllowed(slotType, candidate) then
                 return nil, "weapon " .. tostring(candidate) .. " is not allowed for slot group " .. slotType
             end
             result[groupId] = tostring(candidate)
