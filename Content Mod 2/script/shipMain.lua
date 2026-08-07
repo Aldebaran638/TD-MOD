@@ -1,5 +1,3 @@
--- 该脚本的body点击左键以后向前方发射快子光
--- 111
 #version 2
 #include "script/include/common.lua"
 

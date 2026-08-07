@@ -30,3 +30,6 @@
 
 - `#include "script/include/common.lua"` 是 Teardown 官方提供的特殊头文件。
 - 该文件不应当在模组目录中查找、创建、复制或作为缺失依赖处理。
+
+群星文件夹地址:
+"D:\SteamLibrary\steamapps\common\Stellaris"
