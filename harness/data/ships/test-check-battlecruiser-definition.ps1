@@ -45,6 +45,11 @@ try {
     Assert-True ($missing.ExitCode -eq 1 -and $missing.Text -match 'missing required field: shieldRadius') "rejects a missing top-level field"
     Copy-Item -LiteralPath (Join-Path $source "script\data\ships\battlecruiser\battlecruiser.lua") -Destination (Join-Path $mod "script\data\ships\battlecruiser\battlecruiser.lua") -Force
 
+    Rewrite-Definition '    externalDamage = {' '    componentPools = {},`n    externalDamage = {'
+    $legacyPool = Invoke-Checker
+    Assert-True ($legacyPool.ExitCode -eq 1 -and $legacyPool.Text -match 'unknown field: componentPools') "rejects obsolete component pools"
+    Copy-Item -LiteralPath (Join-Path $source "script\data\ships\battlecruiser\battlecruiser.lua") -Destination (Join-Path $mod "script\data\ships\battlecruiser\battlecruiser.lua") -Force
+
     Rewrite-Definition 'shieldRadius = 7,' "shieldRadius = 7,`n    xSlotCount = 2,"
     $extra = Invoke-Checker
     Assert-True ($extra.ExitCode -eq 1 -and $extra.Text -match 'unknown field: xSlotCount') "rejects a removed top-level field"

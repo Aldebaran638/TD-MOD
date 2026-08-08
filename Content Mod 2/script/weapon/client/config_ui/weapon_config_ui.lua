@@ -855,19 +855,14 @@ local function _drawDefenseSidebar(slotType)
         state.selectedDefenseIndex = 0
         return
     end
-    local pool = ((_shipDefinition().componentPools or {})[slotType]) or {}
+    local pool = shipComponentGetSlotPool(slotType)
     local options = {}
     local optional = slotType == "largeUtility" or slotType == "auxiliary"
     if optional then
         options[#options + 1] = ""
     end
     for _, componentId in ipairs(pool) do
-        local hiddenLowerReactorBooster = slotType == "auxiliary"
-            and (componentId == "reactorBooster1"
-                or componentId == "reactorBooster2")
-        if not hiddenLowerReactorBooster then
-            options[#options + 1] = componentId
-        end
+        options[#options + 1] = componentId
     end
     local listY = 112
     local listHeight = _mainHeight - listY - 12

@@ -26,7 +26,6 @@ shipDefinitionRegister({
         baseArmorHP = 15.0,
         baseHullHP = 30.0,
     },
-    componentPools = {},
     weaponMountProfiles = {},
     defaultSlotConfigurationId = "advancedSwarmerMissile_fixed",
     slotConfigurations = {

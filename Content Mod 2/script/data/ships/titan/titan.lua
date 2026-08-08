@@ -41,13 +41,6 @@ shipDefinitionRegister({
     },
     regen = { tickInterval = 0.1, shieldPerSecond = 0, armorPerSecond = 0, bodyPerSecond = 0, shieldNoDamageDelay = 2, armorNoDamageDelay = 4, bodyNoDamageDelay = 6 },
     componentProfile = { baseArmorRegenPercent = 0.001, baseHullRegenPercent = 0.001 },
-    componentPools = {
-        largeUtility = { "dragonScaleArmor", "darkMatterDeflector" },
-        auxiliary = { "advancedAfterburners", "shieldCapacitor", "naniteRepairSystem", "advancedShieldHardener", "livingReactiveArmor", "reactorBooster3", "darkMatterCloakingField" },
-        thruster = { "chemicalThrusters", "ionThrusters", "plasmaThrusters", "impulseThrusters", "darkMatterThrusters" },
-        sensor = { "radarSystem", "graviticSensors", "subspaceSensors", "tachyonSensors" },
-        reactor = { "fissionReactor", "fusionReactor", "coldFusionReactor", "antimatterReactor", "zeroPointReactor", "darkMatterReactor" },
-    },
     weaponMountProfiles = shipMountProfileData.titan,
     defaultSlotConfigurationId = "titan_core",
     slotConfigurations = {

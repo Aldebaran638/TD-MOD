@@ -197,7 +197,7 @@ $source = Remove-LuaComments ([IO.File]::ReadAllText($definitionPath))
 $table = Find-NamedTable $source "battlecruiserDefinition"
 if ($null -eq $table) { Add-Issue "battlecruiserDefinition table is missing or malformed"; exit 1 }
 $top = Get-TableEntries $source $table.Open $table.Close
-$topAllowed = @("shipType", "displayName", "maxShieldHP", "maxArmorHP", "maxBodyHP", "shieldRadius", "flightProfile", "engineFx", "engineSound", "cameraProfile", "regen", "componentProfile", "componentPools", "externalDamage", "weaponMountProfiles", "defaultSlotConfigurationId", "slotConfigurations")
+$topAllowed = @("shipType", "displayName", "maxShieldHP", "maxArmorHP", "maxBodyHP", "shieldRadius", "flightProfile", "engineFx", "engineSound", "cameraProfile", "regen", "componentProfile", "externalDamage", "weaponMountProfiles", "defaultSlotConfigurationId", "slotConfigurations")
 Require-ExactKeys $top $topAllowed $topAllowed "battlecruiserDefinition"
 
 Assert-LiteralField $source (Get-NamedEntry $top "shipType") '^"enigmaticCruiser"$' "shipType must be enigmaticCruiser"
@@ -230,7 +230,6 @@ $null = Validate-NestedTable $source (Get-NamedEntry $top "regen") @("tickInterv
 $null = Validate-NestedTable $source (Get-NamedEntry $top "componentProfile") @("baseArmorRegenPercent", "baseHullRegenPercent") @("baseArmorRegenPercent", "baseHullRegenPercent") "componentProfile"
 $null = Validate-NestedTable $source (Get-NamedEntry $top "externalDamage") @("bulletDamage", "explosionMinStrength", "explosionMaxDistance", "explosionDamageScale") @("bulletDamage", "explosionMinStrength", "explosionMaxDistance", "explosionDamageScale") "externalDamage"
 
-$pools = Validate-NestedTable $source (Get-NamedEntry $top "componentPools") @("largeUtility", "auxiliary", "thruster", "sensor", "reactor") @("largeUtility", "auxiliary", "thruster", "sensor", "reactor") "componentPools"
 $configEntry = Get-NamedEntry $top "slotConfigurations"
 if ($null -eq $configEntry -or $configEntry.ValueStart -ge $source.Length -or $source[$configEntry.ValueStart] -ne '{') {
     Add-Issue "slotConfigurations must be a table"

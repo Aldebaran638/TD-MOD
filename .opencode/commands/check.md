@@ -12,6 +12,7 @@ if ($?) { .\harness\check-charged-weapons.ps1 -Path ".\Content Mod 2" }
 if ($?) { .\harness\check-noncharged-lasers.ps1 -Path ".\Content Mod 2" }
 if ($?) { .\harness\check-ballistic-weapons.ps1 -Path ".\Content Mod 2" }
 if ($?) { .\harness\data\weapons\check-explicit-weapon-definitions.ps1 -Path ".\Content Mod 2" }
+if ($?) { .\harness\data\components\check-explicit-component-definitions.ps1 -Path ".\Content Mod 2" }
 if ($?) { .\harness\data\ships\check-battlecruiser-definition.ps1 -Path ".\Content Mod 2" }
 if ($?) { .\harness\test-check-lua.ps1 }
 if ($?) { .\harness\test-check-teardown-api.ps1 }
@@ -20,6 +21,7 @@ if ($?) { .\harness\test-check-charged-weapons.ps1 }
 if ($?) { .\harness\test-check-noncharged-lasers.ps1 }
 if ($?) { .\harness\test-check-ballistic-weapons.ps1 }
 if ($?) { .\harness\data\weapons\test-check-explicit-weapon-definitions.ps1 }
+if ($?) { .\harness\data\components\test-check-explicit-component-definitions.ps1 }
 if ($?) { .\harness\data\ships\test-check-battlecruiser-definition.ps1 }
 ```
 

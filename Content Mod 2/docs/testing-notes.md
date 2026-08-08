@@ -15,6 +15,7 @@ record, not a replacement for the project check scripts.
 | UI scale | Wheel and configuration cards remain readable with many groups and long labels. | Screenshot/manual UI pass at supported resolutions. |
 | Validation contract maintenance | Checkers match current audio, asset, and runtime contracts. | Checker self-test before any checker change. |
 | Explicit weapon definitions | Slot weapons remain individually auditable and cannot regress to tier loops, batch tables, wrappers, or unsupported registration functions. | `harness/data/weapons/check-explicit-weapon-definitions.ps1` and its self-test. |
+| Explicit component definitions | A/L 防护组件与反应堆、推进器、传感器保持单条定义、正确槽位目录和自动发现注册。 | `harness/data/components/check-explicit-component-definitions.ps1` and its self-test. |
 
 ## Test Levels
 

@@ -63,7 +63,6 @@ shipDefinitionRegister({
         trackingAdd = 0.0,
         componentId = "radarSystem",
     },
-    componentPools = {},
     weaponMountProfiles = {},
     defaultSlotConfigurationId = "advanced_strike_craft_fixed",
     slotConfigurations = {

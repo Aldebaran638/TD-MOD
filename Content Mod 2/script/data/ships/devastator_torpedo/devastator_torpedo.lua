@@ -26,7 +26,6 @@ shipDefinitionRegister({
         baseArmorHP = 10.0,
         baseHullHP = 10.0,
     },
-    componentPools = {},
     weaponMountProfiles = {},
     defaultSlotConfigurationId = "devastatorTorpedo_fixed",
     slotConfigurations = {
