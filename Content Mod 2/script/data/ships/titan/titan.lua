@@ -8,7 +8,7 @@ shipDefinitionRegister({
     maxShieldHP = 0,
     maxArmorHP = 0,
     maxBodyHP = 40000,
-    shieldRadius = 15,
+    shieldRadius = 20,
     flightProfile = {
         gravityCompensation = 10, forwardAcceleration = 30, backwardAcceleration = 24,
         maxCombatSpeed = 28, maxReverseSpeed = 18, quadraticDamping = 7000,

@@ -9,7 +9,6 @@ local battlecruiserDefinition = {
     maxArmorHP = 0,
     maxBodyHP = 10000,
     shieldRadius = 7,
-    xSlotCount = 2,
     flightProfile = {
         gravityCompensation = 10.0,
         disableLiftVoxelRatio = 0.6,
@@ -109,16 +108,11 @@ local battlecruiserDefinition = {
     regen = {
         tickInterval = 0.1,
         shieldPerSecond = 0.0,
-        armorPerSecond = 0.0,
-        bodyPerSecond = 0.0,
         shieldNoDamageDelay = 2.0,
         armorNoDamageDelay = 4.0,
         bodyNoDamageDelay = 6.0,
     },
     componentProfile = {
-        baseShieldHP = 0.0,
-        baseArmorHP = 0.0,
-        baseHullHP = 10000.0,
         baseArmorRegenPercent = 0.001,
         baseHullRegenPercent = 0.001,
     },
@@ -162,17 +156,6 @@ local battlecruiserDefinition = {
         explosionMinStrength = 0.5,
         explosionMaxDistance = 10.0,
         explosionDamageScale = 30.0,
-    },
-    fx = {
-        shieldHit = {
-            ringParticleRadius = 0.1,
-            ringRadiusStep = 1.0,
-            ringRoundCount = 3,
-            roundTime = 0.14,
-            centerSpawnRadius = 0.5,
-            centerSpawnCount = 20,
-            baseParticleCount = 18,
-        },
     },
     weaponMountProfiles = shipMountProfileData.enigmaticCruiser,
     defaultSlotConfigurationId = "battleline_2x2l4m",

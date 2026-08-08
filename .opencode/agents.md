@@ -8,6 +8,7 @@
 .\harness\check-noncharged-lasers.ps1 -Path ".\Content Mod 2"
 .\harness\check-ballistic-weapons.ps1 -Path ".\Content Mod 2"
 .\harness\data\weapons\check-explicit-weapon-definitions.ps1 -Path ".\Content Mod 2"
+.\harness\data\ships\check-battlecruiser-definition.ps1 -Path ".\Content Mod 2"
 .\harness\test-check-lua.ps1
 .\harness\test-check-teardown-api.ps1
 .\harness\test-check-xml.ps1
@@ -15,6 +16,7 @@
 .\harness\test-check-noncharged-lasers.ps1
 .\harness\test-check-ballistic-weapons.ps1
 .\harness\data\weapons\test-check-explicit-weapon-definitions.ps1
+.\harness\data\ships\test-check-battlecruiser-definition.ps1
 ```
 
 如果修改涉及 `Content Mod 2` 以外的脚本目录，也需检查对应路径：
