@@ -124,7 +124,7 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
         tostring(definition.interceptorClass or ""), true)
     SetInt(prefix .. "/ownerBody", 0, true)
     SetBool(prefix .. "/playerLockable",
-        definition.playerLockable ~= false, true)
+        shipDefinitionIsPlayerLockable(definition), true)
     SetBool(prefix .. "/cloaked", false, true)
     SetFloat(prefix .. "/cloakStrength", 0.0, true)
     SetFloat(prefix .. "/shieldRadius", tonumber(definition.shieldRadius) or 0.0, true)

@@ -1,6 +1,12 @@
 # 项目验证要求
 
-每次完成代码修改后，必须运行以下检查脚本。如果任何检查失败，先修复问题再结束会话。
+每次完成代码修改后，必须通过完整 Harness 检查。如果任何检查失败，先修复问题再结束会话。提交前由仓库 Git `pre-commit` Hook 自动执行同一套检查。
+
+```powershell
+.\harness\check-all.ps1
+```
+
+检查入口按以下顺序运行：
 
 ```powershell
 .\harness\check-lua.ps1 -Path ".\Content Mod 2\script"
@@ -11,7 +17,7 @@
 .\harness\check-ballistic-weapons.ps1 -Path ".\Content Mod 2"
 .\harness\data\weapons\check-explicit-weapon-definitions.ps1 -Path ".\Content Mod 2"
 .\harness\data\components\check-explicit-component-definitions.ps1 -Path ".\Content Mod 2"
-.\harness\data\ships\check-battlecruiser-definition.ps1 -Path ".\Content Mod 2"
+.\harness\data\ships\check-ship-definitions.ps1 -Path ".\Content Mod 2"
 .\harness\test-check-lua.ps1
 .\harness\test-check-teardown-api.ps1
 .\harness\test-check-xml.ps1
@@ -20,7 +26,7 @@
 .\harness\test-check-ballistic-weapons.ps1
 .\harness\data\weapons\test-check-explicit-weapon-definitions.ps1
 .\harness\data\components\test-check-explicit-component-definitions.ps1
-.\harness\data\ships\test-check-battlecruiser-definition.ps1
+.\harness\data\ships\test-check-ship-definitions.ps1
 ```
 
 如果修改涉及 `Content Mod 2` 以外的脚本目录，也需检查对应路径：

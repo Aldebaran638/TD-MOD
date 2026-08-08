@@ -16,6 +16,7 @@ record, not a replacement for the project check scripts.
 | Validation contract maintenance | Checkers match current audio, asset, and runtime contracts. | Checker self-test before any checker change. |
 | Explicit weapon definitions | Slot weapons remain individually auditable and cannot regress to tier loops, batch tables, wrappers, or unsupported registration functions. | `harness/data/weapons/check-explicit-weapon-definitions.ps1` and its self-test. |
 | Explicit component definitions | A/L 防护组件与反应堆、推进器、传感器保持单条定义、正确槽位目录和自动发现注册。 | `harness/data/components/check-explicit-component-definitions.ps1` and its self-test. |
+| Ship definition contracts | Player warships share a complete controllable-ship contract; AI strike craft, missiles, and torpedoes share the minimal AI contract and cannot regain empty player configuration fields. | `harness/data/ships/check-ship-definitions.ps1` and its self-test. |
 
 ## Test Levels
 

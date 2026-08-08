@@ -2,9 +2,11 @@
 
 #include "battlecruiser_mounts.lua"
 
-local battlecruiserDefinition = {
+shipDefinitionRegister({
     shipType = "enigmaticCruiser",
-    displayName = "Enigma Battlecruiser",
+    displayName = "神秘战巡舰",
+    englishName = "Enigma Battlecruiser",
+    controlMode = "player",
     maxShieldHP = 0,
     maxArmorHP = 0,
     maxBodyHP = 10000,
@@ -213,6 +215,4 @@ local battlecruiserDefinition = {
             },
         },
     },
-}
-
-shipDefinitionRegister(battlecruiserDefinition)
+})

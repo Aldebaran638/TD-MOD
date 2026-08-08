@@ -21,7 +21,7 @@ function client.weaponConfigurationBindingInit(shipType, shipBody)
     state.snapshot = client.weaponLocalConfigRead(state.shipType)
     state.serverProfile = nil
     local definition = (shipTypeRegistryData or {})[state.shipType] or {}
-    state.complete = definition.playerConfigurable == false
+    state.complete = not shipDefinitionIsPlayerConfigurable(definition)
     state.requestPending = false
     state.retryRemain = 0.0
     state.lastError = ""

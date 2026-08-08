@@ -124,7 +124,7 @@ local function _shipLabel()
     if known ~= nil then return known end
     return {
         zh = tostring(_shipDefinition().displayName or state.shipType),
-        en = string.upper(tostring(state.shipType or "")),
+        en = tostring(_shipDefinition().englishName or state.shipType),
     }
 end
 
@@ -151,7 +151,7 @@ end
 local function _configurableShipTypes()
     local result = {}
     for shipType, definition in pairs(shipTypeRegistryData or {}) do
-        if definition.playerConfigurable ~= false
+        if shipDefinitionIsPlayerConfigurable(definition)
             and #(definition.slotConfigurations or {}) > 0 then
             result[#result + 1] = tostring(shipType)
         end
@@ -369,7 +369,7 @@ local function _open()
         currentType = tostring(client.shipContextGetType() or "")
     end
     local currentDefinition = (shipTypeRegistryData or {})[currentType] or {}
-    if currentDefinition.playerConfigurable ~= false
+    if shipDefinitionIsPlayerConfigurable(currentDefinition)
         and #(currentDefinition.slotConfigurations or {}) > 0 then
         state.shipType = currentType
     elseif #available > 0 and _shipDefinition().shipType == nil then

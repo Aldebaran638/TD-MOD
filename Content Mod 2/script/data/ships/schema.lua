@@ -2,9 +2,258 @@
 
 shipTypeRegistryData = shipTypeRegistryData or {}
 
+local _playerDefinitionFields = {
+    shipType = true,
+    displayName = true,
+    englishName = true,
+    controlMode = true,
+    maxShieldHP = true,
+    maxArmorHP = true,
+    maxBodyHP = true,
+    shieldRadius = true,
+    flightProfile = true,
+    engineFx = true,
+    engineSound = true,
+    cameraProfile = true,
+    regen = true,
+    componentProfile = true,
+    externalDamage = true,
+    weaponMountProfiles = true,
+    defaultSlotConfigurationId = true,
+    slotConfigurations = true,
+}
+
+local _aiDefinitionFields = {
+    shipType = true,
+    displayName = true,
+    englishName = true,
+    controlMode = true,
+    interceptorClass = true,
+    maxShieldHP = true,
+    maxArmorHP = true,
+    maxBodyHP = true,
+    shieldRadius = true,
+    externalDamage = true,
+}
+
+local _aiRequiredFields = {
+    shipType = true,
+    displayName = true,
+    englishName = true,
+    controlMode = true,
+    interceptorClass = true,
+    maxShieldHP = true,
+    maxArmorHP = true,
+    maxBodyHP = true,
+    shieldRadius = true,
+}
+
+local _flightFields = {
+    gravityCompensation = true,
+    disableLiftVoxelRatio = true,
+    forwardAcceleration = true,
+    backwardAcceleration = true,
+    maxCombatSpeed = true,
+    maxReverseSpeed = true,
+    quadraticDamping = true,
+    dampingMinSpeed = true,
+    attitude = true,
+    roll = true,
+}
+
+local _attitudeFields = {
+    yawDeadzone = true,
+    pitchDeadzone = true,
+    yawSoftZone = true,
+    pitchSoftZone = true,
+    yawForceGain = true,
+    pitchForceGain = true,
+    yawForceMax = true,
+    pitchForceMax = true,
+    yawDamping = true,
+    pitchDamping = true,
+    yawRateDeadzone = true,
+    pitchRateDeadzone = true,
+    yawLeverArm = true,
+    pitchLeverArm = true,
+}
+
+local _rollFields = {
+    deadzone = true,
+    forceGain = true,
+    forceMax = true,
+    damping = true,
+    rateDeadzone = true,
+    leverArm = true,
+    sign = true,
+}
+
+local _engineFxFields = {
+    speedForFullTrail = true,
+    throttleResponse = true,
+    particleRate = true,
+    maxParticleBurstsPerFrame = true,
+    particleNearDistance = true,
+    particleCutoffDistance = true,
+    renderCutoffDistance = true,
+    idleParticleRateScale = true,
+    farParticleRateScale = true,
+    profiles = true,
+}
+
+local _engineSoundFields = { idleLoopPath = true, volume = true }
+local _cameraFields = {
+    distance = true,
+    distanceMin = true,
+    distanceMax = true,
+    pitchLimit = true,
+    rearYawMin = true,
+    rearYawMax = true,
+    mouseSensitivity = true,
+    glideStrength = true,
+    zoomSpeed = true,
+    switchDuration = true,
+    frontOffset = true,
+    frontPitchLimit = true,
+    frontYawMin = true,
+    frontYawMax = true,
+    rearDefaultPitch = true,
+    freelookTurnYawError = true,
+    freelookTurnPitchError = true,
+    rmbLongPressSeconds = true,
+    fov = true,
+}
+local _regenFields = {
+    tickInterval = true,
+    shieldPerSecond = true,
+    shieldNoDamageDelay = true,
+    armorNoDamageDelay = true,
+    bodyNoDamageDelay = true,
+}
+local _componentProfileFields = {
+    baseArmorRegenPercent = true,
+    baseHullRegenPercent = true,
+}
+local _externalDamageFields = {
+    bulletDamage = true,
+    explosionMinStrength = true,
+    explosionMaxDistance = true,
+    explosionDamageScale = true,
+}
+
+local function _requireTable(definition, fieldName)
+    local value = definition[fieldName]
+    if type(value) ~= "table" then
+        error("ship " .. tostring(definition.shipType or "")
+            .. " is missing table " .. fieldName)
+    end
+    return value
+end
+
+local function _validateFields(value, allowed, context, required)
+    for key, _ in pairs(value) do
+        if allowed[key] ~= true then
+            error(context .. " has unsupported field " .. tostring(key))
+        end
+    end
+    for key, _ in pairs(required or allowed) do
+        if value[key] == nil then
+            error(context .. " is missing field " .. tostring(key))
+        end
+    end
+end
+
+local function _validatePlayerDefinition(definition)
+    _validateFields(definition, _playerDefinitionFields,
+        "player ship " .. tostring(definition.shipType or ""))
+    _validateFields(_requireTable(definition, "flightProfile"), _flightFields,
+        "flightProfile")
+    _validateFields(_requireTable(definition.flightProfile, "attitude"),
+        _attitudeFields, "flightProfile.attitude")
+    _validateFields(_requireTable(definition.flightProfile, "roll"),
+        _rollFields, "flightProfile.roll")
+    _validateFields(_requireTable(definition, "engineFx"), _engineFxFields,
+        "engineFx", {
+            speedForFullTrail = true,
+            throttleResponse = true,
+            particleRate = true,
+            maxParticleBurstsPerFrame = true,
+            particleNearDistance = true,
+            particleCutoffDistance = true,
+            renderCutoffDistance = true,
+            idleParticleRateScale = true,
+            farParticleRateScale = true,
+        })
+    _validateFields(_requireTable(definition, "engineSound"), _engineSoundFields,
+        "engineSound")
+    _validateFields(_requireTable(definition, "cameraProfile"), _cameraFields,
+        "cameraProfile")
+    _validateFields(_requireTable(definition, "regen"), _regenFields,
+        "regen")
+    _validateFields(_requireTable(definition, "componentProfile"),
+        _componentProfileFields, "componentProfile")
+    _validateFields(_requireTable(definition, "externalDamage"),
+        _externalDamageFields, "externalDamage")
+    if type(definition.weaponMountProfiles) ~= "table" then
+        error("player ship " .. tostring(definition.shipType or "")
+            .. " is missing weaponMountProfiles")
+    end
+    if type(definition.slotConfigurations) ~= "table"
+        or #definition.slotConfigurations == 0 then
+        error("player ship " .. tostring(definition.shipType or "")
+            .. " must have slotConfigurations")
+    end
+end
+
+local function _validateAiDefinition(definition)
+    _validateFields(definition, _aiDefinitionFields,
+        "AI ship " .. tostring(definition.shipType or ""), _aiRequiredFields)
+    local class = tostring(definition.interceptorClass or "")
+    if class ~= "strike_craft" and class ~= "missile" and class ~= "torpedo" then
+        error("AI ship " .. tostring(definition.shipType or "")
+            .. " has invalid interceptorClass " .. class)
+    end
+    if class == "strike_craft" then
+        _validateFields(_requireTable(definition, "externalDamage"),
+            _externalDamageFields, "externalDamage")
+    elseif definition.externalDamage ~= nil then
+        error("AI ship " .. tostring(definition.shipType or "")
+            .. " must not define externalDamage")
+    end
+end
+
+function shipDefinitionIsPlayerControlled(definition)
+    return tostring((definition or {}).controlMode or "") == "player"
+end
+
+function shipDefinitionIsAiControlled(definition)
+    return tostring((definition or {}).controlMode or "") == "ai"
+end
+
+function shipDefinitionIsPlayerConfigurable(definition)
+    return shipDefinitionIsPlayerControlled(definition)
+end
+
+function shipDefinitionIsPlayerLockable(definition)
+    return shipDefinitionIsPlayerControlled(definition)
+end
+
 function shipDefinitionRegister(definition)
-    local shipType = tostring((definition or {}).shipType or "")
+    if type(definition) ~= "table" then error("ship definition must be a table") end
+    local shipType = tostring(definition.shipType or "")
     if shipType == "" then error("ship definition is missing shipType") end
+    if tostring(definition.displayName or "") == ""
+        or tostring(definition.englishName or "") == "" then
+        error("ship " .. shipType .. " is missing localized names")
+    end
+    local controlMode = tostring(definition.controlMode or "")
+    if controlMode == "player" then
+        _validatePlayerDefinition(definition)
+    elseif controlMode == "ai" then
+        _validateAiDefinition(definition)
+    else
+        error("ship " .. shipType .. " has invalid controlMode " .. controlMode)
+    end
     if shipTypeRegistryData[shipType] ~= nil then
         error("duplicate ship definition " .. shipType)
     end

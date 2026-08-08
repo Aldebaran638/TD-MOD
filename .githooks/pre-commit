@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+# Run the repository Harness before allowing a commit.
+
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+windows_root=$(wslpath -w "$repo_root")
+
+include_global=""
+if git diff --cached --name-only -- "Global Mod/script" | grep -q .; then
+    include_global="-IncludeGlobal"
+fi
+
+echo "Running project Harness before commit..."
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$windows_root\harness\check-all.ps1" $include_global
