@@ -18,16 +18,16 @@ function Rewrite { param([string]$Path, [string]$Before, [string]$After); $text 
 try {
     Copy-Item -LiteralPath $source -Destination $mod -Recurse
     $valid = Invoke-Checker; Assert-True ($valid.ExitCode -eq 0) "accepts normalized ballistic weapon contracts"
-    $kinetic = Join-Path $mod "script\data\weapons\l\kinetic_artillery.lua"
+    $kinetic = Join-Path $mod "script\data\weapons\l\stellaris.lua"
     Rewrite $kinetic 'impactFxProfile = "kineticArtillery",' ''
     $missing = Invoke-Checker; Assert-True ($missing.ExitCode -eq 1) "rejects missing impactFxProfile"
-    Copy-Item -LiteralPath (Join-Path $source "script\data\weapons\l\kinetic_artillery.lua") -Destination $kinetic -Force
-    $generated = Join-Path $mod "script\data\weapons\stellaris_generated_4_4_6.lua"
-    Rewrite $generated 'projectileRadius = item.projectileRadius,' ''
-    $propagation = Invoke-Checker; Assert-True ($propagation.ExitCode -eq 1) "rejects missing generated projectile radius propagation"
-    Copy-Item -LiteralPath (Join-Path $source "script\data\weapons\stellaris_generated_4_4_6.lua") -Destination $generated -Force
-    Rewrite $generated 'impactFxProfile = item.impactFxProfile,' 'impactFxProfile = item.brokenImpactFxProfile,'
-    $dispatch = Invoke-Checker; Assert-True ($dispatch.ExitCode -eq 1) "rejects broken generated impact dispatch"
+    Copy-Item -LiteralPath (Join-Path $source "script\data\weapons\l\stellaris.lua") -Destination $kinetic -Force
+    $generated = $kinetic
+    Rewrite $generated 'projectileRadius = 1.0,' ''
+    $propagation = Invoke-Checker; Assert-True ($propagation.ExitCode -eq 1) "rejects missing projectile radius"
+    Copy-Item -LiteralPath (Join-Path $source "script\data\weapons\l\stellaris.lua") -Destination $generated -Force
+    Rewrite $generated 'impactFxProfile = "kineticArtillery",' 'impactFxProfile = "brokenImpact",'
+    $dispatch = Invoke-Checker; Assert-True ($dispatch.ExitCode -eq 1) "rejects invalid impact profile"
 }
 finally { if ($KeepFixtures) { Write-Host "Fixtures kept at: $root" } elseif (Test-Path -LiteralPath $root) { Remove-Item -LiteralPath $root -Recurse -Force } }
 

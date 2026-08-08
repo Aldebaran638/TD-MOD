@@ -1,5 +1,7 @@
 ---@diagnostic disable: undefined-global
 
+-- Unified T slot weapon definitions.
+
 -- Stellaris 4.4.6: PERDITION_BEAM_TITAN. It remains a charged release weapon
 -- while using its own bounded inferno impact behaviour.
 weaponDefineRay({

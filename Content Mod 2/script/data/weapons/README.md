@@ -55,4 +55,4 @@ projectileRadius = 0.35
 
 `fxProfile` 只决定飞行表现，`projectileFxVariant` 只决定飞行外观变体，`muzzleFxProfile` 只决定枪口，`impactFxProfile` 只决定命中。不要使用旧的嵌套 `projectileProfile`、`projectileGravityScale` 或 `explosionStrength`，除非对应运行时先明确接入。
 
-所有武器都应声明 `slotTypes`、`mountProfile`、`salvoProfile`、`aimControlMode`、`aimLimitDeg`、`aimPitchOffsetDeg` 和 `officialComponentId`。`stellaris_generated_4_4_6.lua` 的原始清单可以保留 `family` 作为导入来源分类，但加载时必须先转换为上述显式字段；`family` 不得复制到 `weaponData`，也不得被客户端或服务端运行时分派读取。
+每个槽位目录只保留一个 `stellaris.lua` 定义入口。所有武器都应声明 `slotTypes`、`mountProfile`、`salvoProfile`、`aimControlMode`、`aimLimitDeg`、`aimPitchOffsetDeg` 和 `officialComponentId`。导入行中的 `family` 仅用于将 Stellaris 原始数据转换为显式运行时字段；不得复制到 `weaponData`，也不得被客户端或服务端运行时分派读取。

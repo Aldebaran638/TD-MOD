@@ -23,7 +23,10 @@ client.weaponConfigUiState = client.weaponConfigUiState or {
     centerScroll = 0,
     summaryScroll = 0,
     detailsOpen = false,
+    language = "en",
+    hoveredComponent = nil,
 }
+client.weaponConfigUiState.language = client.weaponConfigUiState.language or "en"
 
 local _panelWidth = 1280
 local _panelHeight = 940
@@ -36,6 +39,7 @@ local _footerHeight = 92
 local _footerY = _panelHeight - _footerHeight - 14
 local _mainHeight = _footerY - _contentTop - 14
 local _slotOrder = { "T", "X", "L", "L2", "G", "M", "H", "P" }
+local _localized
 
 local _slotLabels = {
     T = { zh = "泰坦武器", en = "T-SLOT", color = { 0.95, 0.22, 0.18 } },
@@ -351,7 +355,7 @@ local function _selectNextShipType()
     state.framePickerOpen = false
     _resetScrollState()
     state.dirty = false
-    state.message = "已载入本地设计 / LOCAL DESIGN LOADED"
+    state.message = _localized("已载入本地设计", "LOCAL DESIGN LOADED")
     _ensureDraft()
 end
 
@@ -382,7 +386,7 @@ local function _open()
     state.selectedDefenseIndex = 0
     state.framePickerOpen = false
     _resetScrollState()
-    state.message = "已载入本地设计 / LOCAL DESIGN LOADED"
+    state.message = _localized("已载入本地设计", "LOCAL DESIGN LOADED")
     state.open = true
     SetBool(_uiRegistryKey(), true)
     _ensureDraft()
@@ -430,7 +434,7 @@ function client.weaponConfiguratorSaveTemplate(
     if not ((profile.energy or {}).valid) then
         local state = client.weaponConfigUiState
         state.pending = false
-        state.message = "能源必须为正 / POSITIVE POWER BALANCE REQUIRED"
+        state.message = _localized("能源必须为正", "POSITIVE POWER BALANCE REQUIRED")
         return false
     end
     client.weaponLocalConfigWrite(
@@ -441,8 +445,7 @@ function client.weaponConfiguratorSaveTemplate(
     )
     local state = client.weaponConfigUiState
     state.pending = false
-    state.message = "设计已保存，仅影响下一艘生成的飞船"
-        .. " / SAVED FOR NEXT SPAWN"
+    state.message = _localized("设计已保存，仅影响下一艘生成的飞船", "SAVED FOR NEXT SPAWN")
     state.dirty = false
     return true
 end
@@ -476,11 +479,74 @@ local function _text(text, size, r, g, b, a)
     UiText(tostring(text or ""))
 end
 
+_localized = function(zh, en)
+    local state = client.weaponConfigUiState
+    if state.language == "zh" then return tostring(zh or en or "") end
+    return tostring(en or zh or "")
+end
+
+local function _displayName(definition, fallback)
+    local entry = definition or {}
+    return _localized(entry.displayName, entry.englishName or fallback)
+end
+
+local function _componentTooltipLines(componentId)
+    local component = (shipComponentData or {})[tostring(componentId or "")] or {}
+    local lines = { _displayName(component, componentId) }
+    local function add(value, zh, en, format, multiplier)
+        local numeric = (tonumber(value) or 0.0) * (multiplier or 1.0)
+        if numeric ~= 0.0 then
+            lines[#lines + 1] = _localized(zh, en) .. string.format(format, numeric)
+        end
+    end
+    add(component.powerUse, "功耗 ", "POWER USE ", "%.0f")
+    add(component.powerOutput, "功率输出 ", "POWER OUTPUT ", "%.0f")
+    add(component.speedMultiplier, "速度 ", "SPEED ", "%+.0f%%", 100)
+    add(component.turnResponseMultiplier, "转向响应 ", "TURN RESPONSE ", "%+.0f%%", 100)
+    add(component.turnForceMultiplier, "转向力度 ", "TURN FORCE ", "%+.0f%%", 100)
+    add(component.armorAdd, "装甲 ", "ARMOR ", "%+.0f")
+    add(component.shieldAdd, "护盾 ", "SHIELD ", "%+.0f")
+    add(component.shieldRegenAdd, "护盾回复 ", "SHIELD REGEN ", "%+.2f")
+    add(component.armorHardening, "装甲硬化 ", "ARMOR HARDENING ", "%+.0f%%", 100)
+    add(component.shieldHardening, "护盾硬化 ", "SHIELD HARDENING ", "%+.0f%%", 100)
+    add(component.hullRegenPercent, "船体修复 ", "HULL REPAIR ", "%+.2f%%", 100)
+    add(component.armorRegenPercent, "装甲修复 ", "ARMOR REPAIR ", "%+.2f%%", 100)
+    add(component.reactorOutputMultiplier, "反应堆输出 ", "REACTOR OUTPUT ", "%+.0f%%", 100)
+    add(component.sensorRange, "探测范围 ", "SENSOR RANGE ", "%.0f")
+    add(component.sensorInterval, "扫描间隔 ", "SCAN INTERVAL ", "%.2fs")
+    add(component.trackingAdd, "追踪 ", "TRACKING ", "%+.0f")
+    add(component.cloakStrength, "隐形强度 ", "CLOAK STRENGTH ", "%.0f")
+    add(component.cloakedShieldReduction, "隐形护盾削弱 ", "CLOAK SHIELD REDUCTION ", "%+.0f%%", 100)
+    return lines
+end
+
+local function _drawComponentTooltip(componentId)
+    if tostring(componentId or "") == "" then return end
+    local lines = _componentTooltipLines(componentId)
+    local width = 250
+    local height = 18 + #lines * 18
+    local mouseX, mouseY = UiGetMousePos()
+    local x = _clamp(mouseX + 18, 8, _panelWidth - width - 8)
+    local y = _clamp(mouseY + 18, 8, _panelHeight - height - 8)
+    UiPush()
+        UiTranslate(x, y)
+        UiColor(0.004, 0.020, 0.024, 0.98)
+        UiRect(width, height)
+        UiColor(0.20, 0.72, 0.62, 0.95)
+        UiRectOutline(width, height, 1)
+        UiTranslate(10, 9)
+        for index, line in ipairs(lines) do
+            _text(line, index == 1 and 13 or 10, index == 1 and 0.94 or 0.70, index == 1 and 0.98 or 0.84, index == 1 and 0.94 or 0.80, 1)
+            UiTranslate(0, 18)
+        end
+    UiPop()
+end
+
 local function _bilingual(zh, en, zhSize, enSize, color, alpha)
     local c = color or { 0.86, 0.94, 0.96 }
-    _text(zh, zhSize or 20, c[1], c[2], c[3], alpha or 1)
-    UiTranslate(0, (zhSize or 20) + 5)
-    _text(en, enSize or 11, c[1] * 0.72, c[2] * 0.82, c[3] * 0.88, alpha or 1)
+    local size = client.weaponConfigUiState.language == "zh"
+        and (zhSize or 20) or (enSize or zhSize or 20)
+    _text(_localized(zh, en), size, c[1], c[2], c[3], alpha or 1)
 end
 
 local function _panel(x, y, width, height, strong)
@@ -528,10 +594,16 @@ local function _drawHeader()
     UiPush()
         UiTranslate(_panelWidth - 330, 17)
         UiAlign("right top")
-        _text(ship.zh, 19, 0.90, 0.77, 0.34, 1)
-        UiTranslate(0, 23)
-        _text(ship.en, 10, 0.58, 0.70, 0.68, 1)
+        _text(_localized(ship.zh, ship.en), 19, 0.90, 0.77, 0.34, 1)
     UiPop()
+    local state = client.weaponConfigUiState
+    if _button(_panelWidth - 104, 14, 38, 38,
+        state.language == "en" and "中" or "EN", false, true) then
+        state.language = state.language == "en" and "zh" or "en"
+        state.message = state.dirty
+            and _localized("未保存的设计", "UNSAVED DESIGN")
+            or _localized("已载入本地设计", "LOCAL DESIGN LOADED")
+    end
     if _button(_panelWidth - 54, 14, 38, 38, "X", false, true) then
         _close()
     end
@@ -558,7 +630,7 @@ local function _drawShipSidebar(configuration)
 
     local available = _configurableShipTypes()
     if #available > 1 and
-        _button(16, 176, _leftWidth - 32, 38, "切换舰船 / NEXT SHIP", false, true) then
+        _button(16, 176, _leftWidth - 32, 38, _localized("切换舰船", "NEXT SHIP"), false, true) then
         _selectNextShipType()
     end
 
@@ -566,15 +638,13 @@ local function _drawShipSidebar(configuration)
         UiTranslate(18, 258)
         _bilingual("部署状态", "DEPLOYMENT", 18, 9)
         UiTranslate(0, 54)
-        _text("配置应用于下一艘飞船", 14, 0.70, 0.82, 0.78, 1)
-        UiTranslate(0, 22)
-        _text("APPLIES TO NEXT SPAWN", 8, 0.40, 0.60, 0.56, 1)
+        _text(_localized("配置应用于下一艘飞船", "APPLIES TO NEXT SPAWN"), 14, 0.70, 0.82, 0.78, 1)
     UiPop()
 
     if state.dirty then
         UiPush()
             UiTranslate(18, 552)
-            _text("● 未保存 / UNSAVED", 12, 0.95, 0.64, 0.24, 1)
+            _text(_localized("● 未保存", "● UNSAVED"), 12, 0.95, 0.64, 0.24, 1)
         UiPop()
     end
 end
@@ -607,23 +677,21 @@ local function _drawWeaponOption(x, y, width, height, slotType, loadoutKey, weap
             UiImageBox(icon, 42, 42, 0, 0)
         end
         UiTranslate(52, 1)
-        _text(tostring(definition.displayName or weaponType), 14, 0.88, 0.95, 0.92, 1)
-        UiTranslate(0, 18)
-        _text(tostring(definition.englishName or weaponType), 8, 0.48, 0.68, 0.64, 1)
+        _text(_displayName(definition, weaponType), 14, 0.88, 0.95, 0.92, 1)
         UiTranslate(width - 74, -16)
-        _text(selected and "已装备" or "", 9, 0.40, 0.86, 0.72, 1)
+        _text(selected and _localized("已装备", "EQUIPPED") or "", 9, 0.40, 0.86, 0.72, 1)
         local clicked = hover and InputPressed("lmb")
     UiPop()
     return clicked
 end
 
 local _weaponCategoryLabels = {
-    { id = "all", zh = "全部" },
-    { id = "ray", zh = "射线" },
-    { id = "charged", zh = "蓄力射线" },
-    { id = "projectile", zh = "弹道" },
-    { id = "missile", zh = "导弹" },
-    { id = "craft", zh = "舰载机" },
+    { id = "all", zh = "全部", en = "ALL" },
+    { id = "ray", zh = "射线", en = "RAY" },
+    { id = "charged", zh = "蓄力射线", en = "CHARGED" },
+    { id = "projectile", zh = "弹道", en = "BALLISTIC" },
+    { id = "missile", zh = "导弹", en = "MISSILE" },
+    { id = "craft", zh = "舰载机", en = "CRAFT" },
 }
 
 local function _drawSearchBox(x, y, width)
@@ -644,7 +712,7 @@ local function _drawSearchBox(x, y, width)
             value = ""
         end
         UiTranslate(10, 8)
-        _text(value == "" and "搜索英文名或 ID" or value, 11,
+        _text(value == "" and _localized("搜索英文名或 ID", "SEARCH ENGLISH NAME OR ID") or value, 11,
             value == "" and 0.44 or 0.86, value == "" and 0.62 or 0.93,
             value == "" and 0.58 or 0.88, 1)
         if hover and InputPressed("lmb") then state.weaponSearchFocused = true end
@@ -675,7 +743,7 @@ local function _drawWeaponCategoryChips(x, y, width, configuration, group)
             y + row * 30,
             chipWidth,
             26,
-            category.zh .. " " .. tostring(count),
+            _localized(category.zh, category.en) .. " " .. tostring(count),
             selected,
             enabled
         ) then
@@ -706,7 +774,7 @@ local function _drawWeaponSidebar(groupId)
         _bilingual("选择 " .. displaySlot .. " 武器", "SELECT " .. displaySlot,
             18, 9, slot.color)
     UiPop()
-    if _button(16, 68, _leftWidth - 32, 34, "← 返回 / BACK", false, true) then
+    if _button(16, 68, _leftWidth - 32, 34, _localized("← 返回", "← BACK"), false, true) then
         state.selectedSlot = ""
         return
     end
@@ -726,7 +794,7 @@ local function _drawWeaponSidebar(groupId)
         for _, weaponType in ipairs(pool) do
             if _drawWeaponOption(0, y, _leftWidth - 36, 54, slotType, loadoutKey, tostring(weaponType)) then
                 state.loadout[loadoutKey] = tostring(weaponType)
-                state.message = "未保存的设计 / UNSAVED DESIGN"
+                state.message = _localized("未保存的设计", "UNSAVED DESIGN")
                 state.dirty = true
             end
             y = y + 58
@@ -738,7 +806,7 @@ local function _drawWeaponSidebar(groupId)
     UiPop()
     UiPush()
         UiTranslate(18, listY - 17)
-        _text("结果 " .. tostring(#pool), 9, 0.44, 0.68, 0.62, 1)
+        _text(_localized("结果 ", "RESULTS ") .. tostring(#pool), 9, 0.44, 0.68, 0.62, 1)
     UiPop()
 end
 
@@ -764,9 +832,10 @@ local function _drawDefenseOption(x, y, width, height, slotType, componentId)
             UiImageBox(icon, 48, 48, 0, 0)
         end
         UiTranslate(60, 2)
-        _text(tostring(definition.displayName or "空槽"), 14, 0.88, 0.95, 0.92, 1)
-        UiTranslate(0, 20)
-        _text(tostring(definition.englishName or "EMPTY"), 9, 0.48, 0.68, 0.64, 1)
+        _text(_displayName(definition, _localized("空槽", "EMPTY")), 14, 0.88, 0.95, 0.92, 1)
+        if hover and tostring(componentId or "") ~= "" then
+            state.hoveredComponent = tostring(componentId)
+        end
         local clicked = hover and InputPressed("lmb")
     UiPop()
     return clicked
@@ -776,14 +845,12 @@ local function _drawDefenseSidebar(slotType)
     local state = client.weaponConfigUiState
     local label = _componentSlotLabels[slotType]
         or { zh = slotType, en = string.upper(slotType), mark = "?" }
-    local slotLabel = label.zh
-    local english = label.en
     _panel(0, 0, _leftWidth, _mainHeight, true)
     UiPush()
         UiTranslate(18, 17)
-        _bilingual("选择" .. slotLabel, "SELECT " .. english, 18, 9)
+        _bilingual("选择" .. label.zh, "SELECT " .. label.en, 18, 9)
     UiPop()
-    if _button(16, 68, _leftWidth - 32, 34, "← 返回 / BACK", false, true) then
+    if _button(16, 68, _leftWidth - 32, 34, _localized("← 返回", "← BACK"), false, true) then
         state.selectedDefenseType = ""
         state.selectedDefenseIndex = 0
         return
@@ -815,7 +882,7 @@ local function _drawDefenseSidebar(slotType)
             if _drawDefenseOption(0, y, _leftWidth - 36, 58, slotType, componentId) then
                 state.componentLoadout[slotType][state.selectedDefenseIndex] =
                     tostring(componentId)
-                state.message = "未保存的设计 / UNSAVED DESIGN"
+                state.message = _localized("未保存的设计", "UNSAVED DESIGN")
                 state.dirty = true
             end
             y = y + 62
@@ -856,6 +923,9 @@ local function _drawDefenseSlot(x, y, size, slotType, index)
         UiTranslate(4, 3)
         local label = _componentSlotLabels[slotType] or { mark = "?" }
         _text(label.mark, 12, 0.9, 0.9, 0.65, 1)
+        if hover and componentId ~= "" then
+            state.hoveredComponent = componentId
+        end
         local clicked = hover and InputPressed("lmb")
     UiPop()
     return clicked
@@ -904,9 +974,7 @@ local function _drawGroupCard(x, y, width, height, group)
             UiImageBox(icon, 46, 46, 0, 0)
         end
         UiTranslate(56, 0)
-        _text(tostring(weapon.displayName or weaponType), 13, 0.90, 0.95, 0.92, 1)
-        UiTranslate(0, 17)
-        _text(tostring(weapon.englishName or weaponType), 9, 0.48, 0.68, 0.64, 1)
+        _text(_displayName(weapon, weaponType), 13, 0.90, 0.95, 0.92, 1)
         local clicked = hover and InputPressed("lmb")
     UiPop()
     return clicked
@@ -921,7 +989,7 @@ local function _drawCenter(configuration, x, width)
         18,
         320,
         56,
-        frame.zh .. "  /  " .. frame.en .. "  ▼",
+        _localized(frame.zh, frame.en) .. "  ▼",
         false,
         true
     ) then
@@ -1041,13 +1109,13 @@ local function _drawCenter(configuration, x, width)
             local energy = profile.energy or {}
             UiPush()
                 UiTranslate(8, detailsY + 42)
-                _text("船体 / 装甲 / 护盾  " .. string.format("%.0f / %.0f / %.0f", protection.maxBodyHP or 0, protection.maxArmorHP or 0, protection.maxShieldHP or 0), 11, 0.78, 0.90, 0.84, 1)
+                _text(_localized("船体 / 装甲 / 护盾  ", "HULL / ARMOR / SHIELD  ") .. string.format("%.0f / %.0f / %.0f", protection.maxBodyHP or 0, protection.maxArmorHP or 0, protection.maxShieldHP or 0), 11, 0.78, 0.90, 0.84, 1)
                 UiTranslate(0, 22)
-                _text("硬化  " .. string.format("装甲 %.0f%%  护盾 %.0f%%", (protection.armorHardening or 0) * 100, (protection.shieldHardening or 0) * 100), 10, 0.64, 0.80, 0.76, 1)
+                _text(_localized("硬化  ", "HARDENING  ") .. string.format(_localized("装甲 %.0f%%  护盾 %.0f%%", "ARMOR %.0f%%  SHIELD %.0f%%"), (protection.armorHardening or 0) * 100, (protection.shieldHardening or 0) * 100), 10, 0.64, 0.80, 0.76, 1)
                 UiTranslate(0, 20)
-                _text("机动  " .. string.format("速度 +%.0f%%  转向 +%.0f%%", (mobility.speedMultiplier or 0) * 100, (mobility.turnResponseMultiplier or 0) * 100), 10, 0.64, 0.80, 0.76, 1)
+                _text(_localized("机动  ", "MOBILITY  ") .. string.format(_localized("速度 +%.0f%%  转向 +%.0f%%", "SPEED +%.0f%%  TURN +%.0f%%"), (mobility.speedMultiplier or 0) * 100, (mobility.turnResponseMultiplier or 0) * 100), 10, 0.64, 0.80, 0.76, 1)
                 UiTranslate(0, 20)
-                _text("能源  " .. string.format("%.0f - %.0f = %.0f", energy.output or 0, energy.use or 0, energy.balance or 0), 10, energy.valid and 0.58 or 0.96, energy.valid and 0.76 or 0.30, energy.valid and 0.70 or 0.22, 1)
+                _text(_localized("能源  ", "POWER  ") .. string.format("%.0f - %.0f = %.0f", energy.output or 0, energy.use or 0, energy.balance or 0), 10, energy.valid and 0.58 or 0.96, energy.valid and 0.76 or 0.30, energy.valid and 0.70 or 0.22, 1)
             UiPop()
         end
     UiPop()
@@ -1081,9 +1149,7 @@ local function _drawSummary(configuration, x)
         state.summaryScroll = _updateScroll("summaryScroll", viewportHeight, contentHeight)
         UiTranslate(0, -state.summaryScroll)
         local frame = _frameLabel(configuration)
-        _text(frame.zh, 16, 0.90, 0.77, 0.34, 1)
-        UiTranslate(0, 19)
-        _text(frame.en, 8, 0.48, 0.64, 0.60, 1)
+        _text(_localized(frame.zh, frame.en), 16, 0.90, 0.77, 0.34, 1)
         UiTranslate(0, 28)
         for _, group in ipairs(groups) do
             local slotType = tostring(group.slotType or "")
@@ -1098,18 +1164,16 @@ local function _drawSummary(configuration, x)
                 UiColor(slot.color[1], slot.color[2], slot.color[3], 0.8)
                 UiRect(3, 42)
                 UiTranslate(10, 8)
-                _text(displaySlot .. "×" .. tostring(group.count or 0) .. " - " .. tostring(weapon.displayName or weaponType), 11, 0.86, 0.94, 0.90, 1)
-                UiTranslate(0, 16)
-                _text(tostring(weapon.englishName or weaponType), 8, 0.45, 0.65, 0.60, 1)
+                _text(displaySlot .. "×" .. tostring(group.count or 0) .. " - " .. _displayName(weapon, weaponType), 11, 0.86, 0.94, 0.90, 1)
             UiPop()
             UiTranslate(0, 50)
         end
         UiColor(0.06, 0.25, 0.22, 1)
         UiRect(viewportWidth - 8, 1)
         UiTranslate(0, 14)
-        _text("能源余额  " .. string.format("%.0f", energy.balance or 0), 12, energy.valid and 0.58 or 0.96, energy.valid and 0.76 or 0.30, energy.valid and 0.70 or 0.22, 1)
+        _text(_localized("能源余额  ", "POWER BALANCE  ") .. string.format("%.0f", energy.balance or 0), 12, energy.valid and 0.58 or 0.96, energy.valid and 0.76 or 0.30, energy.valid and 0.70 or 0.22, 1)
         UiTranslate(0, 20)
-        _text(energy.valid and "设计有效" or "能源不足", 10, energy.valid and 0.58 or 0.96, energy.valid and 0.76 or 0.30, energy.valid and 0.70 or 0.22, 1)
+        _text(energy.valid and _localized("设计有效", "DESIGN VALID") or _localized("能源不足", "INSUFFICIENT POWER"), 10, energy.valid and 0.58 or 0.96, energy.valid and 0.76 or 0.30, energy.valid and 0.70 or 0.22, 1)
     UiPop()
 
     UiPush()
@@ -1178,11 +1242,11 @@ local function _drawFramePicker()
                 _bilingual(label.zh, label.en, 24, 11,
                     selected and { 0.94, 0.80, 0.38 } or { 0.82, 0.91, 0.87 })
                 UiTranslate(0, 72)
-                _text("武器槽 / WEAPON SLOTS", 12, 0.38, 0.62, 0.58, 1)
+                _text(_localized("武器槽", "WEAPON SLOTS"), 12, 0.38, 0.62, 0.58, 1)
                 UiTranslate(0, 31)
                 _text(_groupSummary(candidate), 25, 0.80, 0.92, 0.86, 1)
                 UiTranslate(0, 62)
-                _text(selected and "当前框架 / CURRENT" or "点击选择 / SELECT",
+                _text(selected and _localized("当前框架", "CURRENT") or _localized("点击选择", "SELECT"),
                     13, selected and 0.92 or 0.46, selected and 0.76 or 0.70,
                     selected and 0.30 or 0.64, 1)
             UiPop()
@@ -1193,7 +1257,7 @@ local function _drawFramePicker()
                 state.selectedSlot = ""
                 state.selectedDefenseType = ""
                 state.selectedDefenseIndex = 0
-                state.message = "未保存的设计 / UNSAVED DESIGN"
+                state.message = _localized("未保存的设计", "UNSAVED DESIGN")
                 state.dirty = true
                 _ensureDraft()
                 _resetScrollState()
@@ -1216,7 +1280,7 @@ local function _resetDraft()
     state.selectedDefenseIndex = 0
     state.framePickerOpen = false
     _resetScrollState()
-    state.message = "已恢复默认设计 / DEFAULT DESIGN RESTORED"
+    state.message = _localized("已恢复默认设计", "DEFAULT DESIGN RESTORED")
     state.dirty = true
     _ensureDraft()
 end
@@ -1230,7 +1294,7 @@ local function _drawFooter(configuration)
     local balance = tonumber(energy.balance) or 0.0
     local message = tostring(state.message or "")
     if not designValid then
-        message = "能源不足 / POSITIVE POWER BALANCE REQUIRED"
+        message = _localized("能源不足", "POSITIVE POWER BALANCE REQUIRED")
     end
 
     UiPush()
@@ -1241,7 +1305,7 @@ local function _drawFooter(configuration)
         UiRect(footerWidth, 2)
         UiPush()
             UiTranslate(16, 12)
-            _text("设计状态 / DESIGN STATUS", 11, 0.48, 0.78, 0.72, 1)
+            _text(_localized("设计状态", "DESIGN STATUS"), 11, 0.48, 0.78, 0.72, 1)
             UiTranslate(0, 21)
             _text(message, 14, designValid and 0.82 or 1.0,
                 designValid and 0.94 or 0.36,
@@ -1256,12 +1320,12 @@ local function _drawFooter(configuration)
         local resetX = footerWidth - 374
         local saveX = resetX + 182
         if _button(resetX, 42, 170, 36,
-            "恢复默认 / RESET", false, not state.pending) then
+            _localized("恢复默认", "RESET"), false, not state.pending) then
             _resetDraft()
             configuration = _ensureDraft() or configuration
         end
         if _button(saveX, 42, 170, 36,
-            "保存设计 / SAVE", designValid, not state.pending) then
+            _localized("保存设计", "SAVE"), designValid, not state.pending) then
             client.weaponConfiguratorSaveTemplate(
                 state.shipType,
                 state.configurationId,
@@ -1278,6 +1342,7 @@ function client.weaponConfigUiDraw()
     if not state.open then return end
     local configuration = _ensureDraft()
     if configuration == nil then return end
+    state.hoveredComponent = nil
 
     UiPush()
         UiMakeInteractive()
@@ -1324,6 +1389,13 @@ function client.weaponConfigUiDraw()
             UiTranslate(-14, -_contentTop)
             configuration = _drawFooter(configuration)
         UiPop()
+
+        if not state.framePickerOpen then
+            UiPush()
+                UiTranslate(-14, -_contentTop)
+                _drawComponentTooltip(state.hoveredComponent)
+            UiPop()
+        end
 
         if state.framePickerOpen then
             UiPush()

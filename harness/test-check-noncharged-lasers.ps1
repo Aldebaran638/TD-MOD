@@ -18,10 +18,10 @@ function Rewrite { param([string]$Path, [string]$Before, [string]$After); $text 
 try {
     Copy-Item -LiteralPath $source -Destination $mod -Recurse
     $valid = Invoke-Checker; Assert-True ($valid.ExitCode -eq 0) "accepts non-charged laser contracts"
-    $psionic = Join-Path $mod "script\data\weapons\l\psionic_lightning.lua"
+    $psionic = Join-Path $mod "script\data\weapons\l\stellaris.lua"
     Rewrite $psionic 'muzzleFxProfile = "none",' ''
     $missing = Invoke-Checker; Assert-True ($missing.ExitCode -eq 1) "rejects missing muzzleFxProfile"
-    Copy-Item -LiteralPath (Join-Path $source "script\data\weapons\l\psionic_lightning.lua") -Destination $psionic -Force
+    Copy-Item -LiteralPath (Join-Path $source "script\data\weapons\l\stellaris.lua") -Destination $psionic -Force
     Rewrite $psionic 'impactFxProfile = "focusedArcImpact",' 'impactFxProfile = "unknownImpact",'
     $unknown = Invoke-Checker; Assert-True ($unknown.ExitCode -eq 1) "rejects unknown impact profile"
 }

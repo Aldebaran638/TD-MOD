@@ -7,18 +7,18 @@ $issues = 0
 function Add-Issue { param([string]$Message); Write-Host "[CHARGED WEAPON ERROR] $Message" -ForegroundColor Red; $script:issues++ }
 function Read-Required { param([string]$Relative); $path = Join-Path $script:root $Relative; if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Add-Issue "missing file: $Relative"; return "" }; return [IO.File]::ReadAllText($path) }
 function Require-Text { param([string]$Source, [string]$Pattern, [string]$Message); if ($Source -notmatch $Pattern) { Add-Issue $Message } }
+function Select-Definition { param([string]$Source, [string]$Id); $marker = "weaponType = `"$Id`""; $index = $Source.IndexOf($marker); if ($index -lt 0) { return "" }; $start = [Math]::Max(0, $index - 300); $tail = $Source.Substring($start); $end = $tail.IndexOf("`n})", $index - $start); if ($end -lt 0) { return $tail }; return $tail.Substring(0, $end + 3) }
 
 if (-not (Test-Path -LiteralPath $Path -PathType Container)) { Write-Host "[ERROR] Mod directory does not exist: $Path" -ForegroundColor Red; exit 1 }
 $root = (Resolve-Path -LiteralPath $Path).Path
 $schema = Read-Required "script\data\weapons\schema.lua"
-$stellaris = Read-Required "script\data\weapons\stellaris_4_4_6.lua"
-$generated = Read-Required "script\data\weapons\stellaris_generated_4_4_6.lua"
+$stellaris = (Read-Required "script\data\weapons\x\stellaris.lua") + "`n" + (Read-Required "script\data\weapons\t\stellaris.lua")
 $definitions = @{
-    tachyonLance = Read-Required "script\data\weapons\x\tachyon_lance.lua"
-    focusedArcEmitter = Read-Required "script\data\weapons\x\focused_arc_emitter.lua"
-    perditionBeam = Read-Required "script\data\weapons\t\perdition_beam.lua"
-    particleLance = $stellaris
-    arcEmitter = $stellaris
+    tachyonLance = Select-Definition $stellaris "tachyonLance"
+    focusedArcEmitter = Select-Definition $stellaris "focusedArcEmitter"
+    perditionBeam = Select-Definition $stellaris "perditionBeam"
+    particleLance = Select-Definition $stellaris "particleLance"
+    arcEmitter = Select-Definition $stellaris "arcEmitter"
 }
 
 foreach ($token in @("weaponChargeFxProfiles", "weaponFxProfiles", "weaponImpactFxProfiles", "weaponSoundProfiles", 'controllerType or "") == "chargedRay"', "has invalid chargeFxProfile")) {
@@ -30,17 +30,6 @@ foreach ($id in $definitions.Keys) {
         Require-Text $source ("$field\s*=\s*`"[A-Za-z0-9_]+`"") "charged weapon $id is missing $field"
     }
     Require-Text $source 'controllerType\s*=\s*"chargedRay"' "charged weapon $id is missing controllerType = chargedRay"
-    if ($id -notin @("particleLance", "arcEmitter") -and $source -match 'family\s*=') { Add-Issue "charged weapon $id must not use family for runtime dispatch" }
-}
-
-foreach ($component in @("ENERGY_LANCE_1", "ENERGY_LANCE_2", "ARC_EMITTER_1", "ARC_EMITTER_2")) {
-    $row = [regex]::Match($generated, "(?m)^.*component = `"$component`".*$").Value
-    foreach ($token in @('controllerType = "chargedRay"', "chargeDuration = 0.50", "chargeFxProfile =", "fxProfile =", "impactFxProfile =", "soundProfileId =")) {
-        Require-Text $row ([regex]::Escape($token)) "generated charged weapon $component is missing $token"
-    }
-}
-foreach ($token in @("controllerType = item.controllerType", "chargeDuration = item.chargeDuration", "launchDuration = item.launchDuration", "chargeFxProfile = item.chargeFxProfile")) {
-    Require-Text $generated ([regex]::Escape($token)) "generated adapter does not propagate $token"
 }
 
 $runtime = (Read-Required "script\weapon\client\slots\x\tachyon_lance\effects\charging_fx.lua") + "`n" +

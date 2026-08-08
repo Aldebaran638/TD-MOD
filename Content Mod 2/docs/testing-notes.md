@@ -14,12 +14,13 @@ record, not a replacement for the project check scripts.
 | Charged-ray groups | Numbered X/T groups retain charge, release, visual lifecycle, and cancellation behavior. | Runtime fixture and visual smoke test. |
 | UI scale | Wheel and configuration cards remain readable with many groups and long labels. | Screenshot/manual UI pass at supported resolutions. |
 | Validation contract maintenance | Checkers match current audio, asset, and runtime contracts. | Checker self-test before any checker change. |
+| Explicit weapon definitions | Slot weapons remain individually auditable and cannot regress to tier loops, batch tables, wrappers, or unsupported registration functions. | `harness/data/weapons/check-explicit-weapon-definitions.ps1` and its self-test. |
 
 ## Test Levels
 
 1. Static contract: the charged-weapon and non-charged-laser checkers validate
    their data profile contracts and runtime dispatch boundaries.
-2. Checker self-test: each of the six Harness self-tests rejects intentional
+2. Checker self-test: each Harness self-test rejects intentional
    fixture violations in its own category.
 3. Runtime fixture: isolated Lua state proves loadout resolution, requests,
    cooldowns, and synchronization payloads.
@@ -49,6 +50,27 @@ Status: planned | implemented | blocked | superseded
 - Run the complete verification sequence in `AGENTS.md` after product edits.
 
 ## Planned Runtime And Weapon Integration Scenarios
+
+### Explicit Per-Slot Weapon Definitions
+
+```text
+Scenario: Keep every S/G/H/L/M/P/T/X weapon as one direct definition.
+Risk: Tier loops, batch data tables, wrapper functions, or alternate registration
+      functions hide individual values and reintroduce load-order failures.
+Affected files/runtime layer: script/data/weapons slot definition files and the
+      static Harness contract.
+Setup: Scan each slot directory and its single stellaris.lua definition file.
+Action: Reject loops, helper functions, batch structures, extra Lua files,
+        unsupported calls, duplicate or non-literal weaponType fields, and
+        slotTypes values that disagree with the containing directory.
+Expected result: Every weapon is registered by exactly one direct call to
+                 weaponDefineRay, weaponDefineProjectile, weaponDefineGuided,
+                 or weaponDefineStrikeCraft in its matching slot file.
+Automation owner: harness/data/weapons/check-explicit-weapon-definitions.ps1 and
+                  harness/data/weapons/test-check-explicit-weapon-definitions.ps1.
+Manual validation: None; this is a static source-structure contract.
+Status: implemented
+```
 
 ### Aircraft Load Performance
 

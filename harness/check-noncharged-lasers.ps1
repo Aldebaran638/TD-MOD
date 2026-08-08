@@ -7,18 +7,18 @@ $issues = 0
 function Add-Issue { param([string]$Message); Write-Host "[NONCHARGED LASER ERROR] $Message" -ForegroundColor Red; $script:issues++ }
 function Read-Required { param([string]$Relative); $path = Join-Path $script:root $Relative; if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Add-Issue "missing file: $Relative"; return "" }; return [IO.File]::ReadAllText($path) }
 function Require-Text { param([string]$Source, [string]$Pattern, [string]$Message); if ($Source -notmatch $Pattern) { Add-Issue $Message } }
+function Select-Definition { param([string]$Source, [string]$Id); $marker = "weaponType = `"$Id`""; $index = $Source.IndexOf($marker); if ($index -lt 0) { return "" }; $start = [Math]::Max(0, $index - 300); $tail = $Source.Substring($start); $end = $tail.IndexOf("`n})", $index - $start); if ($end -lt 0) { return $tail }; return $tail.Substring(0, $end + 3) }
 
 if (-not (Test-Path -LiteralPath $Path -PathType Container)) { Write-Host "[ERROR] Mod directory does not exist: $Path" -ForegroundColor Red; exit 1 }
 $root = (Resolve-Path -LiteralPath $Path).Path
 $schema = Read-Required "script\data\weapons\schema.lua"
-$stellaris = Read-Required "script\data\weapons\stellaris_4_4_6.lua"
-$generated = Read-Required "script\data\weapons\stellaris_generated_4_4_6.lua"
+$stellaris = (Read-Required "script\data\weapons\s\stellaris.lua") + (Read-Required "script\data\weapons\m\stellaris.lua") + (Read-Required "script\data\weapons\l\stellaris.lua") + (Read-Required "script\data\weapons\x\stellaris.lua") + (Read-Required "script\data\weapons\p\stellaris.lua")
 $definitions = @{
-    largeGammaLaser = Read-Required "script\data\weapons\l\large_gamma_laser.lua"
-    mediumGammaLaser = Read-Required "script\data\weapons\m\medium_gamma_laser.lua"
-    psionicLightning = Read-Required "script\data\weapons\l\psionic_lightning.lua"
-    phaseDisruptor = Read-Required "script\data\weapons\m\phase_disruptor.lua"
-    guardianPointDefense = Read-Required "script\data\weapons\p\guardian_point_defense.lua"
+    largeGammaLaser = Select-Definition $stellaris "largeGammaLaser"
+    mediumGammaLaser = Select-Definition $stellaris "mediumGammaLaser"
+    psionicLightning = Select-Definition $stellaris "psionicLightning"
+    phaseDisruptor = Select-Definition $stellaris "phaseDisruptor"
+    guardianPointDefense = Select-Definition $stellaris "guardianPointDefense"
 }
 $expected = @{
     largeGammaLaser = @("gammaBeam", "gammaLarge", "gammaLarge", "largeGammaLaser")
@@ -38,20 +38,11 @@ foreach ($id in $definitions.Keys) {
         $field = @("fxProfile", "muzzleFxProfile", "impactFxProfile", "soundProfileId")[$index]
         Require-Text $source "$field\s*=\s*`"$($profiles[$index])`"" "non-charged laser $id has invalid $field"
     }
-    if ($source -match 'family\s*=') { Add-Issue "non-charged laser $id must not use family for runtime dispatch" }
 }
-foreach ($token in @('behaviorType = "raycast"', 'muzzleFxProfile = tier.fx', 'impactFxProfile = tier.fx', 'soundProfileId = tier.fx', 'muzzleFxProfile = "disruptor"', 'muzzleFxProfile = "none"')) {
+foreach ($token in @('behaviorType = "raycast"', 'muzzleFxProfile = "disruptor"', 'muzzleFxProfile = "none"')) {
     Require-Text $stellaris ([regex]::Escape($token)) "Stellaris laser/arc catalog is missing $token"
 }
 if ($stellaris -match 'family\s*=\s*"(?:laser|disruptor|psionic_disruptor)"') { Add-Issue "Stellaris non-charged laser definitions must not use family" }
-foreach ($component in @("SMALL_RED_LASER", "SMALL_GAMMA_LASER", "SMALL_NV_WEAPON", "SMALL_DISRUPTOR_1", "PSIONIC_LIGHTNING")) {
-    $row = [regex]::Match($generated, "(?m)^.*component = `"$component`".*$").Value
-    foreach ($token in @('behaviorType = "raycast"', "fxProfile =", "muzzleFxProfile =", "impactFxProfile =", "soundProfileId =")) {
-        Require-Text $row ([regex]::Escape($token)) "generated non-charged laser $component is missing $token"
-    }
-    if ($row -match 'family =') { Add-Issue "generated non-charged laser $component must not use family" }
-}
-
 $runtime = (Read-Required "script\weapon\client\common\effects\generic_raycast_fx.lua") + "`n" +
     (Read-Required "script\weapon\client\common\effects\gamma_laser_fx.lua") + "`n" +
     (Read-Required "script\weapon\client\common\effects\weapon_muzzle_fx.lua") + "`n" +

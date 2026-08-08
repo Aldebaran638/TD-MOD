@@ -18,13 +18,13 @@ function Rewrite { param([string]$Path, [string]$Before, [string]$After); $text 
 try {
     Copy-Item -LiteralPath $source -Destination $mod -Recurse
     $valid = Invoke-Checker; Assert-True ($valid.ExitCode -eq 0) "accepts charged weapon contracts"
-    $tachyon = Join-Path $mod "script\data\weapons\x\tachyon_lance.lua"
+    $tachyon = Join-Path $mod "script\data\weapons\x\stellaris.lua"
     Rewrite $tachyon 'chargeFxProfile = "tachyonLance",' ''
     $missing = Invoke-Checker; Assert-True ($missing.ExitCode -eq 1) "rejects missing chargeFxProfile"
-    Copy-Item -LiteralPath (Join-Path $source "script\data\weapons\x\tachyon_lance.lua") -Destination $tachyon -Force
-    $generated = Join-Path $mod "script\data\weapons\stellaris_generated_4_4_6.lua"
-    Rewrite $generated 'controllerType = item.controllerType,' ''
-    $propagation = Invoke-Checker; Assert-True ($propagation.ExitCode -eq 1) "rejects missing generated controller propagation"
+    Copy-Item -LiteralPath (Join-Path $source "script\data\weapons\x\stellaris.lua") -Destination $tachyon -Force
+    $generated = $tachyon
+    Rewrite $generated 'controllerType = "chargedRay",' ''
+    $propagation = Invoke-Checker; Assert-True ($propagation.ExitCode -eq 1) "rejects missing charged controller"
 }
 finally { if ($KeepFixtures) { Write-Host "Fixtures kept at: $root" } elseif (Test-Path -LiteralPath $root) { Remove-Item -LiteralPath $root -Recurse -Force } }
 
