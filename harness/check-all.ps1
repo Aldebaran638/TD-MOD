@@ -6,6 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$powershellExe = (Get-Process -Id $PID).Path
 
 function Invoke-Harness {
     param([string]$RelativeScript, [string]$TargetPath = "")
@@ -14,10 +15,11 @@ function Invoke-Harness {
     $displayArguments = ""
     if ($TargetPath -ne "") { $displayArguments = "-Path " + $TargetPath }
     Write-Host ("==> " + $RelativeScript + " " + $displayArguments) -ForegroundColor Cyan
+    # Self-tests use exit; isolate every check so one script cannot end this runner.
     if ($TargetPath -ne "") {
-        & $scriptPath -Path $TargetPath
+        & $powershellExe -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Path $TargetPath
     } else {
-        & $scriptPath
+        & $powershellExe -NoProfile -ExecutionPolicy Bypass -File $scriptPath
     }
     if ($LASTEXITCODE -ne 0) {
         throw "Harness failed: $RelativeScript"
