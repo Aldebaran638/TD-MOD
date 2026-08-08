@@ -291,6 +291,7 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
         turnBlendRate = tonumber(cfg.turnBlendRate) or 0.0,
         turnRate = tonumber(cfg.turnRate) or 0.0,
         turnImpulse = tonumber(cfg.turnImpulse) or 0.0,
+        guidanceProfile = tostring(cfg.guidanceProfile or ""),
         lifeRemain = tonumber(cfg.lifetime) or 0.0,
         distanceTravelled = 0.0,
         prePhysicsCenterPos = Vec(probes.center[1], probes.center[2], probes.center[3]),

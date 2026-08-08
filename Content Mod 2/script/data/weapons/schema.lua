@@ -9,6 +9,9 @@ weaponBehaviorProfiles = weaponBehaviorProfiles or {
     guidedProjectile = true,
     strikeCraft = true,
 }
+weaponGuidanceProfiles = weaponGuidanceProfiles or {
+    whirlwind = true,
+}
 weaponFxProfiles = weaponFxProfiles or {
     tachyonLance = true,
     perditionBeam = true,
@@ -255,6 +258,11 @@ function weaponDefineGuided(definition)
         mode = "guided",
         speed = definition.cruiseSpeed,
     }
+    local guidanceProfile = tostring(definition.guidanceProfile or "")
+    if guidanceProfile ~= "" and not weaponGuidanceProfiles[guidanceProfile] then
+        error("guided weapon " .. tostring(definition.weaponType)
+            .. " has invalid guidanceProfile")
+    end
     return _finish(definition)
 end
 

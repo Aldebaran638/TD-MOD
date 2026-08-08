@@ -44,6 +44,7 @@ local function _guidedGroupBuildLauncherConfig(slotDef)
         turnBlendRate = tonumber(weaponDef.turnBlendRate) or 0.0,
         turnRate = tonumber(weaponDef.turnRate) or 0.0,
         turnImpulse = tonumber(weaponDef.turnImpulse) or 0.0,
+        guidanceProfile = tostring(weaponDef.guidanceProfile or ""),
         damageMin = tonumber(weaponDef.damageMin) or tonumber(weaponDef.damage) or 0.0,
         damageMax = tonumber(weaponDef.damageMax) or tonumber(weaponDef.damage) or 0.0,
         shieldFix = tonumber(weaponDef.shieldFix) or 1.0,

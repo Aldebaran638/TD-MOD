@@ -3,6 +3,19 @@
 
 server = server or {}
 
+local _guidanceTurnProfiles = {
+    whirlwind = {
+        blendRateMultiplier = 3.0,
+        turnRateMultiplier = 2.5,
+        turnImpulseMultiplier = 2.5,
+    },
+}
+
+local function _guidanceTurnProfile(projectile)
+    return _guidanceTurnProfiles[tostring(projectile.guidanceProfile or "")]
+        or {}
+end
+
 function server.guidedProjectileMovementUpdate(dt)
     local active = (server.guidedProjectileRuntimeState or {}).activeProjectiles or {}
     for i = #active, 1, -1 do
@@ -61,7 +74,11 @@ function server.guidedProjectileMovementUpdate(dt)
                 desiredDir = server.guidedProjectileNormalize(VecSub(leadPos, currentPos), currentDir)
             end
 
-            local steerAlpha = math.min(1.0, math.max(0.0, (projectile.turnBlendRate or 0.0) * (dt or 0.0)))
+            local turnProfile = _guidanceTurnProfile(projectile)
+            local steerAlpha = math.min(1.0, math.max(0.0,
+                (projectile.turnBlendRate or 0.0)
+                    * (turnProfile.blendRateMultiplier or 1.0)
+                    * (dt or 0.0)))
             local blendedDir = server.guidedProjectileNormalize(VecLerp(currentDir, desiredDir, steerAlpha), desiredDir)
             local targetSpeed = math.max(currentSpeed, projectile.cruiseSpeed or 0.0)
             targetSpeed = math.min(projectile.maxSpeed or targetSpeed, targetSpeed + (projectile.acceleration or 0.0) * (dt or 0.0))
@@ -85,8 +102,10 @@ function server.guidedProjectileMovementUpdate(dt)
                     0,
                     currentRot,
                     projectile.desiredRot,
-                    projectile.turnRate or 0.0,
-                    projectile.turnImpulse or 0.0
+                    (projectile.turnRate or 0.0)
+                        * (turnProfile.turnRateMultiplier or 1.0),
+                    (projectile.turnImpulse or 0.0)
+                        * (turnProfile.turnImpulseMultiplier or 1.0)
                 )
             end
         end
