@@ -35,6 +35,11 @@ try {
     $valid = Invoke-Checker
     Assert-True ($valid.ExitCode -eq 0) "accepts the complete battlecruiser definition"
 
+    Rewrite-Definition '    engineSound = {' '    obsoleteEngineSound = {'
+    $engineSoundMissing = Invoke-Checker
+    Assert-True ($engineSoundMissing.ExitCode -eq 1 -and $engineSoundMissing.Text -match 'missing required field: engineSound') "rejects a missing engine sound definition"
+    Copy-Item -LiteralPath (Join-Path $source "script\data\ships\battlecruiser\battlecruiser.lua") -Destination (Join-Path $mod "script\data\ships\battlecruiser\battlecruiser.lua") -Force
+
     Rewrite-Definition 'shieldRadius = 7,' ''
     $missing = Invoke-Checker
     Assert-True ($missing.ExitCode -eq 1 -and $missing.Text -match 'missing required field: shieldRadius') "rejects a missing top-level field"

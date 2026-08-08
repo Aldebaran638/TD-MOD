@@ -197,7 +197,7 @@ $source = Remove-LuaComments ([IO.File]::ReadAllText($definitionPath))
 $table = Find-NamedTable $source "battlecruiserDefinition"
 if ($null -eq $table) { Add-Issue "battlecruiserDefinition table is missing or malformed"; exit 1 }
 $top = Get-TableEntries $source $table.Open $table.Close
-$topAllowed = @("shipType", "displayName", "maxShieldHP", "maxArmorHP", "maxBodyHP", "shieldRadius", "flightProfile", "engineFx", "cameraProfile", "regen", "componentProfile", "componentPools", "externalDamage", "weaponMountProfiles", "defaultSlotConfigurationId", "slotConfigurations")
+$topAllowed = @("shipType", "displayName", "maxShieldHP", "maxArmorHP", "maxBodyHP", "shieldRadius", "flightProfile", "engineFx", "engineSound", "cameraProfile", "regen", "componentProfile", "componentPools", "externalDamage", "weaponMountProfiles", "defaultSlotConfigurationId", "slotConfigurations")
 Require-ExactKeys $top $topAllowed $topAllowed "battlecruiserDefinition"
 
 Assert-LiteralField $source (Get-NamedEntry $top "shipType") '^"enigmaticCruiser"$' "shipType must be enigmaticCruiser"
@@ -222,6 +222,8 @@ if ($null -ne $engine) {
         $null = Validate-NestedTable $source (Get-NamedEntry $profiles "engine") @() @("radius", "burnAreaMin", "burnAreaMax", "burnColumns", "burnRows", "sourceOffset", "idleLength", "trailLength", "particleRadius") "engineFx.profiles.engine"
     }
 }
+
+$null = Validate-NestedTable $source (Get-NamedEntry $top "engineSound") @("idleLoopPath", "volume") @("idleLoopPath", "volume") "engineSound"
 
 $null = Validate-NestedTable $source (Get-NamedEntry $top "cameraProfile") @("distance", "distanceMin", "distanceMax", "pitchLimit", "rearYawMin", "rearYawMax", "mouseSensitivity", "glideStrength", "zoomSpeed", "switchDuration", "frontOffset", "frontPitchLimit", "frontYawMin", "frontYawMax", "rearDefaultPitch", "freelookTurnYawError", "freelookTurnPitchError", "rmbLongPressSeconds", "fov") @("distance", "distanceMin", "distanceMax", "pitchLimit", "rearYawMin", "rearYawMax", "mouseSensitivity", "glideStrength", "zoomSpeed", "switchDuration", "frontOffset", "frontPitchLimit", "frontYawMin", "frontYawMax", "rearDefaultPitch", "freelookTurnYawError", "freelookTurnPitchError", "rmbLongPressSeconds", "fov") "cameraProfile"
 $null = Validate-NestedTable $source (Get-NamedEntry $top "regen") @("tickInterval", "shieldPerSecond", "shieldNoDamageDelay", "armorNoDamageDelay", "bodyNoDamageDelay") @("tickInterval", "shieldPerSecond", "shieldNoDamageDelay", "armorNoDamageDelay", "bodyNoDamageDelay") "regen"

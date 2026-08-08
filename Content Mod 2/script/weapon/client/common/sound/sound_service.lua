@@ -5,9 +5,9 @@ client = client or {}
 
 local _soundDistanceThreshold = 150.0
 local _soundVirtualNearDist = 40.0
-local _sndEngineLoop = nil
 local _sndMissileLoop = nil
 local _weaponSoundHandles = {}
+local _engineLoopHandles = {}
 
 client.soundModuleState = client.soundModuleState or {
     lastRenderSeqByShip = {},
@@ -64,18 +64,35 @@ local function _isShipOccupied(shipBodyId)
     return vehicle ~= nil and vehicle ~= 0 and GetPlayerVehicle() == vehicle
 end
 
-local function _shouldUseGenericShipSounds(shipBodyId)
-    if client.registryShipGetShipType == nil then return true end
-    return tostring(client.registryShipGetShipType(shipBodyId) or "") ~= "titan"
+local function _getShipEngineSound(shipBodyId)
+    if client.registryShipGetShipType == nil or shipDefinitionGet == nil then
+        return nil, 0.0
+    end
+    local shipType = tostring(client.registryShipGetShipType(shipBodyId) or "")
+    local definition = shipDefinitionGet(shipType, shipType)
+    local sound = definition.engineSound or {}
+    local path = tostring(sound.idleLoopPath or "")
+    local volume = tonumber(sound.volume) or 1.0
+    if path == "" or volume <= 0.0 then return nil, 0.0 end
+    return path, volume
+end
+
+local function _getEngineLoop(path)
+    local cached = _engineLoopHandles[path]
+    if cached == nil then
+        cached = LoadLoop(path)
+        _engineLoopHandles[path] = cached or 0
+    end
+    return cached
 end
 
 local function _engineTick(shipBodyId)
-    if _sndEngineLoop == nil or _sndEngineLoop == 0
-        or not _shouldUseGenericShipSounds(shipBodyId)
-        or not _isShipOccupied(shipBodyId) then
-        return
-    end
-    PlayLoop(_sndEngineLoop, GetBodyTransform(shipBodyId).pos, 1.0)
+    if not _isShipOccupied(shipBodyId) then return end
+    local path, volume = _getShipEngineSound(shipBodyId)
+    if path == nil then return end
+    local loop = _getEngineLoop(path)
+    if loop == nil or loop == 0 then return end
+    PlayLoop(loop, GetBodyTransform(shipBodyId).pos, volume)
 end
 
 local function _xSlotEventTick(shipBodyId)
@@ -129,9 +146,9 @@ local function _tSlotEventTick(shipBodyId)
 end
 
 function client.soundModuleInit()
-    _sndEngineLoop = LoadLoop("MOD/sound/dem_sfx_psi_ship_transport_ship_idle_01.ogg")
     _sndMissileLoop = LoadLoop("MOD/sound/missile_loop.ogg")
     _weaponSoundHandles = {}
+    _engineLoopHandles = {}
     client.soundModuleState.lastRenderSeqByShip = {}
     client.soundModuleState.lastTSlotSequenceByShip = {}
     for weaponType, profile in pairs(client.weaponSoundCatalog or {}) do
