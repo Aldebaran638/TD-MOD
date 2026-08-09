@@ -1,6 +1,6 @@
 ---@diagnostic disable: undefined-global
 
-#include "../../../weapon/client/config_ui/local_weapon_config.lua"
+#include "../../../weapon/client/interaction/config/local_weapon_config.lua"
 #include "runtime_context.lua"
 #include "config/weapon_configuration_binding.lua"
 #include "registry/ship_registry.lua"

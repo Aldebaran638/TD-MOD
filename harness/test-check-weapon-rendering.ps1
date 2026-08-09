@@ -17,14 +17,14 @@ function Invoke-Checker { $output = & $powershellExe -NoProfile -ExecutionPolicy
 try {
     Copy-Item -LiteralPath $source -Destination $mod -Recurse
     $valid = Invoke-Checker; Assert-True ($valid.ExitCode -eq 0) "accepts the stage-organized client effect layout"
-    Remove-Item -LiteralPath (Join-Path $mod "script\weapon\client\common\effects\registry\palette_profile_registry.lua") -Force
+    Remove-Item -LiteralPath (Join-Path $mod "script\weapon\client\presentation\visual\runtime\registry\palette_profile_registry.lua") -Force
     $missing = Invoke-Checker; Assert-True ($missing.ExitCode -eq 1) "rejects a missing palette registry"
-    Copy-Item -LiteralPath (Join-Path $source "script\weapon\client\common\effects\registry\palette_profile_registry.lua") -Destination (Join-Path $mod "script\weapon\client\common\effects\registry\palette_profile_registry.lua") -Force
+    Copy-Item -LiteralPath (Join-Path $source "script\weapon\client\presentation\visual\runtime\registry\palette_profile_registry.lua") -Destination (Join-Path $mod "script\weapon\client\presentation\visual\runtime\registry\palette_profile_registry.lua") -Force
     $old = Join-Path $mod "script\weapon\client\slots\x\tachyon_lance\effects"
     New-Item -ItemType Directory -Path $old -Force | Out-Null
     $obsolete = Invoke-Checker; Assert-True ($obsolete.ExitCode -eq 1) "rejects an obsolete representative-weapon effect directory"
     Remove-Item -LiteralPath $old -Recurse -Force
-    $gamma = Join-Path $mod "script\weapon\client\common\effects\beam\gamma.lua"
+    $gamma = Join-Path $mod "script\weapon\client\presentation\visual\phase\beam\gamma.lua"
     [IO.File]::WriteAllText($gamma, ([IO.File]::ReadAllText($gamma) + "`nlocal broken = weaponType == `"tachyonLance`"`n"), $encoding)
     $weaponTypeBranch = Invoke-Checker; Assert-True ($weaponTypeBranch.ExitCode -eq 1) "rejects rendering branches selected by weaponType"
 }

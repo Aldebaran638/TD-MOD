@@ -10,23 +10,30 @@ function Require-Text { param([string]$Source, [string]$Pattern, [string]$Messag
 
 if (-not (Test-Path -LiteralPath $Path -PathType Container)) { Write-Host "[ERROR] Mod directory does not exist: $Path" -ForegroundColor Red; exit 1 }
 $root = (Resolve-Path -LiteralPath $Path).Path
-$effectRoot = "script\weapon\client\common\effects"
+$effectRoot = "script\weapon\client\presentation\visual"
 
 $requiredFiles = @(
-    "registry\effect_profile_registry.lua", "registry\palette_profile_registry.lua", "registry\effect_dispatch.lua",
-    "shared\effect_budget.lua", "shared\effect_resources.lua", "shared\shield_hit.lua",
-    "charge\default.lua", "charge\tachyon_lance.lua", "charge\focused_arc.lua", "charge\perdition_beam.lua",
-    "beam\default.lua", "beam\gamma.lua", "beam\arc.lua", "beam\tachyon_lance.lua", "beam\perdition_beam.lua",
-    "muzzle\default.lua", "muzzle\gamma.lua", "muzzle\ballistic.lua", "muzzle\guided.lua",
-    "projectile\default.lua", "projectile\kinetic.lua", "projectile\plasma.lua", "projectile\autocannon.lua", "projectile\neutron.lua", "projectile\giga_cannon.lua",
-    "trail\default.lua", "trail\plasma.lua", "trail\neutron.lua", "trail\guided_missile.lua", "trail\guided_torpedo.lua",
-    "impact\default.lua", "impact\gamma.lua", "impact\arc.lua", "impact\ballistic.lua", "impact\plasma.lua", "impact\neutron.lua", "impact\guided.lua", "impact\perdition_beam.lua",
-    "guided\missile.lua", "guided\torpedo.lua",
-    "craft\default.lua", "craft\engine.lua", "craft\launch.lua", "craft\recover.lua", "craft\subweapon_beam.lua", "craft\subweapon_muzzle.lua", "craft\subweapon_impact.lua"
+    "runtime\registry\effect_profile_registry.lua", "runtime\registry\palette_profile_registry.lua", "runtime\registry\effect_dispatch.lua",
+    "runtime\shared\effect_budget.lua", "runtime\shared\effect_resources.lua", "runtime\shared\shield_hit.lua",
+    "phase\charge\default.lua", "phase\charge\tachyon_lance.lua", "phase\charge\focused_arc.lua", "phase\charge\perdition_beam.lua",
+    "phase\beam\default.lua", "phase\beam\gamma.lua", "phase\beam\arc.lua", "phase\beam\tachyon_lance.lua", "phase\beam\perdition_beam.lua",
+    "phase\muzzle\default.lua", "phase\muzzle\gamma.lua", "phase\muzzle\ballistic.lua", "phase\muzzle\guided.lua",
+    "phase\projectile\default.lua", "phase\projectile\kinetic.lua", "phase\projectile\plasma.lua", "phase\projectile\autocannon.lua", "phase\projectile\neutron.lua", "phase\projectile\giga_cannon.lua", "phase\projectile\guided_missile.lua", "phase\projectile\guided_torpedo.lua",
+    "phase\trail\default.lua", "phase\trail\plasma.lua", "phase\trail\neutron.lua", "phase\trail\guided_missile.lua", "phase\trail\guided_torpedo.lua",
+    "phase\impact\default.lua", "phase\impact\gamma.lua", "phase\impact\arc.lua", "phase\impact\ballistic.lua", "phase\impact\plasma.lua", "phase\impact\neutron.lua", "phase\impact\guided.lua", "phase\impact\perdition_beam.lua",
+    "entity\strike_craft\craft.lua", "entity\strike_craft\engine.lua", "entity\strike_craft\launch.lua", "entity\strike_craft\recover.lua", "entity\strike_craft\subweapon\beam.lua", "entity\strike_craft\subweapon\muzzle.lua", "entity\strike_craft\subweapon\impact.lua"
 )
 foreach ($relative in $requiredFiles) { [void](Read-Required (Join-Path $effectRoot $relative)) }
 
 foreach ($obsolete in @(
+    "script\weapon\client\common",
+    "script\weapon\client\config_ui",
+    "script\weapon\client\guided",
+    "script\weapon\client\slots",
+    "script\weapon\server\common",
+    "script\weapon\server\behaviors",
+    "script\weapon\server\guided",
+    "script\weapon\server\slots",
     "script\weapon\client\slots\x\tachyon_lance\effects",
     "script\weapon\client\slots\x\focused_arc_emitter\effects",
     "script\weapon\client\slots\t\perdition_beam\effects",
@@ -37,15 +44,15 @@ foreach ($obsolete in @(
     if (Test-Path -LiteralPath (Join-Path $root $obsolete)) { Add-Issue "obsolete representative-weapon effect directory remains: $obsolete" }
 }
 
-$registry = Read-Required "$effectRoot\registry\effect_profile_registry.lua"
-$paletteRegistry = Read-Required "$effectRoot\registry\palette_profile_registry.lua"
-$dispatch = Read-Required "$effectRoot\registry\effect_dispatch.lua"
+$registry = Read-Required "$effectRoot\runtime\registry\effect_profile_registry.lua"
+$paletteRegistry = Read-Required "$effectRoot\runtime\registry\palette_profile_registry.lua"
+$dispatch = Read-Required "$effectRoot\runtime\registry\effect_dispatch.lua"
 $bootstrap = Read-Required "script\weapon\client\bootstrap.lua"
 foreach ($token in @("weaponFxRegister", "weaponFxResolve", "weaponFxProfiles")) { Require-Text $registry ([regex]::Escape($token)) "effect profile registry is missing $token" }
 foreach ($token in @("weaponFxPaletteRegister", "weaponFxGetPalette", '"particleLance"')) { Require-Text $paletteRegistry ([regex]::Escape($token)) "palette registry is missing $token" }
 foreach ($token in @("weaponFxInitAll", "weaponFxTickAll", "weaponFxRenderAll", '"tachyonLance"', '"perditionImpact"', '"guidedMissile"')) { Require-Text $dispatch ([regex]::Escape($token)) "effect dispatcher is missing $token" }
 foreach ($token in @("weaponFxInitAll", "weaponFxTickAll", "weaponFxRenderAll")) { Require-Text $bootstrap ([regex]::Escape($token)) "client bootstrap does not use unified $token" }
-if ($bootstrap -match 'slots/[xlh]/.+/effects|guided/effects|common/effects/(?:generic_raycast|gamma_laser|weapon_muzzle|weapon_impact|shield_hit)') { Add-Issue "bootstrap still includes an obsolete effect path" }
+if ($bootstrap -match 'slots/[xlh]/.+/effects|guided/effects|common/effects|common/sound|common/hud|common/state') { Add-Issue "bootstrap still includes an obsolete effect path" }
 
 $dataFiles = Get-ChildItem -LiteralPath (Join-Path $root "script\data\weapons") -Filter "*.lua" -Recurse
 $paletteIds = @{}
@@ -65,12 +72,12 @@ foreach ($profileId in $visualProfileIds.Keys) {
 }
 
 $publicEntries = @{
-    "beam\default.lua" = "function client.spawnGenericRaycastWeaponFx"
-    "projectile\default.lua" = "function client.spawnProjectileVisual"
-    "guided\missile.lua" = "function client.spawnMissileVisual"
-    "muzzle\default.lua" = "function client.spawnWeaponMuzzleFx"
-    "impact\default.lua" = "function client.spawnWeaponImpactFx"
-    "craft\subweapon_beam.lua" = "function client.spawnHSlotBeamFx"
+    "phase\beam\default.lua" = "function client.spawnGenericRaycastWeaponFx"
+    "phase\projectile\default.lua" = "function client.spawnProjectileVisual"
+    "phase\projectile\guided_missile.lua" = "function client.spawnMissileVisual"
+    "phase\muzzle\default.lua" = "function client.spawnWeaponMuzzleFx"
+    "phase\impact\default.lua" = "function client.spawnWeaponImpactFx"
+    "entity\strike_craft\subweapon\beam.lua" = "function client.spawnHSlotBeamFx"
 }
 foreach ($relative in $publicEntries.Keys) {
     Require-Text (Read-Required (Join-Path $effectRoot $relative)) ([regex]::Escape($publicEntries[$relative])) "missing stable client entry in $relative"

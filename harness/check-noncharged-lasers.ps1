@@ -43,12 +43,12 @@ foreach ($token in @('behaviorType = "raycast"', 'muzzleFxProfile = "disruptor"'
     Require-Text $stellaris ([regex]::Escape($token)) "Stellaris laser/arc catalog is missing $token"
 }
 if ($stellaris -match 'family\s*=\s*"(?:laser|disruptor|psionic_disruptor)"') { Add-Issue "Stellaris non-charged laser definitions must not use family" }
-$runtime = (Read-Required "script\weapon\client\common\effects\beam\default.lua") + "`n" +
-    (Read-Required "script\weapon\client\common\effects\beam\gamma.lua") + "`n" +
-    (Read-Required "script\weapon\client\common\effects\muzzle\default.lua") + "`n" +
-    (Read-Required "script\weapon\client\common\effects\impact\default.lua") + "`n" +
-    (Read-Required "script\weapon\client\common\sound\sound_service.lua") + "`n" +
-    (Read-Required "script\weapon\client\common\sound\weapon_sound_catalog.lua")
+$runtime = (Read-Required "script\weapon\client\presentation\visual\phase\beam\default.lua") + "`n" +
+    (Read-Required "script\weapon\client\presentation\visual\phase\beam\gamma.lua") + "`n" +
+    (Read-Required "script\weapon\client\presentation\visual\phase\muzzle\default.lua") + "`n" +
+    (Read-Required "script\weapon\client\presentation\visual\phase\impact\default.lua") + "`n" +
+    (Read-Required "script\weapon\client\presentation\audio\sound_service.lua") + "`n" +
+    (Read-Required "script\weapon\client\presentation\audio\weapon_sound_catalog.lua")
 foreach ($field in @("definition.muzzleFxProfile", "definition.impactFxProfile", "definition.soundProfileId", "spawnGammaLaserMuzzleFx")) {
     Require-Text $runtime ([regex]::Escape($field)) "non-charged runtime does not dispatch $field"
 }

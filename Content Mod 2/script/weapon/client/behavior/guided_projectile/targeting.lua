@@ -1,0 +1,464 @@
+---@diagnostic disable: undefined-global
+---@diagnostic disable: duplicate-set-field
+
+client = client or {}
+
+client.guidedTargetingConfig = client.guidedTargetingConfig or {
+    lockDistance = 660.0,
+    lockHalfAngleDeg = 8.0,
+    lockAcquireTime = 1.4,
+    lockLoseGraceTime = 0.25,
+    lockBoxMinSizePx = 20.0,
+    lockBoxMaxSizePx = 60.0,
+    lockBoxScale = 2400.0,
+}
+
+client.guidedTargetingState = client.guidedTargetingState or {
+    active = false,
+    shipBody = 0,
+    candidateVehicleId = 0,
+    candidateBodyId = 0,
+    lockedVehicleId = 0,
+    lockedBodyId = 0,
+    progress = 0.0,
+    state = "idle",
+    loseTimer = 0.0,
+    targetWorldPos = nil,
+    targetDistance = 0.0,
+    lockCenterWorld = nil,
+    isProjectedVisible = false,
+}
+
+local function _guidedTargetingClamp(v, a, b)
+    if v < a then
+        return a
+    end
+    if v > b then
+        return b
+    end
+    return v
+end
+
+local function _guidedTargetingResolveConfig(shipBody, baseConfig, weaponGroupId)
+    local base = baseConfig or {}
+    local resolved = {}
+    for key, value in pairs(base) do resolved[key] = value end
+    local weapon = client.getShipWeaponDefinition ~= nil
+        and client.getShipWeaponDefinition(shipBody, weaponGroupId)
+        or {}
+    local weaponRange = tonumber(weapon.maxRange) or 0.0
+    local sensor = client.getShipSensorProfile ~= nil
+        and client.getShipSensorProfile(shipBody) or {}
+    local sensorRange = tonumber(sensor.range) or 0.0
+    local lockDistance = tonumber(resolved.lockDistance) or 0.0
+    if weaponRange > 0.0 then lockDistance = math.min(lockDistance, weaponRange) end
+    if sensorRange > 0.0 then lockDistance = math.min(lockDistance, sensorRange) end
+    resolved.lockDistance = lockDistance
+    local tracking = math.max(0.0, tonumber(sensor.trackingAdd) or 0.0)
+    resolved.lockHalfAngleDeg = (tonumber(resolved.lockHalfAngleDeg) or 0.0)
+        + math.min(8.0, tracking * 0.25)
+    resolved.lockAcquireTime = math.max(
+        0.20,
+        (tonumber(resolved.lockAcquireTime) or 1.0)
+            * (1.0 - math.min(0.50, tracking * 0.02))
+    )
+    return resolved
+end
+
+local function _guidedTargetingResetState(state)
+    state.active = false
+    state.shipBody = 0
+    state.lockCenterWorld = nil
+    state.isProjectedVisible = false
+    state.targetWorldPos = nil
+    state.targetDistance = 0.0
+    state.loseTimer = 0.0
+    state.progress = 0.0
+    state.state = "idle"
+    state.candidateVehicleId = 0
+    state.candidateBodyId = 0
+    state.lockedVehicleId = 0
+    state.lockedBodyId = 0
+end
+
+local function _guidedTargetingClearTarget(state)
+    state.targetWorldPos = nil
+    state.targetDistance = 0.0
+    state.isProjectedVisible = false
+    state.loseTimer = 0.0
+    state.progress = 0.0
+    state.state = "idle"
+    state.candidateVehicleId = 0
+    state.candidateBodyId = 0
+    state.lockedVehicleId = 0
+    state.lockedBodyId = 0
+end
+
+local function _resolveControlledShipBody()
+    if client.shipCameraGetControlledBody ~= nil then
+        local body = client.shipCameraGetControlledBody()
+        if body ~= nil and body ~= 0 then
+            return body
+        end
+    end
+
+    local veh = GetPlayerVehicle()
+    if veh == nil or veh == 0 then
+        return 0
+    end
+
+    local body = GetVehicleBody(veh)
+    local scriptBody = client.shipContextGetBody()
+    if body == nil or body == 0 or scriptBody == 0 or body ~= scriptBody then
+        return 0
+    end
+
+    if client.registryShipExists ~= nil and (not client.registryShipExists(body)) then
+        return 0
+    end
+
+    return body
+end
+
+local function _getBodyCenterWorld(bodyId)
+    if bodyId == nil or bodyId == 0 then
+        return nil
+    end
+
+    local bodyT = GetBodyTransform(bodyId)
+    local centerLocal = GetBodyCenterOfMass(bodyId)
+    return TransformToParentPoint(bodyT, centerLocal)
+end
+
+local function _getProjectedOffsetSq(worldPos, centerLocal, camT)
+    local targetLocal = TransformToLocalPoint(camT, worldPos)
+    if targetLocal[3] >= -0.01 then
+        return nil
+    end
+
+    local centerDepth = -centerLocal[3]
+    local targetDepth = -targetLocal[3]
+    if centerDepth <= 0.01 or targetDepth <= 0.01 then
+        return nil
+    end
+
+    local dx = (targetLocal[1] / targetDepth) - (centerLocal[1] / centerDepth)
+    local dy = (targetLocal[2] / targetDepth) - (centerLocal[2] / centerDepth)
+    return dx * dx + dy * dy
+end
+
+local function _evaluateVehicleTarget(vehicleId, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
+    if vehicleId == nil or vehicleId == 0 then
+        return nil
+    end
+
+    local ownVehicleId = GetBodyVehicle(shipBody)
+    if ownVehicleId ~= nil and ownVehicleId ~= 0 and vehicleId == ownVehicleId then
+        return nil
+    end
+
+    local targetBody = GetVehicleBody(vehicleId)
+    if targetBody ~= nil and targetBody ~= 0
+        and client.weaponTargetIsLockableBody ~= nil
+        and not client.weaponTargetIsLockableBody(targetBody, shipBody) then
+        return nil
+    end
+    if targetBody ~= nil and targetBody ~= 0 and targetBody == shipBody then
+        return nil
+    end
+    local targetPos
+    
+    if targetBody ~= nil and targetBody ~= 0 and targetBody ~= shipBody then
+        targetPos = _getBodyCenterWorld(targetBody)
+        if targetPos == nil then
+            return nil
+        end
+    else
+        -- 处理没有body的载具
+        targetPos = GetVehicleTransform(vehicleId).pos
+        if targetPos == nil then
+            return nil
+        end
+    end
+
+    local toTarget = VecSub(targetPos, aimOrigin)
+    local distance = VecLength(toTarget)
+    if distance <= 0.001 or distance > (cfg.lockDistance or 0.0) then
+        return nil
+    end
+
+    local dir = VecScale(toTarget, 1.0 / distance)
+    local minCos = math.cos(math.rad(cfg.lockHalfAngleDeg or 0.0))
+    if VecDot(aimForward, dir) < minCos then
+        return nil
+    end
+
+    local offsetSq = _getProjectedOffsetSq(targetPos, centerLocal, camT)
+    if offsetSq == nil then
+        return nil
+    end
+
+    return {
+        vehicleId = vehicleId,
+        bodyId = targetBody or 0,
+        targetPos = targetPos,
+        distance = distance,
+        score = offsetSq,
+    }
+end
+
+local function _evaluateExternalBodyTarget(
+    bodyId,
+    shipBody,
+    aimOrigin,
+    aimForward,
+    centerLocal,
+    camT,
+    cfg
+)
+    local targetBody = math.floor(bodyId or 0)
+    if targetBody == 0 or targetBody == shipBody
+        or client.weaponTargetIsExternalBody == nil
+        or not client.weaponTargetIsExternalBody(targetBody) then
+        return nil
+    end
+    local targetPos = _getBodyCenterWorld(targetBody)
+    if targetPos == nil then return nil end
+    local toTarget = VecSub(targetPos, aimOrigin)
+    local distance = VecLength(toTarget)
+    if distance <= 0.001 or distance > (cfg.lockDistance or 0.0) then
+        return nil
+    end
+    local dir = VecScale(toTarget, 1.0 / distance)
+    local minCos = math.cos(math.rad(cfg.lockHalfAngleDeg or 0.0))
+    if VecDot(aimForward, dir) < minCos then return nil end
+    local offsetSq = _getProjectedOffsetSq(targetPos, centerLocal, camT)
+    if offsetSq == nil then return nil end
+    return {
+        vehicleId = 0,
+        bodyId = targetBody,
+        targetPos = targetPos,
+        distance = distance,
+        score = offsetSq,
+    }
+end
+
+local function _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
+    local vehicles = FindVehicles("", true) or {}
+    local best = nil
+
+    for i = 1, #vehicles do
+        local vehicleId = vehicles[i]
+        local entry = _evaluateVehicleTarget(vehicleId, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
+        if entry ~= nil and (best == nil or entry.score < best.score) then
+            best = entry
+        end
+    end
+    if client.weaponTargetFindExternalBodies ~= nil then
+        for _, bodyId in ipairs(client.weaponTargetFindExternalBodies()) do
+            local entry = _evaluateExternalBodyTarget(
+                bodyId,
+                shipBody,
+                aimOrigin,
+                aimForward,
+                centerLocal,
+                camT,
+                cfg
+            )
+            if entry ~= nil and (best == nil or entry.score < best.score) then
+                best = entry
+            end
+        end
+    end
+
+    return best
+end
+
+local function _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
+    local stickyVehicleId = 0
+    if state.state == "locked" and state.lockedVehicleId ~= 0 then
+        stickyVehicleId = state.lockedVehicleId
+    elseif state.candidateVehicleId ~= 0 then
+        stickyVehicleId = state.candidateVehicleId
+    end
+
+    if stickyVehicleId ~= 0 then
+        local sticky = _evaluateVehicleTarget(stickyVehicleId, shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
+        if sticky ~= nil then
+            return sticky
+        end
+    elseif state.candidateBodyId ~= 0 or state.lockedBodyId ~= 0 then
+        local stickyBodyId = state.state == "locked"
+            and state.lockedBodyId or state.candidateBodyId
+        local sticky = _evaluateExternalBodyTarget(
+            stickyBodyId,
+            shipBody,
+            aimOrigin,
+            aimForward,
+            centerLocal,
+            camT,
+            cfg
+        )
+        if sticky ~= nil then return sticky end
+    end
+
+    return _findBestVehicleTarget(shipBody, aimOrigin, aimForward, centerLocal, camT, cfg)
+end
+
+function client.guidedTargetingTick(dt)
+    local state = client.guidedTargetingState
+    local cfg = client.guidedTargetingConfig
+
+    local shipBody = _resolveControlledShipBody()
+    local currentMode = (client.getShipMainWeaponMode ~= nil and shipBody ~= 0) and client.getShipMainWeaponMode(shipBody) or "xSlot"
+    local weapon = client.getShipWeaponDefinition ~= nil
+        and client.getShipWeaponDefinition(shipBody, currentMode) or {}
+    local requiresTargetLock = weaponTargetingPolicy ~= nil
+        and weaponTargetingPolicy.requiresTargetLock(weapon)
+    if shipBody == 0 or not requiresTargetLock
+        or tostring(weapon.controllerType or "") == "chargedRay" then
+        _guidedTargetingResetState(state)
+        return
+    end
+
+    state.active = true
+    state.shipBody = shipBody
+
+    local modeCfg = cfg
+    if string.lower(tostring(currentMode or "")):match("^hslot%d*$") ~= nil then
+        modeCfg = {
+            lockDistance = (cfg.lockDistance or 0.0) * 2.0,
+            lockHalfAngleDeg = cfg.lockHalfAngleDeg,
+            lockAcquireTime = cfg.lockAcquireTime,
+            lockLoseGraceTime = cfg.lockLoseGraceTime,
+        }
+    end
+    modeCfg = _guidedTargetingResolveConfig(shipBody, modeCfg, currentMode)
+
+    local shipT = GetBodyTransform(shipBody)
+    local shipPos = shipT.pos
+    local shipForward = VecNormalize(TransformToParentVec(shipT, Vec(0, 0, -1)))
+    local camT = GetCameraTransform()
+    local camPos = camT.pos
+    local camForward = VecNormalize(TransformToParentVec(camT, Vec(0, 0, -1)))
+    local useCameraCone = client.shipCamera ~= nil
+        and (client.shipCamera.rearFreelookActive
+            or client.shipCamera.viewMode == "front")
+        and requiresTargetLock
+
+    local aimOrigin = shipPos
+    local aimForward = shipForward
+    if useCameraCone then
+        aimOrigin = camPos
+        aimForward = camForward
+    end
+
+    local centerDistance = math.max(12.0, math.min(modeCfg.lockDistance or 220.0, 100.0))
+    local centerWorld = nil
+    if useCameraCone then
+        centerWorld = VecAdd(aimOrigin, VecScale(aimForward, centerDistance))
+    elseif client.shipCrosshairGetAimWorldPoint ~= nil then
+        centerWorld = client.shipCrosshairGetAimWorldPoint(shipBody)
+    end
+    if centerWorld == nil then
+        centerWorld = VecAdd(aimOrigin, VecScale(aimForward, centerDistance))
+    end
+    local centerLocal = TransformToLocalPoint(camT, centerWorld)
+    if centerLocal[3] >= -0.01 then
+        centerLocal = Vec(0, 0, -1)
+    end
+    state.lockCenterWorld = centerWorld
+
+    local target = _resolveStickyTarget(state, shipBody, aimOrigin, aimForward, centerLocal, camT, modeCfg)
+    if target == nil then
+        if state.candidateVehicleId ~= 0 or state.lockedVehicleId ~= 0
+            or state.candidateBodyId ~= 0 or state.lockedBodyId ~= 0 then
+            state.loseTimer = state.loseTimer + (dt or 0.0)
+            if state.loseTimer > (modeCfg.lockLoseGraceTime or 0.0) then
+                _guidedTargetingClearTarget(state)
+            end
+        else
+            _guidedTargetingClearTarget(state)
+        end
+        return
+    end
+
+    state.active = true
+    state.shipBody = shipBody
+    state.lockCenterWorld = centerWorld
+    state.loseTimer = 0.0
+    state.targetWorldPos = target.targetPos
+    state.targetDistance = target.distance
+    state.isProjectedVisible = true
+
+    local changedTarget = target.vehicleId ~= state.candidateVehicleId
+        or target.bodyId ~= state.candidateBodyId
+    if changedTarget then
+        state.candidateVehicleId = target.vehicleId
+        state.candidateBodyId = target.bodyId
+        state.lockedVehicleId = 0
+        state.lockedBodyId = 0
+        state.progress = 0.0
+        state.state = "acquiring"
+    elseif state.state == "locked" then
+        state.lockedVehicleId = target.vehicleId
+        state.lockedBodyId = target.bodyId
+    else
+        local acquireTime = math.max(0.001, modeCfg.lockAcquireTime or 1.0)
+        state.progress = _guidedTargetingClamp(state.progress + (dt or 0.0) / acquireTime, 0.0, 1.0)
+        if state.progress >= 1.0 then
+            state.progress = 1.0
+            state.state = "locked"
+            state.lockedVehicleId = target.vehicleId
+            state.lockedBodyId = target.bodyId
+        else
+            state.state = "acquiring"
+        end
+    end
+
+    if state.state == "locked" then
+        state.progress = 1.0
+        state.candidateVehicleId = target.vehicleId
+        state.candidateBodyId = target.bodyId
+        state.lockedVehicleId = target.vehicleId
+        state.lockedBodyId = target.bodyId
+    end
+end
+
+function client.guidedTargetingGetHudState()
+    return client.guidedTargetingState
+end
+
+function client.guidedTargetingCanFire(shipBodyId)
+    local state = client.guidedTargetingState
+    return state.active
+        and state.shipBody == math.floor(shipBodyId or 0)
+        and state.state == "locked"
+        and state.lockedBodyId ~= 0
+end
+
+function client.guidedTargetingGetLockedVehicleId(shipBodyId)
+    if not client.guidedTargetingCanFire(shipBodyId) then
+        return 0
+    end
+    return client.guidedTargetingState.lockedVehicleId or 0
+end
+
+function client.guidedTargetingGetLockedBodyId(shipBodyId)
+    if not client.guidedTargetingCanFire(shipBodyId) then return 0 end
+    return client.guidedTargetingState.lockedBodyId or 0
+end
+
+function client.guidedTargetingGetSummary(shipBodyId)
+    local state = client.guidedTargetingState
+    if not state.active or state.shipBody ~= math.floor(shipBodyId or 0) then
+        return "NO TARGET", 0.0
+    end
+    if state.state == "locked" then
+        return "LOCKED", 1.0
+    end
+    if state.candidateBodyId ~= 0 then
+        return string.format("LOCKING %d%%", math.floor((state.progress or 0.0) * 100 + 0.5)), state.progress or 0.0
+    end
+    return "NO TARGET", 0.0
+end

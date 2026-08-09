@@ -32,12 +32,12 @@ foreach ($id in $definitions.Keys) {
     Require-Text $source 'controllerType\s*=\s*"chargedRay"' "charged weapon $id is missing controllerType = chargedRay"
 }
 
-$runtime = (Read-Required "script\weapon\client\common\effects\charge\tachyon_lance.lua") + "`n" +
-    (Read-Required "script\weapon\client\common\effects\charge\focused_arc.lua") + "`n" +
-    (Read-Required "script\weapon\client\common\effects\charge\perdition_beam.lua") + "`n" +
-    (Read-Required "script\weapon\client\common\effects\beam\tachyon_lance.lua") + "`n" +
-    (Read-Required "script\weapon\client\common\effects\impact\tachyon_lance.lua") + "`n" +
-    (Read-Required "script\weapon\client\common\sound\sound_service.lua")
+$runtime = (Read-Required "script\weapon\client\presentation\visual\phase\charge\tachyon_lance.lua") + "`n" +
+    (Read-Required "script\weapon\client\presentation\visual\phase\charge\focused_arc.lua") + "`n" +
+    (Read-Required "script\weapon\client\presentation\visual\phase\charge\perdition_beam.lua") + "`n" +
+    (Read-Required "script\weapon\client\presentation\visual\phase\beam\tachyon_lance.lua") + "`n" +
+    (Read-Required "script\weapon\client\presentation\visual\phase\impact\tachyon_lance.lua") + "`n" +
+    (Read-Required "script\weapon\client\presentation\audio\sound_service.lua")
 foreach ($field in @("definition.chargeFxProfile", "definition.fxProfile", "definition.impactFxProfile", "definition.soundProfileId")) {
     Require-Text $runtime ([regex]::Escape($field)) "charged runtime does not dispatch $field"
 }

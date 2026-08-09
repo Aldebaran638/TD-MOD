@@ -50,10 +50,10 @@ foreach ($token in @('behaviorType = "projectile"', 'impactFxProfile = "kineticA
     Require-Text $stellaris ([regex]::Escape($token)) "static Stellaris ballistic definitions are missing $token"
 }
 
-$runtime = (Read-Required "script\weapon\client\common\effects\projectile\default.lua") + "`n" +
-    (Read-Required "script\weapon\client\common\effects\muzzle\default.lua") + "`n" +
-    (Read-Required "script\weapon\client\common\sound\sound_service.lua") + "`n" +
-    (Read-Required "script\weapon\server\slots\l\kinetic_artillery\projectile_manager.lua")
+$runtime = (Read-Required "script\weapon\client\presentation\visual\phase\projectile\default.lua") + "`n" +
+    (Read-Required "script\weapon\client\presentation\visual\phase\muzzle\default.lua") + "`n" +
+    (Read-Required "script\weapon\client\presentation\audio\sound_service.lua") + "`n" +
+    (Read-Required "script\weapon\server\behavior\projectile\manager.lua")
 foreach ($token in @("definition.fxProfile", "definition.projectileFxVariant", "definition.impactFxProfile", "definition.muzzleFxProfile", "definition.soundProfileId", "projectileSpeed", "projectileRadius")) {
     Require-Text $runtime ([regex]::Escape($token)) "ballistic runtime does not dispatch $token"
 }
