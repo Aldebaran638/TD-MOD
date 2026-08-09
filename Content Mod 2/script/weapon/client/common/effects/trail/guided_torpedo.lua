@@ -1,0 +1,1 @@
+-- Guided torpedo trail parameters are selected from projectileFxVariant.

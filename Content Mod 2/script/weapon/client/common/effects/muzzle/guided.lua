@@ -1,0 +1,1 @@
+-- Guided muzzle profiles are implemented by muzzle/default.lua.

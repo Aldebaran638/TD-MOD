@@ -1,0 +1,1 @@
+-- Strike craft recovery rendering is implemented by craft/subweapon_beam.lua.

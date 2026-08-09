@@ -1,0 +1,1 @@
+-- Arc impact profiles are implemented by impact/default.lua.

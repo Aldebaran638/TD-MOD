@@ -1,0 +1,1 @@
+-- Arc profiles use the reusable raycast beam renderer registered in effect_dispatch.lua.

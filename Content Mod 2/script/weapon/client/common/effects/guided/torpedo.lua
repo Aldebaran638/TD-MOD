@@ -1,0 +1,1 @@
+-- Torpedo visual profile is implemented by guided/missile.lua.

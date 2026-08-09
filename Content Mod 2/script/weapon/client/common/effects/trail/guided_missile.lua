@@ -1,0 +1,1 @@
+-- Guided missile trail parameters are selected from projectileFxVariant.

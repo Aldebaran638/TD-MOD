@@ -1,0 +1,1 @@
+-- Plasma projectile profile registration lives in effect_dispatch.lua.

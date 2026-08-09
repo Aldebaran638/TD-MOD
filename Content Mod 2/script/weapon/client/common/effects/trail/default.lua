@@ -1,0 +1,1 @@
+-- The projectile renderer owns default trail emission.

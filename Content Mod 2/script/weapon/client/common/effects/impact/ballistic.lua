@@ -1,0 +1,1 @@
+-- Ballistic impact profiles are implemented by projectile/default.lua.

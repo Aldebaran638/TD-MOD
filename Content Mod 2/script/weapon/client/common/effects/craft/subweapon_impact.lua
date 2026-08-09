@@ -1,0 +1,1 @@
+-- Strike craft subweapon impact rendering is implemented by beam/gamma.lua.

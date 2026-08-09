@@ -1,0 +1,1 @@
+-- Strike craft engine rendering is implemented by craft/default.lua.

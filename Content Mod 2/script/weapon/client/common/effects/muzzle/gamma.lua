@@ -1,0 +1,1 @@
+-- Gamma muzzle profiles are implemented by the shared gamma beam profile.

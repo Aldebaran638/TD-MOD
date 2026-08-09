@@ -1,0 +1,1 @@
+-- Strike craft subweapon muzzle rendering is implemented by beam/gamma.lua.

@@ -1,0 +1,1 @@
+-- Gamma impact profiles are implemented by the shared gamma beam profile.
