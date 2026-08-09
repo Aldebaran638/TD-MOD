@@ -63,6 +63,9 @@ shipDefinitionRegister({
         idleLoopPath = "MOD/sound/fallen_empire_titan_idle_01.ogg",
         volume = 0.4,
     },
+    hudProfile = {
+        targetMarkerSize = 16,
+    },
     cameraProfile = {
         distance = 50, distanceMin = 40, distanceMax = 80, pitchLimit = 85,
         rearYawMin = -90, rearYawMax = 90, mouseSensitivity = 0.04, glideStrength = 0.55,

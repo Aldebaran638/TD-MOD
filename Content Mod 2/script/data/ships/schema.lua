@@ -14,6 +14,7 @@ local _playerDefinitionFields = {
     flightProfile = true,
     engineFx = true,
     engineSound = true,
+    hudProfile = true,
     cameraProfile = true,
     regen = true,
     componentProfile = true,
@@ -102,6 +103,7 @@ local _engineFxFields = {
 }
 
 local _engineSoundFields = { idleLoopPath = true, volume = true }
+local _hudFields = { targetMarkerSize = true }
 local _cameraFields = {
     distance = true,
     distanceMin = true,
@@ -186,6 +188,8 @@ local function _validatePlayerDefinition(definition)
         })
     _validateFields(_requireTable(definition, "engineSound"), _engineSoundFields,
         "engineSound")
+    _validateFields(_requireTable(definition, "hudProfile"), _hudFields,
+        "hudProfile")
     _validateFields(_requireTable(definition, "cameraProfile"), _cameraFields,
         "cameraProfile")
     _validateFields(_requireTable(definition, "regen"), _regenFields,

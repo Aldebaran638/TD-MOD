@@ -11,28 +11,19 @@ client.shipSensorHudState = client.shipSensorHudState or {
 local _sensorScanInterval = 3.0
 local _sensorPingLifetime = 1.0
 local _sensorColor = { 0.96, 0.18, 0.20 }
+local _defaultTargetMarkerSize = 4
 
 local function _setSensorColor(alpha)
     UiColor(_sensorColor[1], _sensorColor[2], _sensorColor[3], alpha or 1.0)
 end
 
 local function _sensorShipSize(shipType)
-    local id = string.lower(tostring(shipType or ""))
-    if string.find(id, "externalboss", 1, true)
-        or string.find(id, "dragon", 1, true) then return 16 end
-    if string.find(id, "paradox", 1, true)
-        or string.find(id, "titan", 1, true) then return 16 end
-    if string.find(id, "battlecruiser", 1, true)
-        or string.find(id, "enigmaticcruiser", 1, true)
-        or string.find(id, "battleship", 1, true) then return 8 end
-    if string.find(id, "cruiser", 1, true) then return 4 end
-    if string.find(id, "frigate", 1, true) then return 1 end
-    if string.find(id, "strike", 1, true)
-        or string.find(id, "fighter", 1, true)
-        or string.find(id, "bomber", 1, true)
-        or string.find(id, "destroyer", 1, true)
-        or string.find(id, "escort", 1, true) then return 2 end
-    return 1
+    local definition = shipDefinitionGet ~= nil
+        and shipDefinitionGet(shipType, "")
+        or ((shipTypeRegistryData or {})[tostring(shipType or "")] or {})
+    local profile = (definition or {}).hudProfile or {}
+    return math.max(1, tonumber(profile.targetMarkerSize)
+        or _defaultTargetMarkerSize)
 end
 
 local function _sensorLocalShipBody()

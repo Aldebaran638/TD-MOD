@@ -52,6 +52,11 @@ try {
     Assert-True ($missingPlayerField.ExitCode -eq 1 -and $missingPlayerField.Text -match 'missing required field: externalDamage') "rejects an incomplete player definition"
     Restore-File $titanPath
 
+    Rewrite-File $titanPath '    hudProfile = {' '    obsoleteHudProfile = {'
+    $missingHudProfile = Invoke-Checker
+    Assert-True ($missingHudProfile.ExitCode -eq 1 -and $missingHudProfile.Text -match 'missing required field: hudProfile') "rejects a player definition without hudProfile"
+    Restore-File $titanPath
+
     $craftPath = "script\data\ships\advanced_strike_craft\advanced_strike_craft.lua"
     Rewrite-File $craftPath '    externalDamage = {' "    cameraProfile = {},`n    externalDamage = {"
     $aiCrossField = Invoke-Checker

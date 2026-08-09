@@ -172,7 +172,7 @@ function Assert-LiteralField {
     if ($value -notmatch $Pattern) { Add-Issue $Message }
 }
 
-$playerFields = @("shipType", "displayName", "englishName", "controlMode", "maxShieldHP", "maxArmorHP", "maxBodyHP", "shieldRadius", "flightProfile", "engineFx", "engineSound", "cameraProfile", "regen", "componentProfile", "externalDamage", "weaponMountProfiles", "defaultSlotConfigurationId", "slotConfigurations")
+$playerFields = @("shipType", "displayName", "englishName", "controlMode", "maxShieldHP", "maxArmorHP", "maxBodyHP", "shieldRadius", "flightProfile", "engineFx", "engineSound", "hudProfile", "cameraProfile", "regen", "componentProfile", "externalDamage", "weaponMountProfiles", "defaultSlotConfigurationId", "slotConfigurations")
 $aiFields = @("shipType", "displayName", "englishName", "controlMode", "interceptorClass", "maxShieldHP", "maxArmorHP", "maxBodyHP", "shieldRadius")
 $flightFields = @("gravityCompensation", "disableLiftVoxelRatio", "forwardAcceleration", "backwardAcceleration", "maxCombatSpeed", "maxReverseSpeed", "quadraticDamping", "dampingMinSpeed", "attitude", "roll")
 $attitudeFields = @("yawDeadzone", "pitchDeadzone", "yawSoftZone", "pitchSoftZone", "yawForceGain", "pitchForceGain", "yawForceMax", "pitchForceMax", "yawDamping", "pitchDamping", "yawRateDeadzone", "pitchRateDeadzone", "yawLeverArm", "pitchLeverArm")
@@ -195,6 +195,7 @@ function Validate-PlayerDefinition {
     $null = Validate-NestedTable $Source (Get-NamedEntry $flight "roll") $rollFields "$($Spec.ShipType).flightProfile.roll"
     $engine = Validate-NestedTable $Source (Get-NamedEntry $top "engineFx") $engineRequired "$($Spec.ShipType).engineFx" $engineFields
     $null = Validate-NestedTable $Source (Get-NamedEntry $top "engineSound") @("idleLoopPath", "volume") "$($Spec.ShipType).engineSound"
+    $null = Validate-NestedTable $Source (Get-NamedEntry $top "hudProfile") @("targetMarkerSize") "$($Spec.ShipType).hudProfile"
     $null = Validate-NestedTable $Source (Get-NamedEntry $top "cameraProfile") $cameraFields "$($Spec.ShipType).cameraProfile"
     $null = Validate-NestedTable $Source (Get-NamedEntry $top "regen") $regenFields "$($Spec.ShipType).regen"
     $null = Validate-NestedTable $Source (Get-NamedEntry $top "componentProfile") $componentFields "$($Spec.ShipType).componentProfile"

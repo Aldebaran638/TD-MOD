@@ -90,6 +90,9 @@ shipDefinitionRegister({
         idleLoopPath = "MOD/sound/fallen_empire_warship_idle_01.ogg",
         volume = 1,
     },
+    hudProfile = {
+        targetMarkerSize = 8,
+    },
     cameraProfile = {
         distance = 14.0,
         distanceMin = 10.0,
