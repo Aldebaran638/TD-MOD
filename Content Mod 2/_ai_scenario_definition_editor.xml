@@ -1,0 +1,6 @@
+<scene version="2.0.1" shadowVolume="20 20 20">
+    <environment template="night"/>
+    <script file="MOD/script/testing/scenario/scenario_controller.lua" param0="scenario=definition_editor_v1" param1="revision=definition-editor-xml-v1"/>
+    <script file="MOD/script/testing/scenario/definition_editor_controller.lua"/>
+    <location name="Definition Editor Preview" tags="player" pos="0 4 8" rot="0 180 0"/>
+</scene>

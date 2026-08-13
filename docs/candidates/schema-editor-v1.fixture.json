@@ -61,5 +61,5 @@
     "unknownMetadataRoundTrip": true,
     "generatedLuaManualEdit": "forbidden"
   },
-  "runtimeScope": "headless-editor-contract; live Teardown preview is deferred when executable is unavailable"
+  "runtimeScope": "source/compiler authority plus disposable non-3D Teardown presentation host; live host has no source, compiler, generated-catalog or Runtime write authority"
 }

@@ -28,7 +28,20 @@ catalog ownership therefore remain unchanged. If the editor fails, discard its
 staging workspace and continue editing the previous source package; no generated
 artifact is overwritten.
 
-The first valid weapon path is measured as a five-minute fixture target. This is
-headless evidence for the schema/compiler contract, not a claim about live UI
-usability. Teardown.exe is unavailable, so a live Preview shot and performance
-measurement remain a later runtime gate.
+The disposable non-3D presentation host is
+`Content Mod 2/_ai_scenario_definition_editor.xml`. Open it from Level Editor
+and press F5. It displays the same five schema forms and field metadata validated
+by the headless report. Controls are:
+
+- Left/Right: select form;
+- Up/Down: select field;
+- Space: apply the deterministic valid edit;
+- Delete: inject the field's deterministic invalid value;
+- Enter: validate before save;
+- Backspace/Insert: undo/redo the source snapshot.
+
+The live host is intentionally presentation-only: it cannot write source, invoke
+the Compiler, modify generated artifacts, spawn entities, apply damage or mutate
+Runtime state. Headless fixtures remain authoritative for bytes, hashes and save
+gates; screenshots prove only that the real Teardown input/UI path exposes those
+results. The first valid weapon path remains the five-minute fixture target.

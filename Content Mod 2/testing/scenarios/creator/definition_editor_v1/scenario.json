@@ -1,0 +1,39 @@
+{
+  "schema": "cm2.test-scenario/1",
+  "id": "creator/definition_editor_v1",
+  "step": "Step 8.4",
+  "level": "Content Mod 2/_ai_scenario_definition_editor.xml",
+  "controller": "Content Mod 2/script/testing/scenario/definition_editor_controller.lua",
+  "xml_revision": "definition-editor-xml-v1",
+  "lua_revision": "definition-editor-lua-v1",
+  "source_fixture": "docs/candidates/schema-editor-v1.fixture.json",
+  "source_report": "docs/candidates/schema-editor-v1.result.json",
+  "setup": {
+    "three_dimensional_view": false,
+    "package_id": "cm2.editor.demo",
+    "forms": ["weapon", "projectile", "effect", "vehicle", "mount"],
+    "form_field_count": 16,
+    "schema_field_count": 19,
+    "generated_catalog_write": "forbidden"
+  },
+  "controls": {
+    "form": ["leftarrow", "rightarrow"],
+    "field": ["uparrow", "downarrow"],
+    "valid_edit": "space",
+    "invalid_edit": "delete",
+    "validate_before_save": "return",
+    "undo": "backspace",
+    "redo": "insert"
+  },
+  "expected": {
+    "valid_save": "source save validated",
+    "invalid_save": "save blocked before compiler",
+    "compiler": "byte-identical",
+    "runtime_catalog": "unchanged"
+  },
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "VISUAL", "LOG"],
+  "eyes": ["EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "reload": "REOPEN_LEVEL_XML",
+  "cleanup": ["F4_TO_EDITOR", "EMERGENCY_RELEASE", "NO_HELD_INPUTS"]
+}
