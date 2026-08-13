@@ -1,0 +1,127 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 8.3",
+  "result": "engineering_pass_subjective_visual_review",
+  "verified_at": "2026-08-13T21:07:00+08:00",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "VISUAL", "LOG"],
+  "eyes": ["EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "telemetry": {
+    "required": false,
+    "reason": "The embedded Step 8.3 contract treats deterministic Preview diagnostics as state authority; gameplay telemetry and damage_probe cannot prove Preview behavior."
+  },
+  "setup": {
+    "scene": "Content Mod 2/_ai_scenario_preview_suite.xml",
+    "controller": "Content Mod 2/script/testing/scenario/preview_suite_controller.lua",
+    "scenario": "Content Mod 2/testing/scenarios/creator/preview_suite_v1/scenario.json",
+    "seed": 424242,
+    "preplaced_vox": "Content Mod 2/vox/gammaStrikeCraftTest.vox",
+    "runtime_catalog_mutation": "forbidden"
+  },
+  "static_fixture": {
+    "runner": "tools/cm2-preview/run-preview-suite-v1.ps1",
+    "self_test": "tools/cm2-preview/test-preview-suite-v1.ps1",
+    "report": "docs/candidates/preview-suite-v1.result.json",
+    "effect_replay_sha256": "6493f13453f42ba32bd964af5d54408237e702c72235c50293c8757cb813e3c3",
+    "weapon_replay_sha256": "a3092a1f2b6566905cc276abf34a412ee74ea7324234149b31ab455b1932a93a",
+    "negative_cases": [
+      "wrong compiler",
+      "runtime catalog mutation",
+      "missing world/entity adapter",
+      "missing moving target",
+      "missing VOX",
+      "missing stale disposal case",
+      "native numbered-tool key dual consumption",
+      "native LMB dual consumption"
+    ]
+  },
+  "reload": {
+    "xml_editor_run": "20260813T125348Z-a61d5533",
+    "xml_editor_frame": "frame_f000002-30935038_pid-30296.png",
+    "xml_observation": "Ctrl+O selected the new root XML; Scene Explorer changed to _ai_scenario_preview_suite, Shape count changed from 22 to 1, and the real gamma VOX appeared.",
+    "lua_reload": "F4 returned to Level Editor, then F5 started a fresh level session. Updated LEFT/RIGHT ARROW UI and replay=0 proved the modified controller was reread.",
+    "black_frame_policy": "Loading black frames were rejected by the screenshot validator and retried after waiting; no black frame is used as evidence."
+  },
+  "live_run": {
+    "run_id": "20260813T130550Z-d3b94655",
+    "target_id": "teardown:30296:526038",
+    "input_backend": "gvinput virtual HID",
+    "actions": [
+      "F5 -> fresh Preview session",
+      "Right Arrow -> Weapon Range",
+      "Space -> Weapon Range replay",
+      "Right Arrow -> Ship Dock",
+      "Space -> Ship Dock dispose/stale-reject/spawn replay",
+      "Right Arrow -> Effect Lab",
+      "F4 -> Level Editor cleanup",
+      "emergency release"
+    ],
+    "assertions": {
+      "effect_lab": "EffectPlayer production owner, near LOD0, far LOD1, production PresentationBudget, fixed seed 424242.",
+      "weapon_range": "4 shots, 3 hits, deterministic damage 40, budget accepted=2/degraded=1/rejected=1, moving target visibly changes position.",
+      "ship_dock": "Real gamma VOX, canonical axes, graph ship:gamma.graph, 5 anchors, 2 mounts, 1 turret, orbit camera; Space increments replay from 3 to 4.",
+      "catalog": "Every live mode reports runtime catalog unchanged=true.",
+      "input_isolation": "Arrow/Space controls do not select native numbered tools or fire the native LMB tool; no unrelated ammo HUD is visible in the final frames."
+    }
+  },
+  "screenshots": [
+    {"purpose": "Effect Lab baseline", "file": "frame_f000002-08182eec_pid-30296.png", "sha256": "0b90bfbdc7ea984659415d77db6b98fbfcc6517b3d3379673ed7e58998c152a8"},
+    {"purpose": "Weapon Range select", "file": "frame_f000004-6a07bccb_pid-30296.png", "sha256": "a2821d46151f70ae51a48862ead66d58410f3c3a866f78afcd0c41ae843c220f"},
+    {"purpose": "Weapon Range replay", "file": "frame_f000006-2ac34d5c_pid-30296.png", "sha256": "18bb2044ded4da3dbe858f8a82ff804257d48b25e1a5f0457195d0e062bbd410"},
+    {"purpose": "Ship Dock select", "file": "frame_f000008-8ac3f6fa_pid-30296.png", "sha256": "38eb48db558b9f9bfdfbec3eeee725b7fbb65d783199c500563dd26295c13c14"},
+    {"purpose": "Ship Dock replay", "file": "frame_f000010-dcf6de9d_pid-30296.png", "sha256": "316d9d1d9697c0ea4c3acbbc8b870e657ebba2896bb66d29fe0ebc7f7b3915ed"},
+    {"purpose": "Effect Lab wrap", "file": "frame_f000012-35db2a63_pid-30296.png", "sha256": "b0202a716aea798e0461f523e5273338197269513cc9b0ae7dd74c060cde81fc"},
+    {"purpose": "Editor cleanup", "file": "frame_f000014-25159a74_pid-30296.png", "sha256": "aa3b502effbf652c2204d38bab619b80e19ee862cec2a30f2cc684511e706100"}
+  ],
+  "log": {
+    "path": "%LOCALAPPDATA%/Teardown/log.txt",
+    "post_load_cursor": 80843088,
+    "in_scope_error_count": 0,
+    "in_scope_warning_count": 0,
+    "attributed_external_noise": {
+      "owner": "Steam workshop mod 3148138736 / TABS Vehicle Framework",
+      "errors": 2,
+      "warnings": 6,
+      "details": "Missing TABS sound banks and TABS ballistics pre-init deprecated API calls; every line points outside Content Mod 2."
+    },
+    "post_action_and_cleanup_tail": "0 bytes; no additional error or warning"
+  },
+  "defect_loop": [
+    {
+      "failure": "LMB replay also fired the native player tool and consumed ammo.",
+      "fix": "Removed LMB replay; Space is the sole replay action.",
+      "regression": "Self-test asserts LMB is reserved and final live frames contain no LMB firing artifact."
+    },
+    {
+      "failure": "Numbered Preview mode keys also changed Teardown native tool slots.",
+      "fix": "Replaced numbered keys with Teardown action names leftarrow/rightarrow.",
+      "regression": "Live arrow/Space run cycled all modes without native ammo HUD; self-test reserves numbered keys."
+    }
+  ],
+  "harness": {
+    "command": ".\\harness\\check-all.ps1",
+    "final_manual_run": {
+      "result": "pass",
+      "exit_code": 0,
+      "duration_seconds": 124.5,
+      "lua_files": 229,
+      "xml_files": 10,
+      "api_issues": 0
+    },
+    "input_fix_pre_commit_run": {
+      "result": "pass",
+      "exit_code": 0,
+      "duration_seconds": 123.6
+    },
+    "preview_self_test": "pass",
+    "executable_todo_contracts": 80
+  },
+  "cleanup": {
+    "returned_to_editor": true,
+    "preview_ui_absent_after_f4": true,
+    "held_keys": [],
+    "held_buttons": [],
+    "emergency_release": "pass"
+  },
+  "human_review_remaining": "Subjective visual impact, polish, and aesthetic quality only; objective visibility, mode identity, count, alignment, catalog isolation, replay, log health, and cleanup passed."
+}

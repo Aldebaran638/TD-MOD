@@ -5,7 +5,7 @@ Generated from the authoritative `TEARDOWN_SHIP_PLATFORM_TODO.json` (`cm2.todo/2
 Total: 80
 
 - Implementation: not_started=0; in_progress=0; finish=22; unable=58
-- Verification: verified=10; needs_regression=12; pending=58; human_visual_review=0
+- Verification: verified=10; needs_regression=11; pending=58; human_visual_review=1
 - Automation: FULL_AUTO=43; AUTO_WITH_VISUAL_REVIEW=17; PARTIAL_AUTO=20; MANUAL_REQUIRED=0
 
 ## Profile index
@@ -1115,7 +1115,7 @@ Total: 80
 ### Step 8.3 — 把 Preview 扩展为 Effect Lab、Weapon Range 和 Ship Dock
 
 - Implementation: `finish`
-- Verification: `needs_regression` — Implementation completion is retained, but evidence predates the autonomous policy or explicitly deferred a now-required live, multiplayer, visual, or consumer-path assertion.
+- Verification: `human_visual_review` — Objective engineering verification passed: deterministic fixtures/negative cases, real Editor XML reload, Lua F4->F5 reload, fresh-frame HID mode/replay input, all three visible Preview surfaces, runtime catalog immutability, attributed log health and cleanup are evidenced by run 20260813T130550Z-d3b94655. Only subjective visual impact and polish remain for human review.
 - Automation: `AUTO_WITH_VISUAL_REVIEW`
 - Profiles: `STATIC + FIXTURE + SCENE + REAL_INPUT + VISUAL + LOG`
 - Eyes: `EYE_SCREENSHOT + EYE_LOG`
