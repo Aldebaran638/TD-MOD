@@ -76,7 +76,7 @@
   },
   "regression": {
     "manifest_self_test": {"result": "pass", "assertions": 38},
-    "consumer_self_test": {"result": "pass", "assertions": 10},
+    "consumer_self_test": {"result": "pass", "assertions": 11},
     "compiler_self_test": {"result": "pass", "assertions": 5},
     "todo_contract_validation": {"result": "pass", "contracts": 80},
     "basic_consumer_fixture": "pass",
