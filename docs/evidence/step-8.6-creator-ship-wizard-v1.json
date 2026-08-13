@@ -1,0 +1,165 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 8.6",
+  "result": "engineering_pass_subjective_visual_review",
+  "verified_at": "2026-08-13T23:19:46+08:00",
+  "implementation_commit": "95a09cf427999928f223cc14191007e8b96efcfa",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "VISUAL", "LOG"],
+  "eyes": ["EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "telemetry": {
+    "required": false,
+    "reason": "The embedded Step 8.6 contract has no gameplay-state assertion. Headless artifacts own hashes/schema/budget/entry state; screenshots own the Wizard and Preview surface; incremental logs own runtime health. The disposable scene registers no Runtime ship and invokes no damage RPC."
+  },
+  "setup": {
+    "level": "Content Mod 2/_ai_scenario_creator_ship_wizard.xml",
+    "controller": "Content Mod 2/script/testing/scenario/creator_ship_wizard_controller.lua",
+    "adapter": "Content Mod 2/script/world/adapter/creator_ship_wizard_v1.lua",
+    "scenario": "Content Mod 2/testing/scenarios/creator/ship_wizard_v1/scenario.json",
+    "xml_revision": "creator-ship-wizard-xml-v1",
+    "lua_revision": "creator-ship-wizard-lua-v1",
+    "vox": "Content Mod 2/vox/gammaStrikeCraftTest.vox",
+    "vox_sha256": "c52e69f18a71f54f1259d90570a9d6d9bc917e4d26aa4cfbd2242ad69c06788f",
+    "asset_manifest_sha256": "009135e9ba3cf5a9c1b57222ec712de910584973933ca1edee1f0afa01448e18",
+    "orientation": {"up": "+Y", "forward": "-Z", "meters_per_voxel": 0.1, "logical_size_voxels": [45, 12, 51]},
+    "template": {"body": 1, "shape": 1, "joint": 0, "limits": [2, 8, 4]},
+    "forbidden_authority": ["source fixture write", "VOX write", "Core Lua write", "Runtime catalog registration", "ship registration", "damage RPC", "weapon-runtime substitution"]
+  },
+  "static_fixture": {
+    "runner": "tools/cm2-wizard/run-creator-ship-wizard-v1.ps1",
+    "self_test": "tools/cm2-wizard/test-creator-ship-wizard-v1.ps1",
+    "fixture_sha256": "f16521792a977d345f2ec1663bb52ff73955d233b82f56a2ace219a44631e3c8",
+    "report_sha256": "903169c84b0b0f1131e36ad88a2b55e1998e3116ae172e085cb263378535a94b",
+    "source_sha256": "1b760576732c0323fae67294d228d69b5d82d09eaa250c66f11de2f3e45df331",
+    "build_sha256": "ead7332e378e18bff5f6d7dbf8d28042040da5ce30f6c95654e32c4efafa66a8",
+    "package_sha256": "910a0fdc5db75679df3565553ec139f503c53bd64dd0f82a37d05cb49b443b23",
+    "staging": {
+      "path": "docs/candidates/generated/creator-ship-wizard-v1",
+      "file_count": 4,
+      "package.manifest.json": "bdaceda0eaa5fb39e01459a6379bb08896865608a1549c5671785b606b854caf",
+      "vehicle.definition.json": "a02678d223149c658db60714f61f87eb14a2673d2eeb7ed0397844ce8e840f2f",
+      "anchor-mount.definition.json": "9375535982194e010f7509daddc71ea6042a69b0cd8a5fd19513f4ba2f62a2ec",
+      "catalog.projection.json": "f6ff03c80be8d750814eddb9f8c402bc6ddf9a33d40007cfe86055ae001a0788",
+      "runtime_registration": false,
+      "generated_lua": false
+    },
+    "compiler_checks": ["source schema", "entry references", "body/shape/joint budget", "package file hashes"],
+    "determinism": "Two clean temporary staging directories produced identical source/build/package hashes; the formal source fixture hash was unchanged.",
+    "negative_cases": ["wrong step order", "missing VOX", "unknown orientation", "anchor outside VOX bounds", "invalid mass", "missing engine anchor", "Core boundary", "unlocalizable diagnostic"],
+    "negative_policy": "All eight cases reject before a staging directory is written; no partial package is accepted.",
+    "self_test_assertions": 25,
+    "user_fixture_metrics": {"non_core_users": 3, "first_success_seconds": [238, 301, 276], "localizable_error_rate": 1.0, "lua_calls": 0, "coordinate_drift_meters": 0.0, "preview_difference_count": 0}
+  },
+  "regression": {
+    "asset_importer": {"result": "pass", "assertions": 30},
+    "schema_editor": {"result": "pass", "assertions": 16},
+    "anchor_turret_editor": {"result": "pass", "assertions": 13},
+    "preview_suite": {"result": "pass", "assertions": 17},
+    "shared_compiler": {"result": "pass", "assertions": 5},
+    "wizard": {"result": "pass", "assertions": 25}
+  },
+  "reload": {
+    "open_dialog_run_id": "20260813T145532Z-cac7c350",
+    "open_dialog_frame": "frame_f000002-1b6fb7a5_pid-30296.png",
+    "open_dialog_sha256": "9528859cba990f40f184e920d2c7a17846e1a9e8ba0043cb2755446156d31700",
+    "root_xml_discovery": "The new root XML appeared immediately in Level Editor File/Open. Clicking its exact row and Open changed Scene Explorer identity to _ai_scenario_creator_ship_wizard and kept Shape count at one with the verified Gamma VOX, proving the XML and VOX were reread.",
+    "selected_level_run_id": "20260813T145602Z-dd947691",
+    "selected_level_frame": "frame_f000002-c517a02e_pid-30296.png",
+    "selected_level_sha256": "9a7bb40070ef9e6abdaf2d2bf6864f4a713b867e592973a0ad649135e09cb84d",
+    "lua_reload": "F4 returned to the selected Level Editor scene and F5 loaded the revised creator-ship-wizard-lua-v1 controller.",
+    "loading_recovery": "Near-black F5 loading captures were rejected. The agent waited, checked process/log state, re-observed and sent no contract input until a non-constant Wizard frame was available."
+  },
+  "live_run": {
+    "run_id": "20260813T150815Z-5661c71b",
+    "target_id": "teardown:30296:526038",
+    "pid": 30296,
+    "keyboard_backend": "gvinput virtual HID",
+    "baseline_log_cursor": 80941693,
+    "actions": [
+      "Delete blocks a missing selected VOX at Step 1; Space repairs it",
+      "Right Arrow advances through Import Report to orientation",
+      "Delete blocks unknown orientation at Step 3; Space confirms +Y/-Z",
+      "Right Arrow enters the single-body template and configuration",
+      "Delete blocks mass=0; Space manually edits mass to 1400 kg",
+      "Left Arrow returns to template; Right Arrow proves the manual edit survives backtracking",
+      "Delete removes engine.left at Step 6 and blocks the Anchor reference; Space repairs it",
+      "Right Arrow advances through Loadout into Validate/Build",
+      "Right Arrow is blocked by build-required; Enter validates/builds",
+      "Right Arrow opens Ship Dock and Weapon Range",
+      "Enter marks the package ready",
+      "Held Space produces the synthetic Weapon Range beam",
+      "F4 returns to Level Editor; emergency release clears input"
+    ],
+    "assertions": {
+      "ordered_workflow": "All ten steps are visible and executable through the real Teardown UI path.",
+      "fail_closed": "Missing asset, unknown coordinate frame, invalid mass, missing Anchor and build-required conditions remain on their current steps with structured code/field/resource diagnostics.",
+      "manual_edit_backtracking": "The 1400 kg manual edit remains visible after Step 5 -> Step 4 -> Step 5.",
+      "build": "Enter at Step 8 reports build-pass and exposes the exact package hash without Runtime registration.",
+      "ship_dock": "Step 9 shows the real Gamma VOX inside the cyan Dock boundary with axes and anchors.",
+      "weapon_range": "Step 10 shows a fixed target; real Space input reports synthetic range presentation and draws the beam.",
+      "authority": "The live surface reports source-only staging; no Runtime catalog mutation, ship registration, damage or weapon success is inferred."
+    }
+  },
+  "screenshots": [
+    {"purpose": "Wizard baseline", "file": "frame_f000004-87059e33_pid-30296.png", "sha256": "95b42f0ee093dbda1cac53df2d6b1023907c14caec1f8f8e33a072e8426b6830"},
+    {"purpose": "Missing VOX blocked", "file": "frame_f000006-c0eeb466_pid-30296.png", "sha256": "27632575d1ad4ed056fbee340e19c59e4a949f8835f66658633b32be34ef98f4"},
+    {"purpose": "Unknown orientation blocked", "file": "frame_f000014-a6a99051_pid-30296.png", "sha256": "dfe1d9b5acd0a5e7afc507d523e3fbb6322f43e8557e0c5f3dc1b7c266064eef"},
+    {"purpose": "Invalid mass blocked", "file": "frame_f000022-0ce92d43_pid-30296.png", "sha256": "c11255b904837bc08a1ed01960c699addb473fb8e8f5a0c0c46b4bdd85d8463a"},
+    {"purpose": "Backtracking retains 1400 kg edit", "file": "frame_f000028-9f55d238_pid-30296.png", "sha256": "9d9395027f0b2676266690136aae2462710cf89451ba945147d3f314708975c0"},
+    {"purpose": "Missing Anchor blocked", "file": "frame_f000032-8e3300fc_pid-30296.png", "sha256": "214d0b0d9df3670683c968d1745fefe2f145f22f7fa44bcb3022618c35c74ac8"},
+    {"purpose": "Build required gate", "file": "frame_f000040-0d0f25a6_pid-30296.png", "sha256": "57245cbc3be21999da79c81cf4dee20dd42fa6248d4841e246d727443a5c725d"},
+    {"purpose": "Validate Build pass", "file": "frame_f000042-ddc9c178_pid-30296.png", "sha256": "bee19e081d67e3085030a592f945f06f95d35e15843cac804a23795e10c9d4f6"},
+    {"purpose": "Ship Dock", "file": "frame_f000044-4fb98ae1_pid-30296.png", "sha256": "298a1b120d28cd32e5f6af5c2fa155c75b03df100a503d4cccce7cab42a32610"},
+    {"purpose": "Weapon Range package ready", "file": "frame_f000048-dd4ae589_pid-30296.png", "sha256": "9d6a8957cdf2579d375b0885499a09900b2b8e7a7d2fac44d670f8fa56a30c81"},
+    {"purpose": "Space-triggered synthetic range beam", "file": "frame_f000050-f8adbabc_pid-30296.png", "sha256": "105cec0fefe466cb6a8552cc0b744beef3f644a8fd1cf8a1de2dd0a1dc82f1ac"},
+    {"purpose": "F4 cleanup in Level Editor", "file": "frame_f000052-5c3f7406_pid-30296.png", "sha256": "72b04d54bec33c6339dfa638aad738a853edf8ac58cd2f3bf4abf36f182d6b3d"}
+  ],
+  "log": {
+    "path": "%LOCALAPPDATA%/Teardown/log.txt",
+    "final_contract_cursor": 80941693,
+    "final_contract_bytes": 0,
+    "in_scope_error_count": 0,
+    "in_scope_warning_count": 0,
+    "attributed_external_noise": {
+      "owner": "Steam workshop mod 3148138736 / TABS Vehicle Framework",
+      "errors_per_reload": 2,
+      "warnings_per_reload": 6,
+      "details": "Reload produced two missing TABS sound-bank errors and two groups of TABS ballistics pre-init deprecated API warnings. Every line names the Workshop path outside Content Mod 2. Wizard actions and cleanup added no error or warning."
+    }
+  },
+  "defect_loop": [
+    {
+      "failure": "The old headless Wizard calculated only source/build hashes and wrote no manifest, VehicleDefinition, Anchor/Mount definition or catalog projection; its documentation incorrectly deferred all live verification.",
+      "fix": "Added fail-closed four-file disposable staging, exact file/package hashes, source/Core/catalog immutability, eight negative gates, a source-only workflow adapter and a real Teardown scenario.",
+      "regression": "Wizard 25 assertions, related Asset/Schema/Anchor/Preview/Compiler suites and the full Harness pass."
+    },
+    {
+      "failure": "The first live controller treated LMB as a synthetic range trigger, but neither virtual-HID nor SendInput mouse reached Teardown logical lmb/usetool in this Editor-run session; the UI remained LAST: PACKAGE READY.",
+      "fix": "Did not hide the boundary with an internal call. Bound the Wizard-only synthetic Preview replay to real Space input and retained LMB/usetool as best-effort probes only.",
+      "regression": "The final held-Space frame visibly reports SPACE synthetic range presentation and draws the beam. No claim is made that LMB or any real weapon chain passed; future weapon contracts still require LMB -> weapon runtime -> hit -> damage telemetry."
+    },
+    {
+      "failure": "F5 has a bounded near-black loading period.",
+      "fix": "Rejected black captures, waited and re-observed before each fresh-frame action.",
+      "regression": "All accepted screenshots are non-black client-area captures and cleanup returns to the exact selected root scene."
+    }
+  ],
+  "harness": {
+    "command": ".\\harness\\check-all.ps1",
+    "manual_final": {"result": "pass", "exit_code": 0, "duration_seconds": 129.7, "entry_closure_lua_files": 261, "lua_files": 233, "xml_files": 13, "api_issues": 0, "executable_todo_contracts": 80},
+    "implementation_pre_commit": {"result": "pass", "exit_code": 0, "duration_seconds": 130.7},
+    "wizard_self_test_assertions": 25
+  },
+  "cleanup": {
+    "returned_to_editor": true,
+    "live_wizard_ui_absent_after_f4": true,
+    "scene_explorer": "_ai_scenario_creator_ship_wizard",
+    "shapes_count": 1,
+    "runtime_ship_registered": false,
+    "runtime_catalog_mutated": false,
+    "held_keys": [],
+    "held_buttons": [],
+    "emergency_release": "pass"
+  },
+  "human_review_remaining": "Subjective visual polish and creator ergonomics only. Objective ten-step navigation, diagnostics, manual editing/backtracking, deterministic package generation, VOX orientation/scale, Anchor visibility, Dock/Range surfaces, logs and cleanup passed."
+}

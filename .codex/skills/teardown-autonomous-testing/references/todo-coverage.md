@@ -5,7 +5,7 @@ Generated from the authoritative `TEARDOWN_SHIP_PLATFORM_TODO.json` (`cm2.todo/2
 Total: 80
 
 - Implementation: not_started=0; in_progress=0; finish=22; unable=58
-- Verification: verified=10; needs_regression=9; pending=58; human_visual_review=3
+- Verification: verified=10; needs_regression=8; pending=58; human_visual_review=4
 - Automation: FULL_AUTO=43; AUTO_WITH_VISUAL_REVIEW=17; PARTIAL_AUTO=20; MANUAL_REQUIRED=0
 
 ## Profile index
@@ -1175,7 +1175,7 @@ Total: 80
 ### Step 8.6 — 实现 Creator Ship Wizard MVP
 
 - Implementation: `finish`
-- Verification: `needs_regression` — Implementation completion is retained, but evidence predates the autonomous policy or explicitly deferred a now-required live, multiplayer, visual, or consumer-path assertion.
+- Verification: `human_visual_review` — Objective engineering verification passed on 2026-08-13: deterministic four-file staging, eight fail-closed negative cases, clean rebuild/source immutability, disposable Teardown Wizard navigation, manual edit/backtracking, Build/Ship Dock/Weapon Range Preview, attributed runtime logs and cleanup are evidenced. Only subjective visual polish and creator ergonomics remain for human review.
 - Automation: `AUTO_WITH_VISUAL_REVIEW`
 - Profiles: `STATIC + FIXTURE + SCENE + REAL_INPUT + VISUAL + LOG`
 - Eyes: `EYE_SCREENSHOT + EYE_LOG`
