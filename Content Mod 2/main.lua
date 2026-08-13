@@ -64,4 +64,5 @@ end
 
 function client.draw()
     client.weaponConfigUiDraw()
+    client.aiAgentTelemetryDraw()
 end

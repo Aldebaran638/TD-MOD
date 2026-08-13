@@ -10,6 +10,7 @@ client.mainWeaponInputState = client.mainWeaponInputState or {
     holdMode = "",
     holdTargetVehicleId = 0,
     holdTargetBodyId = 0,
+    diagnosticLmbDown = false,
 }
 
 local function _resolveMainWeaponLocalPlayerId()
@@ -81,19 +82,36 @@ end
 function client.mainWeaponInputTick(dt)
     local _ = dt
     local state = client.mainWeaponInputState
+    local diagnosticLmbDown = InputDown("lmb")
+    local diagnosticPress = diagnosticLmbDown and not state.diagnosticLmbDown
+    state.diagnosticLmbDown = diagnosticLmbDown and true or false
+    local function trace(stage, fields)
+        if not diagnosticPress or client.cm2TelemetryRecord == nil then return end
+        local data = type(fields) == "table" and fields or {}
+        data.stage = tostring(stage or "unknown")
+        data.context_body_id = math.floor((client.shipContextGetBody ~= nil
+            and client.shipContextGetBody()) or 0)
+        client.cm2TelemetryRecord("weapon_input_evaluated", data)
+    end
     if client.weaponConfigUiIsOpen ~= nil and client.weaponConfigUiIsOpen() then
+        trace("blocked", { reason = "weapon configuration UI is open" })
         _releaseHeldWeapon(state)
         return
     end
 
     local playerId = _resolveMainWeaponLocalPlayerId()
     if playerId == nil then
+        trace("blocked", { reason = "local player is unavailable" })
         _releaseHeldWeapon(state)
         return
     end
 
     local vehicle = GetPlayerVehicle(playerId)
     if vehicle == nil or vehicle == 0 then
+        trace("blocked", {
+            reason = "local player is not in a vehicle",
+            player_id = math.floor(playerId or 0),
+        })
         _releaseHeldWeapon(state)
         return
     end
@@ -102,6 +120,15 @@ function client.mainWeaponInputTick(dt)
     local shipBody = client.shipContextGetBody()
     if body == nil or body == 0 or shipBody == nil or shipBody == 0
         or body ~= shipBody or not client.registryShipExists(shipBody) then
+        trace("blocked", {
+            reason = "player vehicle does not match this ship context",
+            player_id = math.floor(playerId or 0),
+            vehicle_id = math.floor(vehicle or 0),
+            vehicle_body_id = math.floor(body or 0),
+            ship_body_id = math.floor(shipBody or 0),
+            registered = shipBody ~= nil and shipBody ~= 0
+                and client.registryShipExists(shipBody) or false,
+        })
         _releaseHeldWeapon(state)
         return
     end
@@ -130,9 +157,26 @@ function client.mainWeaponInputTick(dt)
         _lockedTargetForWeapon(shipBody, definition)
     if _requiresTargetLock(definition)
         and targetVehicleId == 0 and targetBodyId == 0 then
+        trace("blocked", {
+            reason = "selected weapon requires a target lock",
+            player_id = math.floor(playerId or 0),
+            vehicle_id = math.floor(vehicle or 0),
+            ship_body_id = math.floor(shipBody or 0),
+            group_id = tostring(currentMode or ""),
+            weapon_type = tostring((definition or {}).weaponType or ""),
+        })
         _releaseHeldWeapon(state)
         return
     end
+    trace("ready", {
+        player_id = math.floor(playerId or 0),
+        vehicle_id = math.floor(vehicle or 0),
+        ship_body_id = math.floor(shipBody or 0),
+        group_id = tostring(currentMode or ""),
+        weapon_type = tostring((definition or {}).weaponType or ""),
+        target_vehicle_id = math.floor(targetVehicleId or 0),
+        target_body_id = math.floor(targetBodyId or 0),
+    })
     local wantsFire = InputDown("lmb")
     local changed = state.holdShipBody ~= shipBody
         or state.holdMode ~= currentMode

@@ -46,17 +46,51 @@ function server.shipRequestWeaponHold(
     _count()
     local id = tostring(groupId or "")
     local held = math.floor(tonumber(active) or 0) ~= 0
-    if not server.shipRequestMatchesContext(shipBodyId) then return false end
-    -- 松开只清理状态，不要求玩家仍在载具中。
-    if held and not server.shipRequestAuthorize(playerId, shipBodyId) then return false end
-    if held and server.shipRuntimeGetCurrentMainWeapon(shipBodyId) ~= id then
+    local function reject(reason)
+        if server.cm2TelemetryRecord ~= nil then
+            server.cm2TelemetryRecord("weapon_hold_rejected", {
+                ship_body_id = math.floor(tonumber(shipBodyId) or 0),
+                group_id = id,
+                active = held,
+                reason = tostring(reason or "rejected"),
+            })
+        end
         return false
     end
-    return server.weaponGroupSetFireHeld(
+    if server.cm2TelemetryRecord ~= nil then
+        server.cm2TelemetryRecord("weapon_hold_received", {
+            player_id = math.floor(tonumber(playerId) or 0),
+            ship_body_id = math.floor(tonumber(shipBodyId) or 0),
+            group_id = id,
+            active = held,
+            target_vehicle_id = math.floor(tonumber(targetVehicleId) or 0),
+            target_body_id = math.floor(tonumber(targetBodyId) or 0),
+        })
+    end
+    if not server.shipRequestMatchesContext(shipBodyId) then
+        return reject("ship context mismatch")
+    end
+    -- 松开只清理状态，不要求玩家仍在载具中。
+    if held and not server.shipRequestAuthorize(playerId, shipBodyId) then
+        return reject("player is not the active ship driver")
+    end
+    if held and server.shipRuntimeGetCurrentMainWeapon(shipBodyId) ~= id then
+        return reject("weapon group is not selected")
+    end
+    local applied, reason = server.weaponGroupSetFireHeld(
         id,
         held,
         _requestContext(shipBodyId, targetVehicleId, targetBodyId)
     )
+    if not applied then return reject(reason or "weapon runtime rejected hold") end
+    if server.cm2TelemetryRecord ~= nil then
+        server.cm2TelemetryRecord("weapon_hold_applied", {
+            ship_body_id = math.floor(tonumber(shipBodyId) or 0),
+            group_id = id,
+            active = held,
+        })
+    end
+    return true
 end
 
 function server.shipRequestMainWeaponFire(playerId, shipBodyId, request)

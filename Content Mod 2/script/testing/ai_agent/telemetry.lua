@@ -4,10 +4,11 @@
 -- CM2_TEST_V1 structured telemetry.
 --
 -- The game has no socket/file API that is suitable for a portable mod.  The
--- registry is therefore the authority boundary and the clipboard is only a
--- request/response transport.  In the idle state this module samples input
--- locally but does not write a clipboard response or a log line.  A response
--- is produced only for a request carrying a nonce.
+-- registry is therefore the authority boundary.  Teardown's public
+-- UiTextInput is used as a short-lived transport adapter because the direct
+-- clipboard functions are engine-internal and reject calls from mods.  The
+-- adapter is dormant until F8 is pressed and only responds to a request that
+-- carries a nonce.
 
 server = server or {}
 client = client or {}
@@ -31,6 +32,13 @@ telemetry.lastW = telemetry.lastW or false
 telemetry.lastLmb = telemetry.lastLmb or false
 telemetry.inputEdge = telemetry.inputEdge or { w = false, lmb = false }
 telemetry.clientEventSeq = telemetry.clientEventSeq or 0
+telemetry.bridgeActive = telemetry.bridgeActive or false
+telemetry.bridgeFocus = telemetry.bridgeFocus or false
+telemetry.bridgeText = telemetry.bridgeText or ""
+telemetry.bridgeOpenedAt = telemetry.bridgeOpenedAt or 0.0
+telemetry.bridgeTimeout = 8.0
+telemetry.bridgeResponseAt = telemetry.bridgeResponseAt or 0.0
+telemetry.bridgeResponseCloseDelay = 0.45
 
 local function _number(value, fallback)
     local result = tonumber(value)
@@ -324,7 +332,13 @@ function client.cm2TelemetryInit()
     telemetry.lastW = InputDown ~= nil and _boolean(InputDown("w")) or false
     telemetry.lastLmb = InputDown ~= nil and _boolean(InputDown("lmb")) or false
     telemetry.inputEdge = { w = false, lmb = false }
-    telemetry.clientEventSeq = 0
+    telemetry.clientEventSeq = (GetInt ~= nil)
+        and _integer(GetInt(_root() .. "/client_events/latest_seq"), 0) or 0
+    telemetry.bridgeActive = false
+    telemetry.bridgeFocus = false
+    telemetry.bridgeText = ""
+    telemetry.bridgeOpenedAt = 0.0
+    telemetry.bridgeResponseAt = 0.0
     telemetry.clientInitialized = true
     return telemetry.session
 end
@@ -355,25 +369,40 @@ function server.cm2TelemetryRecord(eventName, data)
     return _recordRegistryEvent(eventName, data)
 end
 
-local function _recordClientInputEdge()
+function client.cm2TelemetryRecord(eventName, data)
     if SetString == nil or SetInt == nil then return end
-    telemetry.clientEventSeq = telemetry.clientEventSeq + 1
+    local root = _root() .. "/client_events/"
+    local registrySession = (GetString ~= nil) and GetString(_root() .. "/session") or ""
+    if registrySession ~= nil and registrySession ~= "" then
+        telemetry.session = tostring(registrySession)
+    end
+    telemetry.clientEventSeq = _integer(GetInt(root .. "latest_seq"), 0) + 1
     local event = {
         protocol = telemetry.protocol,
         session = telemetry.session,
         seq = telemetry.clientEventSeq,
         source = "client",
         at = _number((GetTime ~= nil) and GetTime() or 0.0, 0.0),
-        type = "input_edge",
-        data = {
+        type = tostring(eventName or "client_event"),
+        data = type(data) == "table" and data or {},
+    }
+    local slot = ((telemetry.clientEventSeq - 1) % telemetry.ringSize) + 1
+    SetString(root .. tostring(slot) .. "/json", cm2TelemetryJsonEncode(event), false)
+    SetInt(root .. "latest_seq", telemetry.clientEventSeq, false)
+    return telemetry.clientEventSeq
+end
+
+local function _recordClientInputEdge(wDown, lmbDown)
+    return client.cm2TelemetryRecord("input_edge", {
+        changed = {
             w = telemetry.inputEdge.w and true or false,
             lmb = telemetry.inputEdge.lmb and true or false,
         },
-    }
-    local slot = ((telemetry.clientEventSeq - 1) % telemetry.ringSize) + 1
-    local root = _root() .. "/client_events/"
-    SetString(root .. tostring(slot) .. "/json", cm2TelemetryJsonEncode(event), false)
-    SetInt(root .. "latest_seq", telemetry.clientEventSeq, false)
+        down = {
+            w = wDown and true or false,
+            lmb = lmbDown and true or false,
+        },
+    })
 end
 
 local function _sampleInput()
@@ -383,7 +412,7 @@ local function _sampleInput()
     if wDown ~= telemetry.lastW then telemetry.inputEdge.w = true end
     if lmbDown ~= telemetry.lastLmb then telemetry.inputEdge.lmb = true end
     if wDown ~= telemetry.lastW or lmbDown ~= telemetry.lastLmb then
-        _recordClientInputEdge()
+        _recordClientInputEdge(wDown, lmbDown)
     end
     telemetry.lastW = wDown
     telemetry.lastLmb = lmbDown
@@ -432,7 +461,10 @@ function server.cm2TelemetryDamageProbe(playerId, targetBodyId, amount, nonce)
     local damage = _number(amount, 0.0)
     local requestNonce = tostring(nonce or "")
     if requestNonce == "" then return _damageRequestError(requestNonce, target, damage, "nonce is required") end
-    if _integer(playerId, -1) ~= 0 then return _damageRequestError(requestNonce, target, damage, "only the host player may use the test RPC") end
+    local requester = _integer(playerId, -1)
+    if IsPlayerHost == nil or not IsPlayerHost(requester) then
+        return _damageRequestError(requestNonce, target, damage, "only the host player may use the test RPC")
+    end
     if target == 0 or not _registryExists(target) then return _damageRequestError(requestNonce, target, damage, "target body is not a registered ship") end
     if damage <= 0.0 or damage ~= damage or damage == math.huge or damage == -math.huge then
         return _damageRequestError(requestNonce, target, damage, "damage amount must be positive")
@@ -579,6 +611,12 @@ local function _snapshot(maxShips)
         end
     end
     return {
+        scenario = {
+            id = GetString("StellarisShips/testing/scenario/id"),
+            xml_revision = GetString("StellarisShips/testing/scenario/xmlRevision"),
+            lua_revision = GetString("StellarisShips/testing/scenario/luaRevision"),
+            ready = _boolean(GetBool("StellarisShips/testing/scenario/ready")),
+        },
         player = {
             id = playerId,
             health = _number((GetPlayerHealth ~= nil) and GetPlayerHealth(playerId) or 0.0, 0.0),
@@ -727,19 +765,20 @@ local function _handleRequest(request, raw)
         if ServerCall == nil then
             return _response(request, { ok = false, error = "ServerCall is unavailable" })
         end
+        -- ServerCall can only invoke a server function that belongs to the
+        -- issuing script instance. The level bridge therefore publishes a
+        -- local dispatch record; the target ship's client tick issues the RPC
+        -- to the matching ship-script server authority.
         telemetry.pendingRequest = { request = request, raw = raw }
-        local ok = pcall(
-            ServerCall,
-            "server.cm2TelemetryDamageProbe",
+        local dispatchRoot = _root() .. "/damage/client_dispatch/"
+        SetInt(dispatchRoot .. "target_body_id", request.target_body_id, false)
+        SetFloat(dispatchRoot .. "amount", request.amount, false)
+        SetInt(
+            dispatchRoot .. "player_id",
             _integer((GetLocalPlayer ~= nil) and GetLocalPlayer() or 0, 0),
-            request.target_body_id,
-            request.amount,
-            request.nonce
+            false
         )
-        if not ok then
-            telemetry.pendingRequest = nil
-            return _response(request, { ok = false, error = "damage RPC dispatch failed" })
-        end
+        SetString(dispatchRoot .. "nonce", request.nonce, false)
         return nil
     end
     if request.command == "probe" and DebugPrint ~= nil then
@@ -754,6 +793,26 @@ local function _handleRequest(request, raw)
     return _response(request, nil)
 end
 
+local function _closeBridge()
+    telemetry.bridgeActive = false
+    telemetry.bridgeFocus = false
+    telemetry.bridgeText = ""
+    telemetry.bridgeOpenedAt = 0.0
+    telemetry.bridgeResponseAt = 0.0
+    telemetry.pendingRequest = nil
+end
+
+local function _updatePendingDamageResponse()
+    if telemetry.pendingRequest == nil then return end
+    local pending = telemetry.pendingRequest
+    local result = _damageResultForNonce(pending.request.nonce)
+    if result == nil then return end
+    telemetry.bridgeText = _response(pending.request, result)
+    telemetry.bridgeResponseAt = _number((GetTime ~= nil) and GetTime() or 0.0, 0.0)
+    telemetry.lastRequest = pending.raw
+    telemetry.pendingRequest = nil
+end
+
 function client.cm2TelemetryTick(_dt)
     if not telemetry.clientInitialized then client.cm2TelemetryInit() end
     local registrySession = (GetString ~= nil) and GetString(_root() .. "/session") or ""
@@ -765,28 +824,93 @@ function client.cm2TelemetryTick(_dt)
         telemetry.clientEventSeq = 0
     end
     _sampleInput()
-    if GetClipboardText == nil or SetClipboardText == nil then return end
-    local raw = tostring(GetClipboardText() or "")
-    if telemetry.pendingRequest ~= nil then
-        local pending = telemetry.pendingRequest
-        if raw ~= pending.raw then
+
+    local dispatchRoot = _root() .. "/damage/client_dispatch/"
+    local dispatchNonce = tostring(GetString(dispatchRoot .. "nonce") or "")
+    local dispatchTarget = _integer(GetInt(dispatchRoot .. "target_body_id"), 0)
+    local ownBody = (client.shipContextGetBody ~= nil)
+        and _integer(client.shipContextGetBody(), 0) or 0
+    if dispatchNonce ~= "" and ownBody ~= 0 and ownBody == dispatchTarget
+        and GetString(dispatchRoot .. "dispatched_nonce") ~= dispatchNonce then
+        SetString(dispatchRoot .. "dispatched_nonce", dispatchNonce, false)
+        client.cm2TelemetryRecord("damage_dispatch_attempted", {
+            target_body_id = dispatchTarget,
+            amount = _number(GetFloat(dispatchRoot .. "amount"), 0.0),
+            player_id = _integer(GetInt(dispatchRoot .. "player_id"), 0),
+        })
+        local ok = pcall(
+            ServerCall,
+            "server.cm2TelemetryDamageProbe",
+            _integer(GetInt(dispatchRoot .. "player_id"), 0),
+            dispatchTarget,
+            _number(GetFloat(dispatchRoot .. "amount"), 0.0),
+            dispatchNonce
+        )
+        if not ok and telemetry.pendingRequest ~= nil then
+            local pending = telemetry.pendingRequest
+            telemetry.bridgeText = _response(
+                pending.request,
+                { ok = false, error = "damage RPC dispatch failed" }
+            )
+            telemetry.lastRequest = pending.raw
             telemetry.pendingRequest = nil
-        else
-            local result = _damageResultForNonce(pending.request.nonce)
-            if result ~= nil then
-                SetClipboardText(_response(pending.request, result))
-                telemetry.lastRequest = pending.raw
-                telemetry.pendingRequest = nil
-                return
-            end
-            return
         end
     end
+
+    if InputPressed ~= nil and InputPressed("f8") then
+        if telemetry.bridgeActive then
+            _closeBridge()
+        else
+            telemetry.bridgeActive = true
+            telemetry.bridgeFocus = true
+            telemetry.bridgeText = ""
+            telemetry.bridgeOpenedAt = _number((GetTime ~= nil) and GetTime() or 0.0, 0.0)
+        end
+    end
+
+    if not telemetry.bridgeActive then return end
+    local now = _number((GetTime ~= nil) and GetTime() or telemetry.bridgeOpenedAt, telemetry.bridgeOpenedAt)
+    if telemetry.bridgeResponseAt > 0.0
+        and now - telemetry.bridgeResponseAt >= telemetry.bridgeResponseCloseDelay then
+        _closeBridge()
+        return
+    end
+    if now - telemetry.bridgeOpenedAt > telemetry.bridgeTimeout then
+        _closeBridge()
+        return
+    end
+    _updatePendingDamageResponse()
+end
+
+function client.cm2TelemetryDraw()
+    if not telemetry.bridgeActive or UiTextInput == nil or UiMakeInteractive == nil then return end
+    UiPush()
+        UiMakeInteractive()
+        local width = math.max(64, UiWidth() - 80)
+        UiTranslate(40, 20)
+        UiColor(0.0, 0.0, 0.0, 0.92)
+        UiRect(width, 52)
+        UiTranslate(8, 6)
+        UiColor(1.0, 1.0, 1.0, 1.0)
+        UiFont("regular.ttf", 18)
+        telemetry.bridgeText = UiTextInput(
+            telemetry.bridgeText,
+            width - 16,
+            40,
+            telemetry.bridgeFocus,
+            true
+        )
+        telemetry.bridgeFocus = false
+    UiPop()
+
+    if telemetry.pendingRequest ~= nil then return end
+    local raw = tostring(telemetry.bridgeText or "")
     local request = _parseRequest(raw)
     if request == nil or raw == telemetry.lastRequest then return end
     local response = _handleRequest(request, raw)
     if response ~= nil then
-        SetClipboardText(response)
+        telemetry.bridgeText = response
+        telemetry.bridgeResponseAt = _number((GetTime ~= nil) and GetTime() or 0.0, 0.0)
         telemetry.lastRequest = raw
     end
 end
@@ -816,4 +940,8 @@ end
 
 function client.aiAgentTelemetryTick(dt)
     return client.cm2TelemetryTick(dt)
+end
+
+function client.aiAgentTelemetryDraw()
+    return client.cm2TelemetryDraw()
 end

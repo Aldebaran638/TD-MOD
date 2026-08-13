@@ -151,6 +151,15 @@ function client.shipRequestWeaponHold(
     targetBodyId
 )
     if not client.registryShipExists(shipBodyId) then return false end
+    if client.cm2TelemetryRecord ~= nil then
+        client.cm2TelemetryRecord("weapon_hold_sent", {
+            ship_body_id = math.floor(shipBodyId or 0),
+            group_id = tostring(groupId or ""),
+            active = active and true or false,
+            target_vehicle_id = math.floor(targetVehicleId or 0),
+            target_body_id = math.floor(targetBodyId or 0),
+        })
+    end
     ServerCall(
         "server.shipRequestWeaponHold",
         GetLocalPlayer(),

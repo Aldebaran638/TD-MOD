@@ -11,6 +11,7 @@ client = client or {}
 
 function client.init()
     cm2EffectRuntimeAuthority.init()
+    if client.cm2TelemetryInit ~= nil then client.cm2TelemetryInit() end
     cm2ShipInstanceAdapterV1.clientInit("ship:" .. tostring(configuredShipType or "ship"))
     local shipType = GetStringParam("shiptype", "")
     local bodyTag = GetStringParam("bodytag", "")
