@@ -20,23 +20,23 @@ A full weapon claim normally requires `SCENE + REAL_INPUT + TELEMETRY + VISUAL +
 
 ## Verification Contract
 
-Before coding, create JSON with schema `cm2.verification-contract/1` and all of:
+For an 80-Step task, use its embedded JSON object with schema `cm2.verification-contract/2` in `TEARDOWN_SHIP_PLATFORM_TODO.json`. A standalone Scenario may retain compatible schema `cm2.verification-contract/1`. Version 2 records all of:
 
 - `task`: outcome;
 - `behavior_under_test`: exact production behavior;
-- `test_profiles`: one or more allowed profiles;
-- `setup`: deterministic initial state;
+- `profiles`: one or more allowed profiles;
+- `eyes`: `EYE_TELEMETRY`, `EYE_SCREENSHOT`, and/or `EYE_LOG` exactly matching the evidence profiles;
+- `hands`: `HAND_REAL_INPUT` and/or `HAND_TEST_SETUP` exactly matching the trigger/setup profiles;
+- `setup`: deterministic initial state, fixture identity, and forbidden shortcuts;
+- `reload`: mode, reason, and expected session reset;
 - `trigger`: minimum action, including which actions must be real;
-- `expected_telemetry`: ordered/partial boundaries as applicable;
-- `expected_state`: numeric/state assertions;
-- `expected_visual`: visible assertions or an explicit empty list;
-- `expected_log`: forbidden/required runtime lines;
-- `cleanup`: entities, sessions and inputs to release;
-- `reload_requirement`: selected matrix mode;
+- `telemetry_assertions`, `state_assertions`, `visual_assertions`, `log_assertions`;
+- `cleanup_assertions`: entities, sessions and inputs to release;
 - `regression`: old contracts to rerun;
 - `evidence`: files/results to retain.
+- `automation_level` and any concrete `automation_gaps`.
 
-Run `scripts/validate_contract.py`. The validator checks structure and policy consistency, not game correctness.
+Run `scripts/validate_todo_plan.py TEARDOWN_SHIP_PLATFORM_TODO.json`. The validator checks 80-Step identity/order, history, contract structure, Eyes/Hands consistency and stale contract fingerprints; it does not replace gameplay assertions.
 
 ## Setup may cheat; behavior may not
 

@@ -3,6 +3,13 @@
 This note tracks future testing directions for Content Mod 2. It is a planning
 record, not a replacement for the project check scripts.
 
+The authoritative executable contract for every planned Step lives directly in
+the matching task in `TEARDOWN_SHIP_PLATFORM_TODO.json` (`cm2.todo/2`). This
+note may record a reusable testing direction or risk, but must not duplicate or
+override a Step's Profiles, Eyes, Hands, Reload, assertions, evidence, status,
+or automation level. Update the root Todo first and regenerate its read-only
+coverage report.
+
 ## Current Priorities
 
 ## CM2_TEST_V1 Telemetry Boundary

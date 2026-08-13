@@ -1,4 +1,4 @@
 interface:
   display_name: "CM2 Test Planning"
-  short_description: "Plan and record future Content Mod 2 testing"
-  default_prompt: "Plan a Content Mod 2 test using the project testing notes and define coverage, fixtures, checks, and acceptance criteria."
+  short_description: "Maintain executable CM2 Step verification contracts"
+  default_prompt: "Update the authoritative CM2 Todo Step with a validated Verification Contract, Eyes/Hands, deterministic setup, reload, assertions, automation level, regression and evidence."

@@ -4,7 +4,9 @@
 
 修改或验证 CM2 Runtime、武器、伤害、舰船、输入、移动、生命周期、Multiplayer、Loadout、Public API、Presentation、UI、VFX、Strike Craft、Cloak、Battlefield、Registration、Networking，完成 Todo Step、修 Bug、做 Regression，或用户要求“验证”“测试”“确认是否正常”时，必须使用项目 Skill：`$teardown-autonomous-testing`。
 
-编码前必须建立 `cm2.verification-contract/1` 验收合同并选择测试 Profile。测试初始状态允许通过隔离 Scenario 预构造，但不得绕过被测 Behavior。结构化 gameplay 结论以 telemetry 为准，视觉结论以 screenshot 为准，Runtime Health 以增量 log 为准；三类证据不得互相冒充。
+根目录 `TEARDOWN_SHIP_PLATFORM_TODO.json` 是 80 Step 的可执行计划事实来源。编码前必须验证对应内嵌 `cm2.verification-contract/2`，选择测试 Profile、Eyes、Hands、Reload 和 Evidence；没有合法合同的 Step 禁止实现。`implementation_status` 与 `verification_status` 必须独立维护，旧功能缺少新标准证据时标记 `needs_regression`，不得改写其实施完成状态。
+
+测试初始状态允许通过隔离 Scenario 预构造，但不得绕过被测 Behavior。结构化 gameplay 结论以 telemetry 为准，视觉结论以 screenshot 为准，Runtime Health 以增量 log 为准；三类证据不得互相冒充。
 
 涉及真实游戏行为的任务必须完成“识别状态 → 正确 reload → telemetry baseline → 最少真实输入 → telemetry delta → screenshot → log → cleanup → regression”的闭环，证据保存后才能标记完成。具体规则位于 `.codex/skills/teardown-autonomous-testing/SKILL.md`。
 
@@ -21,6 +23,7 @@
 检查入口按以下顺序运行：
 
 ```powershell
+.\harness\check-executable-todo-plan.ps1 -Path "."
 .\harness\check-lua.ps1 -Path ".\Content Mod 2\script"
 .\harness\check-teardown-api.ps1 -Path ".\Content Mod 2\script"
 .\harness\check-xml.ps1 -Path ".\Content Mod 2"
@@ -43,6 +46,7 @@
 .\harness\data\weapons\test-check-explicit-weapon-definitions.ps1
 .\harness\data\components\test-check-explicit-component-definitions.ps1
 .\harness\data\ships\test-check-ship-definitions.ps1
+.\harness\test-executable-todo-plan.ps1
 ```
 
 如果修改涉及 `Content Mod 2` 以外的脚本目录，也需检查对应路径：

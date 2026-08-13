@@ -9,7 +9,7 @@ Use this skill to close the loop from code change to authoritative live evidence
 
 ## Non-negotiable policy
 
-1. Create a machine-readable Verification Contract before implementation. Classify the task with one or more profiles: `STATIC`, `FIXTURE`, `SCENE`, `REAL_INPUT`, `TELEMETRY`, `VISUAL`, `LOG`, `MULTIPLAYER`, `CONSUMER_MOD`.
+1. For a planned Todo Step, use its embedded `cm2.verification-contract/2` in the authoritative root `TEARDOWN_SHIP_PLATFORM_TODO.json`; validate it before implementation. A standalone one-off contract may still use backward-compatible `cm2.verification-contract/1`. Classify with one or more profiles: `STATIC`, `FIXTURE`, `SCENE`, `REAL_INPUT`, `TELEMETRY`, `VISUAL`, `LOG`, `MULTIPLAYER`, `CONSUMER_MOD`.
 2. Setup may cheat; behavior under test may not. Pre-place ships, aim them, zero velocity, select loadouts, set HP and ready cooldowns. If firing is under test, still use real LMB and require the real weapon runtime chain. If movement is under test, still use real movement input.
 3. Use each evidence source only for facts it owns:
    - telemetry: authoritative gameplay state and event boundaries;
@@ -23,11 +23,13 @@ Use this skill to close the loop from code change to authoritative live evidence
 ## Mandatory workflow
 
 1. Read the task, relevant product code, `AGENTS.md`, and existing tests. Read [testing-policy.md](references/testing-policy.md); for runtime work also read [harness.md](references/harness.md).
-2. Write or update a `cm2.verification-contract/1` JSON contract. Validate it with:
+2. Read or update the Step's embedded `cm2.verification-contract/2` contract. Validate the complete executable plan with:
 
    ```powershell
-   python .\.codex\skills\teardown-autonomous-testing\scripts\validate_contract.py <contract.json>
+   python .\.codex\skills\teardown-autonomous-testing\scripts\validate_todo_plan.py .\TEARDOWN_SHIP_PLATFORM_TODO.json
    ```
+
+   Use `validate_contract.py` only for a standalone Scenario/one-off contract.
 
 3. Choose the fixture and the minimum real trigger. Prefer an isolated deterministic scenario over manual travel, aiming, or waiting. Read [scenarios.md](references/scenarios.md) when `SCENE` or `CONSUMER_MOD` applies.
 4. Implement the smallest in-scope change. Do not add a new MCP/game RPC for each gameplay feature; strengthen observation, scenario setup, or authority-boundary telemetry first.
@@ -80,4 +82,4 @@ If visual taste is the only remaining question, report the objective facts and l
 - Event-chain breakpoints and failure recovery: [diagnostics.md](references/diagnostics.md)
 - Host/client startup, targeting, evidence and teardown: [multiplayer.md](references/multiplayer.md)
 - Reproducible experiments that established this manual: [experiments.md](references/experiments.md)
-- Existing 80-Step coverage audit: [todo-coverage.md](references/todo-coverage.md)
+- Read-only report generated from the executable 80-Step source: [todo-coverage.md](references/todo-coverage.md)
