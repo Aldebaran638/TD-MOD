@@ -5,7 +5,7 @@ Generated from the authoritative `TEARDOWN_SHIP_PLATFORM_TODO.json` (`cm2.todo/2
 Total: 80
 
 - Implementation: not_started=0; in_progress=0; finish=22; unable=58
-- Verification: verified=11; needs_regression=7; pending=58; human_visual_review=4
+- Verification: verified=12; needs_regression=6; pending=58; human_visual_review=4
 - Automation: FULL_AUTO=43; AUTO_WITH_VISUAL_REVIEW=17; PARTIAL_AUTO=20; MANUAL_REQUIRED=0
 
 ## Profile index
@@ -1214,7 +1214,7 @@ Total: 80
 ### Step 9.2 — 实现 Creator SDK CLI Alpha
 
 - Implementation: `finish`
-- Verification: `needs_regression` — Implementation completion is retained, but evidence predates the autonomous policy or explicitly deferred a now-required live, multiplayer, visual, or consumer-path assertion.
+- Verification: `verified` — The embedded STATIC+FIXTURE+CONSUMER_MOD contract passed. ProjectPath is now authoritative; init emits a buildable five-definition Hello Ship; PackageManifest and the shared Compiler run in validate/build/test/package; two Windows/CI roots emit byte-identical package, build-report, and Compiler artifacts; actionable version/capability/private-reference/Compiler/tool-lock/drift failures preserve exact last-valid bytes; the reopened Teardown Mod Manager discovered and started the independent SDK Consumer, which displayed PASS for accepted Ship, rejected ExecuteLua, shared Compiler/package hashes, and no Runtime Lua. Evidence: docs/evidence/step-9.2-creator-sdk-cli-alpha.json.
 - Automation: `FULL_AUTO`
 - Profiles: `STATIC + FIXTURE + CONSUMER_MOD`
 - Eyes: `none`

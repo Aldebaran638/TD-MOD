@@ -1,0 +1,143 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 9.2",
+  "result": "pass",
+  "verified_at": "2026-08-14T01:12:00+08:00",
+  "implementation_commits": [
+    "1b715b7d515b4be4bddf07b5cbd59603d6d49258",
+    "13ca32ff42250533fd8e7b16e63fb8193ed33122"
+  ],
+  "profiles": ["STATIC", "FIXTURE", "CONSUMER_MOD"],
+  "eyes": [],
+  "hands": ["HAND_TEST_SETUP"],
+  "behavior_under_test": "A creator can go from a deterministic public template to an installable data-only package without manually editing the CM2 Runtime catalog.",
+  "setup": {
+    "cli": "tools/cm2-sdk/cm2-sdk.ps1",
+    "project": "testing/fixtures/creator_sdk/alpha_project",
+    "package_source": "testing/fixtures/creator_sdk/alpha_project/package.source.json",
+    "package_output": "testing/fixtures/creator_sdk/alpha_project/.cm2-sdk/package",
+    "consumer_installer": "tools/cm2-sdk/install-sdk-consumer-v1.ps1",
+    "consumer_mod": "_AI Test Consumer SDK Alpha",
+    "consumer_host": "_AI Test Consumer SDK Alpha/script/testing/sdk_cli/consumer_host.lua",
+    "forbidden_shortcuts": ["hidden repository package fixture", "manual Runtime catalog edit", "package Runtime Lua", "private CM2 include", "damage RPC", "gameplay Runtime substitution"]
+  },
+  "artifacts": {
+    "package_source_sha256": "f3faaf18dd4ba700ec8d102db471f28da3bbc6e7860ba535ae0b71a0f29b54d6",
+    "package_artifact_sha256": "01e4a4db617d124e9be69f2f99687654308f184b95519a5bc2f79283b53d1aec",
+    "build_report_sha256": "aefca324176afe899f9d7821f4a7024ca69b5cb5c9f4458389d83f23653ec31f",
+    "compiler_manifest_sha256": "8b85457d21764a46de625eb36241c0d44bb8dd606f955890b66d02fcb41c39c3",
+    "consumer_trace_sha256": "38ded72cd3b28ef5df82d2b7bd5fa2b6926d9b302eb6c7975871c303e0169362",
+    "package_fingerprint_matches_exact_bytes": true,
+    "windows_ci_package_byte_identical": true,
+    "windows_ci_build_report_byte_identical": true,
+    "windows_ci_compiler_manifest_byte_identical": true
+  },
+  "assertions": {
+    "commands": ["init", "new", "validate", "build", "explain", "preview", "test", "package", "migrate", "doctor", "clean"],
+    "project_path_is_authoritative": true,
+    "init_output": {"definitions": 5, "assets": 2, "generated": 1, "runtime_lua_files": 0},
+    "shared_compiler": {"mode": "shared-compiler", "definition_count": 5, "catalog_hash": "0c994c60003694bceb03c8abb7385d29c4957628544be0c3c5cdd3fc392f9626"},
+    "package": {"id": "cm2.creator.hello-ship", "version": "0.1.0", "entrypoint": "data-only", "published_lua_files": 0},
+    "consumer": {"valid_operation": "accepted:Ship", "invalid_operation": "rejected:unknown-capability:ExecuteLua", "private_includes": 0, "runtime_lua_loaded": false},
+    "compatibility": {"compatible_core_sdk_dependency": "pass", "incompatible_core": "fail-closed", "unknown_capability": "fail-closed", "core_only_fallback": "builtin-only"},
+    "stable_error_fields": ["code", "packageId", "definitionId", "fieldPath", "suggestion"],
+    "compiler_error_preserves_context": ["definitionId", "fieldPath", "suggestion"],
+    "editor_required": false
+  },
+  "negative_cases": [
+    "Runtime Lua manifest",
+    "incompatible Core API range",
+    "unknown capability",
+    "private Runtime reference",
+    "Compiler out-of-range field",
+    "tool-lock mismatch",
+    "generated output drift",
+    "unsafe clean outside project SDK root",
+    "tampered Consumer artifact"
+  ],
+  "rollback": {
+    "repeat_build_previous_directory": "pass",
+    "previous_artifact_exact_bytes": "pass",
+    "failed_manifest_preserves_last_valid": "pass",
+    "failed_compiler_preserves_last_valid": "pass",
+    "failed_consumer_install_preserves_last_valid": "pass"
+  },
+  "regression": {
+    "sdk_self_test": {"result": "pass", "assertions": 99},
+    "consumer_self_test": {"result": "pass", "assertions": 11},
+    "basic_consumer_fixture": "pass via Step 9.1 retained regression",
+    "clean_room_package": "pass",
+    "compatibility_matrix": "pass",
+    "core_only_build": "pass",
+    "exact_rollback": "pass",
+    "todo_contract_validation": {"result": "pass", "contracts": 80}
+  },
+  "reload": {
+    "mode": "REOPEN_MOD_MANAGER_OR_RESTART_MOD_SESSION",
+    "discovery_run_id": "20260813T170923Z-9cab3a8c",
+    "discovery_frame": "frame_f000001-7b37cab8_pid-30296.png",
+    "identity_run_id": "20260813T171002Z-88d19384",
+    "identity_frame": "frame_f000001-84a41ed8_pid-30296.png",
+    "identity": "After returning to the main menu and reopening Mod Manager, _AI Test Consumer SDK Alpha appeared in Local Files and its exact name/path was selected before Play.",
+    "screen_saver_recovery": "The initial input desktop was Screen-saver, so focus and BitBlt were correctly refused. Emergency release ran; one virtual-HID Space wake changed the input desktop to Default and restored the exact Teardown foreground handle before any menu action."
+  },
+  "live_run": {
+    "target_id": "teardown:30296:526038",
+    "pid": 30296,
+    "input_backend": "gvinput virtual HID",
+    "pass_run_id": "20260813T171040Z-80043ffb",
+    "pass_frame": "frame_f000001-65176fbd_pid-30296.png",
+    "pass_frame_sha256": "50eefdfb1d03e89ace449441dc3210e047fd4b2d771303840aefcd3a7a87d590",
+    "baseline_log_cursor": 80982534,
+    "post_load_log_cursor": 80992428,
+    "final_log_cursor": 80992428,
+    "assertion": "The independent live Mod displayed CREATOR SDK CLI ALPHA CONSUMER PASS, cm2.creator.hello-ship@0.1.0, accepted Ship, rejected ExecuteLua, shared Compiler hash, exact package hash, and Runtime Lua forbidden/not loaded."
+  },
+  "log": {
+    "path": "%LOCALAPPDATA%/Teardown/log.txt",
+    "in_scope_error_count": 0,
+    "in_scope_warning_count": 0,
+    "post_load_delta_error_count": 0,
+    "post_load_delta_warning_count": 0,
+    "attributed_external_noise": {
+      "owner": "Steam Workshop mod 3148138736 / TABS",
+      "errors": 2,
+      "warnings": 6,
+      "details": "The load-window lines explicitly identify the external TABS path (two missing sound banks and deprecated pre-init API use). No line identifies the SDK project or Consumer. A fresh post-load cursor had zero additional errors/warnings."
+    }
+  },
+  "defect_loop": [
+    {
+      "failure": "The prior CLI ignored ProjectPath and silently validated/built the repository PackageManifest fixture; its new command generated a template its own validate/build commands could not consume.",
+      "fix": "Made package.source.json under ProjectPath authoritative, generated a fully buildable five-definition Hello Ship, hydrated source hashes and removed hidden fallback use for project commands.",
+      "regression": "Two independently initialized roots validate and build byte-identical package, Compiler and report artifacts."
+    },
+    {
+      "failure": "The prior validate command rewrote the formal PackageManifest artifact because it omitted ArtifactPath, and build copied metadata without executing the shared Compiler.",
+      "fix": "All validation now uses isolated report/artifact paths; validate/build/test/package run the shared Compiler and preserve its structured first diagnostic.",
+      "regression": "Compiler invalid-range input fails with exact definitionId/runtime.priority/suggestion and preserves last-valid output."
+    },
+    {
+      "failure": "The prior documentation claimed Teardown was unavailable and had no independent SDK-produced Consumer start evidence.",
+      "fix": "Added an independent disposable SDK Consumer, exact build installer and runtime identity surface; reopened Mod Manager and started it in the installed Teardown 2.0.4 process.",
+      "regression": "Live PASS surface, exact hashes, valid/invalid operations, clean post-load log delta and emergency release are recorded."
+    }
+  ],
+  "harness": {
+    "command": ".\\harness\\check-all.ps1",
+    "implementation_manual": {"result": "pass", "exit_code": 0, "duration_seconds": 149.1},
+    "implementation_pre_commit": {"result": "pass", "exit_code": 0, "duration_seconds": 148.1},
+    "consumer_manual": {"result": "pass", "exit_code": 0, "duration_seconds": 147.1},
+    "consumer_pre_commit": {"result": "pass", "exit_code": 0, "duration_seconds": 148.5},
+    "consumer_extra_checks": {"lua_files": 1, "xml_files": 1, "api_issues": 0}
+  },
+  "cleanup": {
+    "temporary_clean_roots_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true,
+    "held_keys": [],
+    "held_buttons": [],
+    "emergency_release": "pass"
+  },
+  "scope_boundary": "Step 9.2 proves the public CLI/template/compiler/package and independent data-only Consumer boundary. It does not claim that CM2 instantiates the generated ship/weapon as gameplay Runtime; install/remove plus S0/S8 gameplay conformance remains Step 9.3."
+}
