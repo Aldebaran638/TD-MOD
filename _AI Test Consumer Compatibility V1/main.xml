@@ -1,0 +1,8 @@
+<scene version="2.0.1" shadowVolume="40 20 40">
+    <environment template="sunny"/>
+    <script file="MOD/script/testing/compatibility/consumer_host.lua" param0="packageId=cm2.creator.hello-ship" param1="packageHash=01e4a4db617d124e9be69f2f99687654308f184b95519a5bc2f79283b53d1aec" param2="policyHash=a8ffa1b50fc757bbb8c7a2a79b1746042945e09a6a77f2504471d715f07d0063" param3="validOperation=accepted:core-1.2.0/sdk-1.0.0/package-1" param4="invalidOperation=rejected:core-policy-version:2.0.0" param5="installId=compatibility-consumer-install-v1"/>
+    <body name="Compatibility Consumer Fixture Floor" dynamic="false" pos="0 -0.1 0">
+        <voxbox size="20 1 20" material="masonry"/>
+    </body>
+    <location name="Player" tags="player" pos="0 1 4" rot="0 0 0"/>
+</scene>
