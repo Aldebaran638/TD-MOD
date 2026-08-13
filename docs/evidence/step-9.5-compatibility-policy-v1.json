@@ -1,0 +1,189 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 9.5",
+  "result": "pass",
+  "verified_at": "2026-08-14T02:03:06+08:00",
+  "implementation_commits": [
+    "8adf6eab8e90a2a0e9210a64ba1120bb1b8c39cf",
+    "b9dfae9d7c3ef66d3e5c6c0e0f8ba273e773da64"
+  ],
+  "verification_contract_fingerprint": "81cce40436e426abd16838b8992d3864ddd131e03a75c237349ad91c1fe6546a",
+  "profiles": ["STATIC", "FIXTURE", "CONSUMER_MOD"],
+  "eyes": [],
+  "hands": ["HAND_TEST_SETUP"],
+  "behavior_under_test": "Schema/Core/Package/SDK upgrades, downgrades and deprecations are predictable, diagnosable, canonical and exactly recoverable through the public package boundary.",
+  "setup": {
+    "policy": "docs/compatibility-policy-v1.json",
+    "resolver": "tools/cm2-compat/resolve-compatibility-v1.ps1",
+    "migrator": "tools/cm2-compat/migrate-compat-v1.ps1",
+    "package_validator": "tools/cm2-package/run-package-manifest-v1.ps1",
+    "clean_room_project": "testing/fixtures/creator_sdk/alpha_project",
+    "consumer_installer": "tools/cm2-compat/install-compatibility-consumer-v1.ps1",
+    "consumer_mod": "_AI Test Consumer Compatibility V1",
+    "consumer_host": "_AI Test Consumer Compatibility V1/script/testing/compatibility/consumer_host.lua",
+    "forbidden_shortcuts": [
+      "private Content Mod 2 include",
+      "package Runtime Lua",
+      "documentation-only compatibility decision",
+      "silent downgrade",
+      "in-place migration",
+      "failed install overwriting last-valid output"
+    ]
+  },
+  "artifacts": {
+    "policy_sha256": "a8ffa1b50fc757bbb8c7a2a79b1746042945e09a6a77f2504471d715f07d0063",
+    "compatibility_result_sha256": "4b4bece460560545e27cacc262c39945c07cca632420abcd812caddbc9daf9eb",
+    "consumer_trace_sha256": "0728b2858e66c438c75c6bafc99a7f6c0fe1836de27dd6b8d6b911439fab6442",
+    "package_artifact_sha256": "01e4a4db617d124e9be69f2f99687654308f184b95519a5bc2f79283b53d1aec",
+    "package_report_sha256": "c8fd2a308d14a5ffea3653cf3aa85423f371fb0a6856f92d73b0b0d81131d548",
+    "build_report_sha256": "0b1216026f908937cc2c05d567984dd3703b476b46631fe815b5e4727ba94a05",
+    "installed_artifact_sha256": "01e4a4db617d124e9be69f2f99687654308f184b95519a5bc2f79283b53d1aec",
+    "consumer_main_xml_sha256": "f740b8ecffa2afe070bf65dc30e7045f227ab94169503c30a25eff717ee5bee4",
+    "consumer_host_sha256": "bee2ff53778e2c89ed9675af2b28c62c629859e962df8ad960fd30d731c1a1f4",
+    "live_pass_frame_sha256": "64c79ab668430227b45c8830c4a9fb01ef214e920358fccf089e1123946334fa",
+    "release_hash_matches_manifest": true,
+    "installed_hash_matches_release": true,
+    "package_report_policy_hash_matches": true,
+    "build_report_policy_hash_matches": true
+  },
+  "assertions": {
+    "support_surfaces": ["source-envelope", "package", "core-api", "sdk", "build-format"],
+    "negotiation_order": ["package", "core-api", "schema", "build-format", "sdk"],
+    "supported_window": {
+      "package_schema": "cm2.package/1",
+      "core_api": ">=1.0.0 <2.0.0",
+      "sdk": ">=1.0.0 <2.0.0",
+      "build_format": "cm2.package-build/1"
+    },
+    "public_validator_uses_public_resolver": true,
+    "canonical_single_writer": true,
+    "effect_aliases_removed": ["runtime.type", "runtime.asset"],
+    "weapon_aliases_removed": ["runtime.behaviour", "runtime.effect"],
+    "unknown_runtime_optional_destination": "editor.compatibility.unknownRuntimeFields",
+    "unknown_package_optional_destination": "provenance.compatibility.unknownPackageFields",
+    "future_required": "rejected",
+    "security_sensitive_unknown": "rejected",
+    "input_mutation": false,
+    "byte_idempotent": true,
+    "deprecation_writer_evidence": "verified",
+    "deprecation_reader_removal": "not-eligible-before-major-2-and-2027-08-11",
+    "consumer": {
+      "package_id": "cm2.creator.hello-ship",
+      "valid_operation": "accepted:core-1.2.0/sdk-1.0.0/package-1",
+      "invalid_operation": "rejected:core-policy-version:2.0.0",
+      "private_includes": 0,
+      "runtime_lua_loaded": false
+    }
+  },
+  "version_matrix": [
+    {"id": "current", "expected": "pass", "actual": "pass"},
+    {"id": "core-package-mismatch", "expected": "core-package-version", "actual": "core-package-version"},
+    {"id": "core-policy-future", "expected": "core-policy-version", "actual": "core-policy-version"},
+    {"id": "sdk-package-mismatch", "expected": "sdk-package-version", "actual": "sdk-package-version"},
+    {"id": "future-package", "expected": "package-version", "actual": "package-version"},
+    {"id": "future-build", "expected": "build-format", "actual": "build-format"}
+  ],
+  "negative_cases": [
+    "missing required source field",
+    "future source schema",
+    "security-sensitive Runtime field",
+    "unsupported old schema",
+    "future Core policy version",
+    "Core outside package range",
+    "SDK outside package range",
+    "future package schema",
+    "future build format"
+  ],
+  "rollback": {
+    "migration_input_preserved": "exact bytes",
+    "failed_migration_output_preserved": "exact bytes",
+    "failed_migration_report_preserved": "exact bytes",
+    "repeat_sdk_build_previous_directory": "pass",
+    "failed_consumer_install_preserves_artifact": "exact bytes",
+    "failed_consumer_install_preserves_trace": "exact bytes",
+    "compatible_reinstall_after_rejection": "pass"
+  },
+  "regression": {
+    "compatibility_self_test": {"result": "pass", "assertions": 77},
+    "compatibility_consumer_self_test": {"result": "pass", "assertions": 11},
+    "package_manifest_self_test": {"result": "pass", "assertions": 39},
+    "creator_sdk_self_test": {"result": "pass", "assertions": 99},
+    "basic_consumer_fixture": "pass via retained Step 9.1 regression",
+    "clean_room_package": "pass",
+    "compatibility_matrix": "pass",
+    "core_only_build": "builtin-only",
+    "exact_rollback": "pass",
+    "todo_contract_validation": {"result": "pass", "contracts": 80}
+  },
+  "reload": {
+    "mode": "REOPEN_MOD_MANAGER_OR_RESTART_MOD_SESSION",
+    "discovery_run_id": "20260813T175900Z-d8ddd1d8",
+    "discovery_frame": "frame_f000002-606f580f_pid-30296.png",
+    "identity_run_id": "20260813T175925Z-58a114fc",
+    "identity_frame": "frame_f000002-6b9acef4_pid-30296.png",
+    "identity": "After leaving the existing Mod Manager to the main menu and reopening Mod Manager, _AI Test Consumer Compatibility V1 appeared in Local Files and its exact name/path was selected before Play.",
+    "screen_saver_recovery": "Initial foreground_handle was zero and observe correctly refused occluded capture. One virtual-HID Space wake restored the Default input desktop and exact Teardown foreground handle before any menu action."
+  },
+  "live_run": {
+    "target_id": "teardown:30296:526038",
+    "pid": 30296,
+    "input_backend": "gvinput virtual HID",
+    "play_run_id": "20260813T175955Z-0cbab889",
+    "pass_run_id": "20260813T180017Z-45c55ef4",
+    "pass_frame": "frame_f000001-734f5d2c_pid-30296.png",
+    "pass_frame_path": "%LOCALAPPDATA%/TeardownAI/runs/20260813T180017Z-45c55ef4/frame_f000001-734f5d2c_pid-30296.png",
+    "assertion": "The independent live Mod displayed COMPATIBILITY POLICY V1 CONSUMER PASS, accepted Core 1.2.0/SDK 1.0.0/Package 1, rejected Core 2.0.0, exact policy/package hash prefixes, and Runtime Lua forbidden/not loaded.",
+    "exit_run_id": "20260813T180151Z-510aac9d",
+    "exit_frame": "frame_f000002-e1e58826_pid-30296.png",
+    "exit_state": "Mod Manager with the exact Compatibility Consumer still selected"
+  },
+  "log": {
+    "path": "%LOCALAPPDATA%/Teardown/log.txt",
+    "baseline_cursor": 80992591,
+    "load_complete_cursor": 81002510,
+    "in_scope_error_count": 0,
+    "in_scope_warning_count": 0,
+    "post_load_delta_error_count": 0,
+    "post_load_delta_warning_count": 0,
+    "attributed_external_noise": {
+      "owner": "Steam Workshop mod 3148138736 / TABS",
+      "errors": 2,
+      "warnings": 6,
+      "details": "Every line names the external TABS path: two missing sound banks and deprecated pre-init API use. No line names the Compatibility Consumer, its script, package, resolver or CM2 compatibility tools."
+    }
+  },
+  "defect_loop": [
+    {
+      "failure": "tools/cm2-compat was ignored by Git and PackageManifest validation duplicated range checks without invoking the documented policy, so the policy was not a public authority.",
+      "fix": "Tracked the compatibility tools, added one public resolver, wired PackageManifest and SDK reports to its policy hash, and made the checker reject disconnected validation.",
+      "regression": "Public compatible package passes; future Core/SDK and incompatible package ranges fail closed with stable resolver codes."
+    },
+    {
+      "failure": "The old migration retained deprecated aliases in Runtime, preserved unknown Runtime data in the authoritative projection, and treated every existing v1 Runtime field as allowed.",
+      "fix": "Derived canonical Runtime fields from the public source schema, deleted aliases, moved unknown optional fields outside Runtime, and rejected future-required/security-sensitive fields for both v0 and v1 input.",
+      "regression": "Effect, Weapon and Package migrations are byte-idempotent, source-immutable and canonical; all negative cases preserve last-valid output."
+    },
+    {
+      "failure": "The old ledger declared removals without separately proving writer alias deletion versus eligibility to remove the legacy reader.",
+      "fix": "Added dated owner/replacement entries with independent writerRemoval and readerRemoval evidence; reader removal remains blocked until both major-2 and 2027-08-11.",
+      "regression": "The checker requires both evidence fields and the self-test verifies each deprecation entry."
+    }
+  ],
+  "harness": {
+    "command": ".\\harness\\check-all.ps1",
+    "implementation_manual": {"result": "pass", "exit_code": 0, "duration_seconds": 147.0},
+    "implementation_pre_commit": {"result": "pass", "exit_code": 0, "duration_seconds": 147.5},
+    "consumer_pre_commit": {"result": "pass", "exit_code": 0, "duration_seconds": 147.4},
+    "consumer_extra_checks": {"lua_files": 1, "xml_files": 1, "api_issues": 0}
+  },
+  "cleanup": {
+    "temporary_clean_roots_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true,
+    "returned_to_mod_manager": true,
+    "held_keys": [],
+    "held_buttons": [],
+    "emergency_release": "pass"
+  },
+  "scope_boundary": "Step 9.5 proves public compatibility negotiation, canonical migration, deprecation retention/removal evidence, independent package install/start and rollback. It does not claim gameplay Runtime instantiation, weapon behavior, telemetry or multiplayer behavior; those are outside this contract."
+}

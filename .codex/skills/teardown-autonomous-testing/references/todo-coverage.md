@@ -5,7 +5,7 @@ Generated from the authoritative `TEARDOWN_SHIP_PLATFORM_TODO.json` (`cm2.todo/2
 Total: 80
 
 - Implementation: not_started=0; in_progress=0; finish=22; unable=58
-- Verification: verified=12; needs_regression=6; pending=58; human_visual_review=4
+- Verification: verified=13; needs_regression=5; pending=58; human_visual_review=4
 - Automation: FULL_AUTO=43; AUTO_WITH_VISUAL_REVIEW=17; PARTIAL_AUTO=20; MANUAL_REQUIRED=0
 
 ## Profile index
@@ -1271,7 +1271,7 @@ Total: 80
 ### Step 9.5 — 建立 Schema/Core/Package 兼容与废弃政策
 
 - Implementation: `finish`
-- Verification: `needs_regression` — Implementation completion is retained, but evidence predates the autonomous policy or explicitly deferred a now-required live, multiplayer, visual, or consumer-path assertion.
+- Verification: `verified` — Embedded STATIC, FIXTURE and CONSUMER_MOD contract passed: 77 compatibility assertions, 11 independent Consumer assertions, retained PackageManifest/SDK regressions, exact hashes/rollback, live Mod discovery/start, attributed log window and emergency-release cleanup are persisted in docs/evidence/step-9.5-compatibility-policy-v1.json.
 - Automation: `FULL_AUTO`
 - Profiles: `STATIC + FIXTURE + CONSUMER_MOD`
 - Eyes: `none`

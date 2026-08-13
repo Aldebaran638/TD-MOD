@@ -24,7 +24,8 @@
   "artifacts": {
     "package_source_sha256": "f3faaf18dd4ba700ec8d102db471f28da3bbc6e7860ba535ae0b71a0f29b54d6",
     "package_artifact_sha256": "01e4a4db617d124e9be69f2f99687654308f184b95519a5bc2f79283b53d1aec",
-    "build_report_sha256": "aefca324176afe899f9d7821f4a7024ca69b5cb5c9f4458389d83f23653ec31f",
+    "build_report_sha256": "0b1216026f908937cc2c05d567984dd3703b476b46631fe815b5e4727ba94a05",
+    "compatibility_policy_sha256": "a8ffa1b50fc757bbb8c7a2a79b1746042945e09a6a77f2504471d715f07d0063",
     "compiler_manifest_sha256": "8b85457d21764a46de625eb36241c0d44bb8dd606f955890b66d02fcb41c39c3",
     "consumer_trace_sha256": "38ded72cd3b28ef5df82d2b7bd5fa2b6926d9b302eb6c7975871c303e0169362",
     "package_fingerprint_matches_exact_bytes": true,
@@ -67,7 +68,7 @@
     "consumer_self_test": {"result": "pass", "assertions": 11},
     "basic_consumer_fixture": "pass via Step 9.1 retained regression",
     "clean_room_package": "pass",
-    "compatibility_matrix": "pass",
+    "compatibility_matrix": "pass; revalidated by Step 9.5 public resolver and policy hash",
     "core_only_build": "pass",
     "exact_rollback": "pass",
     "todo_contract_validation": {"result": "pass", "contracts": 80}
