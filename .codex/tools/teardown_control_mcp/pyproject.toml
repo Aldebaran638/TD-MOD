@@ -1,0 +1,12 @@
+[project]
+name = "teardown-control-mcp"
+version = "0.1.0"
+description = "Local stdio MCP for safe Teardown window observation and input validation"
+requires-python = ">=3.11"
+dependencies = [
+    "hidapi>=0.14.0.post2",
+    "mcp>=1.9.0,<2",
+    "mss>=9.0.1",
+    "Pillow>=10.0.0",
+    "psutil>=6.0.0",
+]
