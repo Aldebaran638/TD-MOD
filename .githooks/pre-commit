@@ -5,7 +5,13 @@ set -eu
 
 repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
-windows_root=$(wslpath -w "$repo_root")
+if command -v wslpath >/dev/null 2>&1; then
+    windows_root=$(wslpath -w "$repo_root")
+elif pwd -W >/dev/null 2>&1; then
+    windows_root=$(pwd -W)
+else
+    windows_root=$repo_root
+fi
 
 include_global=""
 if git diff --cached --name-only -- "Global Mod/script" | grep -q .; then
@@ -13,4 +19,4 @@ if git diff --cached --name-only -- "Global Mod/script" | grep -q .; then
 fi
 
 echo "Running project Harness before commit..."
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$windows_root\harness\check-all.ps1" $include_global
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$windows_root/harness/check-all.ps1" $include_global
