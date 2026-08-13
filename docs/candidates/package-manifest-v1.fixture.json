@@ -61,8 +61,11 @@
     { "name": "unsupported Lua entrypoint", "expected": "runtime-lua-forbidden" },
     { "name": "budget overflow", "expected": "budget" },
     { "name": "asset hash mismatch", "expected": "asset-hash" },
-    { "name": "future schema", "expected": "future-schema" }
+    { "name": "future schema", "expected": "future-schema" },
+    { "name": "incompatible Core API", "expected": "core-version" },
+    { "name": "incompatible SDK", "expected": "sdk-version" },
+    { "name": "incompatible dependency version", "expected": "dependency-version" }
   ],
   "runtimePolicy": { "dataOnly": true, "runtimeLuaAllowed": false, "unknownRuntimeNodeAllowed": false, "builtinOnlyFallback": true },
-  "runtimeScope": "headless package-manifest contract; install/live Runtime verification deferred without Teardown.exe"
+  "runtimeScope": "data-only manifest contract plus independent Teardown consumer install/start verification; gameplay Runtime loading belongs to clean-room Step 9.3"
 }

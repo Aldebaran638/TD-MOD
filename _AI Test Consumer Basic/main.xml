@@ -1,6 +1,6 @@
 <scene version="2.0.1" shadowVolume="40 20 40">
     <environment template="sunny"/>
-    <script file="main.lua"/>
+    <script file="MOD/script/testing/package_manifest/consumer_host.lua" param0="packageId=cm2.thirdparty.hello-ship" param1="packageVersion=1.0.0" param2="packageHash=f935a6690769ec308500bcfd3487cc09e78ac6c2c622a6114b5717b85cd4695e" param3="validOperation=accepted:Ship" param4="invalidOperation=rejected:unknown-capability:ExecuteLua" param5="buildId=package-consumer-build-v1"/>
     <body name="Consumer Fixture Floor" dynamic="false" pos="0 -0.1 0">
         <voxbox size="20 1 20" material="masonry"/>
     </body>

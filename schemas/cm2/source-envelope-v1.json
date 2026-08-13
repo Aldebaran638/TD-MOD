@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "cm2.schema-catalog/1",
+  "envelope": {
+    "required": ["schemaVersion", "id", "kind", "runtime", "editor", "ai", "build"],
+    "sections": {
+      "runtime": "authoritative runtime data only",
+      "editor": "authoring and display metadata",
+      "ai": "planning and provenance hints",
+      "build": "source, revision, resource and budget metadata"
+    }
+  },
+  "definitions": [
+    {
+      "kind": "weapon",
+      "schemaVersion": "cm2.weapon/1",
+      "fields": [
+        {"path":"runtime.behavior","type":"enum","unit":"none","range":"ray|ballistic|guided|charged","default":"ray","runtimeRequired":true,"referenceKind":null,"budgetImpact":"behavior tick class"},
+        {"path":"runtime.effectId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":true,"referenceKind":"effect","budgetImpact":"effect instance"},
+        {"path":"runtime.projectileId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":false,"referenceKind":"projectile","budgetImpact":"projectile allocation"},
+        {"path":"runtime.fireRateHz","type":"number","unit":"Hz","range":"0 < x <= 1000","default":1,"runtimeRequired":true,"referenceKind":null,"budgetImpact":"server fire cadence"}
+      ]
+    },
+    {
+      "kind": "projectile",
+      "schemaVersion": "cm2.projectile/1",
+      "fields": [
+        {"path":"runtime.speedMps","type":"number","unit":"m/s","range":"0 < x <= 10000","default":100,"runtimeRequired":true,"referenceKind":null,"budgetImpact":"projectile query cadence"},
+        {"path":"runtime.damage","type":"number","unit":"damage","range":"0 < x <= 1000000000","default":1,"runtimeRequired":true,"referenceKind":null,"budgetImpact":"damage event"},
+        {"path":"runtime.effectId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":true,"referenceKind":"effect","budgetImpact":"effect instance"}
+      ]
+    },
+    {
+      "kind": "effect",
+      "schemaVersion": "cm2.effect/1",
+      "fields": [
+        {"path":"runtime.effectType","type":"enum","unit":"none","range":"beam|muzzle|trail|impact","default":"impact","runtimeRequired":true,"referenceKind":null,"budgetImpact":"renderer class"},
+        {"path":"runtime.assetId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":true,"referenceKind":"asset","budgetImpact":"resource handle"},
+        {"path":"runtime.priority","type":"number","unit":"rank","range":"0 <= x <= 100","default":50,"runtimeRequired":true,"referenceKind":null,"budgetImpact":"budget eviction priority"}
+      ]
+    },
+    {
+      "kind": "vehicle",
+      "schemaVersion": "cm2.vehicle/1",
+      "fields": [
+        {"path":"runtime.controlMode","type":"enum","unit":"none","range":"player|ai","default":"player","runtimeRequired":true,"referenceKind":null,"budgetImpact":"owner tick class"},
+        {"path":"runtime.massKg","type":"number","unit":"kg","range":"0 < x <= 1000000000","default":1,"runtimeRequired":true,"referenceKind":null,"budgetImpact":"physics mass"},
+        {"path":"runtime.mountId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":true,"referenceKind":"mount","budgetImpact":"mount graph"}
+      ]
+    },
+    {
+      "kind": "mount",
+      "schemaVersion": "cm2.mount/1",
+      "fields": [
+        {"path":"runtime.parentId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":true,"referenceKind":"vehicle","budgetImpact":"transform graph"},
+        {"path":"runtime.localTransform","type":"object","unit":"meter/quaternion","range":"parent-local contract","default":null,"runtimeRequired":true,"referenceKind":null,"budgetImpact":"anchor transform"},
+        {"path":"runtime.slotType","type":"enum","unit":"none","range":"x|l|m|g|h|t|p","default":"p","runtimeRequired":true,"referenceKind":null,"budgetImpact":"slot controller"}
+      ]
+    },
+    {
+      "kind": "turret",
+      "schemaVersion": "cm2.turret/1",
+      "fields": [
+        {"path":"runtime.weaponId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":true,"referenceKind":"weapon","budgetImpact":"weapon controller"},
+        {"path":"runtime.mountId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":true,"referenceKind":"mount","budgetImpact":"joint/anchor graph"},
+        {"path":"runtime.traverseSpeedDeg","type":"number","unit":"deg/s","range":"0 < x <= 3600","default":90,"runtimeRequired":true,"referenceKind":null,"budgetImpact":"turret tick"}
+      ]
+    }
+  ],
+  "supplementalDefinitions": [
+    {"kind":"part","schemaVersion":"cm2.part/1","fields":[
+      {"path":"runtime.parentId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":true,"referenceKind":"vehicle","budgetImpact":"entity graph"},
+      {"path":"runtime.componentId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":false,"referenceKind":"component","budgetImpact":"component lookup"}
+    ]},
+    {"kind":"anchor","schemaVersion":"cm2.anchor/1","fields":[
+      {"path":"runtime.parentId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":true,"referenceKind":"part","budgetImpact":"transform graph"},
+      {"path":"runtime.localTransform","type":"object","unit":"meter/quaternion","range":"parent-local contract","default":null,"runtimeRequired":true,"referenceKind":null,"budgetImpact":"anchor transform"}
+    ]},
+    {"kind":"damage","schemaVersion":"cm2.damage/1","fields":[
+      {"path":"runtime.amount","type":"number","unit":"damage","range":"0 < x <= 1000000000","default":1,"runtimeRequired":true,"referenceKind":null,"budgetImpact":"damage event"},
+      {"path":"runtime.damageType","type":"enum","unit":"none","range":"kinetic|energy|explosive","default":"kinetic","runtimeRequired":true,"referenceKind":null,"budgetImpact":"damage resolver"}
+    ]},
+    {"kind":"sound","schemaVersion":"cm2.sound/1","fields":[
+      {"path":"runtime.assetId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":true,"referenceKind":"asset","budgetImpact":"voice handle"},
+      {"path":"runtime.voiceGroup","type":"enum","unit":"none","range":"weapon|engine|impact|ambient","default":"impact","runtimeRequired":true,"referenceKind":null,"budgetImpact":"voice concurrency"}
+    ]},
+    {"kind":"targetFilter","schemaVersion":"cm2.targetfilter/1","fields":[
+      {"path":"runtime.mode","type":"enum","unit":"none","range":"hostile|friendly|any","default":"hostile","runtimeRequired":true,"referenceKind":null,"budgetImpact":"target query"}
+    ]},
+    {"kind":"flight","schemaVersion":"cm2.flight/1","fields":[
+      {"path":"runtime.speedMps","type":"number","unit":"m/s","range":"0 < x <= 10000","default":100,"runtimeRequired":true,"referenceKind":null,"budgetImpact":"flight query cadence"},
+      {"path":"runtime.guidance","type":"enum","unit":"none","range":"none|seek|intercept","default":"none","runtimeRequired":true,"referenceKind":null,"budgetImpact":"guidance tick"}
+    ]},
+    {"kind":"component","schemaVersion":"cm2.component/1","fields":[
+      {"path":"runtime.componentType","type":"enum","unit":"none","range":"engine|weapon|shield","default":"engine","runtimeRequired":true,"referenceKind":null,"budgetImpact":"component tick"},
+      {"path":"runtime.slotId","type":"id","unit":"none","range":"canonical ID","default":null,"runtimeRequired":false,"referenceKind":"mount","budgetImpact":"slot lookup"}
+    ]}
+  ]
+}

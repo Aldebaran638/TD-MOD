@@ -6,6 +6,15 @@
 !sync-cm2-to-global.ps1
 !docs/
 !docs/**
+!schemas/
+!schemas/cm2/
+!schemas/cm2/package-manifest-v1.json
+!schemas/cm2/source-envelope-v1.json
+!tools/
+!tools/cm2-compiler/
+!tools/cm2-compiler/compile-definitions.ps1
+!tools/cm2-package/
+!tools/cm2-package/**
 !prompt.md
 !README
 !README.md

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cm2.local/schema/package-manifest-v1.json",
+  "title": "CM2 PackageManifest v1",
+  "type": "object",
+  "required": ["packageId", "packageVersion", "schemaVersion", "coreApiVersionRange", "sdkVersionRange", "buildFormatVersion", "license", "provenance", "dependencies", "capabilities", "entrypoints", "contentEntries", "assetEntries", "generatedEntries", "budget", "files", "signature"],
+  "properties": {
+    "packageId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "packageVersion": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "schemaVersion": {"const": "cm2.package/1"},
+    "buildFormatVersion": {"const": "cm2.package-build/1"},
+    "coreApiVersionRange": {"type": "string", "minLength": 1},
+    "sdkVersionRange": {"type": "string", "minLength": 1},
+    "capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"enum": ["Ship", "Mount", "Turret", "Weapon", "Projectile", "Effect", "Localization", "Assets"]}
+    },
+    "entrypoints": {
+      "type": "object",
+      "required": ["runtime", "lua"],
+      "properties": {"runtime": {"const": "data-only"}, "lua": {"type": "null"}},
+      "additionalProperties": true
+    },
+    "contentEntries": {"type": "array"},
+    "assetEntries": {"type": "array"},
+    "generatedEntries": {"type": "array"},
+    "dependencies": {"type": "array"},
+    "optionalDependencies": {"type": "array"},
+    "files": {"type": "array"},
+    "budget": {"type": "object"},
+    "signature": {"type": "object"}
+  },
+  "additionalProperties": true
+}
