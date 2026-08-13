@@ -49,6 +49,17 @@ class TodoPlanTests(unittest.TestCase):
         after = [(task["id"], task["implementation_status"], task["evidence"]) for task in twice["tasks"]]
         self.assertEqual(before, after)
 
+    def test_business_edit_invalidates_prior_verification_without_status_loss(self) -> None:
+        value = copy.deepcopy(self.todo)
+        finished = next(task for task in value["tasks"] if task["verification_status"] == "verified")
+        original_status = finished["implementation_status"]
+        finished["expected_outcome"] += " Contract edit."
+        updated = upgrade(value)
+        refreshed = next(task for task in updated["tasks"] if task["id"] == finished["id"])
+        self.assertEqual(refreshed["implementation_status"], original_status)
+        self.assertEqual(refreshed["verification_status"], "needs_regression")
+        self.assertEqual(validate(updated), [])
+
 
 if __name__ == "__main__":
     unittest.main()

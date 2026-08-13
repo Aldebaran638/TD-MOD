@@ -30,6 +30,8 @@ Use this skill to close the loop from code change to authoritative live evidence
    ```
 
    Use `validate_contract.py` only for a standalone Scenario/one-off contract.
+   `build-todo-json.ps1` is a compatibility-named in-place refresher: the root
+   JSON is authoritative and the command never rebuilds it from Markdown.
 
 3. Choose the fixture and the minimum real trigger. Prefer an isolated deterministic scenario over manual travel, aiming, or waiting. Read [scenarios.md](references/scenarios.md) when `SCENE` or `CONSUMER_MOD` applies.
 4. Implement the smallest in-scope change. Do not add a new MCP/game RPC for each gameplay feature; strengthen observation, scenario setup, or authority-boundary telemetry first.
