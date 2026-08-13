@@ -5,7 +5,7 @@ Generated from the authoritative `TEARDOWN_SHIP_PLATFORM_TODO.json` (`cm2.todo/2
 Total: 80
 
 - Implementation: not_started=0; in_progress=0; finish=22; unable=58
-- Verification: verified=10; needs_regression=10; pending=58; human_visual_review=2
+- Verification: verified=10; needs_regression=9; pending=58; human_visual_review=3
 - Automation: FULL_AUTO=43; AUTO_WITH_VISUAL_REVIEW=17; PARTIAL_AUTO=20; MANUAL_REQUIRED=0
 
 ## Profile index
@@ -1155,7 +1155,7 @@ Total: 80
 ### Step 8.5 — 增加 VOX、Anchor、Mount 与 Turret 3D Editor
 
 - Implementation: `finish`
-- Verification: `needs_regression` — Implementation completion is retained, but evidence predates the autonomous policy or explicitly deferred a now-required live, multiplayer, visual, or consumer-path assertion.
+- Verification: `human_visual_review` — Objective engineering verification passed on 2026-08-13. Static/fixture checks, a disposable live VOX editor scenario, real keyboard input, screenshot assertions, incremental runtime log attribution, F4 cleanup, emergency release, and full Harness evidence are stored in docs/evidence/step-8.5-anchor-turret-editor-v1.json. Only subjective visual polish and creator ergonomics remain for human review.
 - Automation: `AUTO_WITH_VISUAL_REVIEW`
 - Profiles: `STATIC + FIXTURE + SCENE + REAL_INPUT + VISUAL + LOG`
 - Eyes: `EYE_SCREENSHOT + EYE_LOG`

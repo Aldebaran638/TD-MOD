@@ -11,7 +11,7 @@
     "sourceToVox": "logical(x,y,z) -> vox(x,maxZ-1-z,y)",
     "voxToTeardown": "vox(x,y,z) -> logical(x,z,maxZ-1-y)",
     "readOnly": true,
-    "orientation": { "up": "+Y", "forward": "-Z", "confirmed": false }
+    "orientation": { "up": "+Y", "forward": "-Z", "confirmed": true, "evidence": "docs/evidence/step-8.5-anchor-turret-editor-v1.json" }
   },
   "coordinateContract": {
     "frame": "right-handed-y-up",
@@ -67,5 +67,5 @@
   ],
   "generatedForbiddenRoots": [ "Content Mod 2/script", "docs/generated" ],
   "sourcePatchPolicy": { "everyEditProducesPatch": true, "generatedArtifactMutation": false, "storageSpace": "parent-local" },
-  "runtimeScope": "headless-editor-contract; live 3D gizmo/render evidence deferred without Teardown.exe"
+  "runtimeScope": "source/editor contract plus disposable live Teardown VOX/gizmo host; no generated-catalog or gameplay Runtime mutation authority"
 }

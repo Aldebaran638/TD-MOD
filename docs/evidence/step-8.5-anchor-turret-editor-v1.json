@@ -1,0 +1,152 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 8.5",
+  "result": "engineering_pass_subjective_visual_review",
+  "verified_at": "2026-08-13T22:20:00+08:00",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "VISUAL", "LOG"],
+  "eyes": ["EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "telemetry": {
+    "required": false,
+    "reason": "The embedded Step 8.5 contract declares no gameplay telemetry assertion. The headless editor runner owns exact graph/transform/patch/budget values, screenshots own the live VOX/editor surface, and the incremental log owns runtime health."
+  },
+  "setup": {
+    "level": "Content Mod 2/_ai_scenario_anchor_turret_editor.xml",
+    "controller": "Content Mod 2/script/testing/scenario/anchor_turret_editor_controller.lua",
+    "scenario": "Content Mod 2/testing/scenarios/creator/anchor_turret_editor_v1/scenario.json",
+    "xml_revision": "anchor-turret-editor-xml-v1",
+    "lua_revision": "anchor-turret-editor-lua-v1",
+    "vox": "Content Mod 2/vox/gammaStrikeCraftTest.vox",
+    "vox_format": {"version": 150, "models": 1, "voxels": 4120, "bytes": 17576},
+    "vox_sha256": "c52e69f18a71f54f1259d90570a9d6d9bc917e4d26aa4cfbd2242ad69c06788f",
+    "asset_manifest_sha256": "009135e9ba3cf5a9c1b57222ec712de910584973933ca1edee1f0afa01448e18",
+    "coordinate_contract": "right-handed Y-up meters; +X right, +Y up, -Z forward; parent-local storage",
+    "forbidden_authority": ["VOX write", "source filesystem write", "generated catalog write", "gameplay Runtime mutation", "damage RPC"]
+  },
+  "static_fixture": {
+    "runner": "tools/cm2-editor/run-anchor-turret-editor-v1.ps1",
+    "self_test": "tools/cm2-editor/test-anchor-turret-editor-v1.ps1",
+    "report": "docs/candidates/anchor-turret-editor-v1.result.json",
+    "report_sha256": "b019be3be0dc0ab7eedcdfec7e04a115c5dc4ca2e89a624ea7c63327d7de6706",
+    "golden": {
+      "root_world": [10, 2, -4],
+      "wing_world": [12, 2, -4],
+      "wing_scale": [2, 4, 2],
+      "wing_mirror": [-1, 1, 1],
+      "editor_runtime_anchor": [12, 2, -4]
+    },
+    "graph": {"nodes": 3, "anchors": 4, "mounts": 2, "turrets": 1, "arc_samples": 7},
+    "budgets": {
+      "fixed": [1, 1, 0],
+      "logical": [1, 1, 0],
+      "visual": [0, 0, 0],
+      "joint": [2, 2, 1],
+      "runtime_limits": [2, 8, 4]
+    },
+    "source_patch": {"count": 4, "sha256": "c3fc89917a707aa8ab1dc788fdd825675c8a8d750d2bdd865a6c0ed967131547", "storage": "parent-local", "generated_artifact_mutation": false},
+    "negative_cases": ["missing-parent", "duplicate-id", "cycle", "budget"],
+    "self_test_cases": 13,
+    "generated_catalog_sha256_before": "dc01a2b7b91d5e7645bba7ea44d921efb451ec76e06fd8856c9681d80eed7fa9",
+    "generated_catalog_sha256_after": "dc01a2b7b91d5e7645bba7ea44d921efb451ec76e06fd8856c9681d80eed7fa9"
+  },
+  "reload": {
+    "root_xml_discovery": "The new root XML appeared in Level Editor File/Open without restarting Teardown. Selecting it changed Scene Explorer identity and Shapes count from 0 to 1, proving the XML and real VOX were reread.",
+    "level_open_run_id": "20260813T141341Z-1bd2157b",
+    "level_open_frame": "frame_f000002-57e34489_pid-30296.png",
+    "lua_reload": "F4 returned to Level Editor; F5 reloaded the controller and displayed anchor-turret-editor-lua-v1.",
+    "complete_reload_run_id": "20260813T141947Z-6ee94a6d",
+    "loading_recovery": "Four near-black loading captures were rejected; the agent waited and only resumed control after a non-constant live editor frame."
+  },
+  "live_run": {
+    "run_id": "20260813T141947Z-6ee94a6d",
+    "target_id": "teardown:30296:526038",
+    "pid": 30296,
+    "input_backend": "gvinput virtual HID",
+    "baseline_log_cursor": 80888157,
+    "actions": [
+      "F5 reloads the selected root XML",
+      "A creates wing.sensor.live",
+      "Space moves it +0.20 m in parent-local X",
+      "M mirrors it across parent-local X",
+      "K creates mount.live",
+      "Home creates turret.live with base/yaw/pitch axes",
+      "End switches local to world transform view",
+      "Arrow Up selects visual mode and its 0/0/0 budget",
+      "Enter validates the graph and Runtime budget limits",
+      "Delete attempts a duplicate wing.muzzle.left and is rejected before a source patch",
+      "Enter proves the source remains valid after the rejected edit",
+      "F4 returns to Level Editor; emergency release clears all input"
+    ],
+    "assertions": {
+      "live_vox": "The real Gamma Strike Craft VOX is visible with the expected nose/front at -Z, top at +Y, actual model scale and Shape-bounds-derived overlay.",
+      "axes": "Red +X/right, green +Y/up and blue -Z/forward axes are visible from the live Shape center.",
+      "initial_editor": "The live surface reports 4 anchors, 2 mounts, 1 turret, 7 arc samples and logical budget 1/1/0.",
+      "edited_editor": "Real input produces 5 anchors, 3 mounts, 2 turrets, world view, visual budget 0/0/0 and 17 source patches.",
+      "validation": "Enter reports SOURCE PATCH VALIDATED / BUILD READY with graph valid and budgets <= Runtime limits.",
+      "invalid_gate": "Duplicate ID reports BUILD BLOCKED BEFORE SOURCE PATCH, duplicate-id, rejects=1, and patch count stays 17.",
+      "generated_boundary": "Every accepted state reports generated mutation=false; rejected duplicate appends no patch."
+    }
+  },
+  "screenshots": [
+    {"purpose": "Live baseline VOX, axes and initial markers", "run_id": "20260813T141947Z-6ee94a6d", "file": "frame_f000002-7cb9dee5_pid-30296.png", "sha256": "8905f2e251b2ae987896e21bbf94093ec03b980fa92f58a387461e4e78a9ae0c"},
+    {"purpose": "Created and mirrored Anchor", "run_id": "20260813T141947Z-6ee94a6d", "file": "frame_f000005-31008fc8_pid-30296.png", "sha256": "bb457898baa99eff3cb08777165b59f78e5afaaae6d1d12d7c5ff2254f507040"},
+    {"purpose": "Created Mount and Turret", "run_id": "20260813T141947Z-6ee94a6d", "file": "frame_f000007-4b2c01a0_pid-30296.png", "sha256": "c9a70daa772c76ad548e37d9c1c681c9cc6ec046035434133dccd109ac5ac78b"},
+    {"purpose": "World view and visual budget", "run_id": "20260813T141947Z-6ee94a6d", "file": "frame_f000009-144cf1d7_pid-30296.png", "sha256": "4587fe976c93271f78e5e3ab2fb30622197bed65e29f0a4f84df89c9a4a08b7b"},
+    {"purpose": "Valid source patch and Runtime budget parity", "run_id": "20260813T141947Z-6ee94a6d", "file": "frame_f000010-38021ddb_pid-30296.png", "sha256": "291aafb3bbe0dfdbb94f6f86f0c52469d8bddc0bb933cd29d853d6571fa9673d"},
+    {"purpose": "Duplicate build gate", "run_id": "20260813T141947Z-6ee94a6d", "file": "frame_f000011-368f06e6_pid-30296.png", "sha256": "7eddade90c6c8cf1227670c01dc3b15bd9f0108cd326150c32a1c65f6f9a7b84"},
+    {"purpose": "F4 cleanup in Level Editor", "run_id": "20260813T141947Z-6ee94a6d", "file": "frame_f000013-c616cc4e_pid-30296.png", "sha256": "444e6a113f08b1a1057324bc2b0779caa3e5acf81a5bc4ce30ced826cc8b1ec1"}
+  ],
+  "log": {
+    "path": "%LOCALAPPDATA%/Teardown/log.txt",
+    "baseline_cursor": 80888157,
+    "final_cursor": 80896919,
+    "bytes_read": 8762,
+    "in_scope_error_count": 0,
+    "in_scope_warning_count": 0,
+    "attributed_external_noise": {
+      "owner": "Steam workshop mod 3148138736 / TABS Vehicle Framework",
+      "errors": 2,
+      "warnings": 6,
+      "details": "One live reload emitted two missing TABS sound-bank errors and two groups of three TABS ballistics pre-init deprecated API warnings; every line points outside Content Mod 2."
+    },
+    "post_action_tail": "Anchor/Mount/Turret edits, view/mode switching, validation, rejection and cleanup added no CM2 error or warning."
+  },
+  "defect_loop": [
+    {
+      "failure": "The adapter accepted an invalid graph during init, Turret definitions without a base Anchor, budget overflows, and rollback restored only a public snapshot rather than the full internal state.",
+      "fix": "Made init graph validation fail closed, required Turret base Anchors, checked Body/Shape/Joint costs against limits, updated patch metrics, guarded all mutators, and preserved the complete rollback state.",
+      "regression": "The 12-case self-test, Lua/API/XML checks and live validation all pass; duplicate input is blocked without changing patch count."
+    },
+    {
+      "failure": "The initial T key collided with Global Mod Ship Designer and opened an unrelated UI; the first Harness attempts also used non-canonical key aliases uparrow and return.",
+      "fix": "Moved Turret creation and view switching to Home/End, retained Teardown's uparrow/downarrow names in the script, and used Harness canonical up/down and enter names.",
+      "regression": "The final fresh-frame run executed all editor actions without opening Ship Designer or losing focus."
+    },
+    {
+      "failure": "F5 produces a bounded near-black loading interval before the live scene is ready.",
+      "fix": "Rejected black captures, waited, re-observed, and performed no edit until a valid scene frame existed.",
+      "regression": "Every accepted action used the immediately preceding non-black frame_id and exact target_id."
+    }
+  ],
+  "harness": {
+    "command": ".\\harness\\check-all.ps1",
+    "result": "pass",
+    "exit_code": 0,
+    "duration_seconds": 128.3,
+    "entry_closure_lua_files": 261,
+    "lua_files": 231,
+    "xml_files": 12,
+    "api_issues": 0,
+    "anchor_turret_editor_self_test_cases": 13,
+    "executable_todo_contracts": 80
+  },
+  "cleanup": {
+    "returned_to_editor": true,
+    "live_ui_absent_after_f4": true,
+    "shapes_count": 1,
+    "held_keys": [],
+    "held_buttons": [],
+    "emergency_release": "pass"
+  },
+  "human_review_remaining": "Subjective visual polish and creator ergonomics only. Objective VOX visibility/orientation/scale, marker and arc visibility, exact counts, transform views, real-input editing, budget display, invalid gating, catalog isolation, logs and cleanup passed."
+}
