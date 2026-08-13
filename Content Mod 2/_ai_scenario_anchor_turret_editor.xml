@@ -1,0 +1,12 @@
+<scene version="2.0.1" shadowVolume="80 40 80">
+    <environment template="night"/>
+    <script file="MOD/script/testing/scenario/scenario_controller.lua" param0="scenario=anchor_turret_editor_v1" param1="revision=anchor-turret-editor-xml-v1"/>
+    <script file="MOD/script/testing/scenario/anchor_turret_editor_controller.lua"/>
+
+    <!-- Read-only live surface for the Step 8.5 editor contract. Source edits
+         remain in the candidate adapter and never mutate this VOX or generated Runtime. -->
+    <body name="Anchor Turret Editor Gamma Fixture" tags="cm2AnchorEditorFixture" pos="0 2 0" rot="0 0 0" dynamic="false">
+        <vox name="Anchor Turret Editor Gamma VOX" tags="cm2AnchorEditorVox" pos="-2.25 -0.6 2.55" file="MOD/vox/gammaStrikeCraftTest.vox"/>
+    </body>
+    <location name="Anchor Turret Editor Player" tags="player" pos="0 8 18" rot="-18 180 0"/>
+</scene>

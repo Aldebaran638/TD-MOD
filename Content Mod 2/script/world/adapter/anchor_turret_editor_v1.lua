@@ -44,55 +44,30 @@ end
 
 local function _recordPatch(state, operation, payload)
     state.patches[#state.patches + 1] = { index = #state.patches + 1, operation = operation, storageSpace = editor.storageSpace, payload = _clone(payload or {}) }
+    state.metrics.patchCount = #state.patches
 end
 
 local function _newState()
     return {
         initialized = false, disposed = false, sourceRevision = 0, viewSpace = "local", activeMode = "logical",
         assetManifest = nil, graph = nil, parts = {}, anchors = {}, mounts = {}, turrets = {}, muzzleOrder = {},
-        budgets = {}, patches = {}, initialSnapshot = nil, metrics = { edits = 0, patchCount = 0, validationErrors = 0, budgetRejects = 0, staleRejects = 0 },
+        budgets = {}, budgetLimits = {}, patches = {}, initialSnapshot = nil, metrics = { edits = 0, patchCount = 0, validationErrors = 0, budgetRejects = 0, staleRejects = 0 },
     }
 end
 
 editor.state = editor.state or _newState()
 
-function editor.init(assetManifest, graph, options)
-    local manifest = type(assetManifest) == "table" and assetManifest or {}
-    local sourceGraph = type(graph) == "table" and graph or {}
-    if manifest.readOnly ~= true then return false, "AssetManifest must be read-only" end
-    if _safeString(manifest.sourceToVox) == "" or _safeString(manifest.voxToTeardown) == "" then return false, "VOX coordinate mapping is required" end
-    if type(sourceGraph.nodes) ~= "table" then return false, "EntityGraph nodes are required" end
-    local state = _newState()
-    state.initialized = true
-    state.assetManifest = _clone(manifest)
-    state.graph = _clone(sourceGraph)
-    state.sourceRevision = math.max(1, math.floor(_safeNumber(options and options.sourceRevision, 1)))
-    state.viewSpace = _safeString(options and options.viewSpace, "local") == "world" and "world" or "local"
-    state.activeMode = _safeString(options and options.mode, "logical")
-    state.budgets = _clone(options and options.budgets or {})
-    editor.state = state
-    _recordPatch(state, "init", { assetManifest = manifest.manifestHash, vox = manifest.voxPath, viewSpace = state.viewSpace })
-    state.initialSnapshot = editor.snapshot()
-    return true, editor.snapshot()
-end
-
-local function _ready()
-    return editor.state.initialized and not editor.state.disposed
-end
-
-local function _partExists(id)
-    for _, node in ipairs(editor.state.graph.nodes or {}) do if _safeString(node.partId or node.nodeId) == id then return true end end
-    return false
-end
-
-local function _graphValid()
-    local state = editor.state
+local function _graphValid(sourceGraph)
+    local graph = type(sourceGraph) == "table" and sourceGraph or editor.state.graph
     local byId = {}
-    for _, node in ipairs(state.graph.nodes or {}) do
+    local roots = 0
+    for _, node in ipairs(graph.nodes or {}) do
         local id = _safeString(node.partId or node.nodeId)
         if id == "" or byId[id] ~= nil then return false, "duplicate-id" end
         byId[id] = node
+        if _safeString(node.parentId) == "" then roots = roots + 1 end
     end
+    if roots ~= 1 then return false, "root-count" end
     local colors = {}
     local function visit(id)
         if colors[id] == 1 then return false, "cycle" end
@@ -107,8 +82,43 @@ local function _graphValid()
         colors[id] = 2
         return true
     end
-    for id in pairs(byId) do local valid, errorText = visit(id); if not valid then return false, errorText end end
+    for id in pairs(byId) do
+        local valid, errorText = visit(id)
+        if not valid then return false, errorText end
+    end
     return true
+end
+
+function editor.init(assetManifest, graph, options)
+    local manifest = type(assetManifest) == "table" and assetManifest or {}
+    local sourceGraph = type(graph) == "table" and graph or {}
+    if manifest.readOnly ~= true then return false, "AssetManifest must be read-only" end
+    if _safeString(manifest.sourceToVox) == "" or _safeString(manifest.voxToTeardown) == "" then return false, "VOX coordinate mapping is required" end
+    if type(sourceGraph.nodes) ~= "table" then return false, "EntityGraph nodes are required" end
+    local graphValid, graphError = _graphValid(sourceGraph)
+    if not graphValid then return false, graphError end
+    local state = _newState()
+    state.initialized = true
+    state.assetManifest = _clone(manifest)
+    state.graph = _clone(sourceGraph)
+    state.sourceRevision = math.max(1, math.floor(_safeNumber(options and options.sourceRevision, 1)))
+    state.viewSpace = _safeString(options and options.viewSpace, "local") == "world" and "world" or "local"
+    state.activeMode = _safeString(options and options.mode, "logical")
+    state.budgets = _clone(options and options.budgets or {})
+    state.budgetLimits = _clone(options and options.budgetLimits or {})
+    editor.state = state
+    _recordPatch(state, "init", { assetManifest = manifest.manifestHash, vox = manifest.voxPath, viewSpace = state.viewSpace })
+    state.initialSnapshot = _clone(state)
+    return true, editor.snapshot()
+end
+
+local function _ready()
+    return editor.state.initialized and not editor.state.disposed
+end
+
+local function _partExists(id)
+    for _, node in ipairs(editor.state.graph.nodes or {}) do if _safeString(node.partId or node.nodeId) == id then return true end end
+    return false
 end
 
 function editor.setViewSpace(space)
@@ -144,6 +154,7 @@ function editor.addAnchor(anchor)
 end
 
 function editor.moveAnchor(anchorId, localTransform)
+    if not _ready() then return false, "editor is not initialized" end
     local state = editor.state
     local anchor = state.anchors[_safeString(anchorId)]
     if anchor == nil then return false, "anchor is missing" end
@@ -154,6 +165,7 @@ function editor.moveAnchor(anchorId, localTransform)
 end
 
 function editor.mirrorAnchor(anchorId, axis)
+    if not _ready() then return false, "editor is not initialized" end
     local state = editor.state
     local anchor = state.anchors[_safeString(anchorId)]
     if anchor == nil then return false, "anchor is missing" end
@@ -169,6 +181,7 @@ function editor.mirrorAnchor(anchorId, axis)
 end
 
 function editor.snapAnchor(anchorId, gridMeters, gridDegrees)
+    if not _ready() then return false, "editor is not initialized" end
     local state = editor.state
     local anchor = state.anchors[_safeString(anchorId)]
     if anchor == nil then return false, "anchor is missing" end
@@ -182,6 +195,7 @@ function editor.snapAnchor(anchorId, gridMeters, gridDegrees)
 end
 
 function editor.addMount(mount)
+    if not _ready() then return false, "editor is not initialized" end
     local source = type(mount) == "table" and mount or {}
     local id = _safeString(source.id)
     if id == "" then return false, "mount id is required" end
@@ -193,26 +207,34 @@ function editor.addMount(mount)
 end
 
 function editor.addTurret(turret)
+    if not _ready() then return false, "editor is not initialized" end
     local source = type(turret) == "table" and turret or {}
     local id = _safeString(source.id)
     if id == "" then return false, "turret id is required" end
     if editor.state.turrets[id] ~= nil then return false, "duplicate-id" end
     if not _partExists(_safeString(source.basePartId)) then return false, "missing-parent" end
+    if editor.state.anchors[_safeString(source.baseAnchorId)] == nil then return false, "missing-base-anchor" end
     editor.state.turrets[id] = _clone(source)
     _recordPatch(editor.state, "add-turret", editor.state.turrets[id])
     return true
 end
 
 function editor.orderMuzzles(groupId, orderedIds)
+    if not _ready() then return false, "editor is not initialized" end
     local list = type(orderedIds) == "table" and orderedIds or {}
     local seen = {}
-    for _, id in ipairs(list) do if seen[id] then return false, "duplicate-muzzle-order" end; seen[id] = true end
+    for _, id in ipairs(list) do
+        if seen[id] then return false, "duplicate-muzzle-order" end
+        if editor.state.anchors[_safeString(id)] == nil then return false, "missing-muzzle-anchor" end
+        seen[id] = true
+    end
     editor.state.muzzleOrder[_safeString(groupId)] = _clone(list)
     _recordPatch(editor.state, "muzzle-order", { groupId = groupId, ordered = list })
     return true
 end
 
 function editor.previewArc(turretId)
+    if not _ready() then return nil, "editor is not initialized" end
     local turret = editor.state.turrets[_safeString(turretId)]
     if turret == nil then return nil, "turret is missing" end
     local arc = turret.arcPreview or {}
@@ -231,13 +253,21 @@ end
 
 function editor.validate()
     if not _ready() then return false, { "editor is not initialized" } end
-    local valid, errorText = _graphValid()
+    local valid, errorText = _graphValid(editor.state.graph)
     if not valid then editor.state.metrics.validationErrors = editor.state.metrics.validationErrors + 1; return false, { errorText } end
     local errors = {}
     for id, anchor in pairs(editor.state.anchors) do if not _partExists(anchor.parentPartId) then errors[#errors + 1] = "missing-parent:" .. id end end
     for _, mode in ipairs(editor.modes) do
         local budget = editor.getBudget(mode)
         if budget.joint == nil then errors[#errors + 1] = "budget:" .. mode end
+        for _, kind in ipairs({ "body", "shape", "joint" }) do
+            local limit = tonumber(editor.state.budgetLimits[kind])
+            local cost = tonumber(budget[kind])
+            if limit ~= nil and cost ~= nil and cost > limit then
+                errors[#errors + 1] = "budget:" .. mode .. ":" .. kind
+                editor.state.metrics.budgetRejects = editor.state.metrics.budgetRejects + 1
+            end
+        end
     end
     return #errors == 0, errors
 end
@@ -255,7 +285,9 @@ end
 
 function editor.rollback()
     if editor.state.initialSnapshot == nil then return false, "no editor snapshot" end
-    editor.state = _clone(editor.state.initialSnapshot)
+    local initial = _clone(editor.state.initialSnapshot)
+    initial.initialSnapshot = _clone(editor.state.initialSnapshot)
+    editor.state = initial
     return true
 end
 
