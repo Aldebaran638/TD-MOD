@@ -1,0 +1,71 @@
+{
+    "schemaVersion":  "cm2.generated-catalog-manifest/1",
+    "generated":  true,
+    "generatedBy":  "build-generated-catalog-manifest-v1.ps1",
+    "sourceRevision":  "snapshot:6a42c59157f3629a25544c6f0acd5d6245f695c2f3735d11e31faec82aff9040",
+    "catalogs":  [
+                     {
+                         "kind":  "weapon",
+                         "schemaVersion":  "cm2.weapon-catalog/1",
+                         "jsonPath":  "docs/generated/cm2-weapon-definitions-v1.json",
+                         "luaPath":  "docs/generated/cm2-weapon-catalog-v1.lua",
+                         "hashPath":  "docs/generated/cm2-weapon-catalog-v1.sha256",
+                         "luaSha256":  "8613041f605a9cdd9230795ed7bcb63dcd99034f138fd13e8fc4c5d3cdda3c31",
+                         "definitionCount":  109,
+                         "unresolvedCount":  0,
+                         "ownership":  "generated-candidate-only",
+                         "sourceSnapshot":  "docs/golden/cm2-definition-snapshot.json"
+                     },
+                     {
+                         "kind":  "vehicle",
+                         "schemaVersion":  "cm2.vehicle-catalog/1",
+                         "jsonPath":  "docs/generated/cm2-vehicle-definitions-v1.json",
+                         "luaPath":  "docs/generated/cm2-vehicle-catalog-v1.lua",
+                         "hashPath":  "docs/generated/cm2-vehicle-catalog-v1.sha256",
+                         "luaSha256":  "c9ac30aefa68a83b1f24acc6537e52b7b4d82ffcb06802dceafe17c4f37d4d29",
+                         "definitionCount":  5,
+                         "unresolvedCount":  0,
+                         "ownership":  "generated-candidate-only",
+                         "sourceSnapshot":  "docs/golden/cm2-definition-snapshot.json"
+                     }
+                 ],
+    "effectProfiles":  {
+                           "path":  "docs/effect-profiles-v1.json",
+                           "schemaVersion":  "cm2.effect-profile-source/1",
+                           "profileCount":  108,
+                           "aliasCount":  108,
+                           "unresolvedCount":  0,
+                           "sha256":  "bbb5ad1a63350e3250b4b914167682dff2d4b6c9d3dd1e993910cf1d21221d8c"
+                       },
+    "loadoutContract":  {
+                            "path":  "Content Mod 2/script/data/configuration/loadout_contract_v1.lua",
+                            "schemaVersion":  "cm2.loadout/1",
+                            "sha256":  "b56b16d4969e7ca08fd323b072baccd4dbacef0675cd6bd190351dc2c276cb2c"
+                        },
+    "entryClosure":  {
+                         "checker":  "harness/check-entry-closures.ps1",
+                         "entries":  [
+                                         "Content Mod 2/script/shipMain.lua",
+                                         "Content Mod 2/script/strikeCraftMain.lua"
+                                     ],
+                         "status":  "required-pass"
+                     },
+    "references":  {
+                       "unresolvedCount":  0,
+                       "namespacePolicy":  "cm2:\u003ckind\u003e/\u003cid\u003e"
+                   },
+    "ownership":  {
+                      "runtimePolicy":  "legacy-active",
+                      "mode":  "shadow",
+                      "defaultSource":  "legacy",
+                      "candidateSource":  "generated-v1",
+                      "promotionAllowed":  false,
+                      "reason":  "live Teardown shadow/S0-S8 evidence is required before default switch",
+                      "rollback":  "restore previous generated manifest and legacy catalog ownership"
+                  },
+    "buildOutput":  {
+                        "outputHash":  "c2e05f54fc01e6ace236694e24a40000cca457f3877e76338974f6630ce60e72",
+                        "manualEdit":  "forbidden",
+                        "stalePolicy":  "hash-or-header-mismatch-fails-before-promotion"
+                    }
+}
