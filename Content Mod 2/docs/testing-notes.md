@@ -5,6 +5,27 @@ record, not a replacement for the project check scripts.
 
 ## Current Priorities
 
+## CM2_TEST_V1 Telemetry Boundary
+
+The runtime telemetry path is implemented for the end-to-end ship feedback
+scenario. `script/testing/ai_agent/telemetry.lua` owns a versioned,
+nonce-gated request/response protocol. The registry is the authoritative
+source for registered ships, transforms, velocities, three HP layers,
+destruction, and cleanup events. The MCP uses `GetClipboardText`/
+`SetClipboardText` as the structured transport and restores the original
+clipboard after every exchange unless a user change is detected. `DebugPrint`
+is used only by the explicit probe to determine whether the engine log actually
+persists custom markers; it is not treated as a state transport.
+
+The bounded event ring records `fire_request`, `weapon_released`,
+`presentation_event`, `hit`, `damage_applied`, `hp_changed`,
+`ship_destroyed`, `ship_unregistered`, and `ship_cleanup`. The restricted
+damage RPC accepts only a positive amount and an existing, living registered
+ship, then crosses the normal `shipDamageApplyRaw` authority boundary.
+Responses cap events, ships, and encoded payload size and return a continuation
+sequence when truncation occurs. Pure protocol tests cover nonce handling,
+invalid responses, event de-duplication, truncation, and clipboard conflicts.
+
 | Direction | Risk to cover | Preferred validation |
 | --- | --- | --- |
 | Numbered weapon groups | `X1/X2`, `L1/L2/L3`, `M`, `G`, `H`, and `T` groups resolve distinct loadouts, mount profiles, HUD entries, and fire requests. | Lua fixture plus in-game configuration and firing pass. |
@@ -167,5 +188,52 @@ Automation owner: Add a focused runtime fixture when implementation begins to
                    profile contracts.
 Manual validation: Configuration UI and firing pass across every compatible
                    ship, including a client/server session where applicable.
+Status: planned
+```
+
+### External Consumer Ship Mod End-to-End
+
+```text
+Scenario: Build a complete playable ship in a separate workspace mod by
+          following only the documented CM2 extension procedure and public,
+          versioned contracts.
+Risk: The architecture appears extensible inside Content Mod 2 but an external
+      author must copy private scripts, depend on load order, patch core files,
+      or know undocumented registry keys. A ship may spawn yet fail at physics,
+      control, camera, weapons, damage feedback, destruction, or cleanup.
+Affected files/runtime layer: extension authoring contract, world-host and ship
+      registration, vehicle/physics bootstrap, input and camera ownership,
+      component and weapon catalogs, targeting/damage services, presentation,
+      diagnostics, and lifecycle cleanup.
+Setup: Create a top-level reference consumer mod beside Content Mod 2. Give it
+       original metadata, XML/VOX assets, one player ship definition, components,
+       at least one direct-fire weapon, and a small combat level with a target.
+       Do not edit Content Mod 2 to register the test ship and do not include or
+       copy implementation-private CM2 scripts. Record the exact authoring steps,
+       public dependencies, protocol versions, and a fresh telemetry cursor.
+Action: Validate and load the consumer mod; spawn and enter the ship; leave it
+        idle; apply movement and camera input; fire at the target; receive damage;
+        destroy one participant; exit/re-enter; and reload the level. Correlate
+        each injected action with structured game events, state snapshots, and
+        before/after client-area screenshots.
+Expected result: The fixed documented procedure produces a complete ship without
+                 core patches or private-code duplication. Spawn and registration
+                 succeed once; idle physics remain within declared tolerances;
+                 controls and camera respond; firing produces request, discharge,
+                 presentation, hit, and HP-delta evidence; damage/destruction and
+                 cleanup reach terminal states; reload has no stale registrations.
+                 Any missing public hook, special-case edit, silent failure, or
+                 unexplained physics/weapon behavior is reported against the
+                 owning architecture boundary rather than hidden in the fixture.
+Automation owner: A future external-consumer contract check owns mod independence,
+                  declared dependencies, public protocol use, required definition
+                  fields, and forbidden private includes. The Teardown-control MCP
+                  owns action timing, screenshot capture, telemetry correlation,
+                  evidence retention, and the final pass/fail report.
+Manual validation: Screenshots remain required for visual composition, camera,
+                   muzzle/beam/projectile/impact FX, HUD, and obvious clipping.
+                   Structured telemetry is the authority for registration,
+                   transforms/velocities, input edges, weapon lifecycle, target,
+                   damage/HP deltas, destruction, cleanup, and new runtime errors.
 Status: planned
 ```
