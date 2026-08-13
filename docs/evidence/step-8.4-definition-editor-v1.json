@@ -1,0 +1,142 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 8.4",
+  "result": "engineering_pass_subjective_visual_review",
+  "verified_at": "2026-08-13T21:48:00+08:00",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "VISUAL", "LOG"],
+  "eyes": ["EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "telemetry": {
+    "required": false,
+    "reason": "The embedded Step 8.4 contract has no gameplay-state assertion. Headless source/compiler reports own hashes and save gates; screenshots own the Teardown UI path and logs own runtime health."
+  },
+  "setup": {
+    "level": "Content Mod 2/_ai_scenario_definition_editor.xml",
+    "controller": "Content Mod 2/script/testing/scenario/definition_editor_controller.lua",
+    "scenario": "Content Mod 2/testing/scenarios/creator/definition_editor_v1/scenario.json",
+    "xml_revision": "definition-editor-xml-v1",
+    "lua_revision": "definition-editor-lua-v1",
+    "three_dimensional_view": false,
+    "package_id": "cm2.editor.demo",
+    "source_only": true,
+    "forbidden_authority": ["source write", "compiler invoke", "generated catalog write", "Runtime mutation", "spawn", "damage"]
+  },
+  "static_fixture": {
+    "runner": "tools/cm2-editor/run-schema-editor-v1.ps1",
+    "self_test": "tools/cm2-editor/test-schema-editor-v1.ps1",
+    "report": "docs/candidates/schema-editor-v1.result.json",
+    "report_sha256": "caff701380e36dac29c742feca175c2b9f0dcebc6c9de6dcdd7ebdaffe47dd58",
+    "forms": ["weapon", "projectile", "effect", "vehicle", "mount"],
+    "schema_field_metadata_count": 19,
+    "baseline_source_sha256": "ef922d5c38a344a93aaf849085cb329757184aa703a6ea9b66dbf56066ec1848",
+    "edited_source_sha256": "0a325ca5d1e5ff5212d7f36c4c998061c3d724402c7e64ca73e455c9c1f7d3b6",
+    "compiled_catalog_sha256": "ad61b800e3d47d09332c544378f3296bd85c64e085735ccc169d40a6963d5c88",
+    "runtime_projection_sha256": "9c6505f256fd6abd409eabee2edb9300bb7d7479671b4c42ff3cf3ea1e4e7a07",
+    "source_recompile_byte_identical": true,
+    "unknown_metadata_round_trip": true,
+    "undo_redo_exact": true,
+    "first_valid_weapon_minutes": 5,
+    "invalid_save_cases": ["out-of-range", "broken-reference", "wrong-type", "future-version"],
+    "negative_fixtures": ["source-only disabled", "required field missing", "unsafe generated path", "form kind removed"],
+    "forbidden_roots_unchanged": ["Content Mod 2/script", "docs/generated"]
+  },
+  "reload": {
+    "xml_open_run_id": "20260813T133758Z-2a85f14a",
+    "xml_open_frame": "frame_f000002-434e3904_pid-30296.png",
+    "xml_open_sha256": "37703763bae02342c667aeb66118a3ee55a996f740b0eb16b448567380f0b0bd",
+    "xml_observation": "The new root XML appeared immediately in File/Open; selecting it changed Scene Explorer to _ai_scenario_definition_editor and Shapes count from 1 to 0, proving the non-3D level was reread.",
+    "lua_reload_run_id": "20260813T134429Z-168365ca",
+    "lua_reload_frame": "frame_f000001-d15ce5ab_pid-30296.png",
+    "lua_reload_sha256": "41ce6fd285b071df4fdf6a1fcba9880c4da42d92c992ef62272674fac552f207",
+    "lua_observation": "F4 returned to Editor and F5 loaded the revised controller; definition-editor-lua-v1 was visible and the title moved clear of Teardown's native F4/F3 overlay.",
+    "loading_recovery": "Two near-black loading captures were rejected. No black frame is acceptance evidence; the agent waited, re-observed, and acted only after a valid UI frame."
+  },
+  "live_runs": {
+    "complete_contract": {
+      "run_id": "20260813T133927Z-f538ff62",
+      "target_id": "teardown:30296:526038",
+      "input_backend": "gvinput virtual HID",
+      "actions": [
+        "Right Arrow through projectile/effect/vehicle/mount and wrap to weapon",
+        "Down Arrow x3 selects runtime.fireRateHz",
+        "Space edits 2 to 4; Enter validates legal source",
+        "Delete edits 4 to 0; Enter blocks save before compiler",
+        "Backspace undo; Insert redo; Backspace restores valid source; Enter validates",
+        "F4 returns to Level Editor; emergency release"
+      ],
+      "assertions": {
+        "forms": "All five schema-driven forms are visible and selectable through real input.",
+        "field_metadata": "Each visible field exposes path, type, unit, range, reference and budget information.",
+        "valid_save": "runtime.fireRateHz 2 -> 4 reports SOURCE SAVE VALIDATED, compiler byte-identical and generated Lua untouched.",
+        "invalid_save": "runtime.fireRateHz 4 -> 0 reports SAVE BLOCKED BEFORE COMPILER, out-of-range at the exact field path and generated catalog preserved.",
+        "history": "Undo and redo visibly restore exact source snapshots and diffs.",
+        "catalog": "Every form shows generated catalog unchanged."
+      }
+    },
+    "post_fix_contract": {
+      "run_id": "20260813T134501Z-46217ef9",
+      "blocked_frame": "frame_f000002-cf7ee28f_pid-30296.png",
+      "blocked_sha256": "f6a94a58b1e10aabd4548723ec464cd6943d91a2ca84bf3157e80d13651fc7c1",
+      "valid_frame": "frame_f000003-ae029edc_pid-30296.png",
+      "valid_sha256": "4e641889f9c599882641452f6b8dcb3cc6ae4038d7885a39f1033a62393d0c24",
+      "cleanup_frame": "frame_f000004-6ace8d22_pid-30296.png",
+      "cleanup_sha256": "37703763bae02342c667aeb66118a3ee55a996f740b0eb16b448567380f0b0bd",
+      "result": "The revised UI repeated invalid-block, undo, valid-save, log and cleanup assertions."
+    }
+  },
+  "screenshots": [
+    {"purpose": "Weapon baseline", "run_id": "20260813T133927Z-f538ff62", "file": "frame_f000001-b9b0c6a4_pid-30296.png", "sha256": "fcbd1e7f885c75376091491e838ad1378a8821794f8fe5cbeb70f8caa1e34ff3"},
+    {"purpose": "Projectile form", "run_id": "20260813T133927Z-f538ff62", "file": "frame_f000002-77effc7a_pid-30296.png", "sha256": "961afd469b1aec3a7c29dd3b5f5f5a5a9d1d619d3ff5400160a4ebd3548b500d"},
+    {"purpose": "Effect form", "run_id": "20260813T133927Z-f538ff62", "file": "frame_f000003-403bba47_pid-30296.png", "sha256": "08cfbe0d905f119fc32bf4eb6e7be9565eab1457ceb03010e7d1c2665acef990"},
+    {"purpose": "Vehicle form", "run_id": "20260813T133927Z-f538ff62", "file": "frame_f000004-c4d4fa7b_pid-30296.png", "sha256": "411d1d3f62295a95fd906dce41b210a4adf52e5ffa2a3ac443c2e8662c0a785d"},
+    {"purpose": "Mount form", "run_id": "20260813T133927Z-f538ff62", "file": "frame_f000005-c83220b5_pid-30296.png", "sha256": "dfc36a4b6523c7609a0791e898916e44501c5d2cd208715f67b946e59dc8643f"},
+    {"purpose": "Valid save", "run_id": "20260813T133927Z-f538ff62", "file": "frame_f000008-47816bca_pid-30296.png", "sha256": "b33cc30510eaeae91dca79885416ccdaafeab256b3bb16cec1a6154d9cac1236"},
+    {"purpose": "Invalid save blocked", "run_id": "20260813T133927Z-f538ff62", "file": "frame_f000009-5ab12512_pid-30296.png", "sha256": "46ba824d6ace8aa7e6fc0ea208cce5e4b2ded96827c7f901c0944e402d1841d8"},
+    {"purpose": "Undo", "run_id": "20260813T133927Z-f538ff62", "file": "frame_f000010-b9835ec4_pid-30296.png", "sha256": "8fa1d1a30c2096903d22ae5b6df6efe5cc38dda96d2cccaff62656ab2d574cdc"},
+    {"purpose": "Redo", "run_id": "20260813T133927Z-f538ff62", "file": "frame_f000011-a78630cf_pid-30296.png", "sha256": "170c83c24b12ed0356f20d3aaad4f3d4eb1fcf9440c058e22671790270491182"}
+  ],
+  "log": {
+    "path": "%LOCALAPPDATA%/Teardown/log.txt",
+    "baseline_cursor": 80843251,
+    "final_cursor": 80861078,
+    "bytes_read": 17827,
+    "in_scope_error_count": 0,
+    "in_scope_warning_count": 0,
+    "attributed_external_noise": {
+      "owner": "Steam workshop mod 3148138736 / TABS Vehicle Framework",
+      "errors": 4,
+      "warnings": 12,
+      "details": "Two Definition Editor loads each repeated two missing TABS sound-bank errors and six TABS ballistics pre-init deprecated API warnings; every line points outside Content Mod 2."
+    },
+    "post_action_tail": "0 bytes; real form/edit/validate/history actions and cleanup added no errors or warnings"
+  },
+  "defect_loop": [
+    {
+      "failure": "The initial editor title overlapped Teardown's native F4/F3 hints.",
+      "fix": "Moved the title right, kept the metadata line below the native overlay, and exposed definition-editor-lua-v1.",
+      "reload": "F4 -> F5",
+      "regression": "Revision became visible, the title no longer overlaps, invalid save remained blocked, undo restored valid source and Enter validated it."
+    },
+    {
+      "failure": "A keyboard attempt to select the File/Open list did not move the current row.",
+      "fix": "Re-observed the modal and used client-coordinate HID mouse selection for the exact XML row and Open button.",
+      "regression": "Scene Explorer identity and Shapes count 0 proved the correct XML loaded; the failed attempt was not treated as evidence."
+    }
+  ],
+  "harness": {
+    "command": ".\\harness\\check-all.ps1",
+    "manual_final": {"result": "pass", "exit_code": 0, "duration_seconds": 128.1, "lua_files": 230, "xml_files": 11, "api_issues": 0},
+    "implementation_pre_commit": {"result": "pass", "exit_code": 0, "duration_seconds": 128.5},
+    "schema_editor_self_test": "pass",
+    "executable_todo_contracts": 80
+  },
+  "cleanup": {
+    "returned_to_editor": true,
+    "preview_ui_absent_after_f4": true,
+    "shapes_count": 0,
+    "held_keys": [],
+    "held_buttons": [],
+    "emergency_release": "pass"
+  },
+  "human_review_remaining": "Subjective visual polish and creator ergonomics only. Objective layout overlap, visibility, five-form navigation, metadata, diff, undo/redo, validation, catalog isolation, logs and cleanup passed."
+}
