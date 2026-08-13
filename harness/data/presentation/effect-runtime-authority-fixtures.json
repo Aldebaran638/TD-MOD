@@ -1,0 +1,7 @@
+{
+  "modes": ["legacy", "event-v1"],
+  "allowedTerminalModes": ["legacy", "event-v1"],
+  "dualPlayback": "reject-and-count",
+  "firstBatchRemoval": ["duplicate-budget-begin", "high-risk-direct-sound", "high-risk-direct-death-effect"],
+  "rollback": "effectRuntime=legacy"
+}

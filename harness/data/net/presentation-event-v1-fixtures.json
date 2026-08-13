@@ -1,0 +1,28 @@
+{
+  "protocolVersion": "cm2.presentation-event/1",
+  "valid": {
+    "protocolVersion": "cm2.presentation-event/1",
+    "sequence": 7,
+    "kind": "impact",
+    "source": {"id": "ship:alpha", "generation": 2},
+    "weapon": {"id": "cm2:weapon.ray", "schemaVersion": "cm2.weapon/1"},
+    "effect": {"id": "cm2:effect.impact", "schemaVersion": "cm2.effect/1"},
+    "anchor": {"entityId": "ship:alpha", "anchorId": "mount.x.1"},
+    "effectInstance": {"id": "effect:impact.1", "generation": 4},
+    "transform": {"position": [0, 1, -2], "rotation": [0, 0, 0, 1]},
+    "target": {"id": "ship:beta", "generation": 1},
+    "hit": {"position": [3, 2, -4], "normal": [0, 1, 0]},
+    "seed": 99,
+    "priority": 80,
+    "serverTime": 12.5,
+    "payload": {"damage": 100},
+    "extensions": {"optionalFutureField": true}
+  },
+  "negative": {
+    "staleGeneration": {"source": {"id": "ship:alpha", "generation": -1}},
+    "duplicateSequence": {"previousSequence": 7, "sequence": 7},
+    "unknownProtocol": {"protocolVersion": "cm2.presentation-event/2"},
+    "forbiddenCallback": {"callback": "client.playImpact"},
+    "unknownKind": {"kind": "teleport"}
+  }
+}

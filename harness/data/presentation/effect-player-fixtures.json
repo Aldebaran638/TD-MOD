@@ -1,0 +1,8 @@
+{
+  "capacity": 128,
+  "criticalBurst": 100,
+  "operations": ["play", "update", "fade", "stop", "destroy", "owner-lost", "anchor-lost", "scene-reload"],
+  "invariant": "active + free = capacity",
+  "staleHandle": "reject without mutation",
+  "resourcePolicy": "cache by key and reuse handle"
+}

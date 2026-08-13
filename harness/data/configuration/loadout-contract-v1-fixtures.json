@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "cm2.loadout-contract-fixtures/1",
+  "aliases": {
+    "cm2:vehicle/enigmaticCruiser": {
+      "siege_2x4g2m": "torpedo_2x4g4m"
+    }
+  },
+  "validV1": {
+    "schemaVersion": "cm2.loadout/1",
+    "revision": 1,
+    "vehicleId": "cm2:vehicle/enigmaticCruiser",
+    "configurationId": "torpedo_2x4g4m",
+    "mountRevision": 1,
+    "groups": ["xSlot", "gSlot", "mSlot", "hSlot", "pSlot"],
+    "loadout": {
+      "X": "cm2:weapon/tachyonLance",
+      "G": "cm2:weapon/devastatorTorpedoes",
+      "M": "cm2:weapon/swarmerMissile",
+      "H": "cm2:weapon/gammaStrikeCraft",
+      "P": "cm2:weapon/guardianPointDefense"
+    },
+    "componentLoadout": {
+      "largeUtility.1": "cm2:component/dragonScaleArmor",
+      "auxiliary.1": "cm2:component/advancedAfterburners"
+    }
+  },
+  "legacyV0": {
+    "configuration": "siege_2x4g2m",
+    "loadout": {
+      "X": "tachyonLance",
+      "G": "devastatorTorpedoes"
+    },
+    "componentLoadout": {
+      "auxiliary.1": "advancedAfterburners"
+    }
+  },
+  "invalidUnknownWeapon": {
+    "schemaVersion": "cm2.loadout/1",
+    "revision": 1,
+    "vehicleId": "cm2:vehicle/titan",
+    "configurationId": "titan_core",
+    "loadout": {
+      "L": "cm2:weapon/does-not-exist"
+    }
+  },
+  "invalidDowngrade": {
+    "schemaVersion": "cm2.loadout/1",
+    "revision": 0,
+    "vehicleId": "cm2:vehicle/titan",
+    "configurationId": "titan_core",
+    "loadout": {}
+  }
+}

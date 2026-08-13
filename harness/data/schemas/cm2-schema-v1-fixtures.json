@@ -1,0 +1,13 @@
+{
+  "fixtureVersion": "cm2.schema-fixtures/1",
+  "failureCases": ["valid", "missing", "wrong-type", "out-of-range", "broken-reference", "future-version"],
+  "knownReferences": ["cm2:asset.beam", "cm2:asset.projectile", "cm2:effect.projectile"],
+  "bases": [
+    {"id":"cm2:weapon.ray","kind":"weapon","schemaVersion":"cm2.weapon/1","runtime":{"behavior":"ray","effectId":"cm2:effect.ray","projectileId":"cm2:projectile.ray","fireRateHz":2},"editor":{"displayName":"Ray"},"ai":{"roles":["direct-fire"]},"build":{"sourcePath":"definitions/weapon/ray.json","revision":"fixture","budgetClass":"standard"}},
+    {"id":"cm2:projectile.ray","kind":"projectile","schemaVersion":"cm2.projectile/1","runtime":{"speedMps":100,"damage":10,"effectId":"cm2:effect.projectile"},"editor":{"displayName":"Projectile"},"ai":{"roles":["ballistic"]},"build":{"sourcePath":"definitions/projectile/ray.json","revision":"fixture","budgetClass":"standard"}},
+    {"id":"cm2:effect.ray","kind":"effect","schemaVersion":"cm2.effect/1","runtime":{"effectType":"beam","assetId":"cm2:asset.beam","priority":50},"editor":{"displayName":"Beam"},"ai":{"roles":["presentation"]},"build":{"sourcePath":"definitions/effect/ray.json","revision":"fixture","budgetClass":"visual"}},
+    {"id":"cm2:vehicle.battlecruiser","kind":"vehicle","schemaVersion":"cm2.vehicle/1","runtime":{"controlMode":"player","massKg":100000,"mountId":"cm2:mount.battlecruiser"},"editor":{"displayName":"Battlecruiser"},"ai":{"roles":["ship"]},"build":{"sourcePath":"definitions/vehicle/battlecruiser.json","revision":"fixture","budgetClass":"ship"}},
+    {"id":"cm2:mount.battlecruiser","kind":"mount","schemaVersion":"cm2.mount/1","runtime":{"parentId":"cm2:vehicle.battlecruiser","localTransform":{"space":"parent-local","position":[0,0,0],"rotationQuaternion":[0,0,0,1],"scale":[1,1,1]},"slotType":"x"},"editor":{"displayName":"Main mount"},"ai":{"roles":["anchor"]},"build":{"sourcePath":"definitions/mount/battlecruiser.json","revision":"fixture","budgetClass":"anchor"}},
+    {"id":"cm2:turret.main","kind":"turret","schemaVersion":"cm2.turret/1","runtime":{"weaponId":"cm2:weapon.ray","mountId":"cm2:mount.battlecruiser","traverseSpeedDeg":90},"editor":{"displayName":"Main turret"},"ai":{"roles":["aim"]},"build":{"sourcePath":"definitions/turret/main.json","revision":"fixture","budgetClass":"turret"}}
+  ]
+}

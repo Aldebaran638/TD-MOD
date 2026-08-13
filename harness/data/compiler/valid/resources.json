@@ -1,0 +1,5 @@
+{
+  "resources": [
+    {"id": "cm2:asset.beam", "path": "assets/beam.asset"}
+  ]
+}

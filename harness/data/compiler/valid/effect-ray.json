@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "cm2.effect/1",
+  "id": "cm2:effect.ray",
+  "kind": "effect",
+  "runtime": {"effectType": "beam", "assetId": "cm2:asset.beam", "priority": 50},
+  "editor": {"displayName": "Ray"},
+  "ai": {"roles": ["presentation"]},
+  "build": {"sourcePath": "definitions/effect/ray.json", "revision": "fixture", "budgetClass": "visual"}
+}

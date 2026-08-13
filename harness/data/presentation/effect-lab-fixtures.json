@@ -1,0 +1,15 @@
+{
+  "runtime": "production EffectPlayer + PresentationBudget",
+  "registryDependency": false,
+  "fixedSeed": 424242,
+  "distances": ["near", "far"],
+  "budgetProfiles": ["normal", "critical", "ambient"],
+  "operations": ["init", "definition", "play", "pause", "stop", "replay", "update", "reset"],
+  "slices": ["ray-beam", "logical-projectile", "guided-missile", "tachyon-charge-beam"],
+  "definitions": [
+    "docs/candidates/generated/ray-beam/catalog.lua",
+    "docs/candidates/generated/logical-projectile-impact/catalog.lua",
+    "docs/candidates/generated/guided-missile/catalog.lua",
+    "docs/candidates/generated/tachyon-charge-beam-impact/catalog.lua"
+  ]
+}

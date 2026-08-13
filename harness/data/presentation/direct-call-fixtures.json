@@ -1,0 +1,12 @@
+{
+  "forbidden": [
+    "SpawnParticle(position, velocity, life)",
+    "PointLight(position, 1, 1, 1, 1)",
+    "DrawSprite(sprite, transform, 1, 1, 1, 1, 1, 1, true, true, false)",
+    "DrawLine(startPoint, endPoint, 1, 1, 1, 1)",
+    "PlaySound(handle, position, 1.0)"
+  ],
+  "facade": "presentation_budget.lua",
+  "allowedLegacyRenderer": ["effect_budget.lua"],
+  "transitionalBudgetedRenderers": ["tachyon_lance.lua", "perdition_beam.lua"]
+}

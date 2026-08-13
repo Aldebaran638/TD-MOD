@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "cm2.contract/1",
+  "packageId": "CM2",
+  "aliases": {
+    "old_ship_root": "cm2:ship.root"
+  },
+  "records": [
+    {
+      "id": "cm2:ship.root",
+      "kind": "vehicle",
+      "schemaVersion": "cm2.vehicle/1",
+      "parentId": null,
+      "localTransform": {
+        "space": "parent-local",
+        "position": [0, 0, -0],
+        "rotationQuaternion": [0, 0, 0, -1],
+        "scale": [1, 1, 1]
+      },
+      "goldenCase": "root-body"
+    },
+    {
+      "id": "cm2:mount.shape",
+      "kind": "anchor",
+      "schemaVersion": "cm2.anchor/1",
+      "parentId": "cm2:ship.root",
+      "localTransform": {
+        "space": "parent-local",
+        "position": [1.23456789, 2, -3],
+        "rotationEuler": [0, 90, 0],
+        "rotationUnit": "deg",
+        "scale": [1, 1, 1]
+      },
+      "goldenCase": "shape-local"
+    },
+    {
+      "id": "cm2:mount.parented",
+      "kind": "anchor",
+      "schemaVersion": "cm2.anchor/1",
+      "parentId": "cm2:mount.shape",
+      "localTransform": {
+        "space": "parent-local",
+        "position": [0.3333333333, 0.25, 0],
+        "rotationQuaternion": [0, 0, 0.70710678, 0.70710678],
+        "scale": [1, 1, 1]
+      },
+      "goldenCase": "parent-anchor"
+    },
+    {
+      "id": "cm2:mount.mirror",
+      "kind": "anchor",
+      "schemaVersion": "cm2.anchor/1",
+      "parentId": "cm2:ship.root",
+      "localTransform": {
+        "space": "parent-local",
+        "position": [-2, 0, 0],
+        "rotationQuaternion": [0, 0, 0, 1],
+        "scale": [1, 1, 1],
+        "mirror": {
+          "enabled": true,
+          "axis": "x"
+        }
+      },
+      "goldenCase": "mirror-mount"
+    }
+  ],
+  "expectedCases": [
+    "root-body",
+    "shape-local",
+    "parent-anchor",
+    "mirror-mount"
+  ],
+  "expectedSha256": "7ba3d8c60860f13250f595fab05238f149666bb82fff7c50e3b4509e28bc75ba"
+}

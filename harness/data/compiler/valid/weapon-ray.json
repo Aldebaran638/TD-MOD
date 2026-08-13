@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "cm2.weapon/1",
+  "id": "cm2:weapon.ray",
+  "kind": "weapon",
+  "runtime": {"behavior": "ray", "effectId": "cm2:effect.ray", "fireRateHz": 2},
+  "editor": {"displayName": "Ray"},
+  "ai": {"roles": ["direct-fire"]},
+  "build": {"sourcePath": "definitions/weapon/ray.json", "revision": "fixture", "budgetClass": "standard"}
+}
