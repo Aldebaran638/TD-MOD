@@ -1,0 +1,10 @@
+{
+  "schema": "cm2.golden-packages-policy/1",
+  "goldenVersion": "2026.08.11",
+  "status": "headless-candidate",
+  "requiredKinds": [ "builtin-content", "hello-ship", "previous-schema", "dependency-dag", "expert-behavior", "ai-approved-weapon", "ai-approved-effect", "ai-approved-ship" ],
+  "negativeCases": [ "missing-dependency", "dependency-cycle", "duplicate-id", "path-traversal", "asset-hash-mismatch", "budget-overflow" ],
+  "requiredStages": [ "build", "migrate", "preview", "package", "runtime" ],
+  "runtimePolicy": { "teardownRequired": true, "statusWhenUnavailable": "deferred" },
+  "rollback": "Restore the previous Golden manifest and package set; never delete the last valid Golden artifact."
+}

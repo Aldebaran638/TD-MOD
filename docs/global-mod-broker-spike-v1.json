@@ -1,0 +1,31 @@
+{
+  "schema": "cm2.global-mod-broker-spike/1",
+  "status": "not-adopted",
+  "enabled": false,
+  "conclusion": "Do not adopt a Global Mod Broker protocol until live Teardown load-order and unload evidence exists.",
+  "assumptions": {
+    "globalLoadOrderObservable": false,
+    "contentCanDeclareDependency": "unproven",
+    "runtimeUnloadHook": "unproven",
+    "multiplayerAuthority": "unproven",
+    "dataOnlyFallback": "builtin-only"
+  },
+  "scenarios": [
+    { "id": "S1", "name": "Content before Global", "expected": "defer-package", "reason": "Broker cannot assume Core exists before Content registration." },
+    { "id": "S2", "name": "Global before Content", "expected": "defer-package", "reason": "Dependency handshake and version pin are not observable." },
+    { "id": "S3", "name": "Core missing", "expected": "builtin-only", "reason": "Never load a package against a missing Core." },
+    { "id": "S4", "name": "Core version mismatch", "expected": "builtin-only", "reason": "Fail fast; never silently downgrade the package." },
+    { "id": "S5", "name": "Package unload", "expected": "blocked-runtime", "reason": "No proven unload callback for generated definitions/runtime instances." },
+    { "id": "S6", "name": "Multiplayer host/remote", "expected": "blocked-runtime", "reason": "Authority and replication order require live evidence." },
+    { "id": "S7", "name": "Multiple packages/conflict", "expected": "deterministic-reject", "reason": "Namespaced IDs can be sorted, but duplicate capability ownership needs Core policy." }
+  ],
+  "resolution": {
+    "order": [ "core-presence", "core-version", "package-id", "dependency-dag", "capability-conflict", "load", "unload" ],
+    "conflictPolicy": "reject-and-builtin-fallback",
+    "unknownPackagePolicy": "builtin-only",
+    "runtimeMutation": false,
+    "persistentProtocol": false
+  },
+  "requiredEvidenceBeforeAdoption": [ "S0 clean load order", "S8 install/uninstall", "host-remote authority", "two-package conflict", "Core missing/version mismatch", "no generated leftovers" ],
+  "rollback": "Keep Broker disabled; remove experiment registration and leave Content/Global source-of-truth unchanged."
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "cm2.ai-creator-beta-policy/1",
+  "status": "headless-beta",
+  "toolVersion": "cm2.ai-creator-beta/1.0.0",
+  "requiredEvidence": {
+    "nonCoreWeaponEffectAuthors": 5,
+    "nonCoreVoxAuthors": 3,
+    "compilerPassRate": 1.0,
+    "previewPassRate": 1.0,
+    "packageConformanceRate": 1.0,
+    "aiLuaWrites": 0,
+    "pathEscapes": 0,
+    "budgetBypasses": 0
+  },
+  "qualityMetrics": {
+    "firstSchemaLegalRateTarget": 0.95,
+    "finalSchemaLegalRateTarget": 1.0,
+    "averageManualFieldsMax": 8,
+    "promptToPreviewP95SecondsMax": 120,
+    "anchorReworkMax": 3,
+    "luaViewsTarget": 0,
+    "s1s5": "runtime-required"
+  },
+  "requiredSuites": [ "ai-weapon-assistant", "ai-effect-assistant", "ai-vox-import", "sdk-beta" ],
+  "gateRules": {
+    "headlessSimulationDoesNotCountAsExternalAuthors": true,
+    "missingTeardownBlocksOfficialBeta": true,
+    "missingExternalCohortBlocksOfficialBeta": true,
+    "unableMayContinueAsInternalFramework": true
+  },
+  "rollback": "Keep the prior internal Assistant/SDK path, disable Beta invitations, and retain prior valid packages/reports."
+}

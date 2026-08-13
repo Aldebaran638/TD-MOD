@@ -1,0 +1,27 @@
+{
+  "schema": "cm2.multiplayer-lifecycle-soak-policy/1",
+  "version": "2026.08.11",
+  "status": "headless-candidate",
+  "durationSeconds": 1800,
+  "warmupSeconds": 120,
+  "tickHz": 30,
+  "clients": [ "host", "remote", "late-join" ],
+  "requiredScenarios": [ "host-remote-config", "lock", "fire", "turret", "death", "respawn", "late-join", "reconnect" ],
+  "entityKinds": [ "Ship", "Projectile", "Craft", "Effect", "Joint" ],
+  "requiredSaveLoadCases": [ "same-revision", "missing-package", "downgrade-revision", "compatible-migration" ],
+  "metrics": [ "commandQueue", "snapshotQueue", "ownerLease", "memory", "activeCount", "staleHandle", "duplicateDamage", "duplicateEntity", "resurrection", "orphanEffect", "orphanVoice", "orphanJoint" ],
+  "limits": {
+    "commandQueueCapacity": 32,
+    "snapshotQueueCapacity": 64,
+    "ownerLeaseCapacity": 8,
+    "maxMemorySlopeBytesPerMinute": 0,
+    "maxStaleLiveHandles": 0,
+    "maxOrphans": 0
+  },
+  "runtimePolicy": {
+    "teardownRequired": true,
+    "statusWhenUnavailable": "deferred",
+    "requiredEvidence": [ "30-minute live soak", "host/remote trace", "late-join trace", "memory samples", "replay or screenshot" ]
+  },
+  "rollback": "Reduce scenario scale only while preserving failing traces; restore the last valid lifecycle/Save manifest and never discard a failure fixture."
+}

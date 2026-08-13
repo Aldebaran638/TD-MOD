@@ -1,0 +1,37 @@
+{
+  "schema": "cm2.ai-external-3d-policy/1",
+  "status": "candidate-only",
+  "toolVersion": "cm2.external-3d-pipeline/1.0.0",
+  "adapterVersion": "cm2.provider-adapter/1.0.0",
+  "permissions": {
+    "allow": [ "asset-read", "provider-fixture-read", "mesh-candidate-write", "manifest-candidate-write", "validator-read", "preview-read" ],
+    "deny": [ "network", "runtime-registration", "core-write", "generated-artifact-write", "lua-write", "provider-arbitrary-exec", "license-bypass", "auto-publish" ],
+    "default": "deny",
+    "humanApprovalRequired": true
+  },
+  "providers": {
+    "adapterContract": "cm2.provider-adapter/1",
+    "fixtureProvider": "offline-fixture-provider",
+    "replaceable": true,
+    "networkRequired": false
+  },
+  "stages": [
+    { "id": "input", "tool": "cm2.input-normalizer/1", "deterministic": true },
+    { "id": "mesh-cleanup", "tool": "cm2.mesh-cleanup/1", "deterministic": true },
+    { "id": "mesh-repair", "tool": "cm2.mesh-repair/1", "deterministic": true },
+    { "id": "scale-axis", "tool": "cm2.scale-axis/1", "deterministic": true },
+    { "id": "voxelization", "tool": "cm2.voxelization/1", "deterministic": true },
+    { "id": "palette-material", "tool": "cm2.palette-material/1", "deterministic": true },
+    { "id": "voxtool-optimization", "tool": "cm2.voxtool-compat/1", "deterministic": true },
+    { "id": "asset-manifest", "tool": "cm2.asset-manifest/1", "deterministic": true }
+  ],
+  "limits": {
+    "maxVoxelCount": 2000000,
+    "maxPaletteColors": 255,
+    "minWallThicknessVoxels": 1,
+    "maxDisconnectedComponents": 1,
+    "allowedAxisCandidates": [ "logical+Y", "logical+Z", "logical-Z" ]
+  },
+  "provenanceRequired": [ "inputHash", "promptHash", "provider", "modelVersion", "license", "meshHash", "voxelizationParamsHash", "stageHashes", "reviewStatus", "finalBuildHash" ],
+  "rollback": "Discard external candidate/intermediate metadata and retain the last valid AssetManifest/package. Removing a provider must leave generated projects hand-maintainable."
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "cm2.upgrade-rollback-policy/1",
+  "version": "2026.08.11",
+  "status": "headless-candidate",
+  "from": {
+    "core": "cm2.core/1",
+    "schema": "cm2.source-envelope/1",
+    "sdk": "cm2.sdk/1",
+    "package": "cm2.package/1",
+    "save": "cm2.save/1"
+  },
+  "to": {
+    "core": "cm2.core/2",
+    "schema": "cm2.source-envelope/2",
+    "sdk": "cm2.sdk/2",
+    "package": "cm2.package/2",
+    "save": "cm2.save/2"
+  },
+  "requiredPhases": [ "publish-v1", "migrate-v2", "semantic-golden", "rollback", "compatibility" ],
+  "extensionPackageCount": 3,
+  "migrationPolicy": {
+    "singleCommand": true,
+    "idempotent": true,
+    "diagnosticErrors": true,
+    "preserveSource": true,
+    "futureDataPolicy": "old-core-rejects-future-required",
+    "partialPublishPolicy": "atomic-no-publish"
+  },
+  "runtimePolicy": {
+    "teardownRequired": true,
+    "statusWhenUnavailable": "deferred",
+    "requiredEvidence": [ "live v1 boot", "live v2 boot", "live rollback", "runtime error/compatibility trace" ]
+  },
+  "rollback": "Restore the v1 Core/Schema/SDK, three extension packages, saves and generated artifacts from the immutable backup; never overwrite the backup."
+}

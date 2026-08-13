@@ -1,0 +1,25 @@
+{
+  "schema": "cm2.platform-release-gate-policy/1",
+  "releaseVersion": "2026.08.11",
+  "status": "framework-beta-candidate",
+  "requiredChecks": [ "third-party-clean-room", "golden-packages", "s0-s8", "multiplayer-soak", "performance", "upgrade-rollback", "entry-closure", "asset-provenance", "support-docs", "security-boundary", "core-invariance", "runtime-and-replay" ],
+  "thresholds": {
+    "externalAuthors": 3,
+    "independentPackages": 3,
+    "slices": [ "S1", "S2", "S3", "S4", "S5", "S6", "S7" ],
+    "aiRuntimeLuaWrites": 0,
+    "globalBrokerStatus": "not-adopted"
+  },
+  "releasePolicy": {
+    "allRequiredChecksMustPass": true,
+    "noGoAction": "continue-as-Framework-or-Beta",
+    "noSilentPlatformClaim": true,
+    "requiredSignoff": [ "release-owner", "independent-reviewer" ]
+  },
+  "runtimePolicy": {
+    "teardownRequired": true,
+    "statusWhenUnavailable": "deferred",
+    "requiredEvidence": [ "live Core-only", "live Golden", "live S0-S8", "live multiplayer/Save soak", "live upgrade rollback", "replay/screenshots" ]
+  },
+  "rollback": "Keep the current Framework/Beta manifest and last valid Core artifact; do not widen compatibility claims. Re-run this gate after every missing evidence item is supplied."
+}

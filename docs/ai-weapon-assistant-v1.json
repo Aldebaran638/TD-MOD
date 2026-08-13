@@ -1,0 +1,28 @@
+{
+  "schema": "cm2.ai-weapon-policy/1",
+  "status": "candidate-only",
+  "toolVersion": "cm2.ai-weapon-assistant/1.0.0",
+  "modelVersion": "fixture-intent-parser/1.0.0",
+  "parserVersion": "cm2.weapon-intent/1.0.0",
+  "permissions": {
+    "allow": [ "authoring-candidate", "json-patch", "validator-read", "preview-read" ],
+    "deny": [ "generated-artifact-write", "core-write", "lua-write", "filesystem", "network", "runtime-registration", "schema-relax", "budget-relax" ],
+    "default": "deny",
+    "humanApprovalRequired": true
+  },
+  "allowLists": {
+    "behaviors": [ "ray", "ballistic", "guided", "charged" ],
+    "effectTypes": [ "beam", "muzzle", "trail", "impact" ],
+    "targetKinds": [ "source-definition-candidate" ]
+  },
+  "budgets": {
+    "maxFireRateHz": 20,
+    "maxProjectileSpeedMps": 2000,
+    "maxDamagePerShot": 10000,
+    "maxDps": 1000,
+    "maxEffectPriority": 100
+  },
+  "provenanceRequired": [ "promptHash", "candidateHash", "modelVersion", "toolVersion", "parserVersion", "validatorVersion", "humanDiff", "finalBuildHash" ],
+  "pipeline": [ "prompt", "WeaponIntent", "schema-constrained-patch", "deterministic-lint", "human-diff", "source-definition", "compiler", "weapon-range-effect-lab" ],
+  "rollback": "Discard candidate source and report; preserve the last valid source/generated catalog. Never promote a candidate without human approval."
+}

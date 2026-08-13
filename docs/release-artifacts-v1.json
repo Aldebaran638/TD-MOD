@@ -1,0 +1,18 @@
+{
+  "schema": "cm2.release-artifacts-policy/1",
+  "releaseVersion": "2026.08.11",
+  "status": "headless-candidate",
+  "artifacts": [
+    { "id": "core-runtime", "version": "cm2.core/1", "kind": "runtime", "dependencies": [], "sourceRoots": [ "Content Mod 2", "Global Mod" ], "install": "Copy Core Runtime Mod folders", "support": "Player runtime; no Editor/AI/DCC required", "optional": false },
+    { "id": "creator-cli-compiler", "version": "cm2.creator-cli/1", "kind": "creator-cli", "dependencies": [ "schema-api", "core-runtime" ], "sourceRoots": [ "tools/cm2-compiler", "tools/cm2-sdk" ], "install": "Install CLI/Compiler tools and schemas", "support": "Data-only package authoring and deterministic builds", "optional": false },
+    { "id": "external-editor", "version": "cm2.editor/1", "kind": "editor", "dependencies": [ "creator-cli-compiler", "schema-api" ], "sourceRoots": [ "tools/cm2-editor" ], "install": "Install editor tools separately", "support": "Anchor/Turret and Schema editing; not required by Core or CLI", "optional": false },
+    { "id": "preview-mod", "version": "cm2.preview/1", "kind": "preview", "dependencies": [ "core-runtime", "schema-api" ], "sourceRoots": [ "Content Mod 2" ], "install": "Install Preview Mod only for creator Preview", "support": "Synthetic preview and Effect Lab; not required by player Core", "optional": false },
+    { "id": "schema-api", "version": "cm2.schema-api/1", "kind": "schema-api", "dependencies": [], "sourceRoots": [ "schemas", "docs" ], "install": "Install schemas and API documentation", "support": "Shared contract for Core/CLI/Editor/Conformance", "optional": false },
+    { "id": "templates-examples", "version": "cm2.templates/1", "kind": "templates", "dependencies": [ "schema-api" ], "sourceRoots": [ "docs/candidates" ], "install": "Copy templates/examples as an authoring starter", "support": "Hello ship, weapon, VOX and package examples", "optional": false },
+    { "id": "conformance-kit", "version": "cm2.conformance/1", "kind": "conformance", "dependencies": [ "schema-api", "creator-cli-compiler" ], "sourceRoots": [ "harness" ], "install": "Install Harness checks and fixtures", "support": "Author/package conformance and release verification", "optional": false },
+    { "id": "ai-provider-optional", "version": "cm2.ai-provider/1", "kind": "ai-provider", "dependencies": [ "creator-cli-compiler", "schema-api" ], "sourceRoots": [ "tools/cm2-ai" ], "install": "Install only when an approved AI provider is desired", "support": "Provenance/licensed candidate assistance; never Runtime Lua", "optional": true }
+  ],
+  "requiredTopics": [ "five-minute weapon", "single-body VOX", "ID coordinate Anchor Turret", "Effect Projectile Joint budget", "compatibility matrix", "error codes", "release upgrade rollback uninstall", "Data-only Expert Behavior", "AI provenance license" ],
+  "runtimePolicy": { "teardownRequired": true, "statusWhenUnavailable": "deferred", "requiredEvidence": [ "Core-only live run", "CLI without Editor/AI", "Editor without Core mutation", "download hash" ] },
+  "rollback": "Publish the previous single-package Framework manifest as an internal fallback; keep artifact hashes and do not remove the last valid Core package."
+}

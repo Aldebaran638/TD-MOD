@@ -1,0 +1,30 @@
+{
+  "schema": "cm2.ai-vox-import-policy/1",
+  "status": "candidate-only",
+  "toolVersion": "cm2.vox-import-assistant/1.0.0",
+  "modelVersion": "deterministic-vox-analyzer/1.0.0",
+  "parserVersion": "cm2.vox-parser/1.0.0",
+  "voxVersion": 150,
+  "coordinateContract": {
+    "logicalAxes": { "x": "left/right", "y": "down/up", "z": "rear/front" },
+    "mapping": "voxX=logicalX; voxY=logicalSizeZ-1-logicalZ; voxZ=logicalY",
+    "sizeMapping": "voxSIZE=(logicalSizeX,logicalSizeZ,logicalSizeY)",
+    "upAxis": "logical+Y",
+    "forwardSelection": "human-required"
+  },
+  "scaleCandidatesMetersPerVoxel": [ 0.05, 0.1, 0.2 ],
+  "recommendations": [ "forward/up", "engine", "camera", "mount", "symmetry-group", "complexity", "performance-class" ],
+  "permissions": {
+    "allow": [ "asset-read", "metadata-candidate", "anchor-candidate", "validator-read" ],
+    "deny": [ "runtime-registration", "core-write", "generated-artifact-write", "lua-write", "network", "voxel-rewrite", "auto-build" ],
+    "default": "deny",
+    "humanApprovalRequired": true
+  },
+  "confidencePolicy": {
+    "lowConfidenceBlocksBuild": true,
+    "orientationSelection": "never-auto-select",
+    "pca": "candidate-only"
+  },
+  "provenanceRequired": [ "assetHash", "modelIndex", "voxVersion", "parserVersion", "scaleCandidates", "confidence", "reviewStatus", "finalBuildHash" ],
+  "rollback": "Discard import recommendations and keep the original VOX. Do not rewrite binary assets or register Runtime definitions until every recommendation is human-reviewed."
+}

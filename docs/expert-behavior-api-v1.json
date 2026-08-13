@@ -1,0 +1,75 @@
+{
+  "schema": "cm2.expert-behavior-policy/1",
+  "status": "deferred",
+  "enabled": false,
+  "dataOnlyPrerequisite": false,
+  "publicSurface": "design-only; no Runtime registration, Lua loader or engine handle is exposed",
+  "capabilities": {
+    "allowlist": [],
+    "denied": [ "arbitrary-lua", "filesystem", "network", "engine-handle", "process-spawn", "native-code", "reflection" ],
+    "reviewRequired": true,
+    "defaultDeny": true
+  },
+  "sandbox": {
+    "execution": "not-supported-until-security-review",
+    "separateState": true,
+    "noGlobalMutation": true,
+    "noDynamicCode": true,
+    "filesystemRoot": "none",
+    "network": "none",
+    "engineHandles": "opaque-capability-only-after-review"
+  },
+  "lifecycle": {
+    "hooks": [ "create", "tick", "dispose" ],
+    "ownerRequired": true,
+    "generationRequired": true,
+    "disposeOnShipDeath": true,
+    "disposeOnPackageUnload": true,
+    "staleHandlePolicy": "reject"
+  },
+  "network": {
+    "authority": "server-only-review",
+    "clientReplication": "typed-events-only",
+    "rawRpc": "forbidden",
+    "rateLimitRequired": true,
+    "schemaVersionRequired": true
+  },
+  "budgets": {
+    "maxTickMs": 0.25,
+    "maxInstructionUnits": 1000,
+    "maxAllocBytesPerTick": 4096,
+    "maxPersistentBytes": 65536,
+    "maxEventQueue": 64,
+    "timeoutAction": "terminate-and-isolate"
+  },
+  "failureIsolation": {
+    "timeout": "terminate-instance",
+    "crash": "disable-package-instance-and-report",
+    "memory": "reject-allocation-and-disable-instance",
+    "permission": "deny-and-report",
+    "leak": "owner-dispose-and-generation-invalidate",
+    "runtimeFallback": "builtin-only"
+  },
+  "versioning": {
+    "apiMajor": 1,
+    "read": [ "cm2.expert/1" ],
+    "write": "cm2.expert/1-only",
+    "futureRequired": "fail-fast",
+    "migration": "explicit-only",
+    "reviewExpiry": "major-version-boundary"
+  },
+  "threatModel": [
+    { "id": "T01", "threat": "arbitrary code execution", "control": "dynamic code and native code denied" },
+    { "id": "T02", "threat": "filesystem exfiltration", "control": "filesystem root none" },
+    { "id": "T03", "threat": "network exfiltration or raw RPC", "control": "network none/raw RPC forbidden" },
+    { "id": "T04", "threat": "engine handle authority escape", "control": "opaque reviewed capability only" },
+    { "id": "T05", "threat": "CPU denial of service", "control": "tick/instruction/timeout budgets" },
+    { "id": "T06", "threat": "memory denial of service", "control": "allocation/persistent byte budgets" },
+    { "id": "T07", "threat": "lifecycle and stale-handle leak", "control": "owner/generation/dispose policy" },
+    { "id": "T08", "threat": "multiplayer authority confusion", "control": "server-only review and typed events" },
+    { "id": "T09", "threat": "version confusion or silent downgrade", "control": "major/version/migration fail-fast" },
+    { "id": "T10", "threat": "crash propagation", "control": "instance isolation and builtin fallback" }
+  ],
+  "reviewGates": [ "threat-model", "capability-review", "budget-pressure", "lifecycle-leak", "network-authority", "crash-timeout", "version-migration" ],
+  "rollback": "Keep enabled=false, remove any experimental registration, and fall back to builtin/data-only packages."
+}

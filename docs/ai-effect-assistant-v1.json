@@ -1,0 +1,30 @@
+{
+  "schema": "cm2.ai-effect-policy/1",
+  "status": "candidate-only",
+  "toolVersion": "cm2.ai-effect-assistant/1.0.0",
+  "modelVersion": "fixture-effect-intent-parser/1.0.0",
+  "parserVersion": "cm2.effect-intent/1.0.0",
+  "permissions": {
+    "allow": [ "authoring-candidate", "json-patch", "validator-read", "preview-read" ],
+    "deny": [ "generated-artifact-write", "core-write", "lua-write", "filesystem", "network", "runtime-registration", "custom-renderer", "budget-relax" ],
+    "default": "deny",
+    "humanApprovalRequired": true
+  },
+  "allowLists": {
+    "effectTypes": [ "beam", "muzzle", "trail", "impact" ],
+    "nodes": [ "emitter", "beam", "shockwave", "sound", "shake" ],
+    "lod": [ "near", "far" ],
+    "budgetProfiles": [ "normal", "critical", "ambient" ],
+    "targetKinds": [ "source-definition-candidate" ]
+  },
+  "ranges": {
+    "maxEmitters": 8,
+    "maxDurationMs": 5000,
+    "maxPriority": 100,
+    "maxShake": 1.0,
+    "maxPowerCost": 12
+  },
+  "provenanceRequired": [ "promptHash", "candidateHash", "modelVersion", "toolVersion", "parserVersion", "validatorVersion", "humanDiff", "finalBuildHash" ],
+  "pipeline": [ "prompt", "EffectIntent", "approved-nodes", "budget-profiles", "effect-lab", "human-diff", "source-definition", "compiler" ],
+  "rollback": "Discard candidate EffectDefinition and reports; retain the last valid source/profile catalog. Core experts alone may add a new renderer."
+}

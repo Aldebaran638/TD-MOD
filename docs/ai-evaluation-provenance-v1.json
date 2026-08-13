@@ -1,0 +1,22 @@
+{
+  "schema": "cm2.ai-evaluation-policy/1",
+  "status": "evaluation-only",
+  "modelVersion": "fixture-rule-evaluator/1.0.0",
+  "toolVersion": "cm2.ai-gate/1.0.0",
+  "seed": 424242,
+  "permissions": {
+    "allow": [ "authoring-candidate", "json-patch", "validator-read", "preview-read" ],
+    "deny": [ "generated-artifact-write", "core-write", "lua-write", "schema-relax", "budget-relax", "filesystem", "network", "runtime-registration" ],
+    "default": "deny",
+    "humanApprovalRequired": true
+  },
+  "provenanceRequired": [ "modelVersion", "toolVersion", "seed", "inputHash", "promptHash", "candidateHash", "validatorVersion", "repair", "confidence", "humanEdits", "finalBuildHash" ],
+  "candidateContract": { "operations": [ "authoring-candidate", "json-patch" ], "writeTargets": [ "source-definition-candidate" ], "forbiddenTargets": [ "generated", "Core", "Global Mod", "*.lua" ], "schemaAndBudgetPolicy": "cannot-relax" },
+  "evaluationSet": {
+    "requiredCategories": [ "normal", "ambiguous", "conflict", "budget-overflow", "missing-resource", "malicious-path", "lua-request", "manual-edit", "generated-write", "missing-provenance" ],
+    "legalRateTarget": 1.0,
+    "determinismTarget": 1.0,
+    "performanceRiskPolicy": "reject-or-degrade-with-explanation"
+  },
+  "rollback": "Discard candidate artifacts and retain the last valid source/build; AI never overwrites generated/Core/Runtime files."
+}

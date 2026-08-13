@@ -1,0 +1,33 @@
+{
+  "schema": "cm2.creator-sdk-beta/1",
+  "status": "headless-beta",
+  "toolVersion": "cm2.sdk-cli/1.0.0-alpha.1",
+  "cohort": [
+    { "id": "creator-data", "profile": "data-only ship author", "editorRequired": false, "workflow": [ "new", "validate", "build", "preview", "package", "clean" ] },
+    { "id": "creator-weapon", "profile": "weapon/effect author", "editorRequired": false, "workflow": [ "new", "validate", "test", "package", "migrate", "clean" ] },
+    { "id": "ci-maintainer", "profile": "CI/release maintainer", "editorRequired": false, "workflow": [ "doctor", "build", "repeat", "explain", "clean" ] }
+  ],
+  "workflows": {
+    "template": "tools/cm2-sdk/cm2-sdk.ps1 -Command new",
+    "definitions": "tools/cm2-sdk/cm2-sdk.ps1 -Command validate/build",
+    "preview": "tools/cm2-sdk/cm2-sdk.ps1 -Command preview/test",
+    "package": "tools/cm2-sdk/cm2-sdk.ps1 -Command package",
+    "migration": "tools/cm2-sdk/cm2-sdk.ps1 -Command migrate + tools/cm2-compat/migrate-compat-v1.ps1",
+    "uninstall": "tools/cm2-sdk/cm2-sdk.ps1 -Command clean"
+  },
+  "resolvedBlockers": [
+    { "id": "B01", "problem": "unstable validation diagnostics", "resolution": "stable code/packageId/definitionId/fieldPath/suggestion contract", "status": "resolved" },
+    { "id": "B02", "problem": "editor-only build dependency", "resolution": "headless data-only CLI and clean-room fixture", "status": "resolved" },
+    { "id": "B03", "problem": "drift overwrites last valid package", "resolution": "build-report sidecar and previous target gate", "status": "resolved" },
+    { "id": "B04", "problem": "migration silently changes fields", "resolution": "single-write/idempotent migration with provenance", "status": "resolved" }
+  ],
+  "externalEvidence": { "authorsInvited": 0, "runtimeAvailable": false, "status": "deferred", "reason": "No external cohort or Teardown.exe is available in this environment." },
+  "acceptance": {
+    "conformance": [ "alpha-cli", "clean-room", "compatibility" ],
+    "repeatableBuild": true,
+    "editorFree": true,
+    "s0s8": "deferred-until-runtime",
+    "betaMatrixPublication": "required-before-external-invite"
+  },
+  "rollback": "Keep Alpha/internal SDK release, remove Beta invitation metadata, and retain previous package artifacts."
+}
