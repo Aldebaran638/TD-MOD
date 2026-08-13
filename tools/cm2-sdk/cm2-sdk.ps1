@@ -308,6 +308,7 @@ function Invoke-Build([string]$leaf) {
                 resourceCount = @($manifest.files).Count
                 budget = $manifest.budget
                 fingerprint = $fingerprint
+                compatibilityPolicyHash = [string]$package.report.compatibilityPolicyHash
                 outputs = $outputs
                 editorIndependent = $true
                 runtimeLua = $false

@@ -17,12 +17,17 @@
 !tools/cm2-package/**
 !tools/cm2-sdk/
 !tools/cm2-sdk/**
+!tools/cm2-compat/
+!tools/cm2-compat/**
 !testing/
 !testing/fixtures/
 !testing/fixtures/creator_sdk/
 !testing/fixtures/creator_sdk/**
+testing/fixtures/creator_sdk/**/.cm2-sdk/*.previous/
 !_AI Test Consumer SDK Alpha/
 !_AI Test Consumer SDK Alpha/**
+!_AI Test Consumer Compatibility V1/
+!_AI Test Consumer Compatibility V1/**
 !prompt.md
 !README
 !README.md

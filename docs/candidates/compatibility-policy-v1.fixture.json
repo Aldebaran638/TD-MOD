@@ -4,23 +4,42 @@
     "schemaVersion": "cm2.effect/0",
     "id": "cm2:effect.compat",
     "kind": "effect",
-    "runtime": { "type": "impact", "asset": "cm2:asset.compat", "legacyOptional": "preserve-me" },
-    "editor": { "displayName": "Compatibility Effect", "futureColor": "amber" },
+    "runtime": {
+      "type": "impact",
+      "asset": "cm2:asset.compat",
+      "legacyOptional": "preserve-me"
+    },
+    "editor": {"displayName": "Compatibility Effect", "futureColor": "amber"},
     "ai": {},
-    "build": { "sourcePath": "definitions/effect/compat.json" }
+    "build": {"sourcePath": "definitions/effect/compat.json"}
+  },
+  "validV0Weapon": {
+    "schemaVersion": "cm2.weapon/0",
+    "id": "cm2:weapon.compat",
+    "kind": "weapon",
+    "runtime": {
+      "behaviour": "ray",
+      "effect": "cm2:effect.compat",
+      "futureOptionalCadence": 3
+    },
+    "editor": {"displayName": "Compatibility Weapon"},
+    "ai": {},
+    "build": {}
   },
   "validV0Package": {
     "schemaVersion": "cm2.package/0",
     "packageId": "cm2.compat.package",
     "packageVersion": "0.9.0",
     "displayName": "Compatibility Package",
-    "provenance": { "source": "compatibility-fixture" },
+    "coreApiVersionRange": ">=1.0.0 <2.0.0",
+    "sdkVersionRange": ">=1.0.0 <2.0.0",
+    "provenance": {"source": "compatibility-fixture", "legacyOptional": "retain"},
     "files": []
   },
   "missingRequired": {
     "schemaVersion": "cm2.effect/0",
     "kind": "effect",
-    "runtime": { "type": "impact", "asset": "cm2:asset.compat" },
+    "runtime": {"type": "impact", "asset": "cm2:asset.compat"},
     "editor": {},
     "ai": {},
     "build": {}
@@ -29,8 +48,8 @@
     "schemaVersion": "cm2.effect/0",
     "id": "cm2:effect.optional",
     "kind": "effect",
-    "runtime": { "type": "impact", "asset": "cm2:asset.compat" },
-    "editor": { "displayName": "Optional", "unknownOptional": { "futureUi": true } },
+    "runtime": {"type": "impact", "asset": "cm2:asset.compat", "futureOptional": {"quality": "ultra"}},
+    "editor": {"displayName": "Optional", "unknownOptional": {"futureUi": true}},
     "ai": {},
     "build": {}
   },
@@ -38,7 +57,16 @@
     "schemaVersion": "cm2.effect/2",
     "id": "cm2:effect.future",
     "kind": "effect",
-    "runtime": { "effectType": "impact", "assetId": "cm2:asset.compat", "priority": 50, "futureRequired": true },
+    "runtime": {"effectType": "impact", "assetId": "cm2:asset.compat", "priority": 50, "futureRequired": true},
+    "editor": {},
+    "ai": {},
+    "build": {}
+  },
+  "securitySensitive": {
+    "schemaVersion": "cm2.effect/0",
+    "id": "cm2:effect.security",
+    "kind": "effect",
+    "runtime": {"type": "impact", "asset": "cm2:asset.compat", "scriptPath": "private.lua"},
     "editor": {},
     "ai": {},
     "build": {}
@@ -51,5 +79,13 @@
     "editor": {},
     "ai": {},
     "build": {}
-  }
+  },
+  "versionMatrix": [
+    {"id": "current", "packageSchema": "cm2.package/1", "coreRange": ">=1.0.0 <2.0.0", "sdkRange": ">=1.0.0 <2.0.0", "buildFormat": "cm2.package-build/1", "core": "1.2.0", "sdk": "1.0.0", "expected": "pass"},
+    {"id": "core-package-mismatch", "packageSchema": "cm2.package/1", "coreRange": ">=1.3.0 <2.0.0", "sdkRange": ">=1.0.0 <2.0.0", "buildFormat": "cm2.package-build/1", "core": "1.2.0", "sdk": "1.0.0", "expected": "core-package-version"},
+    {"id": "core-policy-future", "packageSchema": "cm2.package/1", "coreRange": ">=1.0.0 <3.0.0", "sdkRange": ">=1.0.0 <2.0.0", "buildFormat": "cm2.package-build/1", "core": "2.0.0", "sdk": "1.0.0", "expected": "core-policy-version"},
+    {"id": "sdk-package-mismatch", "packageSchema": "cm2.package/1", "coreRange": ">=1.0.0 <2.0.0", "sdkRange": ">=1.1.0 <2.0.0", "buildFormat": "cm2.package-build/1", "core": "1.2.0", "sdk": "1.0.0", "expected": "sdk-package-version"},
+    {"id": "future-package", "packageSchema": "cm2.package/2", "coreRange": ">=1.0.0 <2.0.0", "sdkRange": ">=1.0.0 <2.0.0", "buildFormat": "cm2.package-build/1", "core": "1.2.0", "sdk": "1.0.0", "expected": "package-version"},
+    {"id": "future-build", "packageSchema": "cm2.package/1", "coreRange": ">=1.0.0 <2.0.0", "sdkRange": ">=1.0.0 <2.0.0", "buildFormat": "cm2.package-build/2", "core": "1.2.0", "sdk": "1.0.0", "expected": "build-format"}
+  ]
 }

@@ -50,6 +50,36 @@ function Test-VersionRange([string]$versionText, [string]$rangeText) {
     }
     return $true
 }
+function Resolve-PackageCompatibility([object]$manifest) {
+    $resolverPath = Join-Path $root "tools\cm2-compat\resolve-compatibility-v1.ps1"
+    Require (Test-Path -LiteralPath $resolverPath -PathType Leaf) "public compatibility resolver is missing"
+    $temporaryReport = Join-Path ([IO.Path]::GetTempPath()) ("cm2-package-compat-" + [Guid]::NewGuid().ToString("N") + ".json")
+    try {
+        $savedPreference = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $resolverPath `
+            -PackageSchema ([string]$manifest.schemaVersion) `
+            -PackageCoreRange ([string]$manifest.coreApiVersionRange) `
+            -PackageSdkRange ([string]$manifest.sdkVersionRange) `
+            -BuildFormat ([string]$manifest.buildFormatVersion) `
+            -CoreApiVersion $CoreApiVersion `
+            -SdkVersion $SdkVersion `
+            -PackageId ([string]$manifest.packageId) `
+            -ReportPath $temporaryReport *> $null
+        $resolverExitCode = [int]$LASTEXITCODE
+        $ErrorActionPreference = $savedPreference
+        Require (Test-Path -LiteralPath $temporaryReport -PathType Leaf) "compatibility resolver did not publish a report"
+        $resolution = Read-Json $temporaryReport
+        if ($resolverExitCode -ne 0 -or -not [bool]$resolution.compatible) {
+            Fail ("compatibility resolver rejected package: code=" + [string]$resolution.code + "; surface=" + [string]$resolution.surface + "; suggestion=" + [string]$resolution.suggestion)
+        }
+        return $resolution
+    }
+    finally {
+        $ErrorActionPreference = "Stop"
+        if (Test-Path -LiteralPath $temporaryReport -PathType Leaf) { Remove-Item -LiteralPath $temporaryReport -Force -ErrorAction SilentlyContinue }
+    }
+}
 function Write-TextAtomic([string]$path, [string]$text) {
     $full = [IO.Path]::GetFullPath($path)
     $parent = Split-Path -Parent $full
@@ -107,8 +137,7 @@ Require ([string]$manifest.packageVersion -match '^([0-9]+)\.([0-9]+)\.([0-9]+)$
 Require ([string]$manifest.schemaVersion -eq "cm2.package/1") "unsupported/future package schema"
 Require ([string]$manifest.buildFormatVersion -eq "cm2.package-build/1") "build format mismatch"
 foreach ($field in @("displayName", "author", "license", "coreApiVersionRange", "sdkVersionRange")) { Require ([string]$manifest.$field -ne "") ("manifest field missing: " + $field) }
-Require (Test-VersionRange $CoreApiVersion ([string]$manifest.coreApiVersionRange)) ("incompatible Core API version: " + $CoreApiVersion + " not in " + [string]$manifest.coreApiVersionRange)
-Require (Test-VersionRange $SdkVersion ([string]$manifest.sdkVersionRange)) ("incompatible SDK version: " + $SdkVersion + " not in " + [string]$manifest.sdkVersionRange)
+$compatibilityResolution = Resolve-PackageCompatibility $manifest
 Require ([string]$manifest.entrypoints.runtime -eq "data-only" -and $null -eq $manifest.entrypoints.lua) "data-only package has a Runtime Lua entrypoint"
 Require ([string]$fixture.runtimePolicy.dataOnly -eq "True" -or [bool]$fixture.runtimePolicy.dataOnly) "runtime policy is not data-only"
 Require (-not [bool]$fixture.runtimePolicy.runtimeLuaAllowed) "runtime Lua must be forbidden"
@@ -218,9 +247,15 @@ $report = [ordered]@{
     signature = [ordered]@{ algorithm = [string]$manifest.signature.algorithm; keyId = [string]$manifest.signature.keyId; fingerprint = $signatureFingerprint }
     manifestHash = $packageHash
     packageArtifactHash = $packageHash
+    compatibilityPolicyHash = [string]$compatibilityResolution.policyHash
     budget = $budget
     compilerCapabilityCheck = $true
     compatibility = [ordered]@{
+        policyVersion = [string]$compatibilityResolution.policyVersion
+        policyHash = [string]$compatibilityResolution.policyHash
+        order = @($compatibilityResolution.order)
+        package = $compatibilityResolution.surfaces.package
+        buildFormat = $compatibilityResolution.surfaces.buildFormat
         coreApi = [ordered]@{ required = [string]$manifest.coreApiVersionRange; resolved = $CoreApiVersion; compatible = $true }
         sdk = [ordered]@{ required = [string]$manifest.sdkVersionRange; resolved = $SdkVersion; compatible = $true }
         dependencies = @($manifest.dependencies | ForEach-Object { [ordered]@{ packageId = [string]$_.packageId; required = [string]$_.versionRange; resolved = [string]$lockMap[[string]$_.packageId].version; compatible = $true } })

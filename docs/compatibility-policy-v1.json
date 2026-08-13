@@ -1,38 +1,170 @@
 {
   "schema": "cm2.compatibility-policy/1",
-  "current": { "schemaMajor": 1, "coreApi": "1.x", "package": "1.x", "sdk": "1.x", "buildFormat": "cm2.package-build/1" },
+  "policyVersion": "1.0.0",
+  "current": {
+    "schemaMajor": 1,
+    "coreApiVersion": "1.2.0",
+    "packageSchema": "cm2.package/1",
+    "sdkVersion": "1.0.0",
+    "buildFormat": "cm2.package-build/1"
+  },
   "supportMatrix": [
-    { "surface": "source-envelope", "read": [ "cm2.weapon/1", "cm2.projectile/1", "cm2.effect/1", "cm2.vehicle/1", "cm2.mount/1", "cm2.turret/1" ], "write": "v1-only", "unknownOptional": "preserve-under-editor", "futureRequired": "fail-fast" },
-    { "surface": "package", "read": [ "cm2.package/1" ], "write": "cm2.package/1", "unknownOptional": "preserve-under-provenance", "futureRequired": "fail-fast" },
-    { "surface": "core-api", "read": [ "1.x" ], "write": "1.x", "unknownOptional": "ignore-at-runtime", "futureRequired": "fail-fast" },
-    { "surface": "sdk", "read": [ "1.x" ], "write": "1.x", "unknownOptional": "preserve-in-source", "futureRequired": "fail-fast" }
+    {
+      "surface": "source-envelope",
+      "read": ["cm2.weapon/1", "cm2.projectile/1", "cm2.effect/1", "cm2.vehicle/1", "cm2.mount/1", "cm2.turret/1"],
+      "legacyReadViaMigration": ["cm2.weapon/0", "cm2.effect/0"],
+      "write": "v1-only",
+      "minimum": "major-0-through-explicit-adapter",
+      "maximumExclusive": "major-2",
+      "unknownOptional": "move-to-editor-compatibility",
+      "futureRequired": "fail-fast"
+    },
+    {
+      "surface": "package",
+      "read": ["cm2.package/1"],
+      "legacyReadViaMigration": ["cm2.package/0"],
+      "write": "cm2.package/1",
+      "minimum": "cm2.package/0-through-explicit-adapter",
+      "maximumExclusive": "cm2.package/2",
+      "unknownOptional": "preserve-under-provenance-compatibility",
+      "futureRequired": "fail-fast"
+    },
+    {
+      "surface": "core-api",
+      "read": [">=1.0.0 <2.0.0"],
+      "legacyReadViaMigration": [],
+      "write": "1.x",
+      "minimum": "1.0.0",
+      "maximumExclusive": "2.0.0",
+      "unknownOptional": "ignore-with-structured-warning",
+      "futureRequired": "fail-fast"
+    },
+    {
+      "surface": "sdk",
+      "read": [">=1.0.0 <2.0.0"],
+      "legacyReadViaMigration": [],
+      "write": "1.x",
+      "minimum": "1.0.0",
+      "maximumExclusive": "2.0.0",
+      "unknownOptional": "preserve-in-source",
+      "futureRequired": "fail-fast"
+    },
+    {
+      "surface": "build-format",
+      "read": ["cm2.package-build/1"],
+      "legacyReadViaMigration": [],
+      "write": "cm2.package-build/1",
+      "minimum": "cm2.package-build/1",
+      "maximumExclusive": "cm2.package-build/2",
+      "unknownOptional": "reject",
+      "futureRequired": "fail-fast"
+    }
   ],
   "negotiation": {
-    "order": [ "package", "core-api", "schema", "build-format", "sdk" ],
-    "rule": "Every surface must intersect its supported read range; a missing intersection is an actionable error and never a silent downgrade.",
-    "minimumCore": "1.0.0",
-    "maximumCoreExclusive": "2.0.0",
-    "minimumPackage": "1.0.0",
-    "maximumPackageExclusive": "2.0.0",
-    "minimumSdk": "1.0.0",
-    "maximumSdkExclusive": "2.0.0"
+    "order": ["package", "core-api", "schema", "build-format", "sdk"],
+    "rule": "Every surface must match the policy and the selected resolved version must satisfy the package range; an empty intersection is an actionable error and never a silent downgrade.",
+    "supportedCoreApiRange": ">=1.0.0 <2.0.0",
+    "supportedPackageSchemas": ["cm2.package/1"],
+    "supportedSdkRange": ">=1.0.0 <2.0.0",
+    "supportedBuildFormats": ["cm2.package-build/1"]
+  },
+  "diagnosticLevels": {
+    "unknownOptional": "warning",
+    "deprecatedAlias": "warning",
+    "missingRequired": "error",
+    "futureRequired": "error",
+    "unsupportedVersion": "error",
+    "securitySensitiveUnknown": "error"
   },
   "readWritePolicy": {
     "oldSchemaRead": "migration adapter only",
     "currentSchemaWrite": "single canonical v1 writer",
     "unknownEditorMetadata": "round-trip without runtime projection",
-    "unknownRuntimeField": "reject if required or security-sensitive; otherwise emit structured warning",
+    "unknownRuntimeOptional": "move to editor.compatibility.unknownRuntimeFields with warning",
+    "unknownRuntimeField": "reject if required or security-sensitive",
     "futureRequiredField": "reject before Compiler/Runtime",
-    "migrationIdempotent": true
+    "migrationIdempotent": true,
+    "inputMutation": "forbidden",
+    "failedOutputOverwrite": "forbidden"
   },
   "migrations": [
-    { "id": "cm2.source-envelope/0-to-1", "from": "major-0", "to": "major-1", "tool": "tools/cm2-compat/migrate-compat-v1.ps1", "idempotent": true, "singleWrite": true, "status": "supported" },
-    { "id": "cm2.package/0-to-1", "from": "cm2.package/0", "to": "cm2.package/1", "tool": "tools/cm2-compat/migrate-compat-v1.ps1", "idempotent": true, "singleWrite": true, "status": "supported" }
+    {
+      "id": "cm2.source-envelope/0-to-1",
+      "from": "major-0",
+      "to": "major-1",
+      "tool": "tools/cm2-compat/migrate-compat-v1.ps1",
+      "idempotent": true,
+      "singleWrite": true,
+      "status": "supported"
+    },
+    {
+      "id": "cm2.package/0-to-1",
+      "from": "cm2.package/0",
+      "to": "cm2.package/1",
+      "tool": "tools/cm2-compat/migrate-compat-v1.ps1",
+      "idempotent": true,
+      "singleWrite": true,
+      "status": "supported"
+    }
   ],
   "deprecations": [
-    { "id": "legacy.package-v0", "introduced": "0.x", "deprecatedIn": "1.0.0", "removeAfter": "2.0.0", "owner": "Build owner", "replacement": "cm2.package/1", "status": "warning-until-major-2" },
-    { "id": "legacy.effect-type-alias", "introduced": "0.x", "deprecatedIn": "1.0.0", "removeAfter": "2.0.0", "owner": "Schema owner", "replacement": "runtime.effectType", "status": "migration-only" }
+    {
+      "id": "legacy.package-v0",
+      "introduced": "0.x",
+      "deprecatedIn": "1.0.0",
+      "deprecatedOn": "2026-08-11",
+      "removeAfter": "2.0.0",
+      "removalEarliestDate": "2027-08-11",
+      "owner": "CM2 Build Owner",
+      "replacement": "cm2.package/1",
+      "level": "warning",
+      "readerStatus": "retained-until-major-2",
+      "writerRemoval": {
+        "status": "verified",
+        "evidence": "tools/cm2-compat/test-compatibility-policy-v1.ps1::package-v0-canonical-single-write"
+      },
+      "readerRemoval": {
+        "status": "not-eligible",
+        "evidence": "Removal is blocked before removeAfter and removalEarliestDate; checker enforces retention."
+      }
+    },
+    {
+      "id": "legacy.effect-type-alias",
+      "introduced": "0.x",
+      "deprecatedIn": "1.0.0",
+      "deprecatedOn": "2026-08-11",
+      "removeAfter": "2.0.0",
+      "removalEarliestDate": "2027-08-11",
+      "owner": "CM2 Schema Owner",
+      "replacement": "runtime.effectType/runtime.assetId",
+      "level": "warning",
+      "readerStatus": "migration-only-until-major-2",
+      "writerRemoval": {
+        "status": "verified",
+        "evidence": "tools/cm2-compat/test-compatibility-policy-v1.ps1::effect-v0-alias-removal"
+      },
+      "readerRemoval": {
+        "status": "not-eligible",
+        "evidence": "Major-0 adapter remains covered until the declared support window closes."
+      }
+    }
   ],
-  "removalLedger": { "ownerRequired": true, "dateRequired": true, "replacementRequired": true, "evidenceRequired": true, "noSilentRemoval": true },
-  "rollback": { "artifact": "previous valid package/build output", "policy": "Keep old reader and migration tool until removeAfter; revert migration output, never mutate the source in place." }
+  "removalLedger": {
+    "ownerRequired": true,
+    "deprecatedDateRequired": true,
+    "removalDateRequired": true,
+    "replacementRequired": true,
+    "writerRemovalEvidenceRequired": true,
+    "readerRemovalEvidenceRequired": true,
+    "noSilentRemoval": true
+  },
+  "publicIntegration": {
+    "resolver": "tools/cm2-compat/resolve-compatibility-v1.ps1",
+    "packageValidator": "tools/cm2-package/run-package-manifest-v1.ps1",
+    "requirePolicyHashInPackageReport": true
+  },
+  "rollback": {
+    "artifact": "previous valid package/build output",
+    "policy": "Keep old reader and migration tool until removeAfter; revert migration output, never mutate source in place, and never overwrite last-valid output on failure."
+  }
 }

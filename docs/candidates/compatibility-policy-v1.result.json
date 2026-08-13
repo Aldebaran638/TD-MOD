@@ -1,13 +1,74 @@
 {
     "schema":  "cm2.compatibility-test-report/1",
-    "effectMigration":  "pass",
-    "packageMigration":  "pass",
-    "idempotent":  true,
-    "unknownOptionalPreserved":  true,
+    "policyHash":  "a8ffa1b50fc757bbb8c7a2a79b1746042945e09a6a77f2504471d715f07d0063",
+    "assertions":  77,
+    "surfaces":  [
+                     "source-envelope",
+                     "package",
+                     "core-api",
+                     "sdk",
+                     "build-format"
+                 ],
+    "migrations":  {
+                       "effect":  "pass",
+                       "weapon":  "pass",
+                       "package":  "pass",
+                       "byteIdempotent":  true,
+                       "canonicalAliasesRemoved":  true,
+                       "inputMutated":  false
+                   },
+    "unknownOptional":  "preserved-outside-runtime",
+    "versionMatrix":  [
+                          {
+                              "id":  "current",
+                              "expected":  "pass",
+                              "actual":  "pass",
+                              "result":  "pass"
+                          },
+                          {
+                              "id":  "core-package-mismatch",
+                              "expected":  "core-package-version",
+                              "actual":  "core-package-version",
+                              "result":  "pass"
+                          },
+                          {
+                              "id":  "core-policy-future",
+                              "expected":  "core-policy-version",
+                              "actual":  "core-policy-version",
+                              "result":  "pass"
+                          },
+                          {
+                              "id":  "sdk-package-mismatch",
+                              "expected":  "sdk-package-version",
+                              "actual":  "sdk-package-version",
+                              "result":  "pass"
+                          },
+                          {
+                              "id":  "future-package",
+                              "expected":  "package-version",
+                              "actual":  "package-version",
+                              "result":  "pass"
+                          },
+                          {
+                              "id":  "future-build",
+                              "expected":  "build-format",
+                              "actual":  "build-format",
+                              "result":  "pass"
+                          }
+                      ],
+    "publicPackageValidation":  {
+                                    "compatible":  "accepted",
+                                    "futureCore":  "rejected",
+                                    "futureSdk":  "rejected",
+                                    "policyHashMatched":  true
+                                },
     "negativeCases":  {
                           "missingRequired":  "rejected",
                           "futureRequired":  "rejected",
+                          "securitySensitive":  "rejected",
                           "unsupportedOld":  "rejected"
                       },
+    "lastValidPreserved":  true,
+    "deprecationLedger":  "writer-evidence-and-reader-retention-verified",
     "result":  "pass"
 }
