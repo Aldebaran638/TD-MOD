@@ -1,0 +1,47 @@
+{
+  "schema": "cm2.test-scenario/1",
+  "id": "creator/ship_wizard_v1",
+  "step": "Step 8.6",
+  "level": "Content Mod 2/_ai_scenario_creator_ship_wizard.xml",
+  "controller": "Content Mod 2/script/testing/scenario/creator_ship_wizard_controller.lua",
+  "adapter": "Content Mod 2/script/world/adapter/creator_ship_wizard_v1.lua",
+  "xml_revision": "creator-ship-wizard-xml-v1",
+  "lua_revision": "creator-ship-wizard-lua-v1",
+  "source_fixture": "docs/candidates/creator-ship-wizard-v1.fixture.json",
+  "source_report": "docs/candidates/creator-ship-wizard-v1.result.json",
+  "staging": "docs/candidates/generated/creator-ship-wizard-v1",
+  "setup": {
+    "vox": "Content Mod 2/vox/gammaStrikeCraftTest.vox",
+    "vox_sha256": "c52e69f18a71f54f1259d90570a9d6d9bc917e4d26aa4cfbd2242ad69c06788f",
+    "orientation": {"up": "+Y", "forward": "-Z", "meters_per_voxel": 0.1},
+    "body_state": {"mass_kg": 1200, "health": 500, "shield": 250, "armor": 100},
+    "registered_runtime_ship": false,
+    "runtime_catalog_write": false
+  },
+  "controls": {
+    "next": "rightarrow",
+    "back": "leftarrow",
+    "inject_invalid": "delete",
+    "manual_edit_or_repair": "space",
+    "validate_build_or_package": "return",
+    "weapon_range_presentation": "space",
+    "lmb_probe": "best-effort Editor-run compatibility probe; never substitutes for a real weapon contract"
+  },
+  "expected": {
+    "steps": 10,
+    "negative_gates": ["orientation-confirm-required", "range", "anchor-reference"],
+    "back_retains_manual_edit": true,
+    "staged_files": 4,
+    "build_hash": "ead7332e378e18bff5f6d7dbf8d28042040da5ce30f6c95654e32c4efafa66a8",
+    "package_hash": "910a0fdc5db75679df3565553ec139f503c53bd64dd0f82a37d05cb49b443b23",
+    "ship_dock_preview": true,
+    "weapon_range_preview": true,
+    "generated_lua": false,
+    "runtime_catalog_mutation": false
+  },
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "VISUAL", "LOG"],
+  "eyes": ["EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "reload": "REOPEN_LEVEL_XML",
+  "cleanup": ["F4_TO_EDITOR", "EMERGENCY_RELEASE", "NO_HELD_INPUTS", "NO_RUNTIME_REGISTRATION"]
+}
