@@ -4,6 +4,7 @@
 #include "state/runtime_state.lua"
 #include "state/runtime_state_api.lua"
 #include "registry/ship_registry.lua"
+#include "components/interceptor_runtime_v1.lua"
 #include "components/ship_components.lua"
 #include "lifecycle/ship_cloak.lua"
 #include "network/request_authorizer.lua"
@@ -47,8 +48,16 @@ end
 function server.shipServerFinalizeDestroyed()
     local state = server.shipServerLifecycleState
     if state.destroyedFinalized then return end
+    local body = server.shipContextGetBody()
     server.shipDeathExplosionTick(0.0)
     state.destroyedFinalized = true
+    if server.cm2TelemetryRecord ~= nil then
+        server.cm2TelemetryRecord("ship_cleanup", {
+            body_id = math.floor(tonumber(body) or 0),
+            destroyed = true,
+            runtime_deactivated = true,
+        })
+    end
 end
 
 function server.shipServerInit(shipType, bodyTag)

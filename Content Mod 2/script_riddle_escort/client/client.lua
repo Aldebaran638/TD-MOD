@@ -25,11 +25,13 @@ local escortBodyTag = "stellarisShip"
 #include "draw_modules/missileVisual.lua"
 
 function client.init()
+    cm2ShipInstanceAdapterV1.clientInit("escort")
     client.soundModuleInit()
     client.shipBody = FindBody(escortBodyTag, false)
 end
 
 function client.clientTick(dt)
+    cm2ShipInstanceAdapterV1.clientTick(dt)
     client.mainWeaponInputTick(dt)
     client.bodyMoveInputTick(dt)
     client.soundModuleTick(dt)

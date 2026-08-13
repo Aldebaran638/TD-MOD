@@ -126,7 +126,11 @@ local function _engineThrusterSpawnBurnParticle(nozzle, rear, bodyVelocity, thro
     ParticleDrag(0.05)
     ParticleEmissive(18.0 + throttle * 22.0, 0.0)
     ParticleCollide(0.0)
-    SpawnParticle(source, velocity, 0.16 + throttle * 0.18 + math.random() * 0.08)
+    client.presentationBudget.spawnParticle(source, velocity, 0.16 + throttle * 0.18 + math.random() * 0.08, {
+        effect = "engineThruster",
+        priority = "ambient",
+        distance = 180.0,
+    })
 end
 
 local function _engineThrusterDrawFlameAtSource(
@@ -151,7 +155,7 @@ local function _engineThrusterDrawFlameAtSource(
     local coreTransform = Transform(coreCenter, QuatAlignXZ(rear, up))
     local alpha = 0.72 + throttle * 0.24
 
-    DrawSprite(
+    client.presentationBudget.sprite(
         sprite,
         transform,
         length,
@@ -162,9 +166,10 @@ local function _engineThrusterDrawFlameAtSource(
         alpha * 0.58,
         true,
         true,
-        false
+        false,
+        { effect = "engineThruster", priority = "ambient", distance = 180.0 }
     )
-    DrawSprite(
+    client.presentationBudget.sprite(
         sprite,
         coreTransform,
         coreLength,
@@ -175,11 +180,16 @@ local function _engineThrusterDrawFlameAtSource(
         alpha,
         true,
         true,
-        false
+        false,
+        { effect = "engineThruster", priority = "ambient", distance = 180.0 }
     )
 
     if nozzle.tag == "thruster" then
-        PointLight(source, 0.18, 0.48, 1.0, 0.32 + throttle * 0.42)
+        client.presentationBudget.pointLight(source, 0.18, 0.48, 1.0, 0.32 + throttle * 0.42, 180.0, {
+            effect = "engineThruster",
+            priority = "ambient",
+            distance = 180.0,
+        })
     end
 end
 

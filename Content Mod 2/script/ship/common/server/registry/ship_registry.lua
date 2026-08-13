@@ -85,9 +85,16 @@ end
 function server.registryShipUnregister(shipBodyId)
     if shipBodyId == nil or shipBodyId == 0 then return end
     local prefix = _shipKeyPrefix(shipBodyId)
+    local wasRegistered = GetBool(prefix .. "/exists")
     SetBool(prefix .. "/exists", false, true)
     SetBool(prefix .. "/destroyed", true, true)
     _compactShipBodyIndex()
+    if wasRegistered and server.cm2TelemetryRecord ~= nil then
+        server.cm2TelemetryRecord("ship_unregistered", {
+            body_id = math.floor(tonumber(shipBodyId) or 0),
+            ship_type = GetString(prefix .. "/shipType"),
+        })
+    end
 end
 
 function server.registryShipIsBodyDead(shipBodyId)
@@ -102,7 +109,15 @@ function server.registryShipIsBodyDead(shipBodyId)
 
     local bodyHP = GetFloat(prefix .. "/bodyHP")
     if bodyHP <= 0 then
+        local wasDestroyed = GetBool(prefix .. "/destroyed")
         SetBool(prefix .. "/destroyed", true, true)
+        if server.cm2TelemetryRecord ~= nil and not wasDestroyed then
+            server.cm2TelemetryRecord("ship_destroyed", {
+                body_id = math.floor(tonumber(shipBodyId) or 0),
+                body_hp = bodyHP,
+                source = "registry_dead_check",
+            })
+        end
         return true
     end
 
@@ -116,6 +131,7 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
 
     local resolvedShipType, definition = _resolveShipTypeDefinition(shipType, defaultShipType)
     local prefix = _shipKeyPrefix(shipBodyId)
+    local wasRegistered = GetBool(prefix .. "/exists")
 
     SetBool(prefix .. "/exists", true, true)
     _ensureShipBodyIndexed(shipBodyId)
@@ -137,6 +153,15 @@ function server.registryShipRegister(shipBodyId, shipType, defaultShipType)
     SetFloat(prefix .. "/shieldHardening", 0.0, true)
     SetFloat(prefix .. "/armorHardening", 0.0, true)
     SetBool(prefix .. "/destroyed", false, true)
+    if server.cm2TelemetryRecord ~= nil and not wasRegistered then
+        server.cm2TelemetryRecord("ship_registered", {
+            body_id = math.floor(tonumber(shipBodyId) or 0),
+            ship_type = resolvedShipType,
+            max_shield_hp = tonumber(definition.maxShieldHP) or 0.0,
+            max_armor_hp = tonumber(definition.maxArmorHP) or 0.0,
+            max_body_hp = tonumber(definition.maxBodyHP) or 0.0,
+        })
+    end
 end
 
 function server.registryShipGetRegisteredCount()
@@ -288,6 +313,10 @@ function server.registryShipSetHP(shipBodyId, shieldHP, armorHP, bodyHP)
     end
 
     local prefix = _shipKeyPrefix(shipBodyId)
+    local beforeShield = GetFloat(prefix .. "/shieldHP")
+    local beforeArmor = GetFloat(prefix .. "/armorHP")
+    local beforeBody = GetFloat(prefix .. "/bodyHP")
+    local wasDestroyed = GetBool(prefix .. "/destroyed")
     local threshold = 0.01
     if shieldHP ~= nil then
         local nextShield = tonumber(shieldHP) or 0.0
@@ -312,5 +341,28 @@ function server.registryShipSetHP(shipBodyId, shieldHP, armorHP, bodyHP)
         if nextBody <= 0 and not GetBool(prefix .. "/destroyed") then
             SetBool(prefix .. "/destroyed", true, true)
         end
+    end
+    local afterShield = GetFloat(prefix .. "/shieldHP")
+    local afterArmor = GetFloat(prefix .. "/armorHP")
+    local afterBody = GetFloat(prefix .. "/bodyHP")
+    local isDestroyed = GetBool(prefix .. "/destroyed")
+    if server.cm2TelemetryRecord ~= nil and
+        (beforeShield ~= afterShield or beforeArmor ~= afterArmor or beforeBody ~= afterBody) then
+        server.cm2TelemetryRecord("hp_changed", {
+            body_id = math.floor(tonumber(shipBodyId) or 0),
+            before_shield = beforeShield,
+            before_armor = beforeArmor,
+            before_body = beforeBody,
+            after_shield = afterShield,
+            after_armor = afterArmor,
+            after_body = afterBody,
+            destroyed = isDestroyed,
+        })
+    end
+    if server.cm2TelemetryRecord ~= nil and (not wasDestroyed) and isDestroyed then
+        server.cm2TelemetryRecord("ship_destroyed", {
+            body_id = math.floor(tonumber(shipBodyId) or 0),
+            body_hp = afterBody,
+        })
     end
 end

@@ -1,6 +1,11 @@
 -- Riddle escort standalone script entry
 #version 2
 #include "script/include/common.lua"
+#include "../script/net/world_protocol_v1.lua"
+#include "../script/net/world_command_snapshot_v1.lua"
+#include "../script/world/host/world_host_v1.lua"
+#include "../script/world/adapter/ship_instance_adapter_v1.lua"
+#include "../script/weapon/server/behavior/point_defense/allocator_v1.lua"
 
 #include "server/ship_data.lua"
 #include "server/weapon_data.lua"
@@ -68,6 +73,12 @@ function server.init()
         server.shipRuntimeSetCurrentMainWeapon(server.shipBody, initialMode)
     end
     server.shipRuntimeSyncMainWeapon(server.shipBody, true)
+    cm2ShipInstanceAdapterV1.serverInit(
+        "escort:" .. tostring(server.shipBody),
+        { "register", "heartbeat", "snapshotRead", "presentationPublish", "lifecycleRead" },
+        "ship-owner:" .. tostring(server.shipBody)
+    )
+    cm2PointDefenseAllocatorV1.serverInit(cm2WorldHostV1.generation())
 
     if initialMode == "sSlot" then
         server.escortSSlotStatePushHud(true)
@@ -79,6 +90,9 @@ function server.init()
 end
 
 function server.serverTick(dt)
+    local destroyed = server.registryShipIsBodyDead ~= nil
+        and server.registryShipIsBodyDead(server.shipBody)
+    cm2ShipInstanceAdapterV1.serverTick(dt, destroyed)
     server.mainWeaponControlTick(dt)
     server.shipRuntimeStateSyncTick(dt)
     server.escortSSlotControlTick(dt)

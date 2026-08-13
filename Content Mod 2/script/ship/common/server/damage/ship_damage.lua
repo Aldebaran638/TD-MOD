@@ -48,6 +48,7 @@ function server.shipDamageApplyRaw(shipBodyId, rawDamage)
 
     local shield, armor, hull = server.registryShipGetHP(body)
     if shield == nil or armor == nil or hull == nil then return result end
+    local beforeShield, beforeArmor, beforeHull = shield, armor, hull
 
     local function applyLayer(layerName, currentHP)
         local current = math.max(0.0, tonumber(currentHP) or 0.0)
@@ -71,6 +72,31 @@ function server.shipDamageApplyRaw(shipBodyId, rawDamage)
     hull = applyLayer("body", hull)
     server.registryShipSetHP(body, shield, armor, hull)
     _stopDestroyedInterceptor(body, hull)
+    if server.cm2TelemetryRecord ~= nil then
+        server.cm2TelemetryRecord("hit", {
+            target_body_id = body,
+            attacker_body_id = 0,
+            requested_damage = tonumber(rawDamage) or 0.0,
+            applied_damage = result.appliedDamage,
+            impact_layer = result.impactLayer,
+            did_damage = result.didDamage,
+        })
+    end
+    if server.cm2TelemetryRecord ~= nil and result.didDamage then
+        server.cm2TelemetryRecord("damage_applied", {
+            target_body_id = body,
+            attacker_body_id = 0,
+            requested_damage = tonumber(rawDamage) or 0.0,
+            applied_damage = result.appliedDamage,
+            impact_layer = result.impactLayer,
+            before_shield = beforeShield,
+            before_armor = beforeArmor,
+            before_body = beforeHull,
+            after_shield = shield,
+            after_armor = armor,
+            after_body = hull,
+        })
+    end
     return result
 end
 
@@ -108,6 +134,7 @@ function server.shipDamageApplyWeaponDefinition(
 
     local shield, armor, hull = server.registryShipGetHP(body)
     if shield == nil or armor == nil or hull == nil then return result end
+    local beforeShield, beforeArmor, beforeHull = shield, armor, hull
     local shieldHardening, armorHardening = 0.0, 0.0
     if server.shipRuntimeGetHardening ~= nil then
         shieldHardening, armorHardening = server.shipRuntimeGetHardening(body)
@@ -170,6 +197,31 @@ function server.shipDamageApplyWeaponDefinition(
     hull = applyLayer("body", hull, weapon.bodyFix, 0.0, 0.0)
     server.registryShipSetHP(body, shield, armor, hull)
     _stopDestroyedInterceptor(body, hull)
+    if server.cm2TelemetryRecord ~= nil then
+        server.cm2TelemetryRecord("hit", {
+            target_body_id = body,
+            attacker_body_id = attacker,
+            requested_damage = tonumber(rawDamage) or 0.0,
+            applied_damage = result.appliedDamage,
+            impact_layer = result.impactLayer,
+            did_damage = result.didDamage,
+        })
+    end
+    if server.cm2TelemetryRecord ~= nil and result.didDamage then
+        server.cm2TelemetryRecord("damage_applied", {
+            target_body_id = body,
+            attacker_body_id = attacker,
+            requested_damage = tonumber(rawDamage) or 0.0,
+            applied_damage = result.appliedDamage,
+            impact_layer = result.impactLayer,
+            before_shield = beforeShield,
+            before_armor = beforeArmor,
+            before_body = beforeHull,
+            after_shield = shield,
+            after_armor = armor,
+            after_body = hull,
+        })
+    end
     return result
 end
 

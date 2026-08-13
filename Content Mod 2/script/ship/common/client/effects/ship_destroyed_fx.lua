@@ -55,8 +55,8 @@ local function _tickSphereFx(dt)
             local radius = fx.maxRadius * t
             local alpha = math.pow(1.0 - t, 0.58)
 
-            PointLight(fx.center, 1.0, 0.95, 0.74, 15.0 * alpha)
-            PointLight(fx.center, 1.0, 0.88, 0.52, 11.0 * alpha)
+            client.presentationBudget.pointLight(fx.center, 1.0, 0.95, 0.74, 15.0 * alpha, 220.0, { effect = "shipDestroyed", priority = "critical" })
+            client.presentationBudget.pointLight(fx.center, 1.0, 0.88, 0.52, 11.0 * alpha, 220.0, { effect = "shipDestroyed", priority = "critical" })
 
             ParticleReset()
             ParticleColor(1.0, 0.98, 0.78, 1.0, 0.90, 0.55)
@@ -73,7 +73,7 @@ local function _tickSphereFx(dt)
                 local pos = VecAdd(fx.center, VecScale(dir, radius * jitter))
                 local speed = 8.0 + 12.0 * (1.0 - t) + 8.0 * math.random()
                 local vel = VecScale(dir, speed)
-                SpawnParticle(pos, vel, 0.65 + 0.45 * math.random())
+                client.presentationBudget.spawnParticle(pos, vel, 0.65 + 0.45 * math.random(), { effect = "shipDestroyed", priority = "critical" })
             end
         end
         i = i - 1
@@ -93,7 +93,7 @@ local function _tickRingFx(dt)
             local r = fx.r0 + (fx.r1 - fx.r0) * t
             local alpha = math.pow(1.0 - t, 0.62)
 
-            PointLight(fx.center, 1.0, 1.0, 1.0, 7.0 * alpha)
+            client.presentationBudget.pointLight(fx.center, 1.0, 1.0, 1.0, 7.0 * alpha, 220.0, { effect = "shipDestroyed", priority = "critical" })
 
             ParticleReset()
             ParticleColor(1.0, 1.0, 1.0, 0.86, 0.90, 1.0)
@@ -116,7 +116,7 @@ local function _tickRingFx(dt)
                 )
                 local dir = Vec(cs, 0, sn)
                 local vel = VecScale(dir, 12.0 + 7.0 * (1.0 - t) + 5.0 * math.random())
-                SpawnParticle(pos, vel, 0.5 + 0.35 * math.random())
+                client.presentationBudget.spawnParticle(pos, vel, 0.5 + 0.35 * math.random(), { effect = "shipDestroyed", priority = "critical" })
             end
         end
         i = i - 1
