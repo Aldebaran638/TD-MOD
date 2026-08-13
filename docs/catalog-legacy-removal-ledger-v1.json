@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "cm2.catalog-removal-ledger/1",
+  "policy": "Only remove a legacy source after live catalog authority, S0-S8 parity and zero runtime call counters are proven.",
+  "runtimeDefault": "legacy",
+  "entries": [
+    {
+      "id": "legacy-weapon-definition-register",
+      "path": "Content Mod 2/script/data/weapons/schema.lua",
+      "status": "legacy-active",
+      "referenceScan": { "command": "rg -n 'weaponDefine(Ray|Projectile|Guided|Rocket|StrikeCraft)' 'Content Mod 2/script'", "result": "runtime-active; removal blocked", "expectedAfterPromotion": "offline importer/test only" },
+      "removalGate": "Generated weapon catalog promoted, legacyDefinitionRegisterCalls=0 for two releases",
+      "rollback": "restore previous cm2-weapon-definitions-v1.json and legacy weapon catalog"
+    },
+    {
+      "id": "legacy-ship-definition-register",
+      "path": "Content Mod 2/script/data/ships/schema.lua",
+      "status": "legacy-active",
+      "referenceScan": { "command": "rg -n 'shipDefinitionRegister' 'Content Mod 2/script'", "result": "runtime-active; removal blocked", "expectedAfterPromotion": "offline importer/test only" },
+      "removalGate": "Generated vehicle catalog promoted, legacyDefinitionRegisterCalls=0 for two releases",
+      "rollback": "restore previous cm2-vehicle-definitions-v1.json and legacy ship catalog"
+    },
+    {
+      "id": "legacy-component-definition-register",
+      "path": "Content Mod 2/script/data/components/schema.lua",
+      "status": "legacy-active",
+      "referenceScan": { "command": "rg -n 'shipComponentDefine' 'Content Mod 2/script'", "result": "runtime-active; removal blocked", "expectedAfterPromotion": "offline importer/test only" },
+      "removalGate": "Generated component catalog promoted and component power/HP parity is live-verified",
+      "rollback": "restore previous vehicle catalog and component registry"
+    },
+    {
+      "id": "legacy-effect-profile-registry",
+      "path": "Content Mod 2/script/weapon/client/presentation/visual/runtime/registry/effect_profile_registry.lua",
+      "status": "legacy-active",
+      "referenceScan": { "command": "rg -n 'effectProfileRegistry|effect_profile_registry' 'Content Mod 2/script'", "result": "legacy adapter remains; removal blocked", "expectedAfterPromotion": "0 runtime reads" },
+      "removalGate": "effect profile lookup counter zero and candidate renderer parity approved",
+      "rollback": "restore prior effect profile registry and manifest hash"
+    },
+    {
+      "id": "legacy-configuration-alias",
+      "path": "Content Mod 2/script/data/ships/battlecruiser/battlecruiser.lua",
+      "status": "migration-retained",
+      "referenceScan": { "command": "rg -n 'legacyConfigurationIds|siege_2x4g2m' 'Content Mod 2/script'", "result": "read-only v0 adapter retained", "expectedAfterPromotion": "migration tool only" },
+      "removalGate": "v0 usage ledger empty and LoadoutSnapshot v1 save golden approved",
+      "rollback": "re-enable cm2LoadoutContractV1.migrateV0 alias adapter"
+    },
+    {
+      "id": "readonly-definition-importer",
+      "path": "tools/cm2-compiler/compile-definitions.ps1",
+      "status": "migration-tool-retained",
+      "referenceScan": { "command": "rg -n 'compile-definitions|build-generated' 'tools'", "result": "offline-only; no runtime include", "expectedAfterPromotion": "retained for source migration" },
+      "removalGate": "never remove; required to reproduce rollback catalogs",
+      "rollback": "use previous compiler revision and recorded manifest hash"
+    }
+  ]
+}

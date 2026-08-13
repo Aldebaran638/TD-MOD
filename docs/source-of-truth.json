@@ -1,0 +1,23 @@
+{
+  "schema_version": "cm2.source-of-truth/1",
+  "product": "Content Mod 2",
+  "source_root": "Content Mod 2",
+  "generated_target": "Global Mod",
+  "generation_policy": "Content Mod 2 is the only product source; Global Mod is a generated and published target and must not be manually evolved.",
+  "required_source_files": [
+    "main.xml",
+    "main.lua"
+  ],
+  "target_policy": {
+    "must_exist": true,
+    "manual_edits": "forbidden",
+    "release_must_record": [
+      "source_revision",
+      "generator_revision",
+      "package_hash",
+      "generated_at"
+    ]
+  },
+  "owner": "Build owner: ____",
+  "last_review": "2026-08-10"
+}
