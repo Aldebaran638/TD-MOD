@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "cm2.presentation-migration/1",
+  "sourceOfTruth": "Content Mod 2/script",
+  "batches": [
+    {
+      "id": "weapon-phase",
+      "scope": "script/weapon/client/presentation/visual/phase/**",
+      "additionalScopes": ["script/weapon/client/presentation/visual/runtime/shared/**"],
+      "owner": "presentationBudget + slice_runtime",
+      "rendererId": "cm2.phase-renderer",
+      "rendererVersion": "1",
+      "declaredWorstCaseCost": { "particles": 96, "sprites": 8, "lines": 4, "lights": 2, "voices": 0 },
+      "status": "transitional-budgeted",
+      "eventSource": "legacy-adapter-or-event-v1",
+      "fallback": "per-slice legacy"
+    },
+    {
+      "id": "strike-craft-entity",
+      "scope": "script/weapon/client/presentation/visual/entity/strike_craft/**",
+      "owner": "presentationBudget + slice_runtime",
+      "rendererId": "cm2.strike-craft-renderer",
+      "rendererVersion": "1",
+      "declaredWorstCaseCost": { "particles": 96, "sprites": 12, "lines": 8, "lights": 4, "voices": 2 },
+      "status": "transitional-budgeted",
+      "eventSource": "legacy-adapter-or-event-v1",
+      "fallback": "craft legacy adapter"
+    },
+    {
+      "id": "audio",
+      "scope": "script/weapon/client/presentation/audio/**",
+      "owner": "presentationBudget.playSound",
+      "rendererId": "cm2.voice-service",
+      "rendererVersion": "1",
+      "declaredWorstCaseCost": { "particles": 0, "sprites": 0, "lines": 0, "lights": 0, "voices": 64 },
+      "status": "facade-migrated",
+      "eventSource": "publisher-event-or-legacy-adapter",
+      "fallback": "legacy sound callback"
+    },
+    {
+      "id": "ship-effects",
+      "scope": "script/ship/common/client/effects/**",
+      "owner": "presentationBudget + ship owner lifecycle",
+      "rendererId": "cm2.ship-effect-renderer",
+      "rendererVersion": "1",
+      "declaredWorstCaseCost": { "particles": 180, "sprites": 8, "lines": 0, "lights": 8, "voices": 0 },
+      "status": "facade-migrated",
+      "eventSource": "owner-event-or-legacy-lifecycle",
+      "fallback": "legacy ship effect"
+    }
+  ],
+  "directApiPolicy": {
+    "allowedOwners": ["presentationBudget", "effect_budget legacy facade", "approved specialised renderer"],
+    "forbiddenOutsideScopes": ["SpawnParticle", "PointLight", "DrawSprite", "DrawLine", "PlaySound"],
+    "approvalRule": "Every direct primitive in a scoped renderer must have an owner, rendererId, rendererVersion, declaredWorstCaseCost and explicit transitional status. New code must use presentationBudget."
+  },
+  "batchOrder": ["audio", "ship-effects", "weapon-phase", "strike-craft-entity"],
+  "eventSourceRule": "One event source per slice; legacy adapter and event-v1 are init-time alternatives, never simultaneous playback."
+}

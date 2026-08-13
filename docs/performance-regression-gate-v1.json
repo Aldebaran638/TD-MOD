@@ -1,0 +1,33 @@
+{
+  "schema": "cm2.performance-regression-policy/1",
+  "version": "2026.08.11",
+  "status": "headless-candidate",
+  "thresholds": {
+    "p95MaxRegression": 0.05,
+    "p99MaxRegression": 0.10,
+    "metricMaxRegression": 0.05,
+    "maxRelativeStdDev": 0.20,
+    "variancePolicy": "stop-and-repair-scenario",
+    "hardCapPolicy": "any-cap-increase-blocks"
+  },
+  "requiredSlices": [ "S0", "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8" ],
+  "requiredMetrics": [ "frameMs", "queryCount", "activeEntity", "budgetReject", "queueDepth", "networkBytes", "memorySlope" ],
+  "executionProfiles": {
+    "pullRequest": "related-S0-S8-only",
+    "milestone": "all-S0-S8-pressure-and-soak",
+    "nightly": "all-S0-S8-pressure-and-soak"
+  },
+  "replayPolicy": {
+    "required": true,
+    "before": "docs/replays/performance-gate-v1-before.replay.json",
+    "after": "docs/replays/performance-gate-v1-after.replay.json",
+    "referenceHardware": "headless-CI-profile; live hardware must be recorded before promotion",
+    "adr": "docs/adr/performance-budget-v1.md"
+  },
+  "runtimePolicy": {
+    "teardownRequired": true,
+    "statusWhenUnavailable": "deferred",
+    "requiredEvidence": [ "S0-S8 live results", "before/after replay", "hardware identity", "variance report" ]
+  },
+  "rollback": "Restore the previous performance baseline and budget; keep the failing report/replay and revert unapproved budget changes."
+}

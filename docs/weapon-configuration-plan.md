@@ -85,7 +85,7 @@
 
 ## 第二阶段：整理文件夹结构
 
-状态：已完成，并已通过 Teardown 实机验证。
+状态：代码改造已完成；Teardown 实机证据需要按 `docs/teardown-smoke-matrix.md` 重新执行。当前验证环境未发现可调用的 Teardown 可执行文件。
 
 当前核心结构：
 
@@ -205,7 +205,7 @@ UI API 验证通过后的数据流程：
 新 UI 代码应放在：
 
 ```text
-Content Mod 2/script/weapon/client/config_ui/
+Content Mod 2/script/weapon/client/interaction/config/
 ```
 
 在 MVP 验证完成前，新模块不应直接修改现有武器控制器、伤害代码或服务端 loadout。

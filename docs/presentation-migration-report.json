@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "cm2.presentation-migration-report/1",
+  "generatedBy": "harness/check-presentation-migration.ps1",
+  "scope": ["weapon/client/presentation/visual/phase", "weapon/client/presentation/visual/entity/strike_craft", "weapon/client/presentation/audio", "ship/common/client/effects"],
+  "facadeMigrated": ["ship_destroyed_fx.lua", "engine_thruster_fx.lua", "sound_service.lua"],
+  "transitionalRendererPolicy": "direct calls may remain only in manifest-scoped specialised renderers with declared worst-case cost and explicit budget reservation",
+  "runtimeStatus": "static-only; Teardown executable unavailable for owner-dispose and p95 verification",
+  "rollback": "Use per-slice legacy adapter and retain current specialised renderer registrations"
+}
