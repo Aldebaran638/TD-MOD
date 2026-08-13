@@ -1,0 +1,5 @@
+name = CM2 AI Test Consumer SDK Alpha
+author = CM2 Autonomous Testing
+description = [noupload]Disposable external Creator SDK Alpha consumer. Never publish.
+tags = Map
+version = 1
