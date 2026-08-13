@@ -1,0 +1,160 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 9.1",
+  "result": "pass",
+  "verified_at": "2026-08-14T00:22:00+08:00",
+  "implementation_commit": "0f43e078c483f48c48e3710d69dccae0c397bffa",
+  "profiles": ["STATIC", "FIXTURE", "CONSUMER_MOD"],
+  "eyes": [],
+  "hands": ["HAND_TEST_SETUP"],
+  "telemetry": {
+    "required": false,
+    "reason": "The embedded contract has no gameplay-state assertion. Package bytes, capability/version decisions, clean-room installation and rollback are owned by deterministic artifacts. Live Teardown startup is supplementary proof that the independent Mod consumes the installed data projection; generated gameplay Runtime loading belongs to Step 9.3."
+  },
+  "setup": {
+    "fixture": "docs/candidates/package-manifest-v1.fixture.json",
+    "public_schema": "schemas/cm2/package-manifest-v1.json",
+    "compiler_schema": "schemas/cm2/source-envelope-v1.json",
+    "compiler": "tools/cm2-compiler/compile-definitions.ps1",
+    "validator": "tools/cm2-package/run-package-manifest-v1.ps1",
+    "consumer_installer": "tools/cm2-package/install-package-consumer-v1.ps1",
+    "consumer_mod": "_AI Test Consumer Basic",
+    "consumer_host": "_AI Test Consumer Basic/script/testing/package_manifest/consumer_host.lua",
+    "forbidden_authority": ["CM2 private include", "Runtime Lua from package", "gameplay Runtime registration", "damage RPC", "weapon-runtime substitution"]
+  },
+  "artifacts": {
+    "fixture_sha256": "a6277593d1c22cd37be6d25f5729d4aa826377b3a84f300d0249ccd6f1f502dc",
+    "report_sha256": "bcfde3bf0545b93cf257fbe13c110e18801b76a5d79bbf5f63e57f3fc32435f2",
+    "package_sha256": "f935a6690769ec308500bcfd3487cc09e78ac6c2c622a6114b5717b85cd4695e",
+    "installed_package_sha256": "f935a6690769ec308500bcfd3487cc09e78ac6c2c622a6114b5717b85cd4695e",
+    "consumer_trace_sha256": "e2dd2bc808c8c436dc837cbb88e676c0ba0ba6b85c34d591b4929d446036d9d2",
+    "package_schema_sha256": "3cb23c2865a31e0b31f66b244830e7c305d0912802a8eccb7ca0c80df19f2caf",
+    "compiler_schema_sha256": "9a0ebaa61550fdecf7f99fbfbb0f495ea207978d4077ae19af8341d881ffab3c",
+    "manifest_hash_equals_emitted_artifact_hash": true,
+    "two_clean_builds_byte_identical": true,
+    "two_clean_installs_xml_identical": true
+  },
+  "assertions": {
+    "manifest": {
+      "package": "cm2.thirdparty.hello-ship@1.0.0",
+      "schema": "cm2.package/1",
+      "entrypoint": "data-only",
+      "runtime_lua_allowed": false,
+      "content_entries": 4,
+      "asset_entries": 2,
+      "generated_entries": 1,
+      "required_dependencies": 1,
+      "optional_dependencies": 1,
+      "capabilities": ["Ship", "Mount", "Turret", "Weapon", "Projectile", "Effect", "Localization", "Assets"]
+    },
+    "compiler_capability_bridge": {
+      "Ship": "vehicle",
+      "Mount": "mount",
+      "Turret": "turret",
+      "Weapon": "weapon",
+      "Projectile": "projectile",
+      "Effect": "effect",
+      "resource_only": ["Localization", "Assets"]
+    },
+    "compatibility": {
+      "core_api": {"resolved": "1.2.0", "required": ">=1.0.0 <2.0.0", "accepted": true},
+      "sdk": {"resolved": "1.0.0", "required": ">=1.0.0 <2.0.0", "accepted": true},
+      "dependency": {"package": "cm2.core.schemas", "resolved": "1.2.0", "required": ">=1.0.0 <2.0.0", "accepted": true},
+      "incompatible_core_api": "rejected",
+      "incompatible_sdk": "rejected",
+      "incompatible_dependency": "rejected"
+    },
+    "consumer": {
+      "valid_operation": "accepted:Ship",
+      "invalid_operation": "rejected:unknown-capability:ExecuteLua",
+      "private_includes": 0,
+      "installed_runtime_lua_files": 0,
+      "core_only_fallback": ["cm2.core.schemas"]
+    },
+    "negative_cases": ["missing dependency", "dependency cycle", "duplicate content ID", "path traversal", "unknown capability", "unsupported Lua entrypoint", "budget overflow", "asset hash mismatch", "future schema", "incompatible Core API", "incompatible SDK", "incompatible dependency version", "signature mismatch"],
+    "rollback": "Every negative case pre-seeded the destination with last-valid-package and verified the exact bytes remained unchanged. A tampered consumer install was restored from the clean artifact to the exact expected hash."
+  },
+  "regression": {
+    "manifest_self_test": {"result": "pass", "assertions": 38},
+    "consumer_self_test": {"result": "pass", "assertions": 10},
+    "compiler_self_test": {"result": "pass", "assertions": 5},
+    "todo_contract_validation": {"result": "pass", "contracts": 80},
+    "basic_consumer_fixture": "pass",
+    "clean_room_package": "pass",
+    "compatibility_matrix": "pass",
+    "core_only_build": "pass",
+    "exact_rollback": "pass"
+  },
+  "reload": {
+    "mode": "REOPEN_MOD_MANAGER_OR_RESTART_MOD_SESSION",
+    "manager_run_id": "20260813T161144Z-987c9326",
+    "manager_frame": "frame_f000001-8a52152d_pid-30296.png",
+    "manager_frame_sha256": "5d6e9fc0f6203f9c3cd2f67b6c41ef45a1a8d59ac3bfd1476bd8f310264ed111",
+    "identity": "The reopened Mod Manager selected CM2 AI Test Consumer Basic version 3 at the independent _AI Test Consumer Basic path before Play.",
+    "loading_recovery": "The first post-start capture was still loading and was rejected. The agent waited three seconds, re-observed without sending blind input, and accepted the non-constant PASS frame."
+  },
+  "live_run": {
+    "start_run_id": "20260813T161144Z-987c9326",
+    "pass_run_id": "20260813T161223Z-a7005d51",
+    "cleanup_run_id": "20260813T161918Z-346ccb8f",
+    "target_id": "teardown:30296:526038",
+    "pid": 30296,
+    "input_backend": "gvinput virtual HID",
+    "baseline_log_cursor": 80972519,
+    "final_log_cursor": 80982371,
+    "actions": ["Click Play on the exact independent Consumer", "Select the default single-player topology and click Start", "Wait through the rejected loading capture", "Observe the Consumer PASS surface", "Escape, return to Mod Manager and emergency-release input"],
+    "pass_frame": "frame_f000001-cbbf5aa1_pid-30296.png",
+    "pass_frame_sha256": "99da292ecaaf95612b9c08071b447961e1eab0aa5ac5e6b44f2fad9b0a33e243",
+    "cleanup_frame": "frame_f000003-509ea876_pid-30296.png",
+    "cleanup_frame_sha256": "416a84b169888535ea57340eb7d73f692489f3df589a9e1a22e66c43c3a4aec0",
+    "assertion": "The live independent Mod displayed PACKAGE MANIFEST V1 CONSUMER PASS, the package ID/version, accepted Ship operation, rejected ExecuteLua operation, Runtime Lua forbidden/not loaded, artifact hash prefix and consumer-basic-v3 revision."
+  },
+  "log": {
+    "path": "%LOCALAPPDATA%/Teardown/log.txt",
+    "in_scope_error_count": 0,
+    "in_scope_warning_count": 0,
+    "attributed_external_noise": {
+      "owner": "Steam Workshop mod 3148138736 / TABS",
+      "errors": 2,
+      "warnings": 6,
+      "details": "Both missing sound-bank errors and all deprecated pre-init API warnings identify the external TABS path. No line identifies Content Mod 2 or _AI Test Consumer Basic."
+    }
+  },
+  "defect_loop": [
+    {
+      "failure": "The prior report claimed manifestHash=packageArtifactHash while no package artifact, public schema, validator, or compiler existed in the tracked repository; live Consumer still displayed WAITING FOR PUBLIC CM2 CONTRACT.",
+      "fix": "Tracked the public schema/compiler/package tools, emitted a canonical byte-verifiable artifact, added clean install tests, and projected only data decisions into an independent Consumer.",
+      "regression": "Two clean builds/installs match; emitted and installed artifact hashes are identical; package tree contains no Lua."
+    },
+    {
+      "failure": "The first live Consumer start displayed PACKAGE MANIFEST V1 CONSUMER FAIL because Teardown's special root main.lua did not receive XML script params.",
+      "failure_run_id": "20260813T155855Z-b2af041c",
+      "failure_frame": "frame_f000001-dd9b8fb3_pid-30296.png",
+      "failure_frame_sha256": "dae4243bcc6dc9a2bcc1385c28a76c343d7295b813e5642808add69f541da765",
+      "fix": "Moved the host to MOD/script/testing/package_manifest/consumer_host.lua and attached parameters to a normal XML script node.",
+      "regression": "A full Mod Manager/session restart loaded consumer-basic-v3 and displayed PASS with the installed package values."
+    },
+    {
+      "failure": "The validator preserved version ranges but did not evaluate resolved Core, SDK, or dependency versions.",
+      "fix": "Added bounded semantic-version range evaluation and explicit compatibility/core-only report data.",
+      "regression": "Compatible versions pass; incompatible Core, SDK and dependency cases each fail closed while preserving last-valid bytes."
+    }
+  ],
+  "harness": {
+    "command": ".\\harness\\check-all.ps1",
+    "manual_final": {"result": "pass", "exit_code": 0, "duration_seconds": 138.2, "entry_closure_lua_files": 261, "lua_files": 233, "xml_files": 13, "api_issues": 0, "executable_todo_contracts": 80},
+    "implementation_pre_commit": {"result": "pass", "exit_code": 0, "duration_seconds": 135.9},
+    "consumer_extra_checks": {"lua_files": 1, "xml_files": 1, "api_issues": 0}
+  },
+  "cleanup": {
+    "returned_to_mod_manager": true,
+    "consumer_selected": true,
+    "temporary_clean_roots_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true,
+    "held_keys": [],
+    "held_buttons": [],
+    "emergency_release": "pass"
+  },
+  "scope_boundary": "Step 9.1 proves the public data-only package contract and independent Teardown Consumer start. It does not claim that CM2 loads or instantiates the generated ship/weapon; the clean-room gameplay Runtime chain remains Step 9.3."
+}

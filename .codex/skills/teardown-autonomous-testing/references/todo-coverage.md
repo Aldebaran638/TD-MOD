@@ -5,7 +5,7 @@ Generated from the authoritative `TEARDOWN_SHIP_PLATFORM_TODO.json` (`cm2.todo/2
 Total: 80
 
 - Implementation: not_started=0; in_progress=0; finish=22; unable=58
-- Verification: verified=10; needs_regression=8; pending=58; human_visual_review=4
+- Verification: verified=11; needs_regression=7; pending=58; human_visual_review=4
 - Automation: FULL_AUTO=43; AUTO_WITH_VISUAL_REVIEW=17; PARTIAL_AUTO=20; MANUAL_REQUIRED=0
 
 ## Profile index
@@ -1195,7 +1195,7 @@ Total: 80
 ### Step 9.1 — 定义 `PackageManifest v1` 与 Data-only Capability
 
 - Implementation: `finish`
-- Verification: `needs_regression` — Implementation completion is retained, but evidence predates the autonomous policy or explicitly deferred a now-required live, multiplayer, visual, or consumer-path assertion.
+- Verification: `verified` — The embedded STATIC+FIXTURE+CONSUMER_MOD contract passed: public schema/compiler/package tools are tracked, two clean builds and installs are deterministic, manifest and installed hashes match, valid use succeeds, incompatible/invalid use fails closed without overwriting last-valid bytes, Core-only fallback is explicit, the reopened Teardown Mod Manager starts the independent version-3 Consumer and displays PASS, runtime health is clean for in-scope paths, cleanup and full Harness pass. Evidence: docs/evidence/step-9.1-package-manifest-v1.json.
 - Automation: `FULL_AUTO`
 - Profiles: `STATIC + FIXTURE + CONSUMER_MOD`
 - Eyes: `none`
