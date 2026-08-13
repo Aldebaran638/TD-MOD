@@ -1,0 +1,11 @@
+<scene version="2.0.1" shadowVolume="100 40 100">
+    <environment template="night"/>
+    <script file="MOD/main.lua"/>
+    <script file="MOD/script/testing/scenario/scenario_controller.lua" param0="scenario=weapon_direct_fire" param1="revision=direct-fire-xml-v2"/>
+
+    <!-- Root-level entrypoint is required because Teardown's Open level dialog
+         only enumerates level XML files at the content-mod root. The scenario
+         contract and documentation stay under testing/scenarios/. -->
+    <instance pos="0 60 0" rot="0 0 0" file="MOD/prefabs/ships/titan.xml"/>
+    <instance pos="0.1 60 -42.2" rot="0 180 0" file="MOD/prefabs/ships/enigma_battlecruiser.xml"/>
+</scene>

@@ -1,0 +1,5 @@
+name = CM2 AI Test Consumer Basic
+author = CM2 Autonomous Testing
+description = [noupload]Disposable external-consumer fixture. Never publish.
+tags = Map
+version = 2

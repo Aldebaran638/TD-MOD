@@ -1,0 +1,8 @@
+<scene version="2.0.1" shadowVolume="40 20 40">
+    <environment template="sunny"/>
+    <script file="main.lua"/>
+    <body name="Consumer Fixture Floor" dynamic="false" pos="0 -0.1 0">
+        <voxbox size="20 1 20" material="masonry"/>
+    </body>
+    <location name="Player" tags="player" pos="0 1 4" rot="0 0 0"/>
+</scene>

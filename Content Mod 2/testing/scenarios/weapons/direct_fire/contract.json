@@ -1,0 +1,33 @@
+{
+  "schema": "cm2.verification-contract/1",
+  "task": "Prove one direct-fire weapon crosses the real CM2 runtime boundary",
+  "behavior_under_test": "A real LMB edge releases the Titan's configured weapon, hits the registered target and changes authoritative layered HP.",
+  "test_profiles": ["SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+  "level": "MOD/_ai_scenario_weapon_direct_fire.xml",
+  "setup": {
+    "level": "MOD/_ai_scenario_weapon_direct_fire.xml",
+    "attacker": "titan at 0 60 0, forward -Z, velocity near zero",
+    "target": "enigmaticCruiser body centered near 0 60 -25, velocity near zero"
+  },
+  "trigger": ["observe fresh frame", "press and release LMB once"],
+  "expected_telemetry": [
+    "input_edge",
+    "fire_request",
+    "weapon_released",
+    "presentation_event when this weapon is routed through the event-v1 publisher; otherwise record the legacy presentation gap",
+    "hit",
+    "damage_applied",
+    "hp_changed"
+  ],
+  "expected_state": [
+    "scenario.id == weapon_direct_fire",
+    "attacker and target are registered and alive at baseline",
+    "target shield/armor/body delta equals recorded applied damage"
+  ],
+  "expected_visual": ["configured beam or projectile/impact trace is visible", "weapon HUD enters release cooldown/recovery"],
+  "expected_log": ["no new CM2 Lua ERROR", "no new CM2 engine ERROR"],
+  "cleanup": ["release every held input", "F4 back to editor after evidence capture"],
+  "reload_requirement": "REOPEN_LEVEL_XML after XML edits; F4_TO_F5 after Lua-only edits",
+  "regression": ["telemetry nonce/session/cursor", "clipboard compare-and-restore", "ship registration"],
+  "evidence": ["verification contract", "baseline telemetry", "action trace", "delta telemetry", "before/after screenshot", "incremental log slice", "result.json"]
+}
