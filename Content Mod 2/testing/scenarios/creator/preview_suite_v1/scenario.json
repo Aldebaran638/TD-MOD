@@ -1,0 +1,38 @@
+{
+  "schema": "cm2.scenario/1",
+  "id": "preview_suite_v1",
+  "scope": "creator-preview",
+  "root_entry": "Content Mod 2/_ai_scenario_preview_suite.xml",
+  "controller": "Content Mod 2/script/testing/scenario/preview_suite_controller.lua",
+  "revision": "preview-suite-xml-v1",
+  "determinism": {
+    "seed": 424242,
+    "camera": {
+      "position": [0.0, 7.5, 19.0],
+      "look_at": [0.0, 1.5, -2.0]
+    },
+    "runtime_catalog_mutation": "forbidden"
+  },
+  "modes": [
+    {
+      "key": "1",
+      "id": "effect-lab",
+      "expected": ["production EffectPlayer", "near LOD0", "far LOD1", "budgeted line/light/particles"]
+    },
+    {
+      "key": "2",
+      "id": "weapon-range",
+      "expected": ["4 fixed-seed shots", "moving target", "accepted=2", "degraded=1", "rejected=1"]
+    },
+    {
+      "key": "3",
+      "id": "ship-dock",
+      "expected": ["real gamma VOX", "5 anchors", "2 mounts", "1 turret", "spawn/dispose/stale rejection"]
+    }
+  ],
+  "replay_inputs": ["space", "lmb"],
+  "eyes": ["EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "reload": "REOPEN_LEVEL_XML",
+  "forbidden_shortcuts": ["damage_probe", "direct runtime catalog mutation", "gameplay ServerCall"]
+}

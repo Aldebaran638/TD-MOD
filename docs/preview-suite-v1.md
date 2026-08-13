@@ -1,38 +1,61 @@
 # Preview Suite v1
 
-Step 8.3 adds three independent, headless-verifiable Preview surfaces:
+Step 8.3 provides three Preview surfaces behind one shared, versioned boundary:
 
-- **Effect Lab** uses the production `EffectPlayer` and `PresentationBudget`.
-  It accepts a generated normalized runtime DTO, a fixed seed, near/far LOD,
-  synthetic origin/direction/hit/normal/anchor context, and a bounded replay.
-- **Weapon Range** uses the same compiler and frozen catalog. A fixed muzzle,
-  fixed seed, deterministic moving target, shield/body/environment target types,
-  damage range, ballistic trace, and budget result are recorded as one replay.
-- **Ship Dock** uses the same World/Entity adapter. It exposes the imported VOX
-  source, EntityGraph Body/Shape/Joint counts, anchor/mount/turret tree, camera,
-  engine markers, spawn/snapshot/dispose and stale-handle rejection.
+- **Effect Lab** uses production `EffectPlayer` lifecycle and
+  `PresentationBudget`. It accepts the generated normalized runtime DTO, fixed
+  seed `424242`, near/far LOD and synthetic origin/direction/hit/anchor context.
+- **Weapon Range** consumes the same compiler and frozen catalog contract. Its
+  fixed muzzle, fixed seed, moving/static shield/body/environment targets,
+  damage range, four-shot ballistic trace and accepted/degraded/rejected budget
+  result are deterministic.
+- **Ship Dock** consumes the `cm2.world/1` World/Entity dependency. It exposes
+  the real gamma strike-craft VOX, Body/Shape/Joint graph, anchor/mount/turret
+  markers, camera and spawn/dispose/stale-handle lifecycle.
 
-The candidate module is `Content Mod 2/script/world/adapter/preview_suite_v1.lua`.
-The caller injects the production compiler, generated Catalog Authority,
-`cm2.world/1` World/Entity adapter, EffectPlayer and PresentationBudget. Preview
-does not include a second physics/effect implementation and never writes the
-runtime catalog. The fixture records the shared authority IDs and the required
-S0/S2/S5 replay checkpoints.
+## Authority and isolation
 
-`tools/cm2-preview/run-preview-suite-v1.ps1` performs the deterministic contract
-run and writes `docs/candidates/preview-suite-v1.result.json`. It repeats the
-fixed-seed traces, checks the normalized DTO/authority closure, checks Ship Dock
-lifecycle and verifies runtime-catalog immutability. `test-preview-suite-v1.ps1`
-adds negative fixtures for authority mismatch, catalog mutation, missing adapter,
-missing moving target and incomplete Ship Dock data.
+The engine-free candidate is
+`Content Mod 2/script/world/adapter/preview_suite_v1.lua`. Callers inject the
+versioned compiler, frozen Catalog Authority, World/Entity adapter, EffectPlayer
+and PresentationBudget. Preview never writes Runtime catalog state and does not
+own damage, weapon fire, raycast, physics or networking authority.
 
-Screenshot and recording exports are diagnostic descriptors only in this step.
-They explicitly say `runtimeRequired=true`; no Teardown executable is installed
-on this machine, so live rendering, capture, replay playback, physics cost and
-frame-time pressure remain deferred runtime evidence rather than fabricated
-headless claims.
+`cm2SyntheticWorldAdapterV1.entity` is the disposable preview entity boundary.
+It accepts normalized DTOs with an exact generation, rejects duplicate or stale
+instances and never registers a gameplay ship. This keeps test setup separate
+from the behavior being verified.
 
-Rollback is isolated: do not wire this candidate into `main.xml`, `main.lua`, or
-the Runtime catalog. Disable the Preview entrypoint and remove its candidate
-registration while retaining the fixture/result as the audit baseline. Runtime
-source and generated catalog remain the last valid versions.
+## Deterministic and live entries
+
+`tools/cm2-preview/run-preview-suite-v1.ps1` writes the machine report
+`docs/candidates/preview-suite-v1.result.json`. The paired self-test repeats
+fixed-seed traces and rejects wrong compiler/catalog mutation/missing adapter,
+moving target, VOX or stale-disposal coverage.
+
+The disposable Teardown level is
+`Content Mod 2/_ai_scenario_preview_suite.xml`; its controller is
+`Content Mod 2/script/testing/scenario/preview_suite_controller.lua`. It is not
+wired into `main.xml`, `main.lua` or the published Runtime catalog. Open the root
+level XML from Mod Editor and use:
+
+- `1`: Effect Lab;
+- `2`: Weapon Range;
+- `3`: Ship Dock;
+- `Space` or `LMB`: replay the selected mode.
+
+The live UI publishes the fixed seed, active mode, replay count, diagnostics and
+catalog immutability result. The scene uses a fixed camera and preplaced VOX so
+no manual flying, aiming or target search is needed. Objective visibility,
+orientation, anchors and diagnostics are captured by Harness screenshot; visual
+taste remains human review.
+
+## Reload and rollback
+
+Lua changes require Restart/reopen of the level. XML or VOX placement changes
+require leaving the level and reopening `_ai_scenario_preview_suite.xml` from
+Mod Editor. Do not use F5 alone as evidence that XML was reread.
+
+Rollback is isolated: remove the root preview level/controller and disable the
+preview entity fixture while retaining the deterministic fixture/result as an
+audit baseline. The formal Runtime entry and generated catalog remain unchanged.

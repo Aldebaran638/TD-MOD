@@ -1,0 +1,12 @@
+<scene version="2.0.1" shadowVolume="80 40 80">
+    <environment template="night"/>
+    <script file="MOD/script/testing/scenario/scenario_controller.lua" param0="scenario=preview_suite" param1="revision=preview-suite-xml-v1"/>
+    <script file="MOD/script/testing/scenario/preview_suite_controller.lua"/>
+
+    <!-- Disposable visual fixture. The script-owned synthetic adapter controls
+         preview lifecycle; this body provides the real VOX surface only. -->
+    <body name="Preview Gamma Strike Craft" tags="cm2PreviewFixture" pos="4 1 0" rot="0 0 0" dynamic="false">
+        <vox name="Preview Gamma VOX" tags="cm2PreviewVox" pos="-2.25 -0.6 2.55" file="MOD/vox/gammaStrikeCraftTest.vox"/>
+    </body>
+    <location name="Preview Player" tags="player" pos="0 7.5 19" rot="-18 180 0"/>
+</scene>
