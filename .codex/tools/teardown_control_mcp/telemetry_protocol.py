@@ -18,18 +18,16 @@ def build_request(
     amount: float = 0.0,
     client_after_seq: int = 0,
 ) -> str:
-    fields = [
-        PROTOCOL,
-        "request",
-        f"nonce={nonce}",
-        f"after_seq={max(0, int(after_seq))}",
-        f"command={command}",
-        f"client_after_seq={max(0, int(client_after_seq))}",
-    ]
+    fields = [PROTOCOL, "request", f"nonce={nonce}", f"command={command}"]
     if command == "damage":
         fields.extend(
             [f"target_body_id={int(target_body_id)}", f"amount={float(amount):.6f}"]
         )
+    else:
+        fields.extend([
+            f"after_seq={max(0, int(after_seq))}",
+            f"client_after_seq={max(0, int(client_after_seq))}",
+        ])
     return "|".join(fields)
 
 

@@ -76,6 +76,8 @@ MOUSEEVENTF_RIGHTDOWN = 0x0008
 MOUSEEVENTF_RIGHTUP = 0x0010
 MOUSEEVENTF_MIDDLEDOWN = 0x0020
 MOUSEEVENTF_MIDDLEUP = 0x0040
+MOUSEEVENTF_VIRTUALDESK = 0x4000
+MOUSEEVENTF_ABSOLUTE = 0x8000
 KEYEVENTF_EXTENDEDKEY = 0x0001
 KEYEVENTF_KEYUP = 0x0002
 KEYEVENTF_SCANCODE = 0x0008
@@ -128,6 +130,10 @@ class INPUT(ctypes.Structure):
 
 
 user32.GetForegroundWindow.restype = wintypes.HWND
+user32.GetCursorPos.argtypes = [ctypes.POINTER(POINT)]
+user32.GetCursorPos.restype = wintypes.BOOL
+user32.SetCursorPos.argtypes = [ctypes.c_int, ctypes.c_int]
+user32.SetCursorPos.restype = wintypes.BOOL
 user32.IsWindow.argtypes = [wintypes.HWND]
 user32.IsWindow.restype = wintypes.BOOL
 user32.IsWindowVisible.argtypes = [wintypes.HWND]
@@ -150,6 +156,10 @@ user32.PostMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, w
 user32.PostMessageW.restype = wintypes.BOOL
 user32.SetActiveWindow.argtypes = [wintypes.HWND]
 user32.SetActiveWindow.restype = wintypes.HWND
+user32.SetFocus.argtypes = [wintypes.HWND]
+user32.SetFocus.restype = wintypes.HWND
+user32.AttachThreadInput.argtypes = [wintypes.DWORD, wintypes.DWORD, wintypes.BOOL]
+user32.AttachThreadInput.restype = wintypes.BOOL
 user32.GetWindowTextLengthW.argtypes = [wintypes.HWND]
 user32.GetWindowTextLengthW.restype = ctypes.c_int
 user32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
@@ -244,34 +254,69 @@ def _find_windows_for_pid(pid: int) -> list[int]:
     return found
 
 
-def _find_teardown() -> tuple[Optional[psutil.Process], Optional[int]]:
+def _target_id(pid: int, hwnd: int) -> str:
+    return f"teardown:{pid}:{hwnd}"
+
+
+def _target_role(title: str, process_name: str = "") -> str:
+    normalized = title.strip().lower()
+    executable = process_name.strip().lower()
+    if "host" in normalized or "server" in normalized:
+        return "host"
+    if "client" in normalized:
+        return "client"
+    if "editor" in normalized:
+        return "editor"
+    if executable in {"teardown_modtest.exe", "teardown_modtest"}:
+        return "local-multiplayer-instance"
+    return "unknown"
+
+
+def _enumerate_teardown_targets() -> list[tuple[psutil.Process, int]]:
     candidates: list[tuple[psutil.Process, int]] = []
     for process in psutil.process_iter(["pid", "name"]):
         try:
             name = (process.info.get("name") or "").lower()
-            if name not in {"teardown.exe", "teardown"}:
+            if name not in {"teardown.exe", "teardown", "teardown_modtest.exe", "teardown_modtest"}:
                 continue
             windows = _find_windows_for_pid(process.pid)
             for hwnd in windows:
                 title = _window_title(hwnd).strip().lower()
                 if title == "teardown" or "teardown" in title:
                     candidates.append((process, hwnd))
-                    break
-            else:
-                if windows:
-                    candidates.append((process, windows[0]))
+            if windows and not any(candidate[0].pid == process.pid for candidate in candidates):
+                candidates.append((process, windows[0]))
         except (psutil.Error, OSError):
             continue
-    if not candidates:
-        return None, None
     def _created_at(item: tuple[psutil.Process, int]) -> float:
         try:
             return item[0].create_time() if item[0].is_running() else 0.0
         except psutil.Error:
             return 0.0
 
-    candidates.sort(key=_created_at, reverse=True)
-    return candidates[0]
+    foreground = int(user32.GetForegroundWindow() or 0)
+    candidates.sort(key=lambda item: (int(item[1]) == foreground, _created_at(item), item[0].pid, item[1]), reverse=True)
+    return candidates
+
+
+def _find_teardown(target_id: Optional[str] = None) -> tuple[Optional[psutil.Process], Optional[int]]:
+    candidates = _enumerate_teardown_targets()
+    if not candidates:
+        return None, None
+    if target_id is None or not str(target_id).strip():
+        return candidates[0]
+
+    selector = str(target_id).strip().lower()
+    for process, hwnd in candidates:
+        identifiers = {
+            _target_id(process.pid, hwnd).lower(),
+            str(process.pid),
+            str(hwnd),
+            f"{process.pid}:{hwnd}",
+        }
+        if selector in identifiers:
+            return process, hwnd
+    return None, None
 
 
 def _is_foreground(hwnd: int) -> bool:
@@ -290,9 +335,26 @@ def _focus_window(hwnd: int) -> bool:
             user32.PostMessageW(hwnd, 0x0112, 0xF120, 0)  # WM_SYSCOMMAND/SC_RESTORE
     else:
         user32.ShowWindow(hwnd, SW_SHOW)
-    user32.BringWindowToTop(hwnd)
-    user32.SetForegroundWindow(hwnd)
-    user32.SetActiveWindow(hwnd)
+    foreground = int(user32.GetForegroundWindow() or 0)
+    current_thread = int(kernel32.GetCurrentThreadId())
+    target_thread = int(user32.GetWindowThreadProcessId(hwnd, None))
+    foreground_thread = int(user32.GetWindowThreadProcessId(foreground, None)) if foreground else 0
+    attached: list[tuple[int, int]] = []
+    try:
+        for source_thread, destination_thread in (
+            (current_thread, foreground_thread),
+            (current_thread, target_thread),
+        ):
+            if source_thread and destination_thread and source_thread != destination_thread:
+                if user32.AttachThreadInput(source_thread, destination_thread, True):
+                    attached.append((source_thread, destination_thread))
+        user32.BringWindowToTop(hwnd)
+        user32.SetForegroundWindow(hwnd)
+        user32.SetActiveWindow(hwnd)
+        user32.SetFocus(hwnd)
+    finally:
+        for source_thread, destination_thread in reversed(attached):
+            user32.AttachThreadInput(source_thread, destination_thread, False)
     deadline = time.monotonic() + 1.5
     while time.monotonic() < deadline:
         if _is_foreground(hwnd):
@@ -422,6 +484,7 @@ class TeardownState:
     run_dir: Optional[Path] = None
     run_cursor: int = 0
     last_frame_id: Optional[str] = None
+    last_frame_target_id: Optional[str] = None
     frame_counter: int = 0
     held_keys: dict[str, str] = field(default_factory=dict)
     held_buttons: set[str] = field(default_factory=set)
@@ -504,13 +567,41 @@ def _gvinput_mouse(dx: int = 0, dy: int = 0) -> None:
     _gvinput_write(bytes([0x04, buttons, dx & 0xFF, dy & 0xFF, 0]))
 
 
-def _process_window_snapshot() -> dict[str, Any]:
-    process, hwnd = _find_teardown()
+def _target_snapshot(process: psutil.Process, hwnd: int, foreground: int) -> dict[str, Any]:
+    try:
+        created_at = datetime.fromtimestamp(process.create_time(), timezone.utc).isoformat().replace("+00:00", "Z")
+    except (psutil.Error, OSError, ValueError):
+        created_at = None
+    title = _window_title(hwnd)
+    try:
+        process_name = process.name()
+    except psutil.Error:
+        process_name = "unknown"
+    return {
+        "target_id": _target_id(process.pid, hwnd),
+        "pid": process.pid,
+        "handle": int(hwnd),
+        "process_name": process_name,
+        "title": title,
+        "role_hint": _target_role(title, process_name),
+        "visible": bool(user32.IsWindowVisible(hwnd)),
+        "minimized": bool(user32.IsIconic(hwnd)),
+        "focused": foreground == int(hwnd),
+        "created_at": created_at,
+        "client": _window_client(hwnd),
+    }
+
+
+def _process_window_snapshot(target_id: Optional[str] = None) -> dict[str, Any]:
+    candidates = _enumerate_teardown_targets()
+    process, hwnd = _find_teardown(target_id)
     foreground = int(user32.GetForegroundWindow() or 0)
+    instances = [_target_snapshot(candidate_process, candidate_hwnd, foreground) for candidate_process, candidate_hwnd in candidates]
     if process is None or hwnd is None:
         return {
             "process": {"present": False, "name": "teardown.exe"},
-            "window": {"present": False, "foreground_handle": foreground},
+            "window": {"present": False, "foreground_handle": foreground, "requested_target_id": target_id},
+            "instances": instances,
         }
     try:
         process_info = {
@@ -527,14 +618,17 @@ def _process_window_snapshot() -> dict[str, Any]:
         "process": process_info,
         "window": {
             "present": True,
+            "target_id": _target_id(process.pid, hwnd),
             "handle": int(hwnd),
             "title": _window_title(hwnd),
+            "role_hint": _target_role(_window_title(hwnd), process_info.get("name", "")),
             "visible": bool(user32.IsWindowVisible(hwnd)),
             "minimized": bool(user32.IsIconic(hwnd)),
             "focused": foreground == int(hwnd),
             "foreground_handle": foreground,
             "client": client,
         },
+        "instances": instances,
     }
 
 
@@ -667,11 +761,56 @@ def _telemetry_exchange(command: str, after_seq: int = 0,
         STATE.telemetry_client_cursor,
     )
     original = _clipboard_read_text()
-    _clipboard_write_text(request)
+    selected_target_id = STATE.last_frame_target_id
+    bridge_opened = False
+    try:
+        _snapshot, hwnd = _ensure_target(focus=True, target_id=selected_target_id)
+        if not _is_foreground(hwnd):
+            raise RuntimeError("Teardown telemetry target is not foreground")
+        _clipboard_write_text(request)
+        _execute_action({"type": "key_tap", "key": "f8", "duration_ms": 80})
+        bridge_opened = True
+        time.sleep(0.12)
+        _execute_action({"type": "key_down", "key": "ctrl"})
+        _execute_action({"type": "key_tap", "key": "v", "duration_ms": 50})
+        _execute_action({"type": "key_up", "key": "ctrl"})
+    except (OSError, RuntimeError, ValueError) as exc:
+        _release_all_inputs()
+        current = _clipboard_read_text()
+        restored = False
+        restore_conflict = current != request
+        if not restore_conflict:
+            _clipboard_write_text(original)
+            restored = _clipboard_read_text() == original
+        result = {
+            "ok": False,
+            "nonce": nonce,
+            "request": request,
+            "response": None,
+            "response_text": "",
+            "clipboard_restored": restored,
+            "clipboard_restore_conflict": restore_conflict,
+            "timeout": False,
+            "error": str(exc),
+            "transport": "ui-text-input",
+        }
+        STATE.append_jsonl("telemetry.jsonl", {"at": _now_iso(), **result})
+        return result
+
     deadline = time.monotonic() + max(0.1, min(timeout, 10.0))
     response: Optional[dict[str, Any]] = None
     response_text = ""
     while time.monotonic() < deadline:
+        if not _is_foreground(hwnd):
+            break
+        current = _clipboard_read_text()
+        if current not in {request, response_text}:
+            break
+        _execute_action({"type": "key_down", "key": "ctrl"})
+        _execute_action({"type": "key_tap", "key": "a", "duration_ms": 35})
+        _execute_action({"type": "key_tap", "key": "c", "duration_ms": 35})
+        _execute_action({"type": "key_up", "key": "ctrl"})
+        time.sleep(0.05)
         current = _clipboard_read_text()
         parsed = _parse_telemetry_response(current)
         if (
@@ -685,7 +824,9 @@ def _telemetry_exchange(command: str, after_seq: int = 0,
             response = parsed
             response_text = current
             break
-        time.sleep(0.03)
+        if current != request:
+            break
+        time.sleep(0.08)
 
     current = _clipboard_read_text()
     restore_conflict = not clipboard_restore_allowed(
@@ -695,6 +836,11 @@ def _telemetry_exchange(command: str, after_seq: int = 0,
     if not restore_conflict:
         _clipboard_write_text(original)
         restored = _clipboard_read_text() == original
+    # The focused UiTextInput consumes F8, so the bridge closes itself shortly
+    # after exposing a response.  Wait out that bounded window before allowing
+    # gameplay input; sending F8 here could be swallowed or reopen the bridge.
+    if bridge_opened and response is not None and _is_foreground(hwnd):
+        time.sleep(0.55)
 
     result: dict[str, Any] = {
         "ok": response is not None,
@@ -705,6 +851,7 @@ def _telemetry_exchange(command: str, after_seq: int = 0,
         "clipboard_restored": restored,
         "clipboard_restore_conflict": restore_conflict,
         "timeout": response is None,
+        "transport": "ui-text-input",
     }
     STATE.telemetry_last_nonce = nonce
     STATE.append_jsonl("telemetry.jsonl", {"at": _now_iso(), **result})
@@ -786,16 +933,18 @@ def _capture_client(hwnd: int) -> tuple[Image.Image, dict[str, int], float, floa
     return image, region, mean, variance
 
 
-def _ensure_target(focus: bool = False) -> tuple[dict[str, Any], int]:
-    snapshot = _process_window_snapshot()
+def _ensure_target(focus: bool = False, target_id: Optional[str] = None) -> tuple[dict[str, Any], int]:
+    snapshot = _process_window_snapshot(target_id)
     window = snapshot.get("window", {})
     hwnd = _safe_int(window.get("handle"), 0)
     if not hwnd:
+        if target_id:
+            raise RuntimeError(f"Teardown target was not found: {target_id}")
         raise RuntimeError("Teardown window was not found")
     if focus and not _is_foreground(hwnd):
         if not _focus_window(hwnd):
             raise RuntimeError("could not restore and focus Teardown")
-        snapshot = _process_window_snapshot()
+        snapshot = _process_window_snapshot(target_id)
     return snapshot, hwnd
 
 
@@ -975,16 +1124,86 @@ def _execute_action(action: dict[str, Any]) -> dict[str, Any]:
     raise ValueError(f"unsupported action type: {kind!r}")
 
 
+def _move_cursor_to_screen(screen_x: int, screen_y: int) -> str:
+    method = "win32-client"
+    if not user32.SetCursorPos(screen_x, screen_y):
+        if _gvinput_path() is None:
+            raise OSError(ctypes.get_last_error(), "SetCursorPos failed and virtual HID is unavailable")
+        method = "hid-closed-loop-client"
+        # Windows pointer acceleration makes one large relative move unreliable.
+        # Re-read the physical cursor and converge with small proportional steps.
+        for _attempt in range(50):
+            cursor = POINT()
+            if not user32.GetCursorPos(ctypes.byref(cursor)):
+                raise OSError(ctypes.get_last_error(), "GetCursorPos failed during HID movement")
+            remaining_x = screen_x - int(cursor.x)
+            remaining_y = screen_y - int(cursor.y)
+            if abs(remaining_x) <= 3 and abs(remaining_y) <= 3:
+                break
+            step_x = max(-50, min(50, round(remaining_x * 0.35)))
+            step_y = max(-50, min(50, round(remaining_y * 0.35)))
+            _gvinput_mouse(step_x, step_y)
+            time.sleep(0.025)
+        cursor = POINT()
+        if not user32.GetCursorPos(ctypes.byref(cursor)):
+            raise OSError(ctypes.get_last_error(), "GetCursorPos failed after HID movement")
+        if abs(screen_x - int(cursor.x)) > 3 or abs(screen_y - int(cursor.y)) > 3:
+            raise RuntimeError(
+                f"closed-loop HID could not reach screen coordinate: "
+                f"wanted ({screen_x}, {screen_y}), got ({int(cursor.x)}, {int(cursor.y)})"
+            )
+    return method
+
+
+def _move_cursor_to_client(hwnd: int, action: dict[str, Any]) -> dict[str, Any]:
+    client = _window_client(hwnd)
+    x = _safe_int(action.get("x"), -1)
+    y = _safe_int(action.get("y"), -1)
+    if x < 0 or y < 0 or x >= client["width"] or y >= client["height"]:
+        raise ValueError(
+            f"mouse_move_to coordinates must stay inside the Teardown client: "
+            f"({x}, {y}) not in {client['width']}x{client['height']}"
+        )
+    screen_x = client["left"] + x
+    screen_y = client["top"] + y
+    method = _move_cursor_to_screen(screen_x, screen_y)
+    return {
+        "type": "mouse_move_to",
+        "x": x,
+        "y": y,
+        "screen_x": screen_x,
+        "screen_y": screen_y,
+        "method": method,
+    }
+
+
 mcp = FastMCP("teardown-control")
 
 
 @mcp.tool()
-def teardown_status() -> dict[str, Any]:
-    """Return Teardown process/window/focus/client-area and log state."""
+def teardown_instances() -> dict[str, Any]:
+    """Enumerate every visible Teardown process/window as a selectable target."""
 
     with STATE.lock:
         STATE.ensure_run(LOG_PATH)
         snapshot = _process_window_snapshot()
+        result = {
+            "ok": True,
+            "run_id": STATE.run_id,
+            "foreground_handle": snapshot.get("window", {}).get("foreground_handle"),
+            "instances": snapshot.get("instances", []),
+        }
+        STATE.write_json("instances.json", result)
+        return result
+
+
+@mcp.tool()
+def teardown_status(target_id: Optional[str] = None) -> dict[str, Any]:
+    """Return process/window/focus/client-area state for one selectable Teardown target."""
+
+    with STATE.lock:
+        STATE.ensure_run(LOG_PATH)
+        snapshot = _process_window_snapshot(target_id)
         result = {
             "ok": True,
             "run_id": STATE.run_id,
@@ -998,25 +1217,26 @@ def teardown_status() -> dict[str, Any]:
 
 
 @mcp.tool()
-def teardown_observe(restore: bool = True) -> dict[str, Any]:
-    """Restore/focus (by default) and return a validated full client-area PNG."""
+def teardown_observe(restore: bool = True, target_id: Optional[str] = None) -> dict[str, Any]:
+    """Restore/focus one target and return a validated full client-area PNG."""
 
     with STATE.lock:
         STATE.ensure_run(LOG_PATH)
         try:
-            snapshot, hwnd = _ensure_target(focus=bool(restore))
-            if restore and not snapshot["window"].get("focused"):
-                raise RuntimeError("Teardown is not the foreground window")
+            snapshot, hwnd = _ensure_target(focus=bool(restore), target_id=target_id)
+            if not snapshot["window"].get("focused"):
+                raise RuntimeError("refusing occluded capture: Teardown is not the foreground window")
             image, client, mean, variance = _capture_client(hwnd)
         except (CaptureError, RuntimeError, OSError) as exc:
-            result = {"ok": False, "run_id": STATE.run_id, "error": str(exc), "status": _process_window_snapshot()}
+            result = {"ok": False, "run_id": STATE.run_id, "error": str(exc), "status": _process_window_snapshot(target_id)}
             STATE.append_jsonl("observations.jsonl", result)
             return result
 
         STATE.frame_counter += 1
         frame_id = f"f{STATE.frame_counter:06d}-{uuid.uuid4().hex[:8]}"
         STATE.last_frame_id = frame_id
-        filename = f"frame_{frame_id}.png"
+        STATE.last_frame_target_id = snapshot["window"].get("target_id")
+        filename = f"frame_{frame_id}_pid-{snapshot['process'].get('pid', 0)}.png"
         path = STATE.run_dir / filename
         image.save(path, format="PNG", optimize=False)
         png_base64 = base64.b64encode(path.read_bytes()).decode("ascii")
@@ -1025,6 +1245,7 @@ def teardown_observe(restore: bool = True) -> dict[str, Any]:
             "ok": True,
             "run_id": STATE.run_id,
             "frame_id": frame_id,
+            "target_id": STATE.last_frame_target_id,
             "png_filename": filename,
             "png_path": str(path),
             "png_base64": png_base64,
@@ -1042,7 +1263,7 @@ def teardown_observe(restore: bool = True) -> dict[str, Any]:
 
 
 @mcp.tool()
-def teardown_control(frame_id: str, actions: list[dict[str, Any]]) -> dict[str, Any]:
+def teardown_control(frame_id: str, actions: list[dict[str, Any]], target_id: Optional[str] = None) -> dict[str, Any]:
     """Execute at most 20 safe key/mouse/wait actions against the observed frame."""
 
     with STATE.lock:
@@ -1051,6 +1272,9 @@ def teardown_control(frame_id: str, actions: list[dict[str, Any]]) -> dict[str, 
             return {"ok": False, "error": "actions must be a list of at most 20 steps", "run_id": STATE.run_id}
         if not STATE.last_frame_id or frame_id != STATE.last_frame_id:
             return {"ok": False, "error": "frame_id is stale or was not produced by teardown_observe", "run_id": STATE.run_id}
+        selected_target_id = target_id or STATE.last_frame_target_id
+        if not selected_target_id or selected_target_id != STATE.last_frame_target_id:
+            return {"ok": False, "error": "target_id does not match the observed frame", "run_id": STATE.run_id}
         total_duration = sum(_action_duration(item, _action_kind(item)) for item in actions if isinstance(item, dict))
         if total_duration > 5.0:
             return {"ok": False, "error": f"action duration exceeds 5 seconds: {total_duration:.3f}", "run_id": STATE.run_id}
@@ -1060,10 +1284,13 @@ def teardown_control(frame_id: str, actions: list[dict[str, Any]]) -> dict[str, 
             for index, action in enumerate(actions):
                 if not isinstance(action, dict):
                     raise ValueError(f"action {index} is not an object")
-                snapshot, hwnd = _ensure_target(focus=False)
+                snapshot, hwnd = _ensure_target(focus=False, target_id=selected_target_id)
                 if not _is_foreground(hwnd):
                     raise RuntimeError(f"refusing action {index}: Teardown is not foreground")
-                executed.append({"index": index, **_execute_action(action)})
+                if _action_kind(action) == "mouse_move_to":
+                    executed.append({"index": index, **_move_cursor_to_client(hwnd, action)})
+                else:
+                    executed.append({"index": index, **_execute_action(action)})
         except (OSError, RuntimeError, ValueError) as exc:
             _release_all_inputs()
             result = {"ok": False, "run_id": STATE.run_id, "error": str(exc), "executed": executed, "released": True}
@@ -1097,7 +1324,7 @@ def teardown_log_read(cursor: Optional[int] = None) -> dict[str, Any]:
 
 @mcp.tool()
 def teardown_telemetry_probe(timeout: float = 2.5) -> dict[str, Any]:
-    """Probe CM2_TEST_V1 and report whether log and clipboard channels work."""
+    """Probe CM2_TEST_V1 and report whether the UI bridge and log channels work."""
 
     with STATE.lock:
         STATE.ensure_run(LOG_PATH)
@@ -1119,20 +1346,21 @@ def teardown_telemetry_probe(timeout: float = 2.5) -> dict[str, Any]:
             event for event in log_result.get("events", [])
             if str(event.get("raw", "")).find("CM2_TEST_V1|log_probe|nonce=" + nonce) >= 0
         ]
-        clipboard_ok = bool(exchange.get("ok")) and bool(exchange.get("clipboard_restored"))
+        bridge_ok = bool(exchange.get("ok")) and bool(exchange.get("clipboard_restored"))
         log_ok = bool(log_markers)
-        channel = "clipboard"
-        if clipboard_ok and log_ok:
-            channel = "clipboard+log"
+        channel = "ui-text-input"
+        if bridge_ok and log_ok:
+            channel = "ui-text-input+log"
         elif log_ok:
             channel = "log"
-        STATE.telemetry_channel = channel if clipboard_ok or log_ok else "unavailable"
+        STATE.telemetry_channel = channel if bridge_ok or log_ok else "unavailable"
         result = {
-            "ok": clipboard_ok or log_ok,
+            "ok": bridge_ok or log_ok,
             "run_id": STATE.run_id,
             "channel": STATE.telemetry_channel,
-            "clipboard": {
-                "ok": clipboard_ok,
+            "ui_text_input": {
+                "ok": bridge_ok,
+                "transport": exchange.get("transport", "ui-text-input"),
                 "restored": bool(exchange.get("clipboard_restored")),
                 "restore_conflict": bool(exchange.get("clipboard_restore_conflict")),
                 "timeout": bool(exchange.get("timeout")),
@@ -1155,7 +1383,7 @@ def teardown_telemetry_probe(timeout: float = 2.5) -> dict[str, Any]:
 
 @mcp.tool()
 def teardown_telemetry_read(after_seq: int = 0, timeout: float = 2.5) -> dict[str, Any]:
-    """Read a CM2_TEST_V1 snapshot and incremental events via clipboard."""
+    """Read CM2_TEST_V1 state through the focused F8 UiTextInput bridge."""
 
     with STATE.lock:
         STATE.ensure_run(LOG_PATH)

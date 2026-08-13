@@ -11,10 +11,13 @@ uv sync
 uv run python server.py
 ```
 
-The tools are `teardown_status`, `teardown_observe`, `teardown_control`,
+The tools are `teardown_instances`, `teardown_status`, `teardown_observe`, `teardown_control`,
 `teardown_log_read`, `teardown_telemetry_probe`, `teardown_telemetry_read`,
 `teardown_damage_probe`, and `teardown_emergency_release`. The telemetry tools
-use the versioned `CM2_TEST_V1` clipboard handshake and restore the clipboard
-after every read unless the user changes it during the exchange. Evidence is written to
+use the versioned `CM2_TEST_V1` F8 `UiTextInput` bridge. The MCP temporarily
+uses paste/copy to exchange text with that public game UI, then restores the
+clipboard unless the user changes it during the exchange. Process/window tools
+support a `target_id` so `teardown.exe` and the official local-multiplayer
+`teardown_modtest.exe` Host/Client windows can be distinguished. Evidence is written to
 `%LOCALAPPDATA%\TeardownAI\runs\<run-id>\` and is deliberately outside the
 repository.

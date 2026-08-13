@@ -18,10 +18,15 @@ class TelemetryProtocolTests(unittest.TestCase):
     def test_request_nonce_and_damage_fields_round_trip(self) -> None:
         request = build_request("abc123", "damage", 17, 42, 12.5)
         self.assertIn("nonce=abc123", request)
-        self.assertIn("after_seq=17", request)
-        self.assertIn("client_after_seq=0", request)
+        self.assertNotIn("after_seq=", request)
+        self.assertNotIn("client_after_seq=", request)
         self.assertIn("target_body_id=42", request)
         self.assertIn("amount=12.500000", request)
+        self.assertLess(len(request), 128)
+
+        read_request = build_request("abc123", "read", 17, client_after_seq=9)
+        self.assertIn("after_seq=17", read_request)
+        self.assertIn("client_after_seq=9", read_request)
 
     def test_response_parser_rejects_wrong_prefix_and_bad_json(self) -> None:
         self.assertIsNone(parse_response("other|response={}"))
