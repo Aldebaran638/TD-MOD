@@ -1,7 +1,6 @@
 <scene version="2.0.1" shadowVolume="200 50 200">
     <environment template="night"/>
     <script file="main.lua"/>
-    <script file="sandbox.lua" param0="weather=false"/>
     <!-- weapon-configurator-host: Global Mod/main.lua -->
 
     <!-- Engine-level fallback outside the scripted 3.6/4.2 km soft boundary. -->

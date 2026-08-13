@@ -21,5 +21,11 @@
 !CLAUDE.md
 !.codex/
 !.codex/**
+!TEARDOWN_SHIP_PLATFORM_TODO.json
 !.githooks/
 !.githooks/**
+
+# Harness and Python runtime output is disposable and must not be versioned.
+harness/.*-test-*/
+harness/**/.*-test-*/
+.codex/**/__pycache__/
