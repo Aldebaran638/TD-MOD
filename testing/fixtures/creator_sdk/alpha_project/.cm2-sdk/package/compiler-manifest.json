@@ -1,0 +1,15 @@
+{
+    "schemaVersion":  "cm2.generated-manifest/1",
+    "compiler":  "cm2-definition-compiler-mvp",
+    "inputHash":  "9b6b8102a177f508ccd9e13beff0a58909505b99cbc64748a8dc83b7a1b8fea5",
+    "catalogHash":  "0c994c60003694bceb03c8abb7385d29c4957628544be0c3c5cdd3fc392f9626",
+    "definitionCount":  5,
+    "sourceFiles":  [
+                        "000__effect__pulse.json",
+                        "001__mount__main.json",
+                        "002__projectile__pulse.json",
+                        "003__vehicle__hello.json",
+                        "004__weapon__pulse.json"
+                    ],
+    "manualEdit":  "forbidden"
+}

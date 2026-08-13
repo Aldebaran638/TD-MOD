@@ -1,8 +1,7 @@
 {
   "schema": "cm2.creator-sdk-cli/1",
   "toolVersion": "cm2.sdk-cli/1.0.0-alpha.1",
-  "commands": [ "new", "validate", "build", "explain", "preview", "test", "package", "migrate", "doctor", "clean" ],
-  "packageFixture": "docs/candidates/package-manifest-v1.fixture.json",
+  "commands": [ "init", "new", "validate", "build", "explain", "preview", "test", "package", "migrate", "doctor", "clean" ],
   "previewFixture": "docs/candidates/preview-suite-v1.fixture.json",
   "schemaPath": "schemas/cm2/source-envelope-v1.json",
   "compilerPath": "tools/cm2-compiler/compile-definitions.ps1",
@@ -16,9 +15,9 @@
     ]
   },
   "newTemplate": {
-    "packageId": "cm2.creator.new-template",
+    "packageId": "cm2.creator.hello-ship",
     "packageVersion": "0.1.0",
-    "displayName": "New CM2 Data-only Package",
+    "displayName": "Creator SDK Hello Ship",
     "license": "CC-BY-4.0",
     "sourceDirectories": [ "definitions", "assets", "generated" ],
     "runtimeLua": false
@@ -26,13 +25,16 @@
   "cleanRoom": { "name": "hello-ship", "coreDiffExpected": 0, "requiresTeardownInstall": false, "dataOnly": true },
   "expected": {
     "stableErrorFields": [ "code", "packageId", "definitionId", "fieldPath", "suggestion" ],
-    "buildOutputs": [ "manifest.json", "lock.json", "resources.json", "budget.json", "fingerprint.sha256", "build-report.json" ],
+    "buildOutputs": [ "manifest.json", "lock.json", "resources.json", "budget.json", "package.artifact.json", "package-report.json", "compiler-manifest.json", "compiler-report.json", "compiler-diagnostics.md", "fingerprint.sha256", "build-report.json" ],
     "failurePreservesLastValid": true,
     "editorIndependent": true,
     "repeatable": true
   },
   "negativeCases": [
     { "name": "invalid manifest blocks build", "expected": "validate-failed" },
+    { "name": "shared Compiler blocks invalid definition", "expected": "compile-failed" },
+    { "name": "private Runtime reference", "expected": "private-reference" },
+    { "name": "incompatible Core or SDK range", "expected": "validate-failed" },
     { "name": "tool lock mismatch", "expected": "tool-version" },
     { "name": "generated drift", "expected": "generated-drift" },
     { "name": "preview missing", "expected": "preview-fixture" },

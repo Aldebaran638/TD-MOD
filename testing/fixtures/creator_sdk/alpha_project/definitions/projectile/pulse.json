@@ -1,0 +1,1 @@
+{"schemaVersion":"cm2.projectile/1","id":"cm2.creator.hello-ship:projectile.pulse","kind":"projectile","runtime":{"speedMps":120,"damage":10,"effectId":"cm2.creator.hello-ship:effect.pulse"},"editor":{"displayName":"Pulse Projectile"},"ai":{"targetMode":"hostile"},"build":{"budgetClass":"standard"}}

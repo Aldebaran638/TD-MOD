@@ -1,64 +1,78 @@
 # Creator SDK CLI Alpha v1
 
-`tools/cm2-sdk/cm2-sdk.ps1` is the first headless Creator SDK boundary for
-third-party Content Mod 2 packages. It is deliberately data-only: it reuses
-the PackageManifest validator, the existing Definition Compiler contract and
-the Preview Suite builder; it does not load or generate Runtime Lua. The CLI is
-therefore usable on a clean-room machine without a Teardown installation, while
-live visual preview remains an explicit follow-up capability.
+`tools/cm2-sdk/cm2-sdk.ps1` is the headless, project-root-driven Creator SDK
+boundary for third-party Content Mod 2 packages. A project owns
+`package.source.json`, public source-envelope definitions, assets, generated
+data and `sdk.tool-lock.json`. Commands never read a hidden repository package
+fixture when `ProjectPath` is supplied.
 
-## Command contract
+The CLI is deliberately data-only. It validates with the public
+`PackageManifest v1` schema/validator, compiles project definitions with the
+shared Definition Compiler, but does not publish the Compiler's Lua catalog.
+The installable package contains JSON/data assets only and has
+`entrypoints.runtime=data-only` plus `entrypoints.lua=null`.
 
-| Command | Purpose | Safe output/side effects |
+## Project and command contract
+
+Create a deterministic Hello Ship project and package it:
+
+```powershell
+& .\tools\cm2-sdk\cm2-sdk.ps1 -Command init -ProjectPath .\hello-ship
+& .\tools\cm2-sdk\cm2-sdk.ps1 -Command validate -ProjectPath .\hello-ship
+& .\tools\cm2-sdk\cm2-sdk.ps1 -Command package -ProjectPath .\hello-ship
+```
+
+`new` remains an alias for `init`. Both refuse to overwrite an existing root.
+The generated project has five public source-envelope definitions (vehicle,
+mount, weapon, projectile and effect), two assets and one generated DTO, so its
+first `validate/build/package` needs no manual Runtime catalog work.
+
+| Command | Purpose | Output/side effects |
 | --- | --- | --- |
-| `new` | Create `definitions`, `assets`, `generated`, a manifest template and a pinned tool lock. | Refuses to overwrite an existing destination. |
-| `validate` | Validate the shared PackageManifest and report its deterministic hash. | Read-only. |
-| `build` | Validate, stage and atomically publish `manifest.json`, `lock.json`, `resources.json`, `budget.json`, `fingerprint.sha256` and `build-report.json`. | Previous output is retained as `.previous`; drifted output cannot be overwritten. |
-| `explain` | Present capabilities, dependency graph, budgets and Runtime-Lua policy. | Read-only. |
-| `preview` | Execute the shared Effect Lab/Weapon Range/Ship Dock S0/S2/S5 contract. | Read-only report; live Teardown is optional. |
-| `test` | Run package and preview acceptance contracts and return both hashes. | Read-only. |
-| `package` | Alias of deterministic build with a package-oriented output root. | Same atomic publication and rollback rules as `build`. |
-| `migrate` | Write `manifest.migrated.json` with explicit `cm2.package/0` provenance. | Writes only the requested migration directory. |
-| `doctor` | Check schema/compiler availability and report whether `Teardown.exe` is installed. | Read-only; missing Teardown is a warning for data-only commands. |
-| `clean` | Remove a named SDK-owned `build`, `package`, `migrated` or `new-package` leaf. | Rejects paths outside a `.cm2-sdk` root. |
+| `init` / `new` | Create a buildable Hello Ship project and exact tool lock. | Refuses an existing root. |
+| `validate` | Hydrate source hashes, validate PackageManifest and run the shared Compiler. | Temporary files only. |
+| `build` | Atomically publish the validated package and Compiler reports. | `ProjectPath/.cm2-sdk/build`. |
+| `package` | Build an installable data-only package. | `ProjectPath/.cm2-sdk/package`. |
+| `explain` | Report capabilities, dependency compatibility, budget and Core-only fallback. | Read-only. |
+| `preview` | Run shared S0/S2/S5 headless preview contracts after project validation. | Temporary report only. |
+| `test` | Compose package, Compiler and preview contracts. | Temporary files only. |
+| `migrate` | Add explicit `cm2.package/0` migration provenance. | `ProjectPath/.cm2-sdk/migrated`. |
+| `doctor` | Check schema/compiler and report live Teardown process state separately. | Read-only; Editor is not required. |
+| `clean` | Remove only `build`, `package` or `migrated` below the project SDK root. | Fails closed outside approved leaves. |
 
-All failures use the stable fields `code`, `packageId`, `definitionId`,
-`fieldPath`, `message`, and `suggestion`. Typical gates are `validate-failed`,
-`tool-version`, `generated-drift`, `preview-fixture`, and `unsafe-clean`.
+## Build, diagnostics and rollback
 
-## Reproducibility and rollback
+Published output includes the canonical package artifact and report, manifest,
+lock, resources, budget, Compiler manifest/report/diagnostics, fingerprint and
+integrity-protected build report. It intentionally excludes
+`compiler.catalog.lua`; that file is a temporary validation product, not a
+public Runtime entrypoint.
 
-The build uses the PackageManifest artifact fingerprint as
-`fingerprint.sha256`. The canonical JSON report excludes absolute paths,
-timestamps and host-specific values, so independent output roots produce the
-same report hash. A successful publication moves an existing target to
-`<target>.previous`; a failed validation or drift check leaves the last valid
-target untouched. Generated reports are protected by a companion
-`build-report.sha256` file.
+Build reports exclude absolute paths, host names and timestamps. Independent
+Windows/CI roots therefore emit byte-identical package artifacts, Compiler
+manifests and build reports. Rebuilding moves the previous intact output to
+`<target>.previous`. Invalid manifests, incompatible Core/SDK/dependency
+ranges, unknown capabilities, private path references, Compiler diagnostics,
+lock drift and generated-output drift all fail before publication and preserve
+the last valid artifact exactly.
 
-The package capability boundary remains data-only (`runtimeLua=false`). The CLI
-accepts only the locked SDK/compiler/importer/preview versions and leaves the
-runtime catalog unchanged. Unknown packages still use the existing builtin-only
-fallback policy.
+Every CLI failure has stable `code`, `packageId`, `definitionId`, `fieldPath`,
+`message` and `suggestion` fields. A Compiler failure preserves its first
+definition ID, field path and repair suggestion instead of collapsing the
+diagnostic into a generic build exception.
 
 ## Verification
 
-Run the deterministic self-test:
+Run the deterministic regression:
 
 ```powershell
 & .\tools\cm2-sdk\test-cm2-sdk-v1.ps1
 ```
 
-The self-test covers template creation, validation, build output completeness,
-repeatability across two roots, explain/preview/test/package/migrate/doctor,
-stable diagnostic fields, failure preservation, generated drift protection,
-tool-lock rejection, and safe/unsafe clean behavior. In this step the test
-passed all assertions. The full project Harness is still the final gate after
-any implementation edit. No Teardown executable is installed in the current
-environment, so live S0/S2/S5 rendering evidence is deferred; the headless
-preview contract remains covered by the shared Preview Suite.
-
-Rollback is intentionally small: remove the SDK output root, restore the
-`.previous` directory, or disable third-party packages and retain builtin
-catalog entries. No Core Runtime Lua or generated runtime catalog is modified
-by this CLI.
+The test creates independent Windows-workstation and clean-CI roots, builds and
+packages twice, compares exact outputs, exercises all commands, verifies
+rollback, and covers incompatible versions, unknown capability, Runtime Lua,
+private reference, Compiler range, tool-lock, generated-drift and safe-clean
+failures. The retained project fixture is
+`testing/fixtures/creator_sdk/alpha_project`; its `.cm2-sdk/package` output is
+the install source for the independent Teardown Consumer Mod regression.

@@ -1,0 +1,1 @@
+{"schemaVersion":"cm2.weapon/1","id":"cm2.creator.hello-ship:weapon.pulse","kind":"weapon","runtime":{"behavior":"ballistic","effectId":"cm2.creator.hello-ship:effect.pulse","projectileId":"cm2.creator.hello-ship:projectile.pulse","fireRateHz":2},"editor":{"displayName":"Pulse"},"ai":{"targetMode":"hostile"},"build":{"budgetClass":"standard"}}

@@ -1,0 +1,1 @@
+{"schemaVersion":"cm2.effect/1","id":"cm2.creator.hello-ship:effect.pulse","kind":"effect","runtime":{"effectType":"impact","assetId":"cm2.creator.hello-ship:asset.pulse","priority":50},"editor":{"displayName":"Pulse Impact"},"ai":{"role":"visual"},"build":{"budgetClass":"visual"}}

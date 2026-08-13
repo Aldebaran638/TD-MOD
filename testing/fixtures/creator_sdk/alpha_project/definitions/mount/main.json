@@ -1,0 +1,1 @@
+{"schemaVersion":"cm2.mount/1","id":"cm2.creator.hello-ship:mount.main","kind":"mount","runtime":{"parentId":"cm2.creator.hello-ship:ship.hello","localTransform":{"position":[0,0,0],"rotation":[0,0,0,1]},"slotType":"p"},"editor":{"displayName":"Pulse Mount"},"ai":{"role":"none"},"build":{"budgetClass":"anchor"}}

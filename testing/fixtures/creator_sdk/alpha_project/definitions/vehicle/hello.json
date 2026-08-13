@@ -1,0 +1,1 @@
+{"schemaVersion":"cm2.vehicle/1","id":"cm2.creator.hello-ship:ship.hello","kind":"vehicle","runtime":{"controlMode":"player","massKg":1000,"mountId":"cm2.creator.hello-ship:mount.main"},"editor":{"displayName":"Hello Ship"},"ai":{"role":"none"},"build":{"budgetClass":"ship"}}

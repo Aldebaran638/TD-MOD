@@ -15,6 +15,14 @@
 !tools/cm2-compiler/compile-definitions.ps1
 !tools/cm2-package/
 !tools/cm2-package/**
+!tools/cm2-sdk/
+!tools/cm2-sdk/**
+!testing/
+!testing/fixtures/
+!testing/fixtures/creator_sdk/
+!testing/fixtures/creator_sdk/**
+!_AI Test Consumer SDK Alpha/
+!_AI Test Consumer SDK Alpha/**
 !prompt.md
 !README
 !README.md
