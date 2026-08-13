@@ -39,10 +39,11 @@ The disposable Teardown level is
 wired into `main.xml`, `main.lua` or the published Runtime catalog. Open the root
 level XML from Mod Editor and use:
 
-- `1`: Effect Lab;
-- `2`: Weapon Range;
-- `3`: Ship Dock;
-- `Space` or `LMB`: replay the selected mode.
+- `Left` / `Right`: cycle Effect Lab, Weapon Range and Ship Dock without
+  switching Teardown's native numbered tool slots;
+- `Space`: replay the selected mode. `LMB` is intentionally not bound because
+  the native player tool also consumes it and would pollute a deterministic
+  Preview replay with unrelated weapon fire.
 
 The live UI publishes the fixed seed, active mode, replay count, diagnostics and
 catalog immutability result. The scene uses a fixed camera and preplaced VOX so

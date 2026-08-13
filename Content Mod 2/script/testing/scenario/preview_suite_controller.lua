@@ -195,10 +195,9 @@ function client.tick(dt)
     client.presentationBudget.beginFrame(delta)
     SetCameraTransform(Transform(Vec(0, 7.5, 19), QuatLookAt(Vec(0, 7.5, 19), Vec(0, 1.5, -2))))
 
-    if InputPressed("1") then selectMode(1)
-    elseif InputPressed("2") then selectMode(2)
-    elseif InputPressed("3") then selectMode(3)
-    elseif InputPressed("space") or InputPressed("lmb") then replayCurrent() end
+    if InputPressed("leftarrow") then selectMode(state.mode == 1 and 3 or state.mode - 1)
+    elseif InputPressed("rightarrow") then selectMode(state.mode == 3 and 1 or state.mode + 1)
+    elseif InputPressed("space") then replayCurrent() end
 
     if state.flash > 0 and math.floor(state.clock * 30) % 3 == 0 then
         local origin = state.mode == 1 and Vec(-5, 2.2, -2) or Vec(0, 2.0, 5)
@@ -255,8 +254,8 @@ function client.draw()
     UiRect(590, 330)
     UiTranslate(20, 18)
     label("CM2 PREVIEW SUITE V1", 27, 0.25, 0.78, 1.0, 1.0)
-    label("[1] EFFECT LAB   [2] WEAPON RANGE   [3] SHIP DOCK", 17, 0.8, 0.88, 0.98, 1.0)
-    label("ACTIVE: " .. MODES[state.mode] .. "    SPACE/LMB: replay", 20, 1.0, 0.82, 0.25, 1.0)
+    label("[LEFT/RIGHT ARROW] MODE     [SPACE] REPLAY", 17, 0.8, 0.88, 0.98, 1.0)
+    label("ACTIVE: " .. MODES[state.mode], 20, 1.0, 0.82, 0.25, 1.0)
     label("fixed seed: " .. tostring(FIXED_SEED) .. "    replay: " .. tostring(state.replay), 16, 0.7, 0.78, 0.9, 1.0)
     label(state.action, 16, 0.35, 1.0, 0.55, 1.0)
     if state.mode == 1 then

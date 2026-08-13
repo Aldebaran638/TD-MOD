@@ -66,7 +66,7 @@ Require (Test-Path -LiteralPath $scenarioPath -PathType Leaf) "live Preview Suit
 foreach ($token in @('synthetic.version = "cm2.world/1"', 'synthetic.entity.spawn', 'synthetic.entity.dispose', 'synthetic.entity.snapshot')) {
     Require ($worldAdapter -match [regex]::Escape($token)) ("shared World/Entity adapter live boundary missing: " + $token)
 }
-foreach ($token in @('cm2PreviewSuiteV1.init', 'runEffectLab', 'runWeaponRange', 'spawnShipDock', 'disposeShipDock', 'client.presentationBudget', 'client.effectPlayer', 'InputPressed("1")', 'InputPressed("2")', 'InputPressed("3")', 'SetCameraTransform', 'runtimeCatalogUnchanged')) {
+foreach ($token in @('cm2PreviewSuiteV1.init', 'runEffectLab', 'runWeaponRange', 'spawnShipDock', 'disposeShipDock', 'client.presentationBudget', 'client.effectPlayer', 'InputPressed("leftarrow")', 'InputPressed("rightarrow")', 'InputPressed("space")', 'SetCameraTransform', 'runtimeCatalogUnchanged')) {
     Require ($liveController -match [regex]::Escape($token)) ("live Preview controller token missing: " + $token)
 }
 Require ($liveController -notmatch "QueryRaycast|Explosion|ServerCall|shipDamageApplyRaw|damage_probe") "live Preview host must not bypass the preview behavior with gameplay/test authority"
@@ -143,7 +143,7 @@ $report = [ordered]@{
     weaponRange = [ordered]@{ fixedSeed = [int]$range.fixedSeed; shots = [int]$range.shots; targetTypes = @($range.targetTypes); movingTarget = $true; damageMin = [int]$range.damage.min; damageMax = [int]$range.damage.max; budget = [ordered]@{ accepted = [int]$range.budget.accepted; degraded = [int]$range.budget.degraded; rejected = [int]$range.budget.rejected }; replayHash = $weaponReplayHashA }
     shipDock = [ordered]@{ vox = [string]$dock.vox.path; entityGraph = [string]$dock.entityGraph.id; anchors = @($dock.anchors).Count; mounts = @($dock.mounts).Count; turrets = @($dock.turrets).Count; camera = [string]$dock.camera.mode; engineMarkers = @($dock.engineMarkers).Count; lifecycle = $shipLifecycle }
     diagnostics = [ordered]@{ machineReport = [string]$diagnostics.machineReport; screenshot = [string]$diagnostics.screenshot.provider; recording = [string]$diagnostics.recording.provider; runtimeCaptureRequired = $true }
-    liveHost = [ordered]@{ scene = "Content Mod 2/_ai_scenario_preview_suite.xml"; controller = "Content Mod 2/script/testing/scenario/preview_suite_controller.lua"; scenario = "Content Mod 2/testing/scenarios/creator/preview_suite_v1/scenario.json"; sharedWorldEntityAdapter = $true; realInputModes = @("1", "2", "3", "space", "lmb"); runtimeEvidenceRequired = $true }
+    liveHost = [ordered]@{ scene = "Content Mod 2/_ai_scenario_preview_suite.xml"; controller = "Content Mod 2/script/testing/scenario/preview_suite_controller.lua"; scenario = "Content Mod 2/testing/scenarios/creator/preview_suite_v1/scenario.json"; sharedWorldEntityAdapter = $true; realInputModes = @("leftarrow", "rightarrow", "space"); numberedKeysReservedForNativeTools = $true; lmbReservedForNativeTool = $true; runtimeEvidenceRequired = $true }
     runtimeCatalogUnchanged = $true
     traceCount = $effectTraceA.Count + $weaponTraceA.Count + $shipLifecycle.Count
     deferredRuntimeScope = @($fixture.deferredRuntimeScope)

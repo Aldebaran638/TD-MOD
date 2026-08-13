@@ -36,7 +36,9 @@ try {
     Assert-True ([int]$base.shipDock.anchors -ge 1 -and @($base.shipDock.lifecycle).Count -eq 5) "Ship Dock marker/lifecycle report is present"
     Assert-True ([bool]$base.runtimeCatalogUnchanged) "Preview report proves runtime catalog was not mutated"
     Assert-True ([bool]$base.liveHost.sharedWorldEntityAdapter) "live host uses the shared World/Entity adapter boundary"
-    Assert-True (@($base.liveHost.realInputModes) -contains "1" -and @($base.liveHost.realInputModes) -contains "space") "live host declares real keyboard replay controls"
+    Assert-True (@($base.liveHost.realInputModes) -contains "leftarrow" -and @($base.liveHost.realInputModes) -contains "rightarrow" -and @($base.liveHost.realInputModes) -contains "space") "live host declares non-conflicting real keyboard controls"
+    Assert-True ([bool]$base.liveHost.numberedKeysReservedForNativeTools) "live host does not dual-consume native numbered tool keys"
+    Assert-True (-not (@($base.liveHost.realInputModes) -contains "lmb") -and [bool]$base.liveHost.lmbReservedForNativeTool) "live host does not dual-consume native LMB"
 
     $cases = @(
         @{ Name = "wrong compiler"; Mutate = { param($d) $d.sharedAuthority.compiler = "editor-only-compiler" } },

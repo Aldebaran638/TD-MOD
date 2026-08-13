@@ -15,22 +15,23 @@
   },
   "modes": [
     {
-      "key": "1",
+      "key": "initial/left/right",
       "id": "effect-lab",
       "expected": ["production EffectPlayer", "near LOD0", "far LOD1", "budgeted line/light/particles"]
     },
     {
-      "key": "2",
+      "key": "right from effect-lab",
       "id": "weapon-range",
       "expected": ["4 fixed-seed shots", "moving target", "accepted=2", "degraded=1", "rejected=1"]
     },
     {
-      "key": "3",
+      "key": "right from weapon-range",
       "id": "ship-dock",
       "expected": ["real gamma VOX", "5 anchors", "2 mounts", "1 turret", "spawn/dispose/stale rejection"]
     }
   ],
-  "replay_inputs": ["space", "lmb"],
+  "mode_inputs": ["leftarrow", "rightarrow"],
+  "replay_inputs": ["space"],
   "eyes": ["EYE_SCREENSHOT", "EYE_LOG"],
   "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
   "reload": "REOPEN_LEVEL_XML",
