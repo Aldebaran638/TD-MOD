@@ -1,4 +1,4 @@
-# Regression test for developer-confirmed unable handling.
+# Regression tests against the authoritative executable plan.
 
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
@@ -6,18 +6,22 @@ $hook = Join-Path $PSScriptRoot 'check-todo-stop.ps1'
 $source = Join-Path $root 'TEARDOWN_SHIP_PLATFORM_TODO.json'
 $temp = Join-Path ([IO.Path]::GetTempPath()) ('cm2-hook-unconfirmed-' + [Guid]::NewGuid().ToString('N') + '.json')
 function Assert-True([bool]$condition, [string]$message) {
-    if (-not $condition) { throw ('Todo hook developer-confirmation test failed: ' + $message) }
+    if (-not $condition) { throw ('Todo hook executable-plan test failed: ' + $message) }
     Write-Host ('[PASS] ' + $message) -ForegroundColor Green
 }
 try {
-    $document = Get-Content -Raw -LiteralPath $source | ConvertFrom-Json
-    $document.developer_confirmed_unable.task_ids = @($document.developer_confirmed_unable.task_ids | Where-Object { [string]$_ -ne 'Step 11.6' })
+    $document = Get-Content -Raw -Encoding utf8 -LiteralPath $source | ConvertFrom-Json
+    $output = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $hook -TaskPath $source
+    Assert-True ([string]$output -match 'block' -and [string]$output -match 'Step 8\.3' -and [string]$output -match 'needs_regression') 'first verification debt is blocked and requested'
+
+    foreach ($task in @($document.tasks)) { $task.implementation_status = 'finish'; $task.verification_status = 'verified' }
+    $document.tasks[0].implementation_status = 'unable'
+    $document.tasks[0].verification_status = 'pending'
+    $document.developer_confirmed_unable.task_ids = @($document.developer_confirmed_unable.task_ids | Where-Object { [string]$_ -ne 'Step 0.1' })
     [IO.File]::WriteAllText($temp, ($document | ConvertTo-Json -Depth 100), (New-Object Text.UTF8Encoding($false)))
     $output = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $hook -TaskPath $temp
-    Assert-True ([string]$output -match 'block' -and [string]$output -match 'Step 11\.6') 'unconfirmed unable is blocked and requested'
-    $output = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $hook -TaskPath $source
-    Assert-True (@($output).Count -eq 0) 'all developer-confirmed unable tasks allow stop'
-    Write-Host 'Todo hook developer-confirmation regression passed.' -ForegroundColor Green
+    Assert-True ([string]$output -match 'block' -and [string]$output -match 'developer confirmation') 'unconfirmed unable remains fail-closed'
+    Write-Host 'Todo hook executable-plan regression passed.' -ForegroundColor Green
     exit 0
 }
 finally {

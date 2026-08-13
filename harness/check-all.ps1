@@ -30,6 +30,7 @@ Push-Location $repositoryRoot
 try {
     Invoke-Harness "harness/check-entry-closures.ps1" ".\Content Mod 2"
     Invoke-Harness "harness/check-source-of-truth.ps1" "."
+    Invoke-Harness "harness/check-executable-todo-plan.ps1" "."
     Invoke-Harness "harness/check-id-coordinate-contract.ps1" "."
     Invoke-Harness "harness/check-schema-v1.ps1" "."
     Invoke-Harness "harness/check-presentation-event-v1.ps1" ".\Content Mod 2"
@@ -62,6 +63,7 @@ try {
 
     Invoke-Harness "harness/test-check-entry-closures.ps1"
     Invoke-Harness "harness/test-check-source-of-truth.ps1"
+    Invoke-Harness "harness/test-executable-todo-plan.ps1"
     Invoke-Harness "harness/test-check-id-coordinate-contract.ps1"
     Invoke-Harness "harness/test-check-schema-v1.ps1"
     Invoke-Harness "harness/test-presentation-event-v1.ps1"

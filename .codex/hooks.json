@@ -1,5 +1,5 @@
 {
-  "description": "CM2 80-Step Todo continuation gate",
+  "description": "CM2 executable 80-Step implementation and verification gate",
   "hooks": {
     "Stop": [
       {
@@ -8,7 +8,7 @@
             "type": "command",
             "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \".codex/hooks/check-todo-stop.ps1\"",
             "timeout": 30,
-            "statusMessage": "Checking CM2 Todo completion before stopping"
+            "statusMessage": "Checking CM2 executable plan contracts and completion"
           }
         ]
       }
