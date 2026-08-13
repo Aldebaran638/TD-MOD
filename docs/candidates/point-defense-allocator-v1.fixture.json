@@ -1,0 +1,65 @@
+{
+  "schema": "cm2.point-defense-allocator/1",
+  "protocolVersion": "cm2.point-defense-allocator/1",
+  "generation": 7,
+  "ship": {
+    "shipId": "ship-A",
+    "ownerId": "ship-A",
+    "faction": "blue",
+    "candidateCapacity": 8,
+    "fireBudgetPerTick": 2,
+    "backendMode": "catalog",
+    "mounts": [
+      { "mountId": "m-flak", "weaponType": "pd.flak", "role": "flak", "maxRange": 220, "cooldown": 0.10, "targetClasses": ["torpedo", "missile", "strike_craft"], "targetAssignmentLimit": 1 },
+      { "mountId": "m-laser", "weaponType": "pd.laser", "role": "laser", "maxRange": 220, "cooldown": 0.20, "targetClasses": ["torpedo", "missile"], "targetAssignmentLimit": 1 },
+      { "mountId": "m-aux", "weaponType": "pd.aux", "role": "laser", "maxRange": 220, "cooldown": 0.30, "targetClasses": ["missile"], "targetAssignmentLimit": 1 }
+    ]
+  },
+  "candidates": [
+    { "entityId": "torpedo-1", "generation": 3, "targetType": "torpedo", "class": "torpedo", "faction": "red", "distance": 120, "threatTime": 0.4, "priority": 0, "enabled": true, "lineOfSight": true },
+    { "entityId": "missile-1", "generation": 4, "targetType": "missile", "class": "missile", "faction": "red", "distance": 80, "threatTime": 0.2, "priority": 1, "enabled": true, "lineOfSight": true },
+    { "entityId": "craft-1", "generation": 2, "targetType": "strike_craft", "class": "strike_craft", "faction": "red", "distance": 50, "threatTime": 0.8, "priority": 3, "enabled": true, "lineOfSight": true },
+    { "entityId": "friendly-missile", "generation": 1, "targetType": "missile", "class": "missile", "faction": "blue", "ownerId": "ship-A", "distance": 40, "threatTime": 0.1, "priority": 0, "enabled": true, "lineOfSight": true },
+    { "entityId": "far-torpedo", "generation": 1, "targetType": "torpedo", "class": "torpedo", "faction": "red", "distance": 300, "threatTime": 0.3, "priority": 0, "enabled": true, "lineOfSight": true },
+    { "entityId": "occluded-torpedo", "generation": 1, "targetType": "torpedo", "class": "torpedo", "faction": "red", "distance": 60, "threatTime": 0.1, "priority": 0, "enabled": true, "lineOfSight": false },
+    { "entityId": "destroyed-missile", "generation": 1, "targetType": "missile", "class": "missile", "faction": "red", "distance": 30, "threatTime": 0.1, "priority": 0, "enabled": false, "lineOfSight": true },
+    { "entityId": "valid-extra", "generation": 1, "targetType": "missile", "class": "missile", "faction": "red", "distance": 180, "threatTime": 0.9, "priority": 4, "enabled": true, "lineOfSight": true },
+    { "entityId": "overflow-candidate", "generation": 1, "targetType": "missile", "class": "missile", "faction": "red", "distance": 190, "threatTime": 1.0, "priority": 5, "enabled": true, "lineOfSight": true }
+  ],
+  "operations": [
+    { "op": "registerShip", "expected": "accept" },
+    { "op": "setBackend", "mode": "catalog", "expected": "accept" },
+    { "op": "updateCandidates", "revision": 11, "tickId": "tick-1", "expected": "accept", "expectedCandidateCount": 8 },
+    { "op": "allocate", "dt": 0.0, "tickId": "tick-1", "expected": "accept", "expectedAssignments": ["m-flak>torpedo-1", "m-laser>missile-1"], "expectedFireBudgetRejects": 1 },
+    { "op": "allocate", "dt": 0.0, "tickId": "tick-1", "expected": "duplicate-tick", "expectedAssignments": ["m-flak>torpedo-1", "m-laser>missile-1"] },
+    { "op": "updateCandidates", "revision": 11, "tickId": "tick-2", "expected": "accept", "expectedCandidateCount": 8 },
+    { "op": "allocate", "dt": 0.05, "tickId": "tick-2", "expected": "accept", "expectedAssignments": ["m-aux>missile-1"], "expectedCooldownRejects": 2 },
+    { "op": "updateCandidates", "revision": 12, "tickId": "tick-3", "expected": "accept", "expectedCandidateCount": 8 },
+    { "op": "allocate", "dt": 0.20, "tickId": "tick-3", "expected": "accept", "expectedAssignments": ["m-flak>torpedo-1", "m-laser>missile-1"] },
+    { "op": "disposeMount", "mountId": "m-laser", "expected": "accept", "expectedAssignmentsCleared": true },
+    { "op": "updateCandidates", "revision": 13, "tickId": "tick-4", "expected": "accept", "expectedCandidateCount": 8 },
+    { "op": "allocate", "dt": 0.20, "tickId": "tick-4", "expected": "accept", "expectedAssignments": ["m-flak>torpedo-1", "m-aux>missile-1"] }
+  ],
+  "legacyGolden": [
+    { "tickId": "tick-1", "assignments": ["m-flak>torpedo-1", "m-laser>missile-1"], "differencePolicy": "fail-and-record" },
+    { "tickId": "tick-3", "assignments": ["m-flak>torpedo-1", "m-laser>missile-1"], "differencePolicy": "fail-and-record" },
+    { "tickId": "tick-4", "assignments": ["m-flak>torpedo-1", "m-aux>missile-1"], "differencePolicy": "fail-and-record" }
+  ],
+  "expected": {
+    "candidateQueries": 4,
+    "candidatePasses": 4,
+    "candidateCount": 8,
+    "candidateBudgetRejected": 4,
+    "mountAllocations": 7,
+    "duplicateTickRejects": 1,
+    "cooldownRejects": 3,
+    "fireBudgetRejects": 1,
+    "disposedMounts": 1,
+    "friendRejects": 7,
+    "occludedRejects": 7,
+    "destroyedRejects": 7,
+    "rangeRejects": 7,
+    "oneCandidatePassPerShipTick": true,
+    "overloadPolicy": "drop-after-candidate-capacity-then-fire-budget"
+  }
+}

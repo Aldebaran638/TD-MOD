@@ -1,0 +1,13 @@
+{
+    "schemaVersion":  "cm2.generated-manifest/1",
+    "compiler":  "cm2-definition-compiler-mvp",
+    "inputHash":  "dd1383c2c61fbdedfa80d7fdc4e48f1cc4e0c25729f22d9916b25ce33715435b",
+    "catalogHash":  "bc5cd7b0e2a6a266758f19188f27f2812564e2186a5ea3da2176745150b38a98",
+    "definitionCount":  3,
+    "sourceFiles":  [
+                        "effect-beam.json",
+                        "effect-impact.json",
+                        "weapon.json"
+                    ],
+    "manualEdit":  "forbidden"
+}

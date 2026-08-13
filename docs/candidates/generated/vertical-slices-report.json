@@ -1,0 +1,58 @@
+{
+    "schemaVersion":  "cm2.vertical-slice-report/1",
+    "ownershipPath":  "ownership-map.json",
+    "runtimePolicy":  "candidate catalogs are out-of-band; legacy Content Mod 2 catalog remains authoritative until Gate 1 dual-run approval",
+    "slices":  [
+                   {
+                       "name":  "guided-missile",
+                       "sourcePath":  "tools/cm2-slices/source/guided-missile",
+                       "legacyPath":  "Content Mod 2/script/data/weapons/m/stellaris.lua",
+                       "ownership":  "generated-candidate-only",
+                       "ids":  [
+                                   "cm2:slice.effect.guided",
+                                   "cm2:slice.projectile.guided",
+                                   "cm2:slice.weapon.guided"
+                               ],
+                       "catalogHash":  "d798a15dcd08566930ba5fb3cc11f8dd616c01195af8d186d681cfe995976fe9",
+                       "definitionCount":  3
+                   },
+                   {
+                       "name":  "tachyon-charge-beam-impact",
+                       "sourcePath":  "tools/cm2-slices/source/tachyon-charge-beam-impact",
+                       "legacyPath":  "Content Mod 2/script/data/weapons/x/stellaris.lua",
+                       "ownership":  "generated-candidate-only",
+                       "ids":  [
+                                   "cm2:slice.effect.tachyon.beam",
+                                   "cm2:slice.effect.tachyon.impact",
+                                   "cm2:slice.weapon.tachyon"
+                               ],
+                       "catalogHash":  "bc5cd7b0e2a6a266758f19188f27f2812564e2186a5ea3da2176745150b38a98",
+                       "definitionCount":  3
+                   },
+                   {
+                       "name":  "ray-beam",
+                       "sourcePath":  "tools/cm2-slices/source/ray-beam",
+                       "legacyPath":  "Content Mod 2/script/data/weapons/x/stellaris.lua",
+                       "ownership":  "generated-candidate-only",
+                       "ids":  [
+                                   "cm2:slice.effect.ray",
+                                   "cm2:slice.weapon.ray"
+                               ],
+                       "catalogHash":  "37c93a70588f630daa793b19b0bdb6d3e954b50fd4fca41484e3121f79d816de",
+                       "definitionCount":  2
+                   },
+                   {
+                       "name":  "logical-projectile-impact",
+                       "sourcePath":  "tools/cm2-slices/source/logical-projectile-impact",
+                       "legacyPath":  "Content Mod 2/script/data/weapons/x/stellaris.lua",
+                       "ownership":  "generated-candidate-only",
+                       "ids":  [
+                                   "cm2:slice.effect.impact",
+                                   "cm2:slice.projectile.logical",
+                                   "cm2:slice.weapon.projectile"
+                               ],
+                       "catalogHash":  "4657978b67212d888fe95a94e870baf3d677a1f94fc68c110fb805f9542fadf6",
+                       "definitionCount":  3
+                   }
+               ]
+}

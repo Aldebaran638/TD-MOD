@@ -1,0 +1,129 @@
+{
+  "schema": "cm2.world-protocol/1",
+  "protocolVersion": "cm2.world/1",
+  "ownerLease": {
+    "ownerId": "content-host",
+    "generation": 7,
+    "issuedAt": 100,
+    "expiresAt": 110,
+    "timeout": 10,
+    "leaseKey": "content-host@7",
+    "duplicateAcquire": "reject",
+    "renewSameOwner": "accept",
+    "renewOtherOwner": "reject",
+    "staleGeneration": "reject",
+    "expired": "reject"
+  },
+  "capabilities": {
+    "register": true,
+    "heartbeat": true,
+    "command": true,
+    "snapshotRead": true,
+    "snapshotWrite": true,
+    "deltaRead": true,
+    "presentationPublish": true,
+    "lifecycleRead": true
+  },
+  "messages": [
+    {
+      "name": "valid-register",
+      "protocolVersion": "cm2.world/1",
+      "kind": "register",
+      "contextId": "ship-A",
+      "ownerId": "ship-owner-A",
+      "generation": 7,
+      "sequence": 1,
+      "payloadBytes": 96,
+      "maxPayloadBytes": 256,
+      "expected": "accept"
+    },
+    {
+      "name": "stale-generation",
+      "protocolVersion": "cm2.world/1",
+      "kind": "heartbeat",
+      "contextId": "ship-A",
+      "ownerId": "ship-owner-A",
+      "generation": 6,
+      "sequence": 2,
+      "payloadBytes": 32,
+      "maxPayloadBytes": 256,
+      "expected": "reject-stale-generation"
+    },
+    {
+      "name": "duplicate-sequence",
+      "protocolVersion": "cm2.world/1",
+      "kind": "heartbeat",
+      "contextId": "ship-A",
+      "ownerId": "ship-owner-A",
+      "generation": 7,
+      "sequence": 1,
+      "previousSequence": 1,
+      "payloadBytes": 32,
+      "maxPayloadBytes": 256,
+      "expected": "reject-duplicate"
+    },
+    {
+      "name": "incompatible-version",
+      "protocolVersion": "cm2.world/2",
+      "kind": "snapshot",
+      "contextId": "ship-A",
+      "ownerId": "ship-owner-A",
+      "generation": 7,
+      "sequence": 3,
+      "payloadBytes": 128,
+      "maxPayloadBytes": 1024,
+      "expected": "reject-version"
+    },
+    {
+      "name": "queue-overflow-payload",
+      "protocolVersion": "cm2.world/1",
+      "kind": "presentation",
+      "contextId": "ship-A",
+      "ownerId": "ship-owner-A",
+      "generation": 7,
+      "sequence": 4,
+      "payloadBytes": 257,
+      "maxPayloadBytes": 256,
+      "expected": "reject-budget"
+    },
+    {
+      "name": "forbidden-engine-handle",
+      "protocolVersion": "cm2.world/1",
+      "kind": "presentation",
+      "contextId": "ship-A",
+      "ownerId": "ship-owner-A",
+      "generation": 7,
+      "sequence": 5,
+      "payloadBytes": 64,
+      "maxPayloadBytes": 256,
+      "forbiddenPayloadField": "engineHandle",
+      "expected": "reject-runtime-reference"
+    },
+    {
+      "name": "unknown-capability",
+      "protocolVersion": "cm2.world/1",
+      "kind": "command",
+      "contextId": "ship-A",
+      "ownerId": "ship-owner-A",
+      "generation": 7,
+      "sequence": 6,
+      "payloadBytes": 64,
+      "maxPayloadBytes": 256,
+      "capability": "delete-world",
+      "expected": "reject-capability"
+    }
+  ],
+  "queue": {
+    "capacity": 2,
+    "operations": ["enqueue", "enqueue", "enqueue", "dequeue"],
+    "expectedAccepted": 2,
+    "expectedDropped": 1,
+    "expectedDepth": 1,
+    "overflowError": "queue overflow"
+  },
+  "authorityBoundary": {
+    "allowedCrossContext": ["register", "unregister", "heartbeat", "command-intent", "snapshot", "delta", "presentation", "lifecycle"],
+    "deferredUntilLaterGate": ["damage", "fire-authority", "weapon-definition", "engine-handle"],
+    "versionMismatch": "fail-fast"
+  }
+}

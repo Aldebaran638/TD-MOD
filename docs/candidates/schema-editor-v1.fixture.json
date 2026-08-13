@@ -1,0 +1,65 @@
+{
+  "schema": "cm2.schema-editor/1",
+  "schemaPath": "schemas/cm2/source-envelope-v1.json",
+  "sourceOnly": true,
+  "formKinds": [ "weapon", "projectile", "effect", "vehicle", "mount" ],
+  "packageSource": {
+    "packageId": "cm2.editor.demo",
+    "packageVersion": "0.1.0",
+    "revision": 1,
+    "editorMetadata": {
+      "displayName": "Schema Editor Demo",
+      "unknownPluginMetadata": { "plugin.example.color": "cyan", "plugin.example.keep": true }
+    },
+    "definitions": [
+      {
+        "schemaVersion": "cm2.weapon/1",
+        "id": "cm2.editor.demo:weapon.range",
+        "kind": "weapon",
+        "runtime": { "behavior": "ray", "effectId": "cm2.editor.demo:effect.range", "fireRateHz": 2 },
+        "editor": { "displayName": "Range Prototype", "tags": [ "mvp", "no-3d" ] },
+        "ai": { "roles": [ "direct-fire" ] },
+        "build": { "sourcePath": "definitions/weapon/range.json", "revision": "editor-fixture", "budgetClass": "standard" }
+      },
+      {
+        "schemaVersion": "cm2.effect/1",
+        "id": "cm2.editor.demo:effect.range",
+        "kind": "effect",
+        "runtime": { "effectType": "beam", "assetId": "cm2.editor.demo:asset.beam", "priority": 50 },
+        "editor": { "displayName": "Range Beam" },
+        "ai": { "roles": [ "presentation" ] },
+        "build": { "sourcePath": "definitions/effect/range.json", "revision": "editor-fixture", "budgetClass": "visual" }
+      }
+    ],
+    "resources": [
+      { "id": "cm2.editor.demo:asset.beam", "path": "assets/beam.asset", "content": "editor-fixture-beam" }
+    ]
+  },
+  "operations": [
+    { "op": "open", "expected": "source envelope loaded" },
+    { "op": "copy-template", "kind": "weapon", "expected": "schema form created" },
+    { "op": "set", "path": "runtime.fireRateHz", "value": 4, "unit": "Hz" },
+    { "op": "set", "path": "runtime.effectId", "value": "cm2.editor.demo:effect.range", "referenceKind": "effect" },
+    { "op": "diff", "expected": "field paths and values are reviewable" },
+    { "op": "undo", "expected": "one edit removed" },
+    { "op": "redo", "expected": "one edit restored" },
+    { "op": "migrate", "from": "cm2.weapon/0", "to": "cm2.weapon/1", "preserveUnknownMetadata": true },
+    { "op": "validate-before-save", "expected": "compiler not called when invalid" },
+    { "op": "build-explain-preview", "expected": "compiler and Preview consume same runtime projection" }
+  ],
+  "invalidCases": [
+    { "name": "fire rate below range", "path": "runtime.fireRateHz", "value": 0, "expectedCode": "out-of-range" },
+    { "name": "broken effect reference", "path": "runtime.effectId", "value": "cm2.editor.demo:effect.missing", "expectedCode": "broken-reference" },
+    { "name": "wrong numeric type", "path": "runtime.fireRateHz", "value": "fast", "expectedCode": "wrong-type" },
+    { "name": "future schema", "path": "schemaVersion", "value": "cm2.weapon/2", "expectedCode": "future-version" }
+  ],
+  "generatedForbiddenRoots": [ "Content Mod 2/script", "docs/generated" ],
+  "expected": {
+    "compiler": "tools/cm2-compiler/compile-definitions.ps1",
+    "minimumDiagnosticFields": [ "definitionId", "fieldPath", "expected", "actual", "suggestion" ],
+    "firstValidWeaponMinutes": 5,
+    "unknownMetadataRoundTrip": true,
+    "generatedLuaManualEdit": "forbidden"
+  },
+  "runtimeScope": "headless-editor-contract; live Teardown preview is deferred when executable is unavailable"
+}

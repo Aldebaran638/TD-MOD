@@ -1,0 +1,28 @@
+{
+    "schema":  "cm2.transform-anchor-migration-report/1",
+    "protocolVersion":  "cm2.transform-anchor-migration/1",
+    "identity":  "ship:migration-fixture:21",
+    "ownerId":  "ship-owner:migration-fixture",
+    "generation":  21,
+    "batchOrder":  [
+                       "mount-fire",
+                       "camera-engine-thruster",
+                       "weapon-projectile",
+                       "fx-audio-shake",
+                       "damage-part-health"
+                   ],
+    "batchCount":  5,
+    "comparisons":  10,
+    "comparisonPasses":  8,
+    "comparisonMismatches":  2,
+    "modeChanges":  9,
+    "resolves":  9,
+    "legacyResolves":  9,
+    "shadowResolves":  5,
+    "anchorResolves":  4,
+    "rollbacks":  1,
+    "rejects":  2,
+    "staleRejects":  1,
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

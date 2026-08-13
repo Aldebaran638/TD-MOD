@@ -1,0 +1,57 @@
+{
+  "schema": "cm2.turret-content/1",
+  "protocolVersion": "cm2.turret-content/1",
+  "identity": "turret-content-fixture:hero",
+  "ownerId": "ship-owner:hero-content",
+  "generation": 301,
+  "contentId": "hero.turret.dual-axis",
+  "turretDefinitionId": "heroTurretDualAxisV1",
+  "entityGraphId": "ship:hero-content:root",
+  "catalogRef": "content.turrets.hero.dual-axis",
+  "editorSchema": "cm2.turret-editor/1",
+  "previewProfile": "preview.hero.turret.dual-axis.v1",
+  "harnessFixture": "turret-content-authority-v1",
+  "modes": { "default": "visual", "allowed": ["fixed", "logical", "visual", "joint"] },
+  "anchors": {
+    "hero.turret.left.muzzle": { "anchorId": "hero.turret.left.muzzle", "partId": "turret-left", "transform": { "position": { "x": -2.0, "y": 1.2, "z": -3.0 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 } }, "direction": { "x": 0, "y": 0, "z": -1 } },
+    "hero.turret.right.muzzle": { "anchorId": "hero.turret.right.muzzle", "partId": "turret-right", "transform": { "position": { "x": 2.0, "y": 1.2, "z": -3.0 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 } }, "direction": { "x": 0, "y": 0, "z": -1 } }
+  },
+  "mounts": [
+    { "mountId": "hero.left.primary", "weaponGroupId": "hero.primary", "fireAnchorId": "hero.turret.left.muzzle", "mirror": { "x": 1, "y": 1, "z": 1 }, "fallbackMode": "logical" },
+    { "mountId": "hero.right.primary", "weaponGroupId": "hero.primary", "fireAnchorId": "hero.turret.right.muzzle", "mirror": { "x": -1, "y": 1, "z": 1 }, "fallbackMode": "visual" }
+  ],
+  "anchorResolver": {
+    "anchors": {
+      "hero.turret.left.muzzle": { "transform": { "position": { "x": -2.0, "y": 1.2, "z": -3.0 } }, "direction": { "x": 0, "y": 0, "z": -1 } },
+      "hero.turret.right.muzzle": { "transform": { "position": { "x": 2.0, "y": 1.2, "z": -3.0 } }, "direction": { "x": 0, "y": 0, "z": -1 } }
+    }
+  },
+  "operations": [
+    { "op": "init" },
+    { "op": "registerFormal", "expected": "accepted" },
+    { "op": "resolve", "mountId": "hero.left.primary", "expectedSource": "anchor-resolver", "expectedX": -2.0 },
+    { "op": "resolve", "mountId": "hero.right.primary", "expectedSource": "anchor-resolver", "expectedX": 2.0 },
+    { "op": "setMode", "value": "logical", "expected": "accepted" },
+    { "op": "resolve", "mountId": "hero.left.primary", "expectedSource": "anchor-resolver", "expectedX": -2.0 },
+    { "op": "resolveMissing", "mountId": "hero.right.primary", "expectedSource": "visual-fallback", "expectedFallback": true },
+    { "op": "legacyOffset", "mountId": "hero.left.primary", "expected": "rejected" },
+    { "op": "setJoint", "expected": "rejected" },
+    { "op": "preview", "expectedCatalogRef": "content.turrets.hero.dual-axis", "expectedEditorSchema": "cm2.turret-editor/1" },
+    { "op": "staleHandle", "expected": "rejected" }
+  ],
+  "expected": {
+    "definitions": 1,
+    "resolves": 4,
+    "anchorResolves": 3,
+    "fallbackResolves": 1,
+    "missingAnchorRejects": 1,
+    "legacyFieldRejects": 1,
+    "modeChanges": 1,
+    "jointRejects": 1,
+    "previewReads": 1,
+    "staleRejects": 1,
+    "formalMounts": 2,
+    "legacyReaderFiles": "recorded-in-ledger",
+    "fixtureOnly": true
+  }
+}

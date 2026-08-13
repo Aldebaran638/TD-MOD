@@ -1,0 +1,11 @@
+{
+  "schema": "cm2.global-mod-broker-fixtures/1",
+  "coreVersions": [ "1.0.0", "1.2.0", "2.0.0" ],
+  "packages": [
+    { "packageId": "cm2.broker.alpha", "requiresCore": ">=1.0.0 <2.0.0", "capabilities": [ "Ship" ] },
+    { "packageId": "cm2.broker.beta", "requiresCore": ">=1.0.0 <2.0.0", "capabilities": [ "Weapon" ] },
+    { "packageId": "cm2.broker.conflict", "requiresCore": ">=1.0.0 <2.0.0", "capabilities": [ "Ship" ] }
+  ],
+  "scenarios": [ "content-before-global", "global-before-content", "core-missing", "version-mismatch", "package-unload", "multiplayer-host-remote", "multiple-packages-conflict" ],
+  "expectedDefault": "builtin-only"
+}

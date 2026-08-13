@@ -1,0 +1,55 @@
+{
+  "schema": "cm2.projectile-shield-broadphase/1",
+  "protocolVersion": "cm2.projectile.shield-broadphase/1",
+  "generation": 7,
+  "cellSize": 100,
+  "shields": [
+    { "entityId": "shield-A", "generation": 1, "bodyId": 10, "center": { "x": 100, "y": 0, "z": 0 }, "radius": 20, "shieldHP": 100 },
+    { "entityId": "shield-B", "generation": 2, "bodyId": 11, "center": { "x": 260, "y": 0, "z": 0 }, "radius": 30, "shieldHP": 100 },
+    { "entityId": "shield-C-empty", "generation": 1, "bodyId": 12, "center": { "x": 0, "y": 50, "z": 0 }, "radius": 10, "shieldHP": 0 },
+    { "entityId": "shield-D", "generation": 1, "bodyId": 13, "center": { "x": 0, "y": 0, "z": 0 }, "radius": 10, "shieldHP": 100 }
+  ],
+  "operations": [
+    { "op": "init", "expected": "accept" },
+    { "op": "registerAll", "expected": "accept" },
+    { "op": "refresh", "expectedRevision": 1 },
+    { "op": "setMode", "mode": "grid", "expected": "accept" },
+    { "op": "find", "queryId": "tangent", "start": { "x": 0, "y": 20, "z": 0 }, "end": { "x": 200, "y": 20, "z": 0 }, "projectileRadius": 0, "ownerBodyId": 0, "expectedEntityId": "shield-A", "expectedT": 0.5 },
+    { "op": "find", "queryId": "inside-start", "start": { "x": 100, "y": 0, "z": 0 }, "end": { "x": 180, "y": 0, "z": 0 }, "projectileRadius": 0, "ownerBodyId": 0, "expectedEntityId": "shield-A", "expectedT": 0.0 },
+    { "op": "find", "queryId": "high-speed-cross-cell", "start": { "x": -100, "y": 0, "z": 0 }, "end": { "x": 500, "y": 0, "z": 0 }, "projectileRadius": 5, "ownerBodyId": 13, "expectedEntityId": "shield-A", "expectedT": 0.291667 },
+    { "op": "find", "queryId": "large-radius", "start": { "x": 0, "y": 40, "z": 0 }, "end": { "x": 400, "y": 40, "z": 0 }, "projectileRadius": 30, "ownerBodyId": 13, "expectedEntityId": "shield-A", "expectedT": 0.175 },
+    { "op": "update", "entityId": "shield-A", "generation": 1, "center": { "x": 200, "y": 0, "z": 0 }, "radius": 20, "shieldHP": 100, "expected": "accept" },
+    { "op": "tick", "expected": "dirty-refresh", "expectedRevision": 2 },
+    { "op": "find", "queryId": "moved-shield", "start": { "x": 0, "y": 0, "z": 0 }, "end": { "x": 400, "y": 0, "z": 0 }, "projectileRadius": 0, "ownerBodyId": 13, "expectedEntityId": "shield-A", "expectedT": 0.45 },
+    { "op": "remove", "entityId": "shield-B", "generation": 2, "expected": "accept" },
+    { "op": "tick", "expected": "dirty-refresh", "expectedRevision": 3 },
+    { "op": "remove", "entityId": "shield-A", "generation": 2, "expected": "stale-reject" },
+    { "op": "remove", "entityId": "shield-A", "generation": 1, "expected": "accept" },
+    { "op": "tick", "expected": "dirty-refresh", "expectedRevision": 4 },
+    { "op": "find", "queryId": "none-after-remove", "start": { "x": -100, "y": 0, "z": 0 }, "end": { "x": 500, "y": 0, "z": 0 }, "projectileRadius": 0, "ownerBodyId": 13, "expectedEntityId": "", "expectedT": -1 },
+    { "op": "recordLegacyScan", "count": 12, "expected": "accept" },
+    { "op": "snapshot", "expectedEntries": 1 }
+  ],
+  "legacyGolden": [
+    { "queryId": "tangent", "expectedEntityId": "shield-A", "differencePolicy": "fail-and-record" },
+    { "queryId": "inside-start", "expectedEntityId": "shield-A", "differencePolicy": "fail-and-record" },
+    { "queryId": "high-speed-cross-cell", "expectedEntityId": "shield-A", "differencePolicy": "fail-and-record" },
+    { "queryId": "large-radius", "expectedEntityId": "shield-A", "differencePolicy": "fail-and-record" },
+    { "queryId": "moved-shield", "expectedEntityId": "shield-A", "differencePolicy": "fail-and-record" },
+    { "queryId": "none-after-remove", "expectedEntityId": "", "differencePolicy": "fail-and-record" }
+  ],
+  "expected": {
+    "registers": 4,
+    "updates": 1,
+    "removes": 2,
+    "refreshes": 4,
+    "queries": 6,
+    "hits": 5,
+    "staleRejected": 1,
+    "fullRegistryScans": 12,
+    "snapshotEntries": 1,
+    "gridMode": true,
+    "broadphaseOnly": true,
+    "segmentSphereGolden": true
+  }
+}

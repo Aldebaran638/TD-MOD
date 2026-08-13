@@ -1,0 +1,69 @@
+{
+  "schema": "cm2.preview-suite/1",
+  "runtimeMode": "preview-only",
+  "candidate": true,
+  "sharedAuthority": {
+    "compiler": "cm2.runtime-compiler/1",
+    "catalog": "cm2.generated-catalog-manifest/1",
+    "worldEntityAdapter": "cm2.world/1",
+    "effectPlayer": "production-effect-player",
+    "presentationBudget": "production-presentation-budget",
+    "sameNormalizedRuntimeDTO": true,
+    "runtimeCatalogMutationForbidden": true,
+    "runtimeEntryUnchanged": true
+  },
+  "replays": [
+    { "stage": "S0", "name": "entry-to-preview", "expected": "same compiler/catalog/world adapter" },
+    { "stage": "S2", "name": "weapon-to-effect", "expected": "fixed seed and EffectPlayer trace" },
+    { "stage": "S5", "name": "ship-to-dock", "expected": "VOX/graph/anchor/mount/turret lifecycle" }
+  ],
+  "effectLab": {
+    "mode": "effect-lab",
+    "fixedSeed": 424242,
+    "distances": [ "near", "far" ],
+    "lod": [ 0, 1 ],
+    "budgetProfiles": [ "normal", "degraded", "critical" ],
+    "definitionId": "content.effects.focused-arc-impact",
+    "context": { "origin": [ 0.0, 0.0, 0.0 ], "direction": [ 0.0, 0.0, -1.0 ], "hitPoint": [ 0.0, 0.0, -20.0 ], "hitNormal": [ 0.0, 1.0, 0.0 ], "targetAnchor": "preview:effect-target" },
+    "reuses": [ "EffectPlayer", "PresentationBudget" ]
+  },
+  "weaponRange": {
+    "mode": "weapon-range",
+    "fixedSeed": 424242,
+    "muzzle": [ 0.0, 0.0, 0.0 ],
+    "movingTarget": { "id": "target:moving-01", "velocity": [ 2.0, 0.0, 0.0 ], "path": "deterministic-linear" },
+    "targetTypes": [ "shield", "body", "environment" ],
+    "shots": 4,
+    "damage": { "min": 6, "max": 16, "field": "normalized-runtime-dto" },
+    "budget": { "accepted": 2, "degraded": 1, "rejected": 1 },
+    "definitionId": "content.weapons.arc-emitter-1",
+    "replay": true
+  },
+  "shipDock": {
+    "mode": "ship-dock",
+    "definitionId": "content.ships.gamma-strike-craft",
+    "vox": { "path": "Content Mod 2/vox/gammaStrikeCraftTest.vox", "orientationConfirmed": false, "sourceOfTruth": "asset-importer-v1" },
+    "entityGraph": { "id": "ship:gamma.graph", "bodies": 1, "shapes": 1, "joints": 0 },
+    "anchors": [ "engine.left", "engine.right", "muzzle.left", "muzzle.right", "camera.pilot" ],
+    "mounts": [ "mount.primary", "mount.secondary" ],
+    "turrets": [ { "id": "turret.hero", "mode": "logical", "yaw": [ -70, 70 ], "pitch": [ -10, 45 ] } ],
+    "camera": { "mode": "orbit", "distance": 12.0, "lookAt": "ship:gamma.graph" },
+    "engineMarkers": [ "engine.left", "engine.right", "muzzle.left", "muzzle.right", "camera.pilot" ],
+    "spawnDispose": [ "spawn", "snapshot", "camera", "dispose", "stale-dispose-reject" ]
+  },
+  "diagnostics": {
+    "export": true,
+    "screenshot": { "provider": "preview-capture-v1", "runtimeRequired": true },
+    "recording": { "provider": "preview-replay-v1", "runtimeRequired": true },
+    "machineReport": "docs/candidates/preview-suite-v1.result.json"
+  },
+  "negativeCases": [
+    "wrong shared compiler",
+    "runtime catalog mutation enabled",
+    "missing world/entity adapter",
+    "missing moving target",
+    "missing VOX or EntityGraph",
+    "stale Ship Dock dispose"
+  ],
+  "deferredRuntimeScope": [ "Teardown physics spawn", "live EffectPlayer rendering", "live screenshot", "live recording", "frame-time pressure" ]
+}

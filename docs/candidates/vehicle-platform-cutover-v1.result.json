@@ -1,0 +1,29 @@
+{
+    "schema":  "cm2.vehicle-platform-cutover-report/1",
+    "protocolVersion":  "cm2.vehicle-platform-cutover/1",
+    "identity":  "ship:cutover-fixture:51",
+    "ownerId":  "ship-owner:cutover-fixture",
+    "generation":  51,
+    "vehicleOrder":  [
+                         "advancedStrikeCraft",
+                         "advancedSwarmerMissile",
+                         "devastatorTorpedo",
+                         "battlecruiser",
+                         "titan"
+                     ],
+    "vehicleCount":  5,
+    "registrations":  5,
+    "comparisons":  5,
+    "comparisonPasses":  5,
+    "comparisonMismatches":  0,
+    "modeChanges":  6,
+    "rollbacks":  1,
+    "cutoverRejects":  1,
+    "staleRejects":  1,
+    "anchorModeCount":  0,
+    "rootBodyAuthority":  "adapter-only",
+    "legacyReaderFileCount":  57,
+    "legacyReaderLedger":  "legacy-readers-allowed-only-through-ADR-until-live-S0-S7",
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

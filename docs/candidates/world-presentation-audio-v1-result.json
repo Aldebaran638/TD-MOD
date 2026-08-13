@@ -1,0 +1,16 @@
+{
+    "schema":  "cm2.world-presentation-audio-report/1",
+    "effectPlayerOwnerCount":  1,
+    "audioVoiceOwnerCount":  1,
+    "resourceCacheOwnerCount":  1,
+    "criticalCapacity":  64,
+    "ambientCapacity":  128,
+    "eventSlots":  32,
+    "criticalDropped":  0,
+    "ambientCoalesced":  1,
+    "duplicateRejected":  1,
+    "staleRejected":  1,
+    "doublePlayback":  0,
+    "latencyP95":  "requires-live-Teardown",
+    "result":  "pass"
+}

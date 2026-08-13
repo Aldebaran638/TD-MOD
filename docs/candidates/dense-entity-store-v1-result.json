@@ -1,0 +1,78 @@
+{
+    "schema":  "cm2.dense-entity-store-report/1",
+    "protocolVersion":  "cm2.world.dense-store/1",
+    "generation":  7,
+    "stores":  {
+                   "craft":  {
+                                 "capacity":  3,
+                                 "active":  0,
+                                 "free":  3,
+                                 "registers":  4,
+                                 "removes":  4,
+                                 "reuses":  1,
+                                 "staleRejected":  1,
+                                 "capacityRejected":  1,
+                                 "denseIterations":  1,
+                                 "activePlusFree":  3
+                             },
+                   "effect":  {
+                                  "capacity":  3,
+                                  "active":  1,
+                                  "free":  2,
+                                  "registers":  2,
+                                  "removes":  1,
+                                  "reuses":  1,
+                                  "staleRejected":  0,
+                                  "capacityRejected":  0,
+                                  "denseIterations":  1,
+                                  "activePlusFree":  3
+                              },
+                   "joint":  {
+                                 "capacity":  2,
+                                 "active":  1,
+                                 "free":  1,
+                                 "registers":  1,
+                                 "removes":  0,
+                                 "reuses":  0,
+                                 "staleRejected":  0,
+                                 "capacityRejected":  0,
+                                 "denseIterations":  1,
+                                 "activePlusFree":  2
+                             },
+                   "projectile":  {
+                                      "capacity":  4,
+                                      "active":  0,
+                                      "free":  4,
+                                      "registers":  3,
+                                      "removes":  3,
+                                      "reuses":  1,
+                                      "staleRejected":  2,
+                                      "capacityRejected":  0,
+                                      "denseIterations":  1,
+                                      "activePlusFree":  4
+                                  }
+               },
+    "staleHandleRejected":  3,
+    "capacityRejected":  1,
+    "reuses":  3,
+    "denseIterations":  4,
+    "comparison":  {
+                       "before":  {
+                                      "p95Ms":  4.8,
+                                      "p99Ms":  7.2,
+                                      "memoryBytes":  49152,
+                                      "gcBytes":  12288,
+                                      "method":  "legacy table iteration baseline placeholder"
+                                  },
+                       "after":  {
+                                     "p95Ms":  1.4,
+                                     "p99Ms":  2.1,
+                                     "memoryBytes":  24576,
+                                     "gcBytes":  2048,
+                                     "method":  "dense active-array offline model"
+                                 },
+                       "requiresLiveReplay":  true
+                   },
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

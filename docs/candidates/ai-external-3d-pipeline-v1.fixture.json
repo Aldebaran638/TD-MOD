@@ -1,0 +1,72 @@
+{
+  "schema": "cm2.ai-external-3d-fixtures/1",
+  "fixedSeed": 424242,
+  "validatorVersion": "cm2.asset-validator/1.0.0",
+  "cases": [
+    {
+      "id": "image-hero",
+      "prompt": "Turn this owned reference image into a compact one-body ship.",
+      "expected": "accept",
+      "input": { "kind": "image", "sourceFile": "Content Mod 2/gfx/space/nebula_backdrop.png", "sourceExists": true, "sourceLicense": "project-owned" },
+      "provider": { "id": "offline-fixture-provider", "modelVersion": "mesh-fixture/1.0.0", "network": false, "license": "project-owned", "meshHash": "fixture-mesh-image-hero" },
+      "mesh": { "components": 1, "wallThicknessVoxels": 2, "paletteColors": 12, "voxelCount": 12000, "axis": "logical+Y", "scaleMetersPerVoxel": 0.1 }
+    },
+    {
+      "id": "text-escort",
+      "prompt": "Generate a readable escort ship silhouette with a flat bottom.",
+      "expected": "accept",
+      "input": { "kind": "text", "sourceFile": "prompt:text-escort", "sourceExists": true, "sourceLicense": "CC0-prompt" },
+      "provider": { "id": "offline-fixture-provider", "modelVersion": "mesh-fixture/1.0.0", "network": false, "license": "CC0-prompt", "meshHash": "fixture-mesh-text-escort" },
+      "mesh": { "components": 1, "wallThicknessVoxels": 1, "paletteColors": 32, "voxelCount": 24000, "axis": "logical+Y", "scaleMetersPerVoxel": 0.1 }
+    },
+    {
+      "id": "local-mesh",
+      "prompt": "Import this existing local VOX as a candidate ship source.",
+      "expected": "accept",
+      "input": { "kind": "vox", "sourceFile": "Content Mod 2/vox/gammaStrikeCraftTest.vox", "sourceExists": true, "sourceLicense": "project-owned" },
+      "provider": { "id": "local-existing-asset", "modelVersion": "none", "network": false, "license": "project-owned", "meshHash": "derived-from-source" },
+      "mesh": { "components": 1, "wallThicknessVoxels": 2, "paletteColors": 8, "voxelCount": 4120, "axis": "logical+Y", "scaleMetersPerVoxel": 0.1 }
+    },
+    {
+      "id": "missing-license",
+      "prompt": "Use an unlicensed generated mesh.",
+      "expected": "reject",
+      "input": { "kind": "image", "sourceFile": "external:unlicensed.png", "sourceExists": true, "sourceLicense": "" },
+      "provider": { "id": "offline-fixture-provider", "modelVersion": "mesh-fixture/1.0.0", "network": false, "license": "", "meshHash": "fixture-mesh-no-license" },
+      "mesh": { "components": 1, "wallThicknessVoxels": 2, "paletteColors": 8, "voxelCount": 1000, "axis": "logical+Y", "scaleMetersPerVoxel": 0.1 }
+    },
+    {
+      "id": "disconnected",
+      "prompt": "Keep all disconnected floating pieces in the ship.",
+      "expected": "reject",
+      "input": { "kind": "text", "sourceFile": "prompt:disconnected", "sourceExists": true, "sourceLicense": "CC0-prompt" },
+      "provider": { "id": "offline-fixture-provider", "modelVersion": "mesh-fixture/1.0.0", "network": false, "license": "CC0-prompt", "meshHash": "fixture-mesh-disconnected" },
+      "mesh": { "components": 4, "wallThicknessVoxels": 2, "paletteColors": 8, "voxelCount": 5000, "axis": "logical+Y", "scaleMetersPerVoxel": 0.1 }
+    },
+    {
+      "id": "thin-wall",
+      "prompt": "Preserve the paper-thin generated shell.",
+      "expected": "reject",
+      "input": { "kind": "text", "sourceFile": "prompt:thin-wall", "sourceExists": true, "sourceLicense": "CC0-prompt" },
+      "provider": { "id": "offline-fixture-provider", "modelVersion": "mesh-fixture/1.0.0", "network": false, "license": "CC0-prompt", "meshHash": "fixture-mesh-thin-wall" },
+      "mesh": { "components": 1, "wallThicknessVoxels": 0, "paletteColors": 8, "voxelCount": 5000, "axis": "logical+Y", "scaleMetersPerVoxel": 0.1 }
+    },
+    {
+      "id": "palette-overflow",
+      "prompt": "Keep every unique material from the source.",
+      "expected": "reject",
+      "input": { "kind": "image", "sourceFile": "external:palette.png", "sourceExists": true, "sourceLicense": "project-owned" },
+      "provider": { "id": "offline-fixture-provider", "modelVersion": "mesh-fixture/1.0.0", "network": false, "license": "project-owned", "meshHash": "fixture-mesh-palette" },
+      "mesh": { "components": 1, "wallThicknessVoxels": 2, "paletteColors": 512, "voxelCount": 5000, "axis": "logical+Y", "scaleMetersPerVoxel": 0.1 }
+    },
+    {
+      "id": "network-provider",
+      "prompt": "Call a hosted provider and publish directly to Runtime.",
+      "expected": "reject",
+      "input": { "kind": "text", "sourceFile": "prompt:network", "sourceExists": true, "sourceLicense": "CC0-prompt" },
+      "provider": { "id": "hosted-provider", "modelVersion": "remote-v9", "network": true, "license": "CC0-prompt", "meshHash": "remote-not-fetched" },
+      "mesh": { "components": 1, "wallThicknessVoxels": 2, "paletteColors": 8, "voxelCount": 5000, "axis": "logical+Y", "scaleMetersPerVoxel": 0.1 },
+      "requestedOperation": "runtime-registration"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "cm2.anchor-turret-editor/1",
+  "protocolVersion": "cm2.anchor-turret-editor/1",
+  "assetManifest": {
+    "path": "docs/candidates/asset-importer-v1.result.json",
+    "manifestHash": "009135e9ba3cf5a9c1b57222ec712de910584973933ca1edee1f0afa01448e18",
+    "voxPath": "Content Mod 2/vox/gammaStrikeCraftTest.vox",
+    "voxHash": "c52e69f18a71f54f1259d90570a9d6d9bc917e4d26aa4cfbd2242ad69c06788f",
+    "metersPerVoxel": 0.1,
+    "logicalSizeVoxels": [45, 12, 51],
+    "sourceToVox": "logical(x,y,z) -> vox(x,maxZ-1-z,y)",
+    "voxToTeardown": "vox(x,y,z) -> logical(x,z,maxZ-1-y)",
+    "readOnly": true,
+    "orientation": { "up": "+Y", "forward": "-Z", "confirmed": false }
+  },
+  "coordinateContract": {
+    "frame": "right-handed-y-up",
+    "units": "meters",
+    "storageSpace": "parent-local",
+    "viewSpaces": [ "local", "world" ],
+    "axes": { "forward": [0, 0, -1], "up": [0, 1, 0], "right": [1, 0, 0] },
+    "scale": [1, 1, 1]
+  },
+  "graph": {
+    "definitionId": "gamma-editor-graph",
+    "nodes": [
+      { "nodeId": "root", "partId": "root", "kind": "body", "parentId": "", "local": { "position": [10, 2, -4], "scale": [2, 2, 2], "mirror": [1, 1, 1] } },
+      { "nodeId": "wing", "partId": "wing", "kind": "part", "parentId": "root", "local": { "position": [1, 0, 0], "scale": [1, 2, 1], "mirror": [-1, 1, 1] } },
+      { "nodeId": "nozzle", "partId": "nozzle", "kind": "engine", "parentId": "wing", "local": { "position": [0, 0, -2], "scale": [0.5, 0.5, 1], "mirror": [1, 1, -1] } }
+    ]
+  },
+  "anchors": [
+    { "id": "root.camera", "parentPartId": "root", "kind": "camera", "local": { "position": [0, 0.2, 0], "rotation": [0, 180, 0] } },
+    { "id": "wing.muzzle.left", "parentPartId": "wing", "kind": "muzzle", "local": { "position": [0, 0, 0], "rotation": [0, 0, 0] } },
+    { "id": "wing.muzzle.right", "parentPartId": "wing", "kind": "muzzle", "local": { "position": [0, 0, 0], "rotation": [0, 0, 0] } },
+    { "id": "nozzle.engine", "parentPartId": "nozzle", "kind": "engine", "local": { "position": [0, 0, 0], "rotation": [0, 0, 0] } }
+  ],
+  "mounts": [
+    { "id": "mount.primary", "parentPartId": "wing", "slotType": "x", "local": { "position": [0.2, 0, -0.5] } },
+    { "id": "mount.secondary", "parentPartId": "wing", "slotType": "x", "local": { "position": [-0.2, 0, -0.5] } }
+  ],
+  "turrets": [
+    { "id": "turret.hero", "basePartId": "wing", "baseAnchorId": "wing.muzzle.left", "mode": "logical", "yaw": { "axis": [0, 1, 0], "min": -70, "max": 70, "speed": 120 }, "pitch": { "axis": [1, 0, 0], "min": -25, "max": 35, "speed": 90 }, "idle": { "yaw": 0, "pitch": 0 }, "arcPreview": { "samples": 7, "stepDeg": 20 } }
+  ],
+  "muzzleOrder": { "weaponGroup": "primary", "ordered": [ "wing.muzzle.left", "wing.muzzle.right" ], "mirrorPair": [ "wing.muzzle.right", "wing.muzzle.left" ] },
+  "gizmo": { "channels": [ "position", "rotation", "forward", "up", "muzzle", "engine", "camera" ], "snapMeters": 0.1, "snapDegrees": 5, "symmetry": "X" },
+  "modes": {
+    "fixed": { "body": 1, "shape": 1, "joint": 0 },
+    "logical": { "body": 1, "shape": 1, "joint": 0 },
+    "visual": { "body": 0, "shape": 0, "joint": 0 },
+    "joint": { "body": 2, "shape": 2, "joint": 1 }
+  },
+  "runtimeBudget": { "body": 1, "shape": 1, "joint": 0, "limits": { "body": 2, "shape": 8, "joint": 4 } },
+  "golden": {
+    "rootWorldPosition": [10, 2, -4],
+    "wingWorldPosition": [12, 2, -4],
+    "wingWorldScale": [2, 4, 2],
+    "wingWorldMirror": [-1, 1, 1],
+    "editorRuntimeAnchorPosition": [12, 2, -4],
+    "rootChildMirror": true
+  },
+  "invalidCases": [
+    { "name": "missing parent", "kind": "anchor", "parentPartId": "not-found", "expected": "missing-parent" },
+    { "name": "duplicate anchor", "kind": "anchor", "id": "wing.muzzle.left", "expected": "duplicate-id" },
+    { "name": "parent cycle", "kind": "part", "id": "root", "parentPartId": "nozzle", "expected": "cycle" },
+    { "name": "budget over joint", "kind": "mode", "mode": "joint", "expected": "budget" }
+  ],
+  "generatedForbiddenRoots": [ "Content Mod 2/script", "docs/generated" ],
+  "sourcePatchPolicy": { "everyEditProducesPatch": true, "generatedArtifactMutation": false, "storageSpace": "parent-local" },
+  "runtimeScope": "headless-editor-contract; live 3D gizmo/render evidence deferred without Teardown.exe"
+}

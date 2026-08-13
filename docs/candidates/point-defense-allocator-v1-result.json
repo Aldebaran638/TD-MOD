@@ -1,0 +1,21 @@
+{
+    "schema":  "cm2.point-defense-allocator-report/1",
+    "protocolVersion":  "cm2.point-defense-allocator/1",
+    "shipId":  "ship-A",
+    "backendMode":  "catalog",
+    "candidateQueries":  4,
+    "candidatePasses":  4,
+    "candidateCount":  8,
+    "candidateBudgetRejected":  4,
+    "mountAllocations":  7,
+    "duplicateTickRejects":  1,
+    "cooldownRejects":  3,
+    "fireBudgetRejects":  1,
+    "friendRejects":  7,
+    "occludedRejects":  7,
+    "destroyedRejects":  7,
+    "rangeRejects":  7,
+    "disposedMounts":  1,
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

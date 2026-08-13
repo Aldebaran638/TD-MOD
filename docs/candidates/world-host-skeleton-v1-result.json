@@ -1,0 +1,25 @@
+{
+    "schema":  "cm2.world-host-skeleton-report/1",
+    "hostMode":  "content-host",
+    "hostId":  "scene-host-1",
+    "hostCapacity":  12,
+    "adapterCount":  3,
+    "lifecycleSteps":  10,
+    "migratedScope":  [
+                          "registration",
+                          "heartbeat",
+                          "lifecycle",
+                          "dense-index",
+                          "generation",
+                          "diagnostics"
+                      ],
+    "deferredScope":  [
+                          "movement",
+                          "damage",
+                          "weapon-fire",
+                          "projectile-authority",
+                          "presentation-audio"
+                      ],
+    "liveRuntimeEvidence":  "unavailable-without-Teardown.exe",
+    "result":  "pass"
+}

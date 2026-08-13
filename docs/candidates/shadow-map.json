@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "cm2.vertical-slice-shadow/1",
+  "comparisonPolicy": "compare only at init; any mismatch blocks the slice and keeps legacy ownership",
+  "slices": [
+    {"name":"ray-beam","candidateWeaponId":"cm2:slice.weapon.ray","candidateEffectId":"cm2:slice.effect.ray","legacyWeaponId":"flakArtillery","expectedBehaviorFamily":"ray","expectedEffectType":"beam","compareProjectile":false,"compareMountTransform":false},
+    {"name":"logical-projectile-impact","candidateWeaponId":"cm2:slice.weapon.projectile","candidateProjectileId":"cm2:slice.projectile.logical","candidateEffectId":"cm2:slice.effect.impact","legacyWeaponId":"gigaCannon","expectedBehaviorFamily":"projectile","expectedEffectType":"impact","compareProjectile":true,"compareMountTransform":false},
+    {"name":"guided-missile","candidateWeaponId":"cm2:slice.weapon.guided","candidateProjectileId":"cm2:slice.projectile.guided","candidateEffectId":"cm2:slice.effect.guided","legacyWeaponId":"swarmerMissile","expectedBehaviorFamily":"guided","expectedEffectType":"trail","compareProjectile":false,"compareMountTransform":false},
+    {"name":"tachyon-charge-beam-impact","candidateWeaponId":"cm2:slice.weapon.tachyon","candidateEffectId":"cm2:slice.effect.tachyon.beam","legacyWeaponId":"tachyonLance","expectedBehaviorFamily":"charged","expectedEffectType":"beam","compareProjectile":false,"compareMountTransform":false}
+  ]
+}

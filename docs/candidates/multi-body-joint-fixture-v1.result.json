@@ -1,0 +1,19 @@
+{
+    "schema":  "cm2.multi-body-joint-fixture-report/1",
+    "protocolVersion":  "cm2.multi-body-joint-fixture/1",
+    "identity":  "ship:multi-body-fixture:31",
+    "ownerId":  "ship-owner:multi-body-fixture",
+    "generation":  31,
+    "bodyCount":  2,
+    "jointCount":  1,
+    "ticks":  1,
+    "spawns":  1,
+    "disposes":  2,
+    "idempotentDisposes":  1,
+    "networkSnapshots":  2,
+    "jointActiveAtEnd":  false,
+    "formalTurretEnabled":  false,
+    "staleRejects":  1,
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

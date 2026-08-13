@@ -1,0 +1,41 @@
+{
+  "schema": "cm2.hotpath-budget/1",
+  "protocolVersion": "cm2.hotpath-budget/1",
+  "generation": 7,
+  "maxCounterKeys": 128,
+  "projectileChurn": {
+    "cycles": 120,
+    "recordsPerCycle": 96,
+    "expectedBeforeRecordAllocations": 11520,
+    "expectedAfterRecordCreates": 96,
+    "expectedAfterRecordReusesMin": 11424,
+    "activeCount": 0,
+    "behaviorTrace": ["spawn", "sweep", "shield-check", "impact", "finish"]
+  },
+  "candidateChurn": {
+    "updates": 12,
+    "candidatesPerUpdate": 64,
+    "expectedBeforeCandidateBuffers": 12,
+    "expectedAfterBufferCreates": 1,
+    "expectedAfterBufferReusesMin": 11,
+    "behaviorTrace": ["query", "sort", "allocate", "cooldown"]
+  },
+  "orphanCleanup": {
+    "orphanRecords": 40,
+    "expectedBeforePasses": 40,
+    "expectedAfterBatches": 1,
+    "expectedAfterOperations": 40
+  },
+  "counterOverflow": {
+    "attemptedKeys": 129,
+    "expectedRejected": 1
+  },
+  "expected": {
+    "projectileActive": 0,
+    "candidateActive": 64,
+    "behaviorTraceUnchanged": true,
+    "noFeatureDisabled": true,
+    "boundedCounters": true
+  },
+  "rollback": "Revert projectile record pooling, allocator candidate buffer, and batch cleanup independently; retain hotpath diagnostics and legacy behavior paths."
+}

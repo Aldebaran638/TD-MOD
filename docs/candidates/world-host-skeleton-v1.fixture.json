@@ -1,0 +1,46 @@
+{
+  "schema": "cm2.world-host-skeleton/1",
+  "protocolVersion": "cm2.world/1",
+  "host": {
+    "entry": "Content Mod 2/main.lua",
+    "mode": "content-host",
+    "hostId": "scene-host-1",
+    "maxInstances": 12,
+    "heartbeatIntervalSeconds": 0.5,
+    "denseIndex": true,
+    "generationOnInit": 1,
+    "generationOnDispose": 2
+  },
+  "adapters": [
+    { "entry": "Content Mod 2/script/shipMain.lua", "identityPrefix": "ship:", "ownerPrefix": "ship-owner:", "modeWhenHostReady": "content-host", "fallback": "local" },
+    { "entry": "Content Mod 2/script/strikeCraftMain.lua", "identityPrefix": "strike-craft:", "ownerPrefix": "ship-owner:", "modeWhenHostReady": "content-host", "fallback": "local" },
+    { "entry": "Content Mod 2/script_riddle_escort/shipMain.lua", "identityPrefix": "escort:", "ownerPrefix": "ship-owner:", "modeWhenHostReady": "content-host", "fallback": "local" }
+  ],
+  "lifecycle": [
+    "host.init",
+    "ship-A.register",
+    "ship-B.register",
+    "ship-A.heartbeat",
+    "ship-B.heartbeat",
+    "host.reload",
+    "old-generation.reject",
+    "ship-B.late-join",
+    "ship-A.unregister",
+    "scene.unload"
+  ],
+  "migratedScope": ["registration", "heartbeat", "lifecycle", "dense-index", "generation", "diagnostics"],
+  "deferredScope": ["movement", "damage", "weapon-fire", "projectile-authority", "presentation-audio"],
+  "fallbackRules": [
+    "host ready=false -> local with fallbackReason=content-host-unavailable",
+    "host generation changes -> local-fallback with explicit reason",
+    "no implicit second content-host is created",
+    "scene unload clears dense instances and marks ready=false"
+  ],
+  "expected": {
+    "productionEntriesChanged": 5,
+    "syntheticPreviewAdapter": "Content Mod 2/script/world/adapter/synthetic_world_adapter_v1.lua",
+    "hostCountPerScene": 1,
+    "maxDenseInstances": 12,
+    "liveRuntimeProof": "required-but-unavailable-without-Teardown.exe"
+  }
+}

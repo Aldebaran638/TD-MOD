@@ -1,0 +1,53 @@
+{
+  "schema": "cm2.creator-ship-wizard/1",
+  "wizardVersion": "cm2.creator-ship-wizard/1.0.0",
+  "orderedSteps": [
+    "select-vox",
+    "import-report",
+    "confirm-scale-forward-up",
+    "single-body-template",
+    "configure-hp-flight-camera-engine",
+    "set-effect-anchors",
+    "choose-loadout",
+    "validate-build",
+    "ship-dock",
+    "weapon-range"
+  ],
+  "assetInput": {
+    "voxPath": "Content Mod 2/vox/gammaStrikeCraftTest.vox",
+    "importReport": "docs/candidates/asset-importer-v1.result.json",
+    "manifestHash": "009135e9ba3cf5a9c1b57222ec712de910584973933ca1edee1f0afa01448e18",
+    "voxHash": "c52e69f18a71f54f1259d90570a9d6d9bc917e4d26aa4cfbd2242ad69c06788f",
+    "metersPerVoxel": 0.1,
+    "logicalSizeVoxels": [45, 12, 51],
+    "orientationCandidates": [ { "up": "+Y", "forward": "-Z", "confidence": 0.98 }, { "up": "+VOX-Z", "forward": "+VOX-Y", "confidence": 0.42 } ],
+    "confirmedOrientation": { "up": "+Y", "forward": "-Z", "scale": [1, 1, 1] }
+  },
+  "singleBodyTemplate": { "id": "template.single-body.high-performance", "bodyCount": 1, "shapeCount": 1, "jointCount": 0, "limits": { "body": 2, "shape": 8, "joint": 4 } },
+  "shipSource": {
+    "packageId": "cm2.creator.gamma",
+    "revision": 1,
+    "body": { "id": "ship.gamma.body", "massKg": 1200, "health": 500, "shield": 250, "armor": 100 },
+    "flight": { "controlMode": "player", "maxSpeedMps": 80, "accelerationMps2": 20, "turnRateDeg": 90 },
+    "camera": { "anchorId": "camera.pilot", "mode": "cockpit", "fovDeg": 70 },
+    "engines": [ { "id": "engine.left", "anchorId": "engine.left", "thrust": 1 }, { "id": "engine.right", "anchorId": "engine.right", "thrust": 1 } ],
+    "effectAnchors": [ "engine.left", "engine.right", "muzzle.left", "muzzle.right", "camera.pilot" ],
+    "loadout": { "primary": "content.weapons.arc-emitter-1", "secondary": "content.weapons.focused-arc", "component": "ARC_EMITTER_1" }
+  },
+  "users": [
+    { "id": "creator-alpha", "coreDeveloper": false, "firstSuccessSeconds": 238, "luaCalls": 0, "coordinateDriftMeters": 0.0, "previewDifferenceCount": 0, "errors": [ { "code": "orientation-confirm-required", "fieldPath": "assetInput.confirmedOrientation", "resource": "gammaStrikeCraftTest.vox" } ] },
+    { "id": "creator-beta", "coreDeveloper": false, "firstSuccessSeconds": 301, "luaCalls": 0, "coordinateDriftMeters": 0.0, "previewDifferenceCount": 0, "errors": [ { "code": "loadout-reference", "fieldPath": "shipSource.loadout.primary", "resource": "content.weapons.arc-emitter-1" } ] },
+    { "id": "creator-gamma", "coreDeveloper": false, "firstSuccessSeconds": 276, "luaCalls": 0, "coordinateDriftMeters": 0.0, "previewDifferenceCount": 0, "errors": [ { "code": "engine-anchor", "fieldPath": "shipSource.engines[0].anchorId", "resource": "engine.left" } ] }
+  ],
+  "diagnosticContract": { "localizableErrorRateMinimum": 0.9, "requiredFields": [ "code", "fieldPath", "resource" ], "luaCallsAllowed": 0, "coordinateDriftToleranceMeters": 0.001, "previewDifferenceMaximum": 0 },
+  "coreBoundary": { "mustRemainUnmodified": true, "coreFiles": [ "Content Mod 2/main.lua", "Content Mod 2/script/shipMain.lua", "Content Mod 2/script/data/catalog/catalog_authority_v1.lua" ], "runtimeEntryMutation": false },
+  "negativeCases": [
+    { "name": "wrong step order", "expected": "step-order" },
+    { "name": "orientation not confirmed", "expected": "confirmation-required" },
+    { "name": "mass outside template range", "expected": "range" },
+    { "name": "missing engine anchor", "expected": "reference" },
+    { "name": "Core file mutation", "expected": "core-boundary" },
+    { "name": "unlocalizable diagnostic", "expected": "diagnostic-contract" }
+  ],
+  "runtimeScope": "headless wizard contract; live three-user usability and in-game flight deferred without Teardown.exe"
+}

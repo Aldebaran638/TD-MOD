@@ -1,0 +1,23 @@
+{
+    "schema":  "cm2.world-protocol-report/1",
+    "protocolVersion":  "cm2.world/1",
+    "luaModule":  "C:\\Users\\XKWL\\Documents\\Teardown\\mods\\Content Mod 2\\script\\net\\world_protocol_v1.lua",
+    "leaseGeneration":  7,
+    "messageCount":  7,
+    "acceptedMessages":  1,
+    "rejectedMessages":  6,
+    "rejectReasons":  [
+                          "reject-stale-generation",
+                          "reject-duplicate",
+                          "reject-version",
+                          "reject-budget",
+                          "reject-runtime-reference",
+                          "reject-capability"
+                      ],
+    "queueCapacity":  2,
+    "queueAccepted":  2,
+    "queueDropped":  1,
+    "queueDepth":  1,
+    "authorityDamageOrFire":  "deferred",
+    "result":  "pass"
+}

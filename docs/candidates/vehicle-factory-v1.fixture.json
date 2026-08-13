@@ -1,0 +1,51 @@
+{
+  "schema": "cm2.vehicle-factory/1",
+  "protocolVersion": "cm2.vehicle-factory/1",
+  "generation": 41,
+  "ownerId": "ship-owner:factory-fixture",
+  "identity": "vehicle-factory:ship-owner:factory-fixture",
+  "mode": "legacy",
+  "maxInstances": 2,
+  "definition": {
+    "definitionId": "advancedStrikeCraft",
+    "identity": "vehicle:alpha",
+    "graph": { "definitionId": "advancedStrikeCraft" },
+    "body": { "bodyId": 901 },
+    "shape": { "shapeId": 902 },
+    "joint": { "jointId": "none" },
+    "mount": { "mountRevision": 1 },
+    "runtime": { "mode": "legacy" }
+  },
+  "operations": [
+    { "op": "init" },
+    { "op": "spawn", "instanceId": "vehicle:alpha", "definitionId": "advancedStrikeCraft", "expected": "active" },
+    { "op": "snapshot", "expectedActive": 1, "expectedTotal": 1 },
+    { "op": "tick", "instanceId": "vehicle:alpha", "expected": "active" },
+    { "op": "spawnFail", "instanceId": "vehicle:broken", "failStage": "joint", "expected": "rejected" },
+    { "op": "snapshot", "expectedActive": 1, "expectedTotal": 1 },
+    { "op": "dispose", "instanceId": "vehicle:alpha", "reason": "test-dispose", "expected": "disposed" },
+    { "op": "disposeAgain", "instanceId": "vehicle:alpha", "expected": "idempotent" },
+    { "op": "spawnSynthetic", "instanceId": "vehicle:preview", "mode": "synthetic", "expected": "active" },
+    { "op": "disposeAll", "expected": 1 },
+    { "op": "snapshot", "expectedActive": 0, "expectedTotal": 2 },
+    { "op": "staleHandle", "instanceId": "vehicle:preview", "expected": "rejected" },
+    { "op": "ownerMismatch", "instanceId": "vehicle:preview", "expected": "rejected" }
+  ],
+  "expected": {
+    "spawnAttempts": 3,
+    "spawns": 2,
+    "spawnRejects": 1,
+    "stageFailures": 1,
+    "rollbacks": 1,
+    "ticks": 1,
+    "disposes": 2,
+    "idempotentDisposes": 1,
+    "activePeak": 1,
+    "eventsEmitted": 5,
+    "activeInstances": 0,
+    "totalInstances": 2,
+    "staleRejects": 1,
+    "ownerRejects": 1,
+    "orphanResources": 0
+  }
+}

@@ -1,0 +1,20 @@
+{
+    "schema":  "cm2.hotpath-budget-report/1",
+    "protocolVersion":  "cm2.hotpath-budget/1",
+    "beforeProjectileRecordAllocations":  11520,
+    "afterProjectileRecordCreates":  96,
+    "afterProjectileRecordReuses":  11424,
+    "projectileFreeRecords":  96,
+    "beforeCandidateBuffers":  12,
+    "afterCandidateBufferCreates":  1,
+    "afterCandidateBufferReuses":  11,
+    "candidateActive":  64,
+    "beforeOrphanCleanupPasses":  40,
+    "afterOrphanCleanupBatches":  1,
+    "afterOrphanCleanupOperations":  40,
+    "counterAccepted":  128,
+    "counterRejected":  1,
+    "behaviorTraceUnchanged":  true,
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

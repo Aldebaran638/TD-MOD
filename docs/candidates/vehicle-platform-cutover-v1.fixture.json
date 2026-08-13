@@ -1,0 +1,50 @@
+{
+  "schema": "cm2.vehicle-platform-cutover/1",
+  "protocolVersion": "cm2.vehicle-platform-cutover/1",
+  "identity": "ship:cutover-fixture:51",
+  "ownerId": "ship-owner:cutover-fixture",
+  "generation": 51,
+  "defaultMode": "legacy",
+  "vehicleOrder": [
+    "advancedStrikeCraft",
+    "advancedSwarmerMissile",
+    "devastatorTorpedo",
+    "battlecruiser",
+    "titan"
+  ],
+  "legacyReaderLedger": {
+    "policy": "legacy-readers-allowed-only-through-ADR-until-live-S0-S7",
+    "categories": ["movement", "camera", "thruster", "weapon", "presentation", "damage", "network"],
+    "rootAuthority": "adapter-only"
+  },
+  "operations": [
+    { "op": "init" },
+    { "op": "validateAll", "expected": "valid" },
+    { "op": "compare", "vehicle": "advancedStrikeCraft", "legacy": { "identity": "advancedStrikeCraft", "rootAuthority": "adapter-only" }, "anchor": { "identity": "advancedStrikeCraft", "rootAuthority": "adapter-only" }, "expected": "pass" },
+    { "op": "compare", "vehicle": "advancedSwarmerMissile", "legacy": { "identity": "advancedSwarmerMissile", "rootAuthority": "adapter-only" }, "anchor": { "identity": "advancedSwarmerMissile", "rootAuthority": "adapter-only" }, "expected": "pass" },
+    { "op": "compare", "vehicle": "devastatorTorpedo", "legacy": { "identity": "devastatorTorpedo", "rootAuthority": "adapter-only" }, "anchor": { "identity": "devastatorTorpedo", "rootAuthority": "adapter-only" }, "expected": "pass" },
+    { "op": "compare", "vehicle": "battlecruiser", "legacy": { "identity": "battlecruiser", "rootAuthority": "adapter-only" }, "anchor": { "identity": "battlecruiser", "rootAuthority": "adapter-only" }, "expected": "pass" },
+    { "op": "compare", "vehicle": "titan", "legacy": { "identity": "titan", "rootAuthority": "adapter-only" }, "anchor": { "identity": "titan", "rootAuthority": "adapter-only" }, "expected": "pass" },
+    { "op": "mode", "vehicle": "advancedStrikeCraft", "value": "shadow" },
+    { "op": "mode", "vehicle": "advancedSwarmerMissile", "value": "shadow" },
+    { "op": "mode", "vehicle": "devastatorTorpedo", "value": "shadow" },
+    { "op": "mode", "vehicle": "battlecruiser", "value": "shadow" },
+    { "op": "mode", "vehicle": "titan", "value": "shadow" },
+    { "op": "mode", "vehicle": "advancedStrikeCraft", "value": "anchor" },
+    { "op": "rollback", "vehicle": "advancedStrikeCraft", "reason": "live-S0-S7-pending" },
+    { "op": "invalidVehicle", "expected": "rejected" },
+    { "op": "staleHandle", "expected": "rejected" }
+  ],
+  "expected": {
+    "vehicleCount": 5,
+    "registrations": 5,
+    "comparisons": 5,
+    "comparisonPasses": 5,
+    "comparisonMismatches": 0,
+    "modeChanges": 6,
+    "rollbacks": 1,
+    "cutoverRejects": 1,
+    "staleRejects": 1,
+    "anchorModeCount": 0
+  }
+}

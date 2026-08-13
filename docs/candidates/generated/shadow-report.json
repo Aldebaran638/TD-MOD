@@ -1,0 +1,12 @@
+{
+    "schemaVersion":  "cm2.shadow-report/1",
+    "definitionSource":  "legacy",
+    "comparisonPhase":  "init-only",
+    "candidateRuntimeEnabled":  false,
+    "blockedSlices":  [
+
+                      ],
+    "issues":  [
+
+               ]
+}

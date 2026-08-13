@@ -1,0 +1,17 @@
+{
+  "schema": "cm2.ai-vox-import-fixtures/1",
+  "validator": "C:/Users/XKWL/.codex/skills/build-teardown-vox-models/scripts/validate-vox.ps1",
+  "requiredModels": [
+    { "id": "gamma-strike-craft", "path": "Content Mod 2/vox/gammaStrikeCraftTest.vox" },
+    { "id": "escort", "path": "Content Mod 2/vox/escort_1.vox" },
+    { "id": "wujinhao", "path": "Content Mod 2/vox/WUJINHAO.vox" }
+  ],
+  "expected": {
+    "minFiles": 3,
+    "minModelRecords": 7,
+    "minDistinctAxisSignatures": 3,
+    "minDistinctSymmetryClasses": 2,
+    "autoBuild": false,
+    "runtimeAI": false
+  }
+}

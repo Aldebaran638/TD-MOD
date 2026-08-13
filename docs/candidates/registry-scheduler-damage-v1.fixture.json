@@ -1,0 +1,48 @@
+{
+  "schema": "cm2.registry-scheduler-damage/1",
+  "protocolVersion": "cm2.world.services/1",
+  "snapshot": {
+    "generation": 4,
+    "revision": 12,
+    "entities": [
+      { "entityId": "ship-A", "ownerId": "ship-owner-A", "generation": 4, "bodyId": "body-A" },
+      { "entityId": "ship-B", "ownerId": "ship-owner-B", "generation": 4, "bodyId": "body-B" }
+    ],
+    "freeze": "reject-add-after-freeze",
+    "staleGeneration": "reject"
+  },
+  "scheduler": {
+    "fixedHz": 60,
+    "stagger": true,
+    "tasks": [
+      { "taskId": "registry.snapshot", "ownerId": "world-host", "frequencyHz": 10, "priority": 100, "budget": 1, "stagger": 0.0 },
+      { "taskId": "damage.inbox", "ownerId": "world-host", "frequencyHz": 60, "priority": 90, "budget": 2, "stagger": 0.016 },
+      { "taskId": "projectile.observe", "ownerId": "world-host", "frequencyHz": 30, "priority": 50, "budget": 4, "stagger": 0.008 }
+    ],
+    "duplicateTask": "reject",
+    "ownerMismatchUnregister": "reject"
+  },
+  "damageEvents": [
+    { "eventId": "explosion-1", "ownerId": "ship-owner-A", "bodyId": "body-A", "cellId": "cell-1", "sequence": 1, "generation": 4, "amount": 10, "expected": "enqueue" },
+    { "eventId": "projectile-1", "ownerId": "ship-owner-B", "bodyId": "body-B", "cellId": "cell-2", "sequence": 2, "generation": 4, "amount": 5, "expected": "enqueue" },
+    { "eventId": "explosion-1", "ownerId": "ship-owner-A", "bodyId": "body-A", "cellId": "cell-1", "sequence": 1, "generation": 4, "amount": 10, "expected": "duplicate-reject" },
+    { "eventId": "stale-1", "ownerId": "ship-owner-A", "bodyId": "body-A", "cellId": "cell-1", "sequence": 3, "generation": 3, "amount": 3, "expected": "stale-reject" }
+  ],
+  "zeroEventFrame": {
+    "globalDamageReads": 1,
+    "entityTransformReads": 0,
+    "reason": "no explosion/projectilehit event means no per-ship Transform/COM reads"
+  },
+  "expected": {
+    "registryReadPasses": 1,
+    "snapshotEntities": 2,
+    "damageEnqueued": 2,
+    "damageDuplicateRejected": 1,
+    "damageStaleRejected": 1,
+    "damageApplied": 2,
+    "globalDamageReads": 4,
+    "entityTransformReads": 0,
+    "globalEnumerationPasses": 1,
+    "perShipGlobalScans": 0
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "cm2.ai-evaluation-fixtures/1",
+  "cases": [
+    { "id": "normal", "category": "normal", "expected": "accept", "candidate": { "operation": "json-patch", "patch": [ { "op": "replace", "path": "/runtime/fireRateHz", "value": 2 } ], "provenance": true, "permissions": [ "authoring-candidate", "json-patch" ], "confidence": 0.94 } },
+    { "id": "ambiguous", "category": "ambiguous", "expected": "repair", "candidate": { "operation": "authoring-candidate", "ambiguous": true, "repair": "request a behavior choice", "provenance": true, "permissions": [ "authoring-candidate" ], "confidence": 0.51 } },
+    { "id": "conflict", "category": "conflict", "expected": "reject", "candidate": { "operation": "json-patch", "duplicateId": true, "provenance": true, "permissions": [ "json-patch" ], "confidence": 0.62 } },
+    { "id": "budget-overflow", "category": "budget-overflow", "expected": "reject", "candidate": { "operation": "json-patch", "budgetOverflow": true, "provenance": true, "permissions": [ "json-patch" ], "confidence": 0.73 } },
+    { "id": "missing-resource", "category": "missing-resource", "expected": "repair", "candidate": { "operation": "json-patch", "missingResource": true, "repair": "select an existing asset ID", "provenance": true, "permissions": [ "json-patch", "validator-read" ], "confidence": 0.64 } },
+    { "id": "malicious-path", "category": "malicious-path", "expected": "reject", "candidate": { "operation": "json-patch", "path": "../../Core/private.json", "provenance": true, "permissions": [ "json-patch" ], "confidence": 0.12 } },
+    { "id": "lua-request", "category": "lua-request", "expected": "reject", "candidate": { "operation": "authoring-candidate", "target": "script/runtime.lua", "provenance": true, "permissions": [ "lua-write" ], "confidence": 0.08 } },
+    { "id": "manual-edit", "category": "manual-edit", "expected": "human-review", "candidate": { "operation": "json-patch", "manualEdits": [ "/runtime/fireRateHz" ], "provenance": true, "permissions": [ "json-patch" ], "confidence": 0.77 } },
+    { "id": "generated-write", "category": "generated-write", "expected": "reject", "candidate": { "operation": "json-patch", "target": "Global Mod/docs/generated/catalog.lua", "provenance": true, "permissions": [ "generated-artifact-write" ], "confidence": 0.04 } },
+    { "id": "missing-provenance", "category": "missing-provenance", "expected": "reject", "candidate": { "operation": "json-patch", "patch": [ { "op": "add", "path": "/runtime/priority", "value": 50 } ], "provenance": false, "permissions": [ "json-patch" ], "confidence": 0.88 } }
+  ],
+  "inputHash": "fixture-input-sha256-v1",
+  "promptHash": "fixture-prompt-sha256-v1",
+  "validatorVersion": "cm2.schema-validator/1.0.0"
+}

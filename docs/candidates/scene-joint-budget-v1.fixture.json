@@ -1,0 +1,46 @@
+{
+  "schema": "cm2.scene-joint-budget/1",
+  "protocolVersion": "cm2.scene-joint-budget/1",
+  "identity": "scene-joint-budget-fixture:hero",
+  "ownerId": "scene-owner:hero",
+  "generation": 201,
+  "config": { "hardCap": 4, "softCap": 3, "recoveryMargin": 1 },
+  "requests": [
+    { "id": "turret-primary", "ownerId": "ship-owner:primary", "priority": "critical", "distance": 8.0, "screenRelevance": 1.0, "playerInteractive": true, "destructionRequired": true, "jointCost": 2, "physicsBodies": 2, "physicsShapes": 4, "networkCost": 3.0, "fxCost": 2.0, "fallbackMode": "logical-only" },
+    { "id": "turret-secondary", "ownerId": "ship-owner:secondary", "priority": "high", "distance": 20.0, "screenRelevance": 0.8, "jointCost": 2, "physicsBodies": 2, "physicsShapes": 3, "networkCost": 2.0, "fxCost": 1.0, "fallbackMode": "visual-only" },
+    { "id": "turret-recovery", "ownerId": "ship-owner:recovery", "priority": "high", "distance": 25.0, "screenRelevance": 0.7, "jointCost": 2, "physicsBodies": 2, "physicsShapes": 3, "networkCost": 2.0, "fxCost": 1.0, "fallbackMode": "visual-only" },
+    { "id": "turret-far", "ownerId": "ship-owner:far", "priority": "low", "distance": 90.0, "screenRelevance": 0.1, "jointCost": 1, "physicsBodies": 1, "physicsShapes": 1, "networkCost": 1.0, "fxCost": 0.5, "fallbackMode": "visual-only" }
+  ],
+  "operations": [
+    { "op": "init" },
+    { "op": "recordMetrics", "metrics": { "physicsBodies": 12, "physicsShapes": 28, "networkMessages": 6, "fxRequests": 9 } },
+    { "op": "requestAll" },
+    { "op": "duplicate", "id": "turret-primary", "expected": "rejected" },
+    { "op": "evaluate", "label": "initial", "expectedActiveJointCost": 4, "expectedGranted": 2, "expectedDowngraded": 2 },
+    { "op": "release", "id": "turret-secondary" },
+    { "op": "evaluate", "label": "hysteresis", "expectedActiveJointCost": 3, "expectedGranted": 2, "expectedDowngraded": 1, "expectedHysteresisHolds": 1, "expectedRecoveries": 1 },
+    { "op": "release", "id": "turret-primary" },
+    { "op": "evaluate", "label": "recovery", "expectedActiveJointCost": 3, "expectedGranted": 2, "expectedDowngraded": 0, "expectedRecoveries": 2 },
+    { "op": "snapshot", "expectedHardCap": 4, "expectedActiveJointCost": 3 },
+    { "op": "disposeOwner", "ownerId": "ship-owner:far", "expectedRemoved": 1 },
+    { "op": "evaluate", "label": "owner-dispose", "expectedActiveJointCost": 2, "expectedGranted": 1, "expectedDowngraded": 0 },
+    { "op": "staleHandle", "expected": "rejected" }
+  ],
+  "expected": {
+    "requestCount": 4,
+    "hardCap": 4,
+    "softCap": 3,
+    "maxActiveJointCost": 4,
+    "evaluations": 4,
+    "grantedTotal": 7,
+    "downgradedTotal": 3,
+    "rejected": 1,
+    "duplicateRejects": 1,
+    "recoveries": 2,
+    "hysteresisHolds": 1,
+    "ownerDisposals": 1,
+    "staleRejects": 1,
+    "sceneMetricUpdates": 1,
+    "fixtureOnly": true
+  }
+}

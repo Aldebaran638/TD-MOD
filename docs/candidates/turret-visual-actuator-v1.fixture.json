@@ -1,0 +1,33 @@
+{
+  "schema": "cm2.turret-visual-actuator/1",
+  "protocolVersion": "cm2.turret-visual-actuator/1",
+  "identity": "turret-actuator-fixture:sentinel",
+  "ownerId": "ship-owner:turret-actuator-fixture",
+  "generation": 81,
+  "turretId": "sentinel-turret",
+  "profile": { "maxYawSpeed": 90.0, "maxPitchSpeed": 60.0 },
+  "lodBudget": { "nearDistance": 40.0, "farDistance": 120.0, "enabled": true },
+  "operations": [
+    { "op": "init" },
+    { "op": "apply", "targetYaw": 45.0, "targetPitch": 20.0, "dt": 0.1, "expectedYaw": 9.0, "expectedPitch": 6.0 },
+    { "op": "apply", "targetYaw": 45.0, "targetPitch": 20.0, "dt": 0.1, "expectedYaw": 18.0, "expectedPitch": 12.0 },
+    { "op": "lod", "distance": 10.0, "expected": "near" },
+    { "op": "lod", "distance": 80.0, "expected": "far" },
+    { "op": "lod", "distance": 200.0, "expected": "cull" },
+    { "op": "applyLargeDt", "targetYaw": 90.0, "targetPitch": 30.0, "dt": 1.0, "expectedYaw": 27.0, "expectedPitch": 18.0 },
+    { "op": "dispose", "expected": "disposed" },
+    { "op": "staleHandle", "expected": "rejected" }
+  ],
+  "expected": {
+    "applies": 3,
+    "dtClamps": 1,
+    "yawSteps": 3,
+    "pitchSteps": 3,
+    "lodQueries": 3,
+    "nearFrames": 1,
+    "farFrames": 1,
+    "culledFrames": 1,
+    "staleRejects": 1,
+    "fallbackMode": "static-anchor"
+  }
+}

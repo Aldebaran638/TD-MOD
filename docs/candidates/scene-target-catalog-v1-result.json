@@ -1,0 +1,22 @@
+{
+    "schema":  "cm2.scene-target-catalog-report/1",
+    "protocolVersion":  "cm2.world.target-catalog/1",
+    "sceneId":  "scene-target-fixture",
+    "generation":  7,
+    "cellSize":  100,
+    "refreshHz":  5,
+    "registered":  6,
+    "refreshes":  5,
+    "dirtyRefreshes":  4,
+    "moves":  2,
+    "disables":  1,
+    "removes":  1,
+    "staleRejected":  2,
+    "queries":  5,
+    "queryCostSamples":  1,
+    "finalRevision":  5,
+    "finalSnapshotEntries":  4,
+    "candidateScope":  "grid-local",
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

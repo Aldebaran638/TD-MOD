@@ -1,0 +1,14 @@
+{
+  "schema": "cm2.turret-content-catalog/1",
+  "catalogRef": "content.turrets.hero.dual-axis",
+  "contentId": "hero.turret.dual-axis",
+  "turretDefinitionId": "heroTurretDualAxisV1",
+  "sourceFixture": "docs/candidates/turret-content-authority-v1.fixture.json",
+  "runtimeAuthority": "AnchorResolver/TurretDefinition",
+  "legacyAuthority": "migration-ledger-only",
+  "editor": { "schema": "cm2.turret-editor/1", "sourceMode": "read-write-source-only", "generatedLuaEditable": false },
+  "preview": { "profile": "preview.hero.turret.dual-axis.v1", "contentMod": "Content Mod 2", "sameRuntimeDTO": true },
+  "harness": { "fixture": "turret-content-authority-v1", "fullHarnessRequired": true },
+  "fallback": { "modes": ["fixed", "logical", "visual"], "physicalJointDefault": false },
+  "status": "candidate-until-live-S0-S7"
+}

@@ -1,0 +1,42 @@
+{
+    "schema":  "cm2.guided-collision-budget-report/1",
+    "protocolVersion":  "cm2.guided-collision-budget/1",
+    "mode":  "budgeted",
+    "projectiles":  96,
+    "frames":  60,
+    "queryGranted":  3008,
+    "queryRejected":  0,
+    "degraded":  72,
+    "sweepQueries":  2908,
+    "closestQueries":  100,
+    "criticalElevations":  3,
+    "maxWindowQueries":  3000,
+    "phaseSpreadSamples":  100,
+    "negativeDegraded":  3,
+    "negativeRejected":  3,
+    "legacyQueries":  5,
+    "scenarioResults":  [
+                            {
+                                "id":  "straight",
+                                "queryCost":  2,
+                                "critical":  false
+                            },
+                            {
+                                "id":  "sharp-turn",
+                                "queryCost":  2,
+                                "critical":  true
+                            },
+                            {
+                                "id":  "near-collision",
+                                "queryCost":  2,
+                                "critical":  true
+                            },
+                            {
+                                "id":  "overspeed",
+                                "queryCost":  2,
+                                "critical":  true
+                            }
+                        ],
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

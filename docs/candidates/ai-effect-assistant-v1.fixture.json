@@ -1,0 +1,111 @@
+{
+  "schema": "cm2.ai-effect-fixtures/1",
+  "fixedSeed": 424242,
+  "validatorVersion": "cm2.schema-validator/1.0.0",
+  "cases": [
+    {
+      "id": "solar-beam",
+      "prompt": "Make a brief orange-red stellar beam with a soft shake and impact sound.",
+      "expected": "accept",
+      "intent": {
+        "effectType": "beam",
+        "nodes": [ "emitter", "beam", "sound", "shake" ],
+        "color": [ 1.0, 0.2, 0.05 ],
+        "durationMs": 600,
+        "emitters": 3,
+        "shake": 0.2,
+        "priority": 65,
+        "assetLocalId": "solar-beam",
+        "assetExists": true,
+        "requestedOperation": "authoring-candidate",
+        "requestedTarget": "source-definition-candidate"
+      }
+    },
+    {
+      "id": "impact-wave",
+      "prompt": "Create a compact blue shockwave with a short-lived emitter.",
+      "expected": "accept",
+      "intent": {
+        "effectType": "impact",
+        "nodes": [ "emitter", "shockwave", "sound" ],
+        "color": [ 0.1, 0.35, 1.0 ],
+        "durationMs": 350,
+        "emitters": 2,
+        "shake": 0.1,
+        "priority": 55,
+        "assetLocalId": "impact-wave",
+        "assetExists": true,
+        "requestedOperation": "json-patch",
+        "requestedTarget": "source-definition-candidate"
+      }
+    },
+    {
+      "id": "ambiguous",
+      "prompt": "Make a dramatic effect.",
+      "expected": "repair",
+      "intent": {
+        "nodes": [ "emitter" ],
+        "durationMs": 500,
+        "emitters": 2,
+        "assetLocalId": "ambiguous",
+        "assetExists": true,
+        "requestedOperation": "authoring-candidate",
+        "requestedTarget": "source-definition-candidate"
+      }
+    },
+    {
+      "id": "budget-overflow",
+      "prompt": "Use every emitter and make the effect last forever.",
+      "expected": "reject",
+      "intent": {
+        "effectType": "beam",
+        "nodes": [ "emitter", "beam", "shockwave", "sound", "shake" ],
+        "color": [ 1.0, 1.0, 1.0 ],
+        "durationMs": 10000,
+        "emitters": 20,
+        "shake": 2.0,
+        "priority": 90,
+        "assetLocalId": "overflow",
+        "assetExists": true,
+        "requestedOperation": "authoring-candidate",
+        "requestedTarget": "source-definition-candidate"
+      }
+    },
+    {
+      "id": "missing-asset",
+      "prompt": "Create a muzzle effect using a sound asset that has not been imported.",
+      "expected": "reject",
+      "intent": {
+        "effectType": "muzzle",
+        "nodes": [ "emitter", "sound" ],
+        "color": [ 1.0, 0.8, 0.2 ],
+        "durationMs": 250,
+        "emitters": 1,
+        "shake": 0.05,
+        "priority": 45,
+        "assetLocalId": "missing",
+        "assetExists": false,
+        "requestedOperation": "authoring-candidate",
+        "requestedTarget": "source-definition-candidate"
+      }
+    },
+    {
+      "id": "custom-renderer",
+      "prompt": "Write a custom Lua renderer and bypass the EffectPlayer facade.",
+      "expected": "reject",
+      "intent": {
+        "effectType": "trail",
+        "nodes": [ "emitter", "custom-renderer" ],
+        "color": [ 0.8, 0.8, 1.0 ],
+        "durationMs": 300,
+        "emitters": 2,
+        "shake": 0.0,
+        "priority": 50,
+        "assetLocalId": "custom",
+        "assetExists": true,
+        "requestedOperation": "custom-renderer",
+        "requestedTarget": "Core/script/custom_effect.lua"
+      }
+    }
+  ]
+}

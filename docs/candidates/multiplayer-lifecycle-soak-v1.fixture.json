@@ -1,0 +1,66 @@
+{
+  "schema": "cm2.multiplayer-lifecycle-soak-fixtures/1",
+  "protocolVersion": "cm2.world.multiplayer/1",
+  "durationSeconds": 1800,
+  "warmupSeconds": 120,
+  "tickHz": 30,
+  "clients": [
+    { "id": "host", "role": "host", "generation": 7, "ownerId": "player-host" },
+    { "id": "remote", "role": "remote", "generation": 7, "ownerId": "player-remote" },
+    { "id": "late-join", "role": "late-join", "generation": 7, "ownerId": "player-late" }
+  ],
+  "scenarios": [
+    { "id": "host-remote-config", "steps": [ "negotiate", "register", "configure", "snapshot" ], "expected": "converged" },
+    { "id": "lock", "steps": [ "acquire-host", "duplicate-acquire-reject", "release" ], "expected": "single-owner" },
+    { "id": "fire", "steps": [ "fire-intent", "projectile-spawn", "damage-idempotency" ], "expected": "one-damage" },
+    { "id": "turret", "steps": [ "target", "aim", "fire", "joint-update" ], "expected": "one-authority" },
+    { "id": "death", "steps": [ "mark-destroyed", "destroy-effects", "destroy-joints" ], "expected": "no-orphan" },
+    { "id": "respawn", "steps": [ "generation-increment", "spawn-new-entity", "reject-stale-handle" ], "expected": "fresh-generation" },
+    { "id": "late-join", "steps": [ "stable-snapshot", "stable-delta", "suppress-transient-replay" ], "expected": "stable-only" },
+    { "id": "reconnect", "steps": [ "sequence-reset", "lease-reacquire", "stable-snapshot" ], "expected": "converged" }
+  ],
+  "entityChurn": {
+    "cycles": 1800,
+    "entitiesPerCycle": { "Ship": 1, "Projectile": 2, "Craft": 1, "Effect": 2, "Joint": 1 },
+    "destroyBeforeNextCycle": true,
+    "staleHandleAttemptsPerCycle": 1,
+    "ownerLeaseAcquirePerCycle": 1,
+    "ownerLeaseReleasePerCycle": 1
+  },
+  "saveLoad": [
+    { "case": "same-revision", "packageId": "cm2:golden/hello-ship", "storedRevision": 3, "requestedRevision": 3, "expected": "accept" },
+    { "case": "missing-package", "packageId": "cm2:missing/package", "storedRevision": 1, "requestedRevision": 1, "expected": "reject-missing-package", "fallback": "builtin-only" },
+    { "case": "downgrade-revision", "packageId": "cm2:golden/hello-ship", "storedRevision": 3, "requestedRevision": 2, "expected": "reject-downgrade" },
+    { "case": "compatible-migration", "packageId": "cm2:golden/hello-ship", "storedRevision": 2, "requestedRevision": 3, "expected": "migrate-then-accept", "migration": "cm2.schema/1-to-2" }
+  ],
+  "queuePattern": { "commandPerTick": 2, "snapshotPerTick": 3, "drainPerTick": 3, "transientDropAllowed": true },
+  "sourceContracts": [
+    { "path": "Content Mod 2/script/net/world_command_snapshot_v1.lua", "symbols": [ "function multiplayer.serverInit", "function multiplayer.lateJoin", "function multiplayer.reconnect", "function multiplayer.markDestroyed", "transientReplaySuppressed" ] },
+    { "path": "Content Mod 2/script/world/host/dense_entity_store_v1.lua", "symbols": [ "function dense.serverInit", "function dense.register", "function dense.remove", "generations", "stale dense handle" ] },
+    { "path": "Content Mod 2/script/weapon/server/behavior/projectile/lifecycle_api_v1.lua", "symbols": [ "function lifecycle.serverInit", "function lifecycle.spawn", "function lifecycle.destroy", "function lifecycle.ownerDestroyed", "generation" ] },
+    { "path": "Content Mod 2/script/weapon/client/presentation/effect_player.lua", "symbols": [ "function player.init", "function player.play", "function player.destroy", "function player.sceneReload", "generation" ] },
+    { "path": "Content Mod 2/script/world/adapter/multi_body_joint_fixture_v1.lua", "symbols": [ "function fixture.serverInit", "function fixture.spawn", "function fixture.dispose", "function fixture.disposeBody", "generation" ] },
+    { "path": "Content Mod 2/script/data/configuration/loadout_contract_v1.lua", "symbols": [ "function _contract.freeze", "function _contract.validate", "function _contract.migrateV0", "function _contract.snapshotHash", "revision" ] }
+  ],
+  "headlessSuites": [
+    { "id": "world-command-snapshot", "path": "tools/cm2-world-host/test-world-command-snapshot-v1.ps1" },
+    { "id": "dense-entity-store", "path": "tools/cm2-world-host/test-dense-entity-store-v1.ps1" },
+    { "id": "projectile-lifecycle", "path": "tools/cm2-world-host/test-projectile-lifecycle-v1.ps1" },
+    { "id": "multi-body-joint", "path": "tools/cm2-world-host/test-multi-body-joint-fixture-v1.ps1" },
+    { "id": "package-manifest", "path": "tools/cm2-package/test-package-manifest-v1.ps1" },
+    { "id": "compatibility", "path": "tools/cm2-compat/test-compatibility-policy-v1.ps1" }
+  ],
+  "expected": {
+    "scenarioCount": 8,
+    "entityKinds": 5,
+    "saveLoadCount": 4,
+    "durationMinutes": 30,
+    "queueDepthAfterDrain": 0,
+    "maxStaleLiveHandles": 0,
+    "ownerLeaseLeaks": 0,
+    "orphanCount": 0,
+    "duplicateDamage": 0,
+    "duplicateEntities": 0,
+    "resurrections": 0
+  }
+}

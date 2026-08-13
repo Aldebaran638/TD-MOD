@@ -1,0 +1,32 @@
+{
+    "schema":  "cm2.world-host-spike-report/1",
+    "fixture":  "C:\\Users\\XKWL\\Documents\\Teardown\\mods\\docs\\candidates\\world-host-spike-v1.fixture.json",
+    "route":  "A",
+    "hostCount":  1,
+    "contextCount":  2,
+    "lifecycleEvents":  15,
+    "acceptedLifecycleEvents":  12,
+    "rejectedTransportEvents":  3,
+    "duplicateDrops":  1,
+    "outOfOrderDrops":  1,
+    "staleGenerationDrops":  1,
+    "ownerViolations":  1,
+    "finalRegisteredContexts":  0,
+    "channels":  [
+                     {
+                         "name":  "presentation",
+                         "frequencyHz":  60,
+                         "payloadBudgetBytes":  256,
+                         "reliability":  "ambient-coalesce"
+                     },
+                     {
+                         "name":  "snapshot",
+                         "frequencyHz":  10,
+                         "payloadBudgetBytes":  1024,
+                         "reliability":  "ordered-reliable"
+                     }
+                 ],
+    "authoritativeDamageOrFireEvents":  0,
+    "runtimeEvidence":  "offline-fixture-only; Teardown.exe unavailable",
+    "result":  "pass"
+}

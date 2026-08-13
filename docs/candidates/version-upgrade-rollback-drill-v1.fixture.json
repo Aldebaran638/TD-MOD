@@ -1,0 +1,47 @@
+{
+  "schema": "cm2.upgrade-rollback-fixtures/1",
+  "v1": {
+    "core": "cm2.core/1",
+    "schema": "cm2.source-envelope/1",
+    "sdk": "cm2.sdk/1",
+    "packages": [
+      { "packageId": "cm2:extension/weapon-pack", "schemaVersion": "cm2.package/1", "packageVersion": "1.0.0", "entrypoints": [ "weapon.catalog" ], "semanticIds": [ "cm2:weapon/extension-laser" ] },
+      { "packageId": "cm2:extension/effect-pack", "schemaVersion": "cm2.package/1", "packageVersion": "1.0.0", "entrypoints": [ "effect.catalog" ], "semanticIds": [ "cm2:effect/extension-impact" ] },
+      { "packageId": "cm2:extension/ship-pack", "schemaVersion": "cm2.package/1", "packageVersion": "1.0.0", "entrypoints": [ "ship.catalog" ], "semanticIds": [ "cm2:ship/extension-scout" ] }
+    ],
+    "saves": [
+      { "saveId": "save-alpha", "schemaVersion": "cm2.save/1", "packageId": "cm2:extension/weapon-pack", "packageRevision": 1, "loadoutId": "cm2:loadout/alpha" },
+      { "saveId": "save-beta", "schemaVersion": "cm2.save/1", "packageId": "cm2:extension/ship-pack", "packageRevision": 1, "loadoutId": "cm2:loadout/beta" }
+    ],
+    "generatedArtifacts": [
+      { "path": "docs/generated/cm2-generated-catalog-v1.lua", "kind": "catalog", "source": "repository", "semanticId": "cm2:catalog/core" },
+      { "path": "docs/generated/cm2-generated-catalog-manifest-v1.json", "kind": "manifest", "source": "repository", "semanticId": "cm2:manifest/core" }
+    ]
+  },
+  "v2": {
+    "core": "cm2.core/2",
+    "schema": "cm2.source-envelope/2",
+    "sdk": "cm2.sdk/2",
+    "package": "cm2.package/2",
+    "save": "cm2.save/2",
+    "migrationId": "cm2.migration/core-1-to-2"
+  },
+  "failureCases": [
+    { "id": "future-required", "schemaVersion": "cm2.package/3", "expectedCode": "future-required", "expectedAction": "old-core-reject" },
+    { "id": "missing-required", "schemaVersion": "cm2.package/1", "expectedCode": "missing-required", "expectedAction": "atomic-no-publish" },
+    { "id": "source-hash-mismatch", "schemaVersion": "cm2.package/1", "expectedCode": "source-hash-mismatch", "expectedAction": "restore-v1-backup" },
+    { "id": "partial-publish", "schemaVersion": "cm2.package/2", "expectedCode": "partial-publish", "expectedAction": "atomic-no-publish" }
+  ],
+  "manualSteps": [
+    "Capture v1 source/package/save/generated hashes",
+    "Run one v1-to-v2 migration command",
+    "Validate semantic golden and repeat the command for idempotency",
+    "Boot v2 and then restore the immutable v1 backup",
+    "Verify old Core rejects v2 future-required data and record timing/failures"
+  ],
+  "headlessSuites": [
+    { "id": "compatibility", "path": "tools/cm2-compat/test-compatibility-policy-v1.ps1" },
+    { "id": "semantic-snapshot", "path": "harness/test-semantic-snapshot.ps1" },
+    { "id": "compiler", "path": "harness/test-cm2-compiler.ps1" }
+  ]
+}

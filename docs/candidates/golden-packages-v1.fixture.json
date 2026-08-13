@@ -1,0 +1,22 @@
+{
+  "schema": "cm2.golden-packages-fixtures/1",
+  "packages": [
+    { "id": "builtin-content", "kind": "builtin-content", "suite": "harness/baseline-contract", "headless": "baseline-contract" },
+    { "id": "hello-ship", "kind": "hello-ship", "suite": "tools/cm2-clean-room/test-clean-room-hello-ship-v1.ps1", "headless": "clean-room" },
+    { "id": "previous-schema", "kind": "previous-schema", "suite": "tools/cm2-compat/test-compatibility-policy-v1.ps1", "headless": "migration" },
+    { "id": "dependency-dag", "kind": "dependency-dag", "suite": "tools/cm2-sdk/test-cm2-sdk-v1.ps1", "headless": "package-builder" },
+    { "id": "expert-behavior", "kind": "expert-behavior", "suite": "tools/cm2-expert/test-expert-behavior-policy-v1.ps1", "headless": "default-deny" },
+    { "id": "ai-approved-weapon", "kind": "ai-approved-weapon", "suite": "tools/cm2-ai/test-ai-weapon-assistant-v1.ps1", "headless": "human-approved-candidate" },
+    { "id": "ai-approved-effect", "kind": "ai-approved-effect", "suite": "tools/cm2-ai/test-ai-effect-assistant-v1.ps1", "headless": "human-approved-candidate" },
+    { "id": "ai-approved-ship", "kind": "ai-approved-ship", "suite": "tools/cm2-ai/test-ai-vox-ship-import-v1.ps1", "headless": "human-reviewed-candidate" }
+  ],
+  "negativeCases": [
+    { "id": "missing-dependency", "expectedCode": "validate-failed", "source": "clean-room/sdk negative fixture" },
+    { "id": "dependency-cycle", "expectedCode": "dependency-cycle", "source": "golden diagnostic contract" },
+    { "id": "duplicate-id", "expectedCode": "duplicate-id", "source": "Compiler negative fixture" },
+    { "id": "path-traversal", "expectedCode": "unsafe-path", "source": "SDK/compatibility negative fixture" },
+    { "id": "asset-hash-mismatch", "expectedCode": "asset-hash-mismatch", "source": "asset manifest negative contract" },
+    { "id": "budget-overflow", "expectedCode": "budget-overflow", "source": "AI Weapon/Effect budget fixture" }
+  ],
+  "runtime": { "teardownAvailable": false, "status": "deferred", "reason": "No Teardown.exe is installed or discoverable." }
+}

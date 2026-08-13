@@ -1,0 +1,44 @@
+{
+  "schema": "cm2.turret-solver/1",
+  "protocolVersion": "cm2.turret-solver/1",
+  "identity": "turret-solver-fixture:sentinel",
+  "ownerId": "ship-owner:turret-solver-fixture",
+  "generation": 71,
+  "definition": {
+    "leadTime": 0.0,
+    "joint": { "minAngle": -40.0, "maxAngle": 40.0 },
+    "pitch": { "minAngle": -20.0, "maxAngle": 25.0 }
+  },
+  "base": {
+    "position": [0.0, 0.0, 0.0],
+    "forward": [0.0, 0.0, -1.0],
+    "up": [0.0, 1.0, 0.0],
+    "right": [1.0, 0.0, 0.0]
+  },
+  "candidates": [
+    { "targetId": "projectile-02", "kind": "projectile", "hostile": true, "alive": true, "priority": 3, "distance": 5.0, "position": [5.0, 0.0, -5.0] },
+    { "targetId": "drone-01", "kind": "hostile", "hostile": true, "alive": true, "priority": 1, "distance": 20.0, "position": [0.0, 0.0, -20.0] },
+    { "targetId": "friendly-01", "kind": "ship", "hostile": false, "alive": true, "priority": 9, "distance": 1.0, "position": [0.0, 0.0, -1.0] },
+    { "targetId": "dead-01", "kind": "projectile", "hostile": true, "alive": false, "priority": 9, "distance": 1.0, "position": [0.0, 0.0, -1.0] }
+  ],
+  "filters": { "hostileOnly": true, "allowedKinds": ["projectile", "hostile"], "maxDistance": 30.0 },
+  "operations": [
+    { "op": "init" },
+    { "op": "select", "limit": 1, "expectedTarget": "projectile-02" },
+    { "op": "solveClamp", "targetIndex": 0, "expectedYaw": 40.0, "expectedPitch": 0.0, "expectedClampedYaw": true, "expectedClampedPitch": false },
+    { "op": "solveLead", "target": { "targetId": "drone-01", "position": [0.0, 0.0, -10.0], "velocity": [1.0, 0.0, 0.0], "leadTime": 1.0 }, "expectedAimPoint": [1.0, 0.0, -10.0] },
+    { "op": "invalidBasis", "expected": "rejected" },
+    { "op": "staleHandle", "expected": "rejected" }
+  ],
+  "expected": {
+    "selections": 1,
+    "selected": 1,
+    "solves": 2,
+    "solveRejects": 1,
+    "clampedYaw": 1,
+    "clampedPitch": 0,
+    "leadApplications": 1,
+    "filterRejects": 2,
+    "staleRejects": 1
+  }
+}

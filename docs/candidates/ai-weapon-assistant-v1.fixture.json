@@ -1,0 +1,105 @@
+{
+  "schema": "cm2.ai-weapon-fixtures/1",
+  "fixedSeed": 424242,
+  "validatorVersion": "cm2.schema-validator/1.0.0",
+  "cases": [
+    {
+      "id": "pulse",
+      "prompt": "Create a controlled ray pulse weapon for a small mount.",
+      "expected": "accept",
+      "intent": {
+        "behavior": "ray",
+        "fireRateHz": 4,
+        "damage": 18,
+        "speedMps": 600,
+        "effectType": "beam",
+        "effectPriority": 55,
+        "assetLocalId": "pulse",
+        "requestedOperation": "authoring-candidate",
+        "requestedTarget": "source-definition-candidate",
+        "assetExists": true
+      }
+    },
+    {
+      "id": "guided",
+      "prompt": "Create a slow guided missile with a visible impact effect.",
+      "expected": "accept",
+      "intent": {
+        "behavior": "guided",
+        "fireRateHz": 0.25,
+        "damage": 280,
+        "speedMps": 420,
+        "effectType": "impact",
+        "effectPriority": 70,
+        "assetLocalId": "guided",
+        "requestedOperation": "json-patch",
+        "requestedTarget": "source-definition-candidate",
+        "assetExists": true
+      }
+    },
+    {
+      "id": "ambiguous",
+      "prompt": "Make it fast and powerful.",
+      "expected": "repair",
+      "intent": {
+        "fireRateHz": 8,
+        "damage": 200,
+        "assetLocalId": "ambiguous",
+        "requestedOperation": "authoring-candidate",
+        "requestedTarget": "source-definition-candidate",
+        "assetExists": true
+      }
+    },
+    {
+      "id": "budget-overflow",
+      "prompt": "Create an extreme rapid-fire weapon that ignores normal budget limits.",
+      "expected": "reject",
+      "intent": {
+        "behavior": "ballistic",
+        "fireRateHz": 40,
+        "damage": 50000,
+        "speedMps": 4000,
+        "effectType": "muzzle",
+        "effectPriority": 90,
+        "assetLocalId": "overflow",
+        "requestedOperation": "authoring-candidate",
+        "requestedTarget": "source-definition-candidate",
+        "assetExists": true
+      }
+    },
+    {
+      "id": "missing-effect-asset",
+      "prompt": "Create a charged weapon but use a not-yet-created effect asset.",
+      "expected": "reject",
+      "intent": {
+        "behavior": "charged",
+        "fireRateHz": 0.1,
+        "damage": 900,
+        "speedMps": 800,
+        "effectType": "beam",
+        "effectPriority": 80,
+        "assetLocalId": "missing",
+        "requestedOperation": "authoring-candidate",
+        "requestedTarget": "source-definition-candidate",
+        "assetExists": false
+      }
+    },
+    {
+      "id": "lua-request",
+      "prompt": "Write a custom Lua controller into the runtime to make this weapon smarter.",
+      "expected": "reject",
+      "intent": {
+        "behavior": "guided",
+        "fireRateHz": 1,
+        "damage": 100,
+        "speedMps": 250,
+        "effectType": "trail",
+        "effectPriority": 60,
+        "assetLocalId": "lua",
+        "requestedOperation": "lua-write",
+        "requestedTarget": "Global Mod/script/weapon/runtime.lua",
+        "assetExists": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "schema": "cm2.world-host-spike/1",
+  "protocolVersion": 1,
+  "selectedRoute": "A",
+  "routeOptions": {
+    "A": "Content Host + per-ship adapter + transport",
+    "B": "One World Script owns every Ship; prefabs only register",
+    "C": "Hybrid: instance-local high-frequency work and centralized reliable services"
+  },
+  "host": {
+    "hostId": "scene-host-1",
+    "owner": "content-host",
+    "tickHz": 60,
+    "generation": 1,
+    "fixedCapacityInstances": 12,
+    "transport": "versioned-dto-only"
+  },
+  "contexts": [
+    {
+      "id": "ship-A",
+      "role": "ship-adapter",
+      "owner": "ship-owner-A",
+      "capabilities": ["register", "heartbeat", "presentation-publish", "snapshot-read"]
+    },
+    {
+      "id": "ship-B",
+      "role": "ship-adapter",
+      "owner": "ship-owner-B",
+      "capabilities": ["register", "heartbeat", "presentation-publish", "snapshot-read"]
+    }
+  ],
+  "forbiddenPayloadFields": [
+    "function",
+    "engineHandle",
+    "bodyHandle",
+    "shapeHandle",
+    "jointHandle",
+    "registryReference"
+  ],
+  "authorityExclusions": ["damage", "fire-authority", "weapon-definition", "engine-handle"],
+  "capabilityMatrix": [
+    { "capability": "host init/tick/client lifecycle", "A": "pass", "B": "pass", "C": "pass", "observed": "pass" },
+    { "capability": "two independent ship registrations", "A": "pass", "B": "pass", "C": "pass", "observed": "pass" },
+    { "capability": "cross-context DTO has no engine handles/functions", "A": "pass", "B": "pass", "C": "pass", "observed": "pass" },
+    { "capability": "host reload invalidates old generation", "A": "pass", "B": "pass", "C": "pass", "observed": "pass" },
+    { "capability": "high-frequency presentation is bounded/coalescible", "A": "pass", "B": "risk", "C": "pass", "observed": "pass" },
+    { "capability": "reliable authoritative damage/fire transport", "A": "defer", "B": "defer", "C": "defer", "observed": "deferred-to-Step-4.2+" }
+  ],
+  "channels": [
+    {
+      "name": "presentation",
+      "frequencyHz": 60,
+      "payloadBudgetBytes": 256,
+      "reliability": "ambient-coalesce",
+      "measuredSeparately": true
+    },
+    {
+      "name": "snapshot",
+      "frequencyHz": 10,
+      "payloadBudgetBytes": 1024,
+      "reliability": "ordered-reliable",
+      "measuredSeparately": true
+    }
+  ],
+  "lifecycleTrace": [
+    { "index": 1, "kind": "host.init", "context": "world", "generation": 1, "owner": "content-host" },
+    { "index": 2, "kind": "ship.register", "context": "ship-A", "generation": 1, "owner": "ship-owner-A", "seq": 1 },
+    { "index": 3, "kind": "ship.register", "context": "ship-B", "generation": 1, "owner": "ship-owner-B", "seq": 1 },
+    { "index": 4, "kind": "ship.heartbeat", "context": "ship-A", "generation": 1, "owner": "ship-owner-A", "seq": 2 },
+    { "index": 5, "kind": "ship.heartbeat", "context": "ship-B", "generation": 1, "owner": "ship-owner-B", "seq": 2 },
+    { "index": 6, "kind": "presentation.publish", "context": "ship-A", "generation": 1, "owner": "ship-owner-A", "seq": 100, "payload": { "event": "muzzle", "anchorId": "ship-A.muzzle.0", "seed": 7 } },
+    { "index": 7, "kind": "snapshot.publish", "context": "ship-B", "generation": 1, "owner": "ship-owner-B", "seq": 10, "payload": { "position": [0, 0, 0], "velocity": [0, 0, 0], "revision": 1 } },
+    { "index": 8, "kind": "transport.duplicate", "context": "ship-A", "generation": 1, "owner": "ship-owner-A", "seq": 100, "originalSeq": 100 },
+    { "index": 9, "kind": "transport.out-of-order", "context": "ship-A", "generation": 1, "owner": "ship-owner-A", "seq": 99, "lastAcceptedSeq": 100 },
+    { "index": 10, "kind": "host.reload", "context": "world", "generation": 2, "owner": "content-host" },
+    { "index": 11, "kind": "transport.stale-generation", "context": "ship-B", "generation": 1, "owner": "ship-owner-B", "seq": 11 },
+    { "index": 12, "kind": "ship.late-join", "context": "ship-B", "generation": 2, "owner": "ship-owner-B", "seq": 1 },
+    { "index": 13, "kind": "ship.register", "context": "ship-A", "generation": 2, "owner": "ship-owner-A", "seq": 1 },
+    { "index": 14, "kind": "ship.unregister", "context": "ship-A", "generation": 2, "owner": "ship-owner-A", "seq": 2 },
+    { "index": 15, "kind": "scene.unload", "context": "world", "generation": 2, "owner": "content-host" }
+  ],
+  "transportProbes": [
+    { "name": "duplicate-sequence", "input": { "generation": 1, "seq": 100 }, "expected": "reject-and-count" },
+    { "name": "delayed-out-of-order", "input": { "generation": 1, "seq": 99, "lastAcceptedSeq": 100 }, "expected": "reject-and-count" },
+    { "name": "stale-generation-after-reload", "input": { "generation": 1, "currentGeneration": 2 }, "expected": "reject-and-count" },
+    { "name": "owner-mismatch", "input": { "context": "ship-A", "owner": "ship-owner-B" }, "expected": "reject-and-count" },
+    { "name": "late-join-snapshot", "input": { "context": "ship-B", "generation": 2, "snapshotRevision": 1 }, "expected": "accept-and-sync" }
+  ],
+  "expected": {
+    "contexts": 2,
+    "hostCount": 1,
+    "acceptedLifecycleEvents": 12,
+    "rejectedTransportEvents": 3,
+    "ownerViolations": 1,
+    "staleGenerationDrops": 1,
+    "duplicateDrops": 1,
+    "outOfOrderDrops": 1,
+    "finalRegisteredContexts": 0,
+    "authoritativeDamageOrFireEvents": 0
+  }
+}

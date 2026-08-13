@@ -1,0 +1,217 @@
+{
+    "schema":  "cm2.asset-importer-report/1",
+    "importerVersion":  "cm2.asset-importer/1.0.0",
+    "manifestHash":  "009135e9ba3cf5a9c1b57222ec712de910584973933ca1edee1f0afa01448e18",
+    "manifest":  {
+                     "schema":  "cm2.asset-manifest/1",
+                     "importerVersion":  "cm2.asset-importer/1.0.0",
+                     "readOnly":  true,
+                     "sourceRoot":  "Content Mod 2",
+                     "sourceToVox":  "logical(x,y,z) -\u003e vox(x, maxZ-1-z, y)",
+                     "voxToTeardown":  "vox(x,y,z) -\u003e logical(x,z,maxZ-1-y)",
+                     "catalogBinding":  {
+                                            "path":  "docs/generated/cm2-generated-catalog-manifest-v1.json",
+                                            "catalogHash":  "dc01a2b7b91d5e7645bba7ea44d921efb451ec76e06fd8856c9681d80eed7fa9",
+                                            "ownership":  "generated-candidate-only",
+                                            "runtimeMode":  "shadow"
+                                        },
+                     "assets":  [
+                                    {
+                                        "kind":  "vox",
+                                        "sourceFile":  "Content Mod 2/vox/gammaStrikeCraftTest.vox",
+                                        "hash":  "c52e69f18a71f54f1259d90570a9d6d9bc917e4d26aa4cfbd2242ad69c06788f",
+                                        "bytes":  17576,
+                                        "license":  "project-owned",
+                                        "provenance":  "generated-by-Content-Mod-2/tools/build-test-strike-craft-vox.ps1",
+                                        "importerVersion":  "cm2.asset-importer/1.0.0",
+                                        "sourceUnits":  "voxels",
+                                        "sourceToVox":  "logical(x,y,z) -\u003e vox(x, maxZ-1-z, y)",
+                                        "voxToTeardown":  "vox(x,y,z) -\u003e logical(x,z,maxZ-1-y)",
+                                        "metersPerVoxel":  0.1,
+                                        "logicalSizeVoxels":  [
+                                                                  45,
+                                                                  12,
+                                                                  51
+                                                              ],
+                                        "voxSize":  [
+                                                        45,
+                                                        51,
+                                                        12
+                                                    ],
+                                        "paletteMaterial":  {
+                                                                "1":  "candidate-unknown",
+                                                                "2":  "candidate-unknown",
+                                                                "3":  "candidate-unknown",
+                                                                "4":  "candidate-unknown",
+                                                                "5":  "candidate-unknown",
+                                                                "6":  "candidate-unknown",
+                                                                "7":  "candidate-unknown",
+                                                                "8":  "candidate-unknown"
+                                                            },
+                                        "bounds":  {
+                                                       "vox":  {
+                                                                   "min":  [
+                                                                               2,
+                                                                               0,
+                                                                               2
+                                                                           ],
+                                                                   "max":  [
+                                                                               42,
+                                                                               50,
+                                                                               10
+                                                                           ]
+                                                               },
+                                                       "meters":  {
+                                                                      "min":  [
+                                                                                  0.2,
+                                                                                  0,
+                                                                                  0.2
+                                                                              ],
+                                                                      "max":  [
+                                                                                  4.2,
+                                                                                  5,
+                                                                                  1
+                                                                              ]
+                                                                  }
+                                                   },
+                                        "complexity":  {
+                                                           "voxelCount":  4120,
+                                                           "paletteColorCount":  8,
+                                                           "connectedComponents":  1,
+                                                           "largestComponentVoxelCount":  4120,
+                                                           "fillFraction":  0.149601,
+                                                           "chunkIds":  [
+                                                                            "MAIN",
+                                                                            "SIZE",
+                                                                            "XYZI",
+                                                                            "RGBA"
+                                                                        ]
+                                                       },
+                                        "orientationCandidates":  [
+                                                                      {
+                                                                          "name":  "teardown-y-up-forward-minus-z",
+                                                                          "up":  "+Y",
+                                                                          "forward":  "-Z",
+                                                                          "confidence":  0.98,
+                                                                          "confirmed":  false
+                                                                      },
+                                                                      {
+                                                                          "name":  "legacy-vox-axis-review",
+                                                                          "up":  "+VOX-Z",
+                                                                          "forward":  "+VOX-Y",
+                                                                          "confidence":  0.42,
+                                                                          "confirmed":  false
+                                                                      }
+                                                                  ],
+                                        "readOnly":  true
+                                    },
+                                    {
+                                        "kind":  "xml",
+                                        "sourceFile":  "Content Mod 2/prefabs/gammaStrikeCraft.xml",
+                                        "hash":  "7fef6f09b20243b675dae4104a1cba540d59571cd4acfa5821860b8b99ace68e",
+                                        "bytes":  1387,
+                                        "license":  "project-owned",
+                                        "provenance":  "hand-authored-prefab-source",
+                                        "importerVersion":  "cm2.asset-importer/1.0.0",
+                                        "sourceUnits":  "Teardown XML units",
+                                        "references":  [
+                                                           {
+                                                               "reference":  "MOD/script/strikeCraftMain.lua",
+                                                               "resolvedSourceFile":  "Content Mod 2/script/strikeCraftMain.lua",
+                                                               "node":  "script",
+                                                               "kind":  "lua",
+                                                               "exists":  true
+                                                           },
+                                                           {
+                                                               "reference":  "MOD/vox/gammaStrikeCraftTest.vox",
+                                                               "resolvedSourceFile":  "Content Mod 2/vox/gammaStrikeCraftTest.vox",
+                                                               "node":  "gammaStrikeCraft",
+                                                               "kind":  "vox",
+                                                               "exists":  true
+                                                           }
+                                                       ],
+                                        "duplicateReferences":  [
+
+                                                                ],
+                                        "nodeTransforms":  [
+                                                               {
+                                                                   "name":  "gammaStrikeCraft",
+                                                                   "pos":  "-2.25 -0.6 2.55",
+                                                                   "rot":  "",
+                                                                   "candidate":  true,
+                                                                   "confidence":  0.55
+                                                               },
+                                                               {
+                                                                   "name":  "muzzle",
+                                                                   "pos":  "0 0 -2.61",
+                                                                   "rot":  "",
+                                                                   "candidate":  true,
+                                                                   "confidence":  0.55
+                                                               },
+                                                               {
+                                                                   "name":  "engineLeft",
+                                                                   "pos":  "-0.70 -0.15 2.58",
+                                                                   "rot":  "",
+                                                                   "candidate":  true,
+                                                                   "confidence":  0.55
+                                                               },
+                                                               {
+                                                                   "name":  "engineRight",
+                                                                   "pos":  "0.70 -0.15 2.58",
+                                                                   "rot":  "",
+                                                                   "candidate":  true,
+                                                                   "confidence":  0.55
+                                                               },
+                                                               {
+                                                                   "name":  "Strike Craft Running Light",
+                                                                   "pos":  "0 -0.10 2.40",
+                                                                   "rot":  "",
+                                                                   "candidate":  true,
+                                                                   "confidence":  0.55
+                                                               },
+                                                               {
+                                                                   "name":  "Player",
+                                                                   "pos":  "0 0.2 0",
+                                                                   "rot":  "0 180 0",
+                                                                   "candidate":  true,
+                                                                   "confidence":  0.55
+                                                               },
+                                                               {
+                                                                   "name":  "exit",
+                                                                   "pos":  "0 -0.7 1.8",
+                                                                   "rot":  "",
+                                                                   "candidate":  true,
+                                                                   "confidence":  0.55
+                                                               }
+                                                           ],
+                                        "readOnly":  true
+                                    },
+                                    {
+                                        "kind":  "texture",
+                                        "sourceFile":  "Content Mod 2/gfx/space/nebula_backdrop.png",
+                                        "hash":  "7f03a00ae348f67fb830736d8911200b796c6da8b8feec8966dedbf49c90765a",
+                                        "bytes":  396873,
+                                        "license":  "project-owned",
+                                        "provenance":  "hand-authored-space-art",
+                                        "importerVersion":  "cm2.asset-importer/1.0.0",
+                                        "sourceUnits":  "binary-resource",
+                                        "readOnly":  true
+                                    },
+                                    {
+                                        "kind":  "audio",
+                                        "sourceFile":  "Content Mod 2/sound/engine.ogg",
+                                        "hash":  "5521d3f3086ff8630c429cc3b885f0972d9c79e3d60d22738aec38b74a69e4ad",
+                                        "bytes":  304800,
+                                        "license":  "project-owned",
+                                        "provenance":  "hand-authored-audio",
+                                        "importerVersion":  "cm2.asset-importer/1.0.0",
+                                        "sourceUnits":  "binary-resource",
+                                        "readOnly":  true
+                                    }
+                                ],
+                     "duplicateHashes":  [
+
+                                         ]
+                 },
+    "result":  "pass"
+}

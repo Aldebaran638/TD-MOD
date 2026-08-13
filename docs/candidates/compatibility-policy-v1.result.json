@@ -1,0 +1,13 @@
+{
+    "schema":  "cm2.compatibility-test-report/1",
+    "effectMigration":  "pass",
+    "packageMigration":  "pass",
+    "idempotent":  true,
+    "unknownOptionalPreserved":  true,
+    "negativeCases":  {
+                          "missingRequired":  "rejected",
+                          "futureRequired":  "rejected",
+                          "unsupportedOld":  "rejected"
+                      },
+    "result":  "pass"
+}

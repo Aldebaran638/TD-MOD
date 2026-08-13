@@ -1,0 +1,94 @@
+{
+  "schema": "cm2.world-command-snapshot/1",
+  "protocolVersion": "cm2.world.multiplayer/1",
+  "limits": {
+    "maxCommandBytes": 512,
+    "maxCommandsPerWindow": 30,
+    "rateWindowSeconds": 1,
+    "commandQueueCapacity": 32,
+    "snapshotQueueCapacity": 64
+  },
+  "sessions": [
+    { "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "revision": 1 },
+    { "sessionId": "remote-session", "ownerId": "player-remote", "generation": 7, "revision": 1 },
+    { "sessionId": "late-session", "ownerId": "player-late", "generation": 7, "revision": 1 }
+  ],
+  "versionNegotiation": [
+    { "clientVersion": "cm2.world.multiplayer/1", "compatibleVersions": [], "expected": "exact-accept" },
+    { "clientVersion": "cm2.world.multiplayer/0", "compatibleVersions": ["cm2.world.multiplayer/1"], "expected": "declared-compatible-accept" },
+    { "clientVersion": "cm2.world.multiplayer/0", "compatibleVersions": [], "expected": "incompatible-reject" }
+  ],
+  "commands": [
+    { "id": "input-1", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 1, "revision": 1, "kind": "input", "payload": { "axisX": 1, "axisY": 0 }, "payloadBytes": 64, "expected": "accept" },
+    { "id": "loadout-2", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 2, "revision": 1, "kind": "loadout", "payload": { "loadoutId": "loadout.alpha", "revision": 3 }, "payloadBytes": 96, "fit": true, "expected": "accept" },
+    { "id": "target-3", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 3, "revision": 1, "kind": "target", "payload": { "targetEntityId": "ship-remote" }, "payloadBytes": 80, "targetValid": true, "expected": "accept" },
+    { "id": "fire-4", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 4, "revision": 1, "kind": "fireIntent", "payload": { "weaponId": "weapon.laser", "trigger": true }, "payloadBytes": 112, "cooldownReady": true, "expected": "accept" },
+    { "id": "owner-5", "sessionId": "host-session", "ownerId": "attacker", "generation": 7, "sequence": 5, "revision": 1, "kind": "input", "payload": { "axisX": 0 }, "payloadBytes": 32, "expected": "reject-owner" },
+    { "id": "generation-6", "sessionId": "host-session", "ownerId": "player-host", "generation": 6, "sequence": 5, "revision": 1, "kind": "input", "payload": { "axisX": 0 }, "payloadBytes": 32, "expected": "reject-stale-generation" },
+    { "id": "revision-7", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 5, "revision": 2, "kind": "loadout", "payload": { "loadoutId": "loadout.alpha" }, "payloadBytes": 64, "fit": true, "expected": "reject-stale-revision" },
+    { "id": "duplicate-8", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 4, "revision": 1, "kind": "input", "payload": { "axisX": 0 }, "payloadBytes": 32, "expected": "reject-duplicate-sequence" },
+    { "id": "fit-9", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 5, "revision": 1, "kind": "loadout", "payload": { "loadoutId": "loadout.invalid" }, "payloadBytes": 64, "fit": false, "expected": "reject-fit" },
+    { "id": "target-10", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 5, "revision": 1, "kind": "target", "payload": { "targetEntityId": "missing" }, "payloadBytes": 64, "targetValid": false, "expected": "reject-target" },
+    { "id": "cooldown-11", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 5, "revision": 1, "kind": "fireIntent", "payload": { "weaponId": "weapon.laser", "trigger": true }, "payloadBytes": 112, "cooldownReady": false, "expected": "reject-cooldown" },
+    { "id": "forbidden-12", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 5, "revision": 1, "kind": "input", "payload": { "axisX": 0, "engineHandle": "raw-body" }, "payloadBytes": 64, "expected": "reject-forbidden" },
+    { "id": "oversized-13", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 5, "revision": 1, "kind": "input", "payload": { "axisX": 0 }, "payloadBytes": 513, "expected": "reject-size" },
+    { "id": "unknown-kind-14", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 5, "revision": 1, "kind": "teleport", "payload": { "position": { "x": 0, "y": 0, "z": 0 } }, "payloadBytes": 80, "expected": "reject-kind" },
+    { "id": "version-15", "sessionId": "host-session", "ownerId": "player-host", "generation": 7, "sequence": 5, "revision": 1, "protocolVersion": "cm2.world.multiplayer/0", "kind": "input", "payload": { "axisX": 0 }, "payloadBytes": 32, "expected": "reject-version" }
+  ],
+  "rateLimit": {
+    "sessionId": "remote-session",
+    "attempts": 31,
+    "expectedAccepted": 30,
+    "expectedRejected": 1,
+    "expectedReason": "rate-limit"
+  },
+  "snapshots": [
+    { "kind": "lifecycle", "stable": true, "payload": { "entityId": "ship-host", "state": "alive" }, "expected": "stable" },
+    { "kind": "snapshot", "stable": true, "payload": { "entityId": "ship-host", "health": 100 }, "expected": "stable" },
+    { "kind": "delta", "stable": true, "payload": { "entityId": "ship-host", "health": 90 }, "expected": "stable" },
+    { "kind": "shot", "stable": false, "payload": { "shotId": "shot-1", "seed": 44 }, "expected": "transient" },
+    { "kind": "damage", "stable": false, "payload": { "eventId": "damage-1", "entityId": "ship-remote", "amount": 10 }, "expected": "transient" },
+    { "kind": "presentation", "stable": false, "payload": { "eventId": "fx-1", "effectId": "fx.laser" }, "expected": "transient" }
+  ],
+  "duplicateDamage": {
+    "firstEventId": "damage-2",
+    "duplicateEventId": "damage-2",
+    "expected": "duplicate-reject"
+  },
+  "destroyedEntity": {
+    "entityId": "ship-dead",
+    "markDestroyed": true,
+    "resurrectionSnapshot": { "kind": "snapshot", "stable": true, "payload": { "entityId": "ship-dead", "health": 100 } },
+    "expected": "resurrection-reject"
+  },
+  "lateJoin": {
+    "sessionId": "late-session",
+    "stableOnly": true,
+    "includesKinds": ["lifecycle", "snapshot", "delta"],
+    "excludesKinds": ["shot", "damage", "presentation"],
+    "transientReplay": false,
+    "expected": "stable-only"
+  },
+  "reconnect": {
+    "sessionId": "remote-session",
+    "ownerId": "player-remote",
+    "sequenceReset": true,
+    "returnsStableSnapshot": true,
+    "expected": "reconnect-stable"
+  },
+  "expected": {
+    "acceptedCommands": 4,
+    "rejectedCommands": 11,
+    "rejectionReasons": ["owner", "stale-generation", "stale-revision", "duplicate-sequence", "fit", "target", "cooldown", "forbidden", "size", "kind", "version"],
+    "stablePublished": 3,
+    "transientPublished": 3,
+    "stableLateJoinCount": 3,
+    "transientLateJoinCount": 0,
+    "commandQueueDepth": 0,
+    "snapshotQueueDepth": 0,
+    "commandQueueHighWatermark": 1,
+    "snapshotQueueHighWatermark": 1,
+    "destroyedResurrectionRejected": 1,
+    "duplicateDamageRejected": 1
+  }
+}

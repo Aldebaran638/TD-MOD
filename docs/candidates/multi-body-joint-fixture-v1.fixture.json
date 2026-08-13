@@ -1,0 +1,40 @@
+{
+  "schema": "cm2.multi-body-joint-fixture/1",
+  "protocolVersion": "cm2.multi-body-joint-fixture/1",
+  "identity": "ship:multi-body-fixture:31",
+  "ownerId": "ship-owner:multi-body-fixture",
+  "generation": 31,
+  "fixtureId": "two-body-joint",
+  "bodies": [
+    { "bodyId": "root", "engineBodyId": 701, "parentId": "", "localTransform": { "position": [0.0, 0.0, 0.0] } },
+    { "bodyId": "pod", "engineBodyId": 702, "parentId": "root", "localTransform": { "position": [0.0, 1.0, 0.0] } }
+  ],
+  "joints": [
+    { "jointId": "pod-yaw", "parentId": "root", "childId": "pod", "axis": [0.0, 1.0, 0.0], "minLimit": -45.0, "maxLimit": 45.0, "angle": 12.0 }
+  ],
+  "operations": [
+    { "op": "init" },
+    { "op": "spawn", "expected": "active" },
+    { "op": "tick", "dt": 0.016, "expected": "active" },
+    { "op": "networkSnapshot", "expectedBodies": 2, "expectedJoints": 1, "formalTurretEnabled": false },
+    { "op": "disposeBody", "bodyId": "pod", "expected": "active" },
+    { "op": "networkSnapshot", "expectedBodies": 2, "expectedJoints": 1, "formalTurretEnabled": false },
+    { "op": "dispose", "reason": "parent-destroyed", "expected": "disposed" },
+    { "op": "disposeIdempotent", "expected": "idempotent" },
+    { "op": "promoteFormalTurret", "expected": "rejected" },
+    { "op": "staleGeneration", "expected": "rejected" }
+  ],
+  "expected": {
+    "bodyCount": 2,
+    "jointCount": 1,
+    "ticks": 1,
+    "spawns": 1,
+    "disposes": 2,
+    "idempotentDisposes": 1,
+    "networkSnapshots": 2,
+    "formalTurretEnabled": false,
+    "staleRejects": 1,
+    "parentRejects": 0,
+    "jointRejects": 0
+  }
+}

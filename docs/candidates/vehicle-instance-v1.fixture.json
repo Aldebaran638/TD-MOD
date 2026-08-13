@@ -1,0 +1,41 @@
+{
+  "schema": "cm2.vehicle-instance/1",
+  "protocolVersion": "cm2.vehicle-instance/1",
+  "generation": 7,
+  "identity": "ship:advancedStrikeCraft:42",
+  "definitionId": "advancedStrikeCraft",
+  "ownerId": "ship-owner:42",
+  "bodyId": 42,
+  "capabilities": ["register", "heartbeat", "snapshotRead", "presentationPublish", "lifecycleRead", "mountLookup"],
+  "operations": [
+    { "op": "init", "expected": "active" },
+    { "op": "snapshot", "expectedIdentity": "ship:advancedStrikeCraft:42", "expectedDefinition": "advancedStrikeCraft", "expectedBodyId": 42, "expectedGeneration": 7 },
+    { "op": "validate", "handle": { "identity": "ship:advancedStrikeCraft:42", "ownerId": "ship-owner:42", "generation": 7, "bodyId": 42 }, "expected": "valid" },
+    { "op": "health", "shield": 80, "armor": 50, "body": 100, "expected": "accept" },
+    { "op": "inputRevision", "revision": 4, "expected": "accept" },
+    { "op": "mountRevision", "revision": 9, "expected": "accept" },
+    { "op": "resolveMount", "mountId": "mSlot-1", "expected": "resolved" },
+    { "op": "lifecycle", "value": "recovering", "expected": "accept" },
+    { "op": "tick", "dt": 0.5, "destroyed": false, "expected": "active" },
+    { "op": "validate", "handle": { "identity": "ship:advancedStrikeCraft:42", "ownerId": "ship-owner:42", "generation": 6, "bodyId": 42 }, "expected": "stale-reject" },
+    { "op": "validate", "handle": { "identity": "ship:advancedStrikeCraft:42", "ownerId": "ship-owner:99", "generation": 7, "bodyId": 42 }, "expected": "owner-reject" },
+    { "op": "tick", "dt": 0.016, "destroyed": true, "expected": "disposed" },
+    { "op": "dispose", "expected": "idempotent" },
+    { "op": "validate", "handle": { "identity": "ship:advancedStrikeCraft:42", "ownerId": "ship-owner:42", "generation": 7, "bodyId": 42 }, "expected": "disposed-reject" }
+  ],
+  "expected": {
+    "identityStable": true,
+    "rootBodyUnchanged": true,
+    "generation": 7,
+    "staleRejects": 2,
+    "ownerRejects": 1,
+    "mountResolves": 1,
+    "healthReadsOrWrites": 1,
+    "inputRevision": 4,
+    "mountRevision": 9,
+    "lifecycle": "disposed",
+    "disposed": true,
+    "noPhysicsLayoutChange": true
+  },
+  "rollback": "Bypass cm2VehicleInstanceV1 and restore direct cm2ShipInstanceAdapterV1 init/tick calls; keep identity snapshot fixture and generation checks for comparison."
+}

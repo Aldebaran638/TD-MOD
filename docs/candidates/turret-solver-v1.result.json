@@ -1,0 +1,18 @@
+{
+    "schema":  "cm2.turret-solver-report/1",
+    "protocolVersion":  "cm2.turret-solver/1",
+    "identity":  "turret-solver-fixture:sentinel",
+    "ownerId":  "ship-owner:turret-solver-fixture",
+    "generation":  71,
+    "selections":  1,
+    "selected":  1,
+    "solves":  2,
+    "solveRejects":  1,
+    "clampedYaw":  1,
+    "clampedPitch":  0,
+    "leadApplications":  1,
+    "filterRejects":  2,
+    "staleRejects":  1,
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

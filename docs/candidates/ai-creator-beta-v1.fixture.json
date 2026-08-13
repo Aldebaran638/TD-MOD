@@ -1,0 +1,31 @@
+{
+  "schema": "cm2.ai-creator-beta-fixtures/1",
+  "externalEvidence": {
+    "nonCoreWeaponEffectAuthorsVerified": 0,
+    "nonCoreVoxAuthorsVerified": 0,
+    "authorsInvited": 0,
+    "teardownAvailable": false,
+    "status": "deferred"
+  },
+  "headlessCohort": [
+    { "id": "sim-weapon-01", "kind": "weapon-effect", "mode": "headless-simulation" },
+    { "id": "sim-weapon-02", "kind": "weapon-effect", "mode": "headless-simulation" },
+    { "id": "sim-weapon-03", "kind": "weapon-effect", "mode": "headless-simulation" },
+    { "id": "sim-weapon-04", "kind": "weapon-effect", "mode": "headless-simulation" },
+    { "id": "sim-weapon-05", "kind": "weapon-effect", "mode": "headless-simulation" },
+    { "id": "sim-vox-01", "kind": "vox-ship", "mode": "headless-simulation" },
+    { "id": "sim-vox-02", "kind": "vox-ship", "mode": "headless-simulation" },
+    { "id": "sim-vox-03", "kind": "vox-ship", "mode": "headless-simulation" }
+  ],
+  "qualitySamples": [
+    { "id": "weapon-normal", "firstLegal": true, "finalLegal": true, "manualFields": 3, "promptToPreviewSeconds": 8, "budgetRejected": false, "anchorRework": 0, "luaViews": 0 },
+    { "id": "effect-budget", "firstLegal": true, "finalLegal": true, "manualFields": 5, "promptToPreviewSeconds": 12, "budgetRejected": true, "anchorRework": 0, "luaViews": 0 },
+    { "id": "vox-review", "firstLegal": true, "finalLegal": true, "manualFields": 4, "promptToPreviewSeconds": 15, "budgetRejected": false, "anchorRework": 2, "luaViews": 0 }
+  ],
+  "negativeSecurity": {
+    "aiLuaWrites": 0,
+    "pathEscapes": 0,
+    "budgetBypasses": 0,
+    "providerNetworkCalls": 0
+  }
+}

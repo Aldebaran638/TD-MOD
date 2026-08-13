@@ -1,0 +1,94 @@
+{
+  "schema": "cm2.transform-anchor/1",
+  "protocolVersion": "cm2.transform-anchor/1",
+  "identity": "ship:transform-fixture:12",
+  "ownerId": "ship-owner:transform-fixture",
+  "generation": 12,
+  "units": "meters",
+  "frame": "right-handed-y-up",
+  "parts": {
+    "root": {
+      "partId": "root",
+      "nodeId": "root",
+      "parentPartId": "",
+      "localTransform": {
+        "position": [10.0, 2.0, -4.0],
+        "rotation": [0.0, 0.0, 0.0, 1.0],
+        "scale": [2.0, 2.0, 2.0],
+        "mirror": [1.0, 1.0, 1.0]
+      },
+      "velocity": [1.0, 0.0, 0.0],
+      "velocitySpace": "world"
+    },
+    "wing": {
+      "partId": "wing",
+      "nodeId": "wing",
+      "parentPartId": "root",
+      "localTransform": {
+        "position": [1.0, 0.0, 0.0],
+        "rotation": [0.0, 0.7071067812, 0.0, 0.7071067812],
+        "scale": [1.0, 2.0, 1.0],
+        "mirror": [-1.0, 1.0, 1.0]
+      },
+      "velocity": [0.0, 0.0, -3.0],
+      "velocitySpace": "local"
+    },
+    "nozzle": {
+      "partId": "nozzle",
+      "nodeId": "nozzle",
+      "parentPartId": "wing",
+      "localTransform": {
+        "position": [0.0, 0.0, -2.0],
+        "rotation": [0.0, 0.0, 0.0, 1.0],
+        "scale": [0.5, 0.5, 1.0],
+        "mirror": [1.0, 1.0, -1.0]
+      },
+      "velocity": [0.0, 0.0, 0.0],
+      "velocitySpace": "world"
+    }
+  },
+  "anchors": {
+    "wing-muzzle": {
+      "anchorId": "wing-muzzle",
+      "partId": "wing",
+      "localTransform": {
+        "position": [0.0, 0.0, -1.0],
+        "rotation": [0.0, 0.0, 0.0, 1.0],
+        "scale": [1.0, 1.0, 1.0],
+        "mirror": [1.0, 1.0, 1.0]
+      }
+    }
+  },
+  "operations": [
+    { "op": "init" },
+    { "op": "bind", "revision": 1 },
+    { "op": "resolvePart", "partId": "root", "space": "world", "expectedPosition": [10.0, 2.0, -4.0] },
+    { "op": "resolvePart", "partId": "wing", "space": "world", "expectedPosition": [12.0, 2.0, -4.0], "expectedScale": [2.0, 4.0, 2.0], "expectedMirror": [-1.0, 1.0, 1.0] },
+    { "op": "resolvePartCached", "partId": "wing", "space": "world" },
+    { "op": "resolvePart", "partId": "nozzle", "space": "world", "expectedPosition": [8.0, 2.0, -4.0] },
+    { "op": "resolveAnchor", "anchorId": "wing-muzzle", "space": "world", "expectedPosition": [10.0, 2.0, -4.0] },
+    { "op": "basis", "partId": "wing", "expectedForward": [-1.0, 0.0, 0.0], "expectedUp": [0.0, 1.0, 0.0], "expectedRight": [0.0, 0.0, -1.0] },
+    { "op": "roundTrip", "partId": "nozzle" },
+    { "op": "velocity", "partId": "wing", "space": "world", "expectedVelocity": [-3.0, 0.0, 0.0] },
+    { "op": "scale", "partId": "wing", "expectedScale": [2.0, 4.0, 2.0] },
+    { "op": "mirror", "partId": "wing", "expectedMirror": [-1.0, 1.0, 1.0] },
+    { "op": "invalidHandle", "partId": "wing" },
+    { "op": "invalidate", "reason": "scene-reload" },
+    { "op": "resolvePart", "partId": "wing", "space": "world", "expectedPosition": [12.0, 2.0, -4.0] },
+    { "op": "staleHandle", "partId": "wing" }
+  ],
+  "expected": {
+    "partLookups": 11,
+    "partCacheHits": 7,
+    "anchorLookups": 1,
+    "basisLookups": 1,
+    "velocityLookups": 1,
+    "scaleLookups": 1,
+    "mirrorLookups": 1,
+    "invalidHandleRejects": 1,
+    "staleRejects": 1,
+    "invalidations": 1,
+    "roundTrip": true,
+    "engineCalls": 0
+  }
+}

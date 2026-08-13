@@ -1,0 +1,22 @@
+{
+  "schema": "cm2.release-artifacts-fixtures/1",
+  "cleanRoomProfiles": [
+    { "id": "core-only", "installed": [ "core-runtime" ], "removed": [ "creator-cli-compiler", "external-editor", "preview-mod", "ai-provider-optional" ], "expected": "runtime-independent" },
+    { "id": "cli-without-editor-ai", "installed": [ "core-runtime", "schema-api", "creator-cli-compiler" ], "removed": [ "external-editor", "ai-provider-optional" ], "expected": "build-pass" },
+    { "id": "editor-without-ai", "installed": [ "schema-api", "creator-cli-compiler", "external-editor" ], "removed": [ "ai-provider-optional" ], "expected": "edit-contract-pass" },
+    { "id": "conformance", "installed": [ "schema-api", "creator-cli-compiler", "conformance-kit" ], "removed": [ "ai-provider-optional" ], "expected": "checks-pass" }
+  ],
+  "requiredTopics": [ "five-minute weapon", "single-body VOX", "ID coordinate Anchor Turret", "Effect Projectile Joint budget", "compatibility matrix", "error codes", "release upgrade rollback uninstall", "Data-only Expert Behavior", "AI provenance license" ],
+  "headlessSuites": [
+    { "id": "package-manifest", "path": "tools/cm2-package/test-package-manifest-v1.ps1" },
+    { "id": "clean-room", "path": "tools/cm2-clean-room/test-clean-room-hello-ship-v1.ps1" },
+    { "id": "sdk-cli", "path": "tools/cm2-sdk/test-cm2-sdk-v1.ps1" },
+    { "id": "editor-contract", "path": "tools/cm2-editor/test-schema-editor-v1.ps1" },
+    { "id": "conformance", "path": "harness/test-cm2-compiler.ps1" }
+  ],
+  "downloadHashes": [
+    { "artifactId": "core-runtime", "content": "source-roots-only", "expected": "verified-by-source-snapshot" },
+    { "artifactId": "creator-cli-compiler", "content": "source-roots-only", "expected": "verified-by-source-snapshot" },
+    { "artifactId": "schema-api", "content": "source-roots-only", "expected": "verified-by-source-snapshot" }
+  ]
+}

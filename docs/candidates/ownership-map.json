@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "cm2.vertical-slice-ownership/1",
+  "runtimePolicy": "candidate catalogs are out-of-band; legacy Content Mod 2 catalog remains authoritative until Gate 1 dual-run approval",
+  "slices": [
+    {
+      "name": "ray-beam",
+      "sourcePath": "tools/cm2-slices/source/ray-beam",
+      "legacyPath": "Content Mod 2/script/data/weapons/x/stellaris.lua",
+      "ids": ["cm2:slice.weapon.ray", "cm2:slice.effect.ray"],
+      "ownership": "generated-candidate-only"
+    },
+    {
+      "name": "logical-projectile-impact",
+      "sourcePath": "tools/cm2-slices/source/logical-projectile-impact",
+      "legacyPath": "Content Mod 2/script/data/weapons/x/stellaris.lua",
+      "ids": ["cm2:slice.weapon.projectile", "cm2:slice.projectile.logical", "cm2:slice.effect.impact"],
+      "ownership": "generated-candidate-only"
+    },
+    {
+      "name": "guided-missile",
+      "sourcePath": "tools/cm2-slices/source/guided-missile",
+      "legacyPath": "Content Mod 2/script/data/weapons/m/stellaris.lua",
+      "ids": ["cm2:slice.weapon.guided", "cm2:slice.projectile.guided", "cm2:slice.effect.guided"],
+      "ownership": "generated-candidate-only"
+    },
+    {
+      "name": "tachyon-charge-beam-impact",
+      "sourcePath": "tools/cm2-slices/source/tachyon-charge-beam-impact",
+      "legacyPath": "Content Mod 2/script/data/weapons/x/stellaris.lua",
+      "ids": ["cm2:slice.weapon.tachyon", "cm2:slice.effect.tachyon.beam", "cm2:slice.effect.tachyon.impact"],
+      "ownership": "generated-candidate-only"
+    }
+  ]
+}

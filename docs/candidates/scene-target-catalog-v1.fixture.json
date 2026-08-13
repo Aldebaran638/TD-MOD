@@ -1,0 +1,63 @@
+{
+  "schema": "cm2.scene-target-catalog/1",
+  "protocolVersion": "cm2.world.target-catalog/1",
+  "sceneId": "scene-target-fixture",
+  "generation": 7,
+  "cellSize": 100,
+  "refreshHz": 5,
+  "targets": [
+    { "entityId": "ship-A", "generation": 7, "position": { "x": 0, "y": 0, "z": 0 }, "velocity": { "x": 0, "y": 0, "z": 0 }, "radius": 30, "faction": "blue", "targetType": "major", "capabilities": ["lockable", "pd"] },
+    { "entityId": "ship-B", "generation": 7, "position": { "x": 99.9, "y": 0, "z": 0 }, "velocity": { "x": 2, "y": 0, "z": 0 }, "radius": 30, "faction": "red", "targetType": "major", "capabilities": ["lockable"] },
+    { "entityId": "missile-1", "generation": 7, "position": { "x": 150.1, "y": 0, "z": 0 }, "velocity": { "x": -4, "y": 0, "z": 0 }, "radius": 2, "faction": "red", "targetType": "interceptor", "capabilities": ["lockable", "interceptor"] },
+    { "entityId": "craft-A", "generation": 7, "position": { "x": -150.1, "y": 0, "z": 0 }, "velocity": { "x": 1, "y": 0, "z": 0 }, "radius": 8, "faction": "blue", "targetType": "craft", "capabilities": ["lockable", "interceptor"] },
+    { "entityId": "external-A", "generation": 7, "position": { "x": 300, "y": 0, "z": 0 }, "velocity": { "x": 0, "y": 0, "z": 0 }, "radius": 12, "faction": "red", "targetType": "external", "capabilities": ["external"] },
+    { "entityId": "boundary-A", "generation": 7, "position": { "x": -0.1, "y": 0, "z": 0 }, "velocity": { "x": 0, "y": 0, "z": 0 }, "radius": 4, "faction": "red", "targetType": "external", "capabilities": ["lockable"] }
+  ],
+  "operations": [
+    { "op": "registerAll", "expected": "accept" },
+    { "op": "refresh", "reason": "spawn", "expectedRevision": 1 },
+    { "op": "query", "queryId": "q-initial-red", "origin": { "x": 0, "y": 0, "z": 0 }, "radius": 220, "filter": { "faction": "red", "capabilities": ["lockable"], "targetTypes": ["major", "interceptor", "external"] }, "expectedIds": ["boundary-A", "ship-B", "missile-1"], "expectedRevision": 1 },
+    { "op": "update", "entityId": "ship-B", "generation": 7, "position": { "x": 260, "y": 0, "z": 0 }, "velocity": { "x": 2, "y": 0, "z": 0 }, "expected": "accept", "expectedCell": "2:0:0" },
+    { "op": "query", "queryId": "q-before-dirty-refresh", "origin": { "x": 0, "y": 0, "z": 0 }, "radius": 220, "filter": { "faction": "red", "capabilities": ["lockable"], "targetTypes": ["major", "interceptor", "external"] }, "expectedIds": ["boundary-A", "ship-B", "missile-1"], "expectedRevision": 1 },
+    { "op": "tick", "dt": 0.0, "expected": "dirty-refresh", "expectedRevision": 2 },
+    { "op": "query", "queryId": "q-after-move", "origin": { "x": 0, "y": 0, "z": 0 }, "radius": 220, "filter": { "faction": "red", "capabilities": ["lockable"], "targetTypes": ["major", "interceptor", "external"] }, "expectedIds": ["boundary-A", "missile-1"], "expectedRevision": 2 },
+    { "op": "update", "entityId": "boundary-A", "generation": 7, "position": { "x": 0.1, "y": 0, "z": 0 }, "velocity": { "x": 0, "y": 0, "z": 0 }, "expected": "accept", "expectedCell": "0:0:0" },
+    { "op": "tick", "dt": 0.0, "expected": "dirty-refresh", "expectedRevision": 3 },
+    { "op": "disable", "entityId": "missile-1", "generation": 7, "expected": "accept" },
+    { "op": "tick", "dt": 0.0, "expected": "dirty-refresh", "expectedRevision": 4 },
+    { "op": "query", "queryId": "q-disabled", "origin": { "x": 0, "y": 0, "z": 0 }, "radius": 220, "filter": { "faction": "red", "capabilities": ["lockable"] }, "expectedIds": ["boundary-A"], "expectedRevision": 4 },
+    { "op": "remove", "entityId": "boundary-A", "generation": 7, "expected": "accept" },
+    { "op": "tick", "dt": 0.0, "expected": "dirty-refresh", "expectedRevision": 5 },
+    { "op": "query", "queryId": "q-removed", "origin": { "x": 0, "y": 0, "z": 0 }, "radius": 220, "filter": { "faction": "red", "capabilities": ["lockable"] }, "expectedIds": [], "expectedRevision": 5 },
+    { "op": "update", "entityId": "craft-A", "generation": 6, "position": { "x": -140, "y": 0, "z": 0 }, "velocity": { "x": 1, "y": 0, "z": 0 }, "expected": "stale-reject" },
+    { "op": "register", "target": { "entityId": "stale-target", "generation": 6, "position": { "x": 0, "y": 0, "z": 0 }, "faction": "red", "targetType": "major", "capabilities": ["lockable"] }, "expected": "stale-reject" },
+    { "op": "recordCost", "elapsedMs": 0.42, "expected": "accept" }
+  ],
+  "legacyGolden": [
+    { "queryId": "q-initial-red", "expectedIds": ["boundary-A", "ship-B", "missile-1"], "differencePolicy": "fail-and-record" },
+    { "queryId": "q-after-move", "expectedIds": ["boundary-A", "missile-1"], "differencePolicy": "fail-and-record" },
+    { "queryId": "q-disabled", "expectedIds": ["boundary-A"], "differencePolicy": "fail-and-record" },
+    { "queryId": "q-removed", "expectedIds": [], "differencePolicy": "fail-and-record" }
+  ],
+  "clientSnapshot": {
+    "acceptedVersion": "cm2.world.target-catalog/1",
+    "rejectedVersion": "cm2.world.target-catalog/0",
+    "maxEntries": 512,
+    "expected": "bounded-snapshot-only"
+  },
+  "expected": {
+    "registered": 6,
+    "refreshes": 5,
+    "dirtyRefreshes": 4,
+    "moves": 2,
+    "disables": 1,
+    "removes": 1,
+    "staleRejected": 2,
+    "queries": 5,
+    "queryCostSamples": 1,
+    "finalRevision": 5,
+    "finalSnapshotEntries": 4,
+    "cellBoundaryMove": true,
+    "candidateScope": "grid-local"
+  }
+}

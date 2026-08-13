@@ -1,0 +1,51 @@
+{
+  "schema": "cm2.guided-collision-budget/1",
+  "protocolVersion": "cm2.guided-collision-budget/1",
+  "generation": 7,
+  "averageBudget": 3000,
+  "hardBudget": 6000,
+  "sweepHz": 30,
+  "closestHz": 20,
+  "criticalDistance": 40,
+  "criticalTime": 0.25,
+  "maxSpeed": 240,
+  "bulk": {
+    "projectiles": 96,
+    "frames": 60,
+    "dt": 0.0166666667,
+    "distanceToTarget": 200,
+    "timeToImpact": 2,
+    "speed": 100,
+    "turning": false,
+    "expected": {
+      "queryGrantedMin": 2800,
+      "queryGrantedMax": 3000,
+      "maxWindowQueriesMax": 3000,
+      "degradedMin": 1,
+      "hardRejectsMax": 0,
+      "phaseSpreadMin": 90,
+      "noInfiniteRetry": true
+    }
+  },
+  "scenarios": [
+    { "id": "straight", "distanceToTarget": 200, "timeToImpact": 2, "speed": 100, "turning": false, "firstContact": true, "expectedCritical": false },
+    { "id": "sharp-turn", "distanceToTarget": 200, "timeToImpact": 2, "speed": 100, "turning": true, "firstContact": true, "expectedCritical": true },
+    { "id": "near-collision", "distanceToTarget": 20, "timeToImpact": 0.1, "speed": 100, "turning": false, "firstContact": true, "expectedCritical": true },
+    { "id": "overspeed", "distanceToTarget": 200, "timeToImpact": 2, "speed": 300, "turning": false, "firstContact": true, "expectedCritical": true }
+  ],
+  "negative": {
+    "averageBudget": 2,
+    "hardBudget": 3,
+    "projectiles": 4,
+    "dt": 0.0166666667,
+    "expectedDegradedMin": 1,
+    "expectedRejectedMin": 1,
+    "noInfiniteRetry": true
+  },
+  "legacy": {
+    "queryCost": 5,
+    "expectedQueries": 5,
+    "rollbackMode": "legacy"
+  },
+  "continuityPolicy": "A rejected or degraded frame records one miss and advances the deterministic phase/accumulator once; it is never retried in the same frame. The legacy five-query path is the rollback switch."
+}

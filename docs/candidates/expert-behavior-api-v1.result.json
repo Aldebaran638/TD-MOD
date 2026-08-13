@@ -1,0 +1,11 @@
+{
+    "schema":  "cm2.expert-behavior-test-report/1",
+    "status":  "deferred",
+    "enabled":  false,
+    "requestsEvaluated":  7,
+    "allExecutionNotRun":  true,
+    "capabilityDenials":  4,
+    "isolationDecisions":  2,
+    "securityReviewRequired":  true,
+    "result":  "pass"
+}

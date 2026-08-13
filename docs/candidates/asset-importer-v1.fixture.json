@@ -1,0 +1,47 @@
+{
+  "schema": "cm2.asset-importer/1",
+  "importerVersion": "cm2.asset-importer/1.0.0",
+  "readOnly": true,
+  "resources": [
+    {
+      "sourceFile": "Content Mod 2/vox/gammaStrikeCraftTest.vox",
+      "kind": "vox",
+      "license": "project-owned",
+      "provenance": "generated-by-Content-Mod-2/tools/build-test-strike-craft-vox.ps1",
+      "metersPerVoxel": 0.1,
+      "maxVoxels": 2000000,
+      "expected": { "sha256": "c52e69f18a71f54f1259d90570a9d6d9bc917e4d26aa4cfbd2242ad69c06788f", "bytes": 17576, "voxVersion": 150, "voxelCount": 4120, "logicalSizeVoxels": [45, 12, 51] }
+    },
+    {
+      "sourceFile": "Content Mod 2/prefabs/gammaStrikeCraft.xml",
+      "kind": "xml",
+      "license": "project-owned",
+      "provenance": "hand-authored-prefab-source",
+      "expected": { "references": 2, "duplicateReferences": 0 }
+    },
+    {
+      "sourceFile": "Content Mod 2/gfx/space/nebula_backdrop.png",
+      "kind": "texture",
+      "license": "project-owned",
+      "provenance": "hand-authored-space-art",
+      "expected": { "bytesPositive": true }
+    },
+    {
+      "sourceFile": "Content Mod 2/sound/engine.ogg",
+      "kind": "audio",
+      "license": "project-owned",
+      "provenance": "hand-authored-audio",
+      "expected": { "bytesPositive": true }
+    }
+  ],
+  "negativeFixtures": [
+    "truncated VOX chunk",
+    "XYZI coordinate outside SIZE",
+    "missing RGBA/palette mapping",
+    "oversized voxel budget",
+    "wrong expected resource hash",
+    "XML MOD path traversal",
+    "duplicate resource source path",
+    "missing XML resource reference"
+  ]
+}

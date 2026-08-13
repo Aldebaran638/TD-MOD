@@ -1,0 +1,7 @@
+{
+  "schema": "cm2.creator-sdk-beta-fixtures/1",
+  "requiredSuites": [ "tools/cm2-sdk/test-cm2-sdk-v1.ps1", "tools/cm2-clean-room/test-clean-room-hello-ship-v1.ps1", "tools/cm2-compat/test-compatibility-policy-v1.ps1" ],
+  "cohortIds": [ "creator-data", "creator-weapon", "ci-maintainer" ],
+  "blockerIds": [ "B01", "B02", "B03", "B04" ],
+  "expected": { "runtime": "deferred", "externalAuthors": 0, "result": "headless-beta" }
+}

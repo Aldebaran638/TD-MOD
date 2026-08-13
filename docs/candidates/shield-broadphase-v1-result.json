@@ -1,0 +1,21 @@
+{
+    "schema":  "cm2.projectile-shield-broadphase-report/1",
+    "protocolVersion":  "cm2.projectile.shield-broadphase/1",
+    "generation":  7,
+    "mode":  "grid",
+    "cellSize":  100,
+    "registers":  4,
+    "updates":  1,
+    "removes":  2,
+    "refreshes":  4,
+    "queries":  6,
+    "hits":  5,
+    "staleRejected":  1,
+    "broadphaseCandidates":  14,
+    "narrowphaseTests":  10,
+    "candidateChecks":  14,
+    "fullRegistryScans":  12,
+    "snapshotEntries":  1,
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

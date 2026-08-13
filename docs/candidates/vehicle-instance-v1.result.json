@@ -1,0 +1,20 @@
+{
+    "schema":  "cm2.vehicle-instance-report/1",
+    "protocolVersion":  "cm2.vehicle-instance/1",
+    "identity":  "ship:advancedStrikeCraft:42",
+    "definitionId":  "advancedStrikeCraft",
+    "ownerId":  "ship-owner:42",
+    "bodyId":  42,
+    "generation":  7,
+    "lifecycle":  "disposed",
+    "disposed":  true,
+    "staleRejects":  2,
+    "ownerRejects":  1,
+    "mountResolves":  1,
+    "healthWrites":  1,
+    "inputRevision":  4,
+    "mountRevision":  9,
+    "physicsLayoutChanged":  false,
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

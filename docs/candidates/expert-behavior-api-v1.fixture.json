@@ -1,0 +1,14 @@
+{
+  "schema": "cm2.expert-behavior-fixtures/1",
+  "requests": [
+    { "name": "data-only package", "capabilities": [], "expected": "deferred" },
+    { "name": "arbitrary Lua", "capabilities": [ "arbitrary-lua" ], "expected": "deny" },
+    { "name": "filesystem", "capabilities": [ "filesystem" ], "expected": "deny" },
+    { "name": "network", "capabilities": [ "network" ], "expected": "deny" },
+    { "name": "engine handle", "capabilities": [ "engine-handle" ], "expected": "deny" },
+    { "name": "timeout", "capabilities": [], "timeoutMs": 1000, "expected": "isolate" },
+    { "name": "crash", "capabilities": [], "simulateCrash": true, "expected": "isolate" }
+  ],
+  "mustRemainDisabled": true,
+  "mustNotBeDataOnlyPrerequisite": true
+}

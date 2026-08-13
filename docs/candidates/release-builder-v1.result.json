@@ -1,0 +1,14 @@
+{
+    "schema":  "cm2.release-builder-report/1",
+    "sourceRevision":  "tree:c9ba318144cdaed3c39a2abf25db89e8531e6fa4a4d271fc4b4c0c5bbb9c505a",
+    "generatorRevision":  "script:bd761a1b09d636ca7adc0a330dc4a41efde427f3bb80ba74776a8b4c21198ded",
+    "packageHash":  "c9ba318144cdaed3c39a2abf25db89e8531e6fa4a4d271fc4b4c0c5bbb9c505a",
+    "outputHash":  "74859f4139b834b64802e2174cea49aef98b290e4e008d8925743ec3401cdc5e",
+    "secondWorkspaceOutputHash":  "74859f4139b834b64802e2174cea49aef98b290e4e008d8925743ec3401cdc5e",
+    "preflightCount":  14,
+    "byteIdenticalWorkspaces":  true,
+    "whatIfPreservedTarget":  true,
+    "failurePreservedLastValid":  true,
+    "rollbackLedger":  "previous + rollback.json",
+    "status":  "pass"
+}

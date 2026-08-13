@@ -1,0 +1,37 @@
+{
+  "schema": "cm2.turret-network/1",
+  "protocolVersion": "cm2.turret-network/1",
+  "identity": "turret-network-fixture:sentinel",
+  "ownerId": "ship-owner:turret-network-fixture",
+  "generation": 91,
+  "commandRate": 1,
+  "operations": [
+    { "op": "serverInit" },
+    { "op": "serverSnapshot", "expectedSequence": 1 },
+    { "op": "command", "sequence": 1, "ownerId": "ship-owner:turret-network-fixture", "generation": 91, "yaw": 30.0, "pitch": 12.0, "targetId": "projectile-02", "expected": "accepted", "expectedSnapshotSequence": 2 },
+    { "op": "command", "sequence": 1, "ownerId": "ship-owner:turret-network-fixture", "generation": 91, "yaw": 31.0, "pitch": 12.0, "expected": "rejected-stale" },
+    { "op": "command", "sequence": 2, "ownerId": "foreign-owner", "generation": 91, "yaw": 40.0, "pitch": 15.0, "expected": "rejected-owner" },
+    { "op": "command", "sequence": 2, "ownerId": "ship-owner:turret-network-fixture", "generation": 91, "yaw": 40.0, "pitch": 15.0, "expected": "rejected-rate" },
+    { "op": "fire", "sequence": 3, "targetId": "projectile-02", "groupId": "left", "expected": "accepted" },
+    { "op": "fire", "sequence": 3, "targetId": "projectile-02", "groupId": "left", "expected": "rejected-duplicate" },
+    { "op": "clientInit" },
+    { "op": "clientSnapshot", "sequence": 2, "yaw": 30.0, "pitch": 12.0, "expected": "accepted" },
+    { "op": "clientSnapshot", "sequence": 1, "yaw": 0.0, "pitch": 0.0, "expected": "rejected-stale" },
+    { "op": "interpolate", "alpha": 0.5, "expectedYaw": 15.0, "expectedPitch": 6.0 },
+    { "op": "staleHandle", "expected": "rejected" }
+  ],
+  "expected": {
+    "snapshots": 2,
+    "commandsAccepted": 1,
+    "commandsRejected": 3,
+    "staleCommands": 1,
+    "foreignCommands": 1,
+    "rateRejected": 1,
+    "fires": 1,
+    "duplicateFires": 1,
+    "clientSnapshots": 1,
+    "clientStaleSnapshots": 1,
+    "interpolations": 1,
+    "staleRejects": 1
+  }
+}

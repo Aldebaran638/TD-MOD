@@ -1,0 +1,63 @@
+{
+  "schema": "cm2.entity-graph/1",
+  "protocolVersion": "cm2.entity-graph/1",
+  "generation": 7,
+  "identity": "ship:graph-test:42",
+  "ownerId": "owner:42",
+  "definitionId": "graph-test",
+  "definition": {
+    "definitionId": "graph-test",
+    "nodes": [
+      { "nodeId": "root", "partId": "root", "kind": "body", "parentId": "", "anchors": [ { "anchorId": "root-anchor", "localTransform": { "x": 0, "y": 0, "z": 0 } } ] },
+      { "nodeId": "wing", "partId": "wing", "kind": "part", "parentId": "root", "anchors": [ { "anchorId": "wing-anchor", "localTransform": { "x": 2, "y": 0, "z": -1 } } ] },
+      { "nodeId": "engine", "partId": "engine", "kind": "engine", "parentId": "wing", "anchors": [ { "anchorId": "nozzle", "localTransform": { "x": 0, "y": 0, "z": -2 } } ] }
+    ]
+  },
+  "runtime": {
+    "generation": 7,
+    "ownerId": "owner:42",
+    "nodes": [
+      { "nodeId": "root", "generation": 7, "ownerId": "owner:42", "bodyId": 42, "shapeId": 100, "jointId": 0, "transform": { "x": 10, "y": 5, "z": 0 } },
+      { "nodeId": "wing", "generation": 7, "ownerId": "owner:42", "bodyId": 43, "shapeId": 101, "jointId": 201, "transform": { "x": 12, "y": 5, "z": -1 } },
+      { "nodeId": "engine", "generation": 7, "ownerId": "owner:42", "bodyId": 44, "shapeId": 102, "jointId": 202, "transform": { "x": 12, "y": 5, "z": -3 } }
+    ]
+  },
+  "operations": [
+    { "op": "init", "expected": "accept" },
+    { "op": "load", "definition": "valid", "expected": "accept" },
+    { "op": "bind", "runtime": "valid", "expected": "accept" },
+    { "op": "part", "id": "engine", "expected": "hit", "expectedBodyId": 44 },
+    { "op": "part", "id": "engine", "expected": "cache-hit", "expectedBodyId": 44 },
+    { "op": "anchor", "id": "nozzle", "expected": "hit", "expectedBodyId": 44 },
+    { "op": "part", "id": "missing-part", "expected": "miss" },
+    { "op": "bind", "runtime": "stale", "expected": "stale-reject" },
+    { "op": "load", "definition": "cycle", "expected": "cycle-reject" },
+    { "op": "load", "definition": "duplicate-anchor", "expected": "duplicate-reject" },
+    { "op": "load", "definition": "missing-parent", "expected": "missing-reject" },
+    { "op": "snapshot", "expectedParts": 3, "expectedAnchors": 3, "expectedRuntimeNodes": 3 }
+  ],
+  "invalidDefinitions": {
+    "cycle": { "definitionId": "cycle", "nodes": [ { "nodeId": "root", "partId": "root", "parentId": "" }, { "nodeId": "a", "partId": "a", "parentId": "b" }, { "nodeId": "b", "partId": "b", "parentId": "a" } ] },
+    "duplicate-anchor": { "definitionId": "duplicate-anchor", "nodes": [ { "nodeId": "root", "partId": "root", "parentId": "", "anchors": [ { "anchorId": "same" }, { "anchorId": "same" } ] } ] },
+    "missing-parent": { "definitionId": "missing-parent", "nodes": [ { "nodeId": "root", "partId": "root", "parentId": "" }, { "nodeId": "child", "partId": "child", "parentId": "not-found" } ] }
+  },
+  "expected": {
+    "definitionLoads": 1,
+    "runtimeBinds": 1,
+    "definitionRejects": 3,
+    "runtimeRejects": 1,
+    "cyclesRejected": 1,
+    "missingRejected": 1,
+    "duplicateRejected": 1,
+    "partLookups": 3,
+    "partHits": 2,
+    "partMisses": 1,
+    "anchorLookups": 1,
+    "anchorHits": 1,
+    "anchorMisses": 0,
+    "staleRejected": 1,
+    "stableResolution": true,
+    "generationOwnerReturned": true
+  },
+  "rollback": "Keep old mount resolver as read-only comparison and bypass EntityGraph adapter per system if any S1 mount count/coordinate golden differs."
+}

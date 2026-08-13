@@ -1,0 +1,38 @@
+{
+  "schema": "cm2.world-presentation-audio/1",
+  "protocolVersion": "cm2.world.presentation/1",
+  "owner": {
+    "effectPlayerOwnerCount": 1,
+    "audioVoiceOwnerCount": 1,
+    "resourceCacheOwnerCount": 1,
+    "ownerId": "scene-presentation-host"
+  },
+  "budgets": {
+    "criticalCapacity": 64,
+    "ambientCapacity": 128,
+    "eventSlots": 32,
+    "criticalReliability": "reliable",
+    "ambientReliability": "coalesce"
+  },
+  "shipAdapterContract": {
+    "publishes": ["presentationEvent", "anchorSnapshot"],
+    "doesNotOwn": ["effectPlayer", "audioVoiceManager", "resourceCache", "sceneBudget"],
+    "localFallback": "legacy-local-owner",
+    "doublePlayback": "reject-by-mode"
+  },
+  "events": [
+    { "sourceId": "ship-A", "sequence": 1, "generation": 4, "kind": "muzzle", "critical": true, "expected": "critical-accepted" },
+    { "sourceId": "ship-A", "sequence": 1, "generation": 4, "kind": "muzzle", "critical": true, "expected": "duplicate-rejected" },
+    { "sourceId": "ship-B", "sequence": 2, "generation": 4, "kind": "smoke", "critical": false, "coalesceKey": "ship-B:smoke", "expected": "ambient-accepted" },
+    { "sourceId": "ship-B", "sequence": 3, "generation": 4, "kind": "smoke", "critical": false, "coalesceKey": "ship-B:smoke", "expected": "ambient-coalesced" },
+    { "sourceId": "ship-A", "sequence": 4, "generation": 3, "kind": "impact", "critical": true, "expected": "stale-rejected" }
+  ],
+  "expected": {
+    "criticalDropped": 0,
+    "ambientCoalesced": 1,
+    "duplicateRejected": 1,
+    "staleRejected": 1,
+    "doublePlayback": 0,
+    "p95Milliseconds": "requires-live-Teardown"
+  }
+}

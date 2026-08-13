@@ -1,0 +1,20 @@
+{
+    "schema":  "cm2.turret-definition-report/1",
+    "protocolVersion":  "cm2.turret-definition/1",
+    "identity":  "turret-fixture:sentinel",
+    "ownerId":  "ship-owner:turret-fixture",
+    "generation":  61,
+    "turretId":  "sentinel-turret",
+    "fixtureOnly":  true,
+    "compiles":  1,
+    "compileRejects":  4,
+    "fixtureSpawns":  1,
+    "fixtureDisposes":  1,
+    "limitRejects":  1,
+    "referenceRejects":  1,
+    "duplicateRejects":  1,
+    "staleRejects":  1,
+    "clampedAngle":  70,
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

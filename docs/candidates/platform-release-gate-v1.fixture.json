@@ -1,0 +1,33 @@
+{
+  "schema": "cm2.platform-release-gate-fixtures/1",
+  "evidence": {
+    "thirdParty": "docs/candidates/release-artifacts-v1.result.json",
+    "golden": "docs/candidates/golden-packages-v1.result.json",
+    "soak": "docs/candidates/multiplayer-lifecycle-soak-v1.result.json",
+    "performance": "docs/candidates/performance-regression-gate-v1.result.json",
+    "upgrade": "docs/candidates/version-upgrade-rollback-drill-v1.result.json",
+    "aiBeta": "docs/candidates/ai-creator-beta-v1.result.json",
+    "aiProvenance": "docs/candidates/ai-evaluation-provenance-v1.result.json",
+    "broker": "docs/candidates/global-mod-broker-spike-v1.result.json",
+    "supportDocs": "docs/release-boundaries-v1.md"
+  },
+  "observations": {
+    "externalAuthorsVerified": 0,
+    "independentPackages": 0,
+    "teardownAvailable": false,
+    "releaseOwner": "unassigned",
+    "independentReviewer": "unassigned",
+    "knownLimitations": [
+      "No Teardown.exe or live Runtime evidence",
+      "No verified external author cohort",
+      "No immutable archive/download hashes",
+      "Nightly pressure and replay evidence are deferred"
+    ],
+    "nextPlan": [
+      "Acquire Teardown runtime and fixed reference hardware",
+      "Run Core-only, Golden, S0-S8, multiplayer/Save soak and v1-to-v2 rollback live",
+      "Recruit and verify three external authors and three independent packages",
+      "Publish immutable archives, hashes, compatibility matrix and reviewer sign-off"
+    ]
+  }
+}

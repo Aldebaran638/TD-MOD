@@ -1,0 +1,29 @@
+{
+  "schema": "cm2.turret-physical-joint/1",
+  "protocolVersion": "cm2.turret-physical-joint/1",
+  "identity": "turret-joint-fixture:hero",
+  "ownerId": "ship-owner:turret-joint-fixture",
+  "generation": 101,
+  "limits": { "minYaw": -90.0, "maxYaw": 90.0, "minPitch": -30.0, "maxPitch": 30.0, "maxSpeed": 60.0, "maxTorque": 50.0 },
+  "operations": [
+    { "op": "init" },
+    { "op": "apply", "yaw": 120.0, "pitch": -50.0, "torque": 40.0, "dt": 0.1, "expectedYaw": 6.0, "expectedPitch": -6.0 },
+    { "op": "apply", "yaw": 45.0, "pitch": -20.0, "torque": 20.0, "dt": 0.1, "expectedYaw": 12.0, "expectedPitch": -12.0 },
+    { "op": "torqueReject", "expected": "rejected" },
+    { "op": "parentDestroyed", "expected": "disposed" },
+    { "op": "applyAfterParentDestroy", "expected": "rejected" },
+    { "op": "snapshot", "expectedLifecycle": "disposed" },
+    { "op": "dispose", "expected": "disposed" },
+    { "op": "staleHandle", "expected": "rejected" }
+  ],
+  "expected": {
+    "applies": 2,
+    "clamped": 1,
+    "torqueRejected": 1,
+    "parentRejects": 1,
+    "lifecycleChanges": 2,
+    "snapshots": 5,
+    "staleRejects": 1,
+    "fixtureOnly": true
+  }
+}

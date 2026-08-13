@@ -1,0 +1,53 @@
+{
+  "schema": "cm2.dense-entity-store/1",
+  "protocolVersion": "cm2.world.dense-store/1",
+  "generation": 7,
+  "stores": [
+    { "kind": "projectile", "capacity": 4 },
+    { "kind": "craft", "capacity": 3 },
+    { "kind": "effect", "capacity": 3 },
+    { "kind": "joint", "capacity": 2 }
+  ],
+  "operations": [
+    { "op": "register", "kind": "projectile", "entityId": "p-1", "bodyId": "body-A", "handleRef": "old-p1", "expected": "accept", "expectedIndex": 1, "expectedGeneration": 1 },
+    { "op": "register", "kind": "projectile", "entityId": "p-2", "bodyId": "body-B", "handleRef": "p2", "expected": "accept", "expectedIndex": 2, "expectedGeneration": 1 },
+    { "op": "iterate", "kind": "projectile", "expected": "active-2" },
+    { "op": "remove", "kind": "projectile", "handleRef": "old-p1", "expected": "accept" },
+    { "op": "get", "kind": "projectile", "handleRef": "old-p1", "expected": "stale-reject" },
+    { "op": "register", "kind": "projectile", "entityId": "p-3", "bodyId": "body-A", "handleRef": "new-p3", "expected": "accept", "expectedIndex": 1, "expectedGeneration": 2 },
+    { "op": "get", "kind": "projectile", "handleRef": "old-p1", "expected": "stale-reject" },
+    { "op": "get", "kind": "projectile", "handleRef": "new-p3", "expected": "valid" },
+    { "op": "remove", "kind": "projectile", "handleRef": "p2", "expected": "accept" },
+    { "op": "remove", "kind": "projectile", "handleRef": "new-p3", "expected": "accept" },
+    { "op": "register", "kind": "craft", "entityId": "c-1", "bodyId": "craft-body-1", "handleRef": "c1", "expected": "accept", "expectedIndex": 1, "expectedGeneration": 1 },
+    { "op": "register", "kind": "craft", "entityId": "c-2", "bodyId": "craft-body-2", "handleRef": "old-c2", "expected": "accept", "expectedIndex": 2, "expectedGeneration": 1 },
+    { "op": "register", "kind": "craft", "entityId": "c-3", "bodyId": "craft-body-3", "handleRef": "c3", "expected": "accept", "expectedIndex": 3, "expectedGeneration": 1 },
+    { "op": "register", "kind": "craft", "entityId": "c-4", "bodyId": "craft-body-4", "handleRef": "c4-failed", "expected": "capacity-reject" },
+    { "op": "remove", "kind": "craft", "handleRef": "old-c2", "expected": "accept" },
+    { "op": "get", "kind": "craft", "handleRef": "old-c2", "expected": "stale-reject" },
+    { "op": "register", "kind": "craft", "entityId": "c-4", "bodyId": "craft-body-2", "handleRef": "new-c4", "expected": "accept", "expectedIndex": 2, "expectedGeneration": 2 },
+    { "op": "iterate", "kind": "craft", "expected": "active-3" },
+    { "op": "remove", "kind": "craft", "handleRef": "c1", "expected": "accept" },
+    { "op": "remove", "kind": "craft", "handleRef": "c3", "expected": "accept" },
+    { "op": "remove", "kind": "craft", "handleRef": "new-c4", "expected": "accept" },
+    { "op": "register", "kind": "effect", "entityId": "fx-1", "bodyId": "", "handleRef": "old-fx", "expected": "accept", "expectedIndex": 1, "expectedGeneration": 1 },
+    { "op": "remove", "kind": "effect", "handleRef": "old-fx", "expected": "accept" },
+    { "op": "register", "kind": "effect", "entityId": "fx-2", "bodyId": "", "handleRef": "new-fx", "expected": "accept", "expectedIndex": 1, "expectedGeneration": 2 },
+    { "op": "iterate", "kind": "effect", "expected": "active-1" },
+    { "op": "register", "kind": "joint", "entityId": "joint-1", "bodyId": "joint-body", "handleRef": "joint-1", "expected": "accept", "expectedIndex": 1, "expectedGeneration": 1 },
+    { "op": "iterate", "kind": "joint", "expected": "active-1" }
+  ],
+  "comparison": {
+    "before": { "p95Ms": 4.8, "p99Ms": 7.2, "memoryBytes": 49152, "gcBytes": 12288, "method": "legacy table iteration baseline placeholder" },
+    "after": { "p95Ms": 1.4, "p99Ms": 2.1, "memoryBytes": 24576, "gcBytes": 2048, "method": "dense active-array offline model" },
+    "requiresLiveReplay": true
+  },
+  "expected": {
+    "staleHandleRejected": 3,
+    "capacityRejected": 1,
+    "reuses": 3,
+    "denseIterations": 4,
+    "activePlusFreeAlwaysCapacity": true,
+    "finalActive": { "projectile": 0, "craft": 0, "effect": 1, "joint": 1 }
+  }
+}

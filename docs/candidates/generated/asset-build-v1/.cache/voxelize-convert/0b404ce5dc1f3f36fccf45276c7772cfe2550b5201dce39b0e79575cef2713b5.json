@@ -1,0 +1,1 @@
+{"converted":true,"coordinateContract":"logical(x,y,z) -\u003e vox(x, maxZ-1-z, y)","sourceHash":"c52e69f18a71f54f1259d90570a9d6d9bc917e4d26aa4cfbd2242ad69c06788f","logicalSizeVoxels":[45,12,51],"voxelCount":4120,"metersPerVoxel":0.1,"outputKind":"intermediate-vox"}

@@ -1,0 +1,23 @@
+{
+    "schema":  "cm2.entity-graph-report/1",
+    "protocolVersion":  "cm2.entity-graph/1",
+    "identity":  "ship:graph-test:42",
+    "ownerId":  "owner:42",
+    "generation":  7,
+    "definitionLoads":  1,
+    "runtimeBinds":  1,
+    "definitionRejects":  3,
+    "runtimeRejects":  1,
+    "cyclesRejected":  1,
+    "missingRejected":  1,
+    "duplicateRejected":  1,
+    "partLookups":  3,
+    "partHits":  2,
+    "partMisses":  1,
+    "anchorLookups":  1,
+    "anchorHits":  1,
+    "anchorMisses":  0,
+    "stableResolution":  true,
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

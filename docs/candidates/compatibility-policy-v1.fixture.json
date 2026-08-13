@@ -1,0 +1,55 @@
+{
+  "schema": "cm2.compatibility-fixtures/1",
+  "validV0Effect": {
+    "schemaVersion": "cm2.effect/0",
+    "id": "cm2:effect.compat",
+    "kind": "effect",
+    "runtime": { "type": "impact", "asset": "cm2:asset.compat", "legacyOptional": "preserve-me" },
+    "editor": { "displayName": "Compatibility Effect", "futureColor": "amber" },
+    "ai": {},
+    "build": { "sourcePath": "definitions/effect/compat.json" }
+  },
+  "validV0Package": {
+    "schemaVersion": "cm2.package/0",
+    "packageId": "cm2.compat.package",
+    "packageVersion": "0.9.0",
+    "displayName": "Compatibility Package",
+    "provenance": { "source": "compatibility-fixture" },
+    "files": []
+  },
+  "missingRequired": {
+    "schemaVersion": "cm2.effect/0",
+    "kind": "effect",
+    "runtime": { "type": "impact", "asset": "cm2:asset.compat" },
+    "editor": {},
+    "ai": {},
+    "build": {}
+  },
+  "unknownOptional": {
+    "schemaVersion": "cm2.effect/0",
+    "id": "cm2:effect.optional",
+    "kind": "effect",
+    "runtime": { "type": "impact", "asset": "cm2:asset.compat" },
+    "editor": { "displayName": "Optional", "unknownOptional": { "futureUi": true } },
+    "ai": {},
+    "build": {}
+  },
+  "futureRequired": {
+    "schemaVersion": "cm2.effect/2",
+    "id": "cm2:effect.future",
+    "kind": "effect",
+    "runtime": { "effectType": "impact", "assetId": "cm2:asset.compat", "priority": 50, "futureRequired": true },
+    "editor": {},
+    "ai": {},
+    "build": {}
+  },
+  "unsupportedOld": {
+    "schemaVersion": "cm2.effect/-1",
+    "id": "cm2:effect.old",
+    "kind": "effect",
+    "runtime": {},
+    "editor": {},
+    "ai": {},
+    "build": {}
+  }
+}
