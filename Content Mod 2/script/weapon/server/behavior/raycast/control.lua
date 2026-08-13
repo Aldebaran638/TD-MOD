@@ -25,26 +25,36 @@ local function _fireRaycast(context)
     if didHitShield then
         local shieldEndpoint, shieldNormal = _resolveShieldEndpoint(origin, direction, hitBody, distance)
         if shieldEndpoint ~= nil then endpoint, normal = shieldEndpoint, shieldNormal end
-        ClientCall(
-            0,
-            "client.playProjectileShieldImpactFx",
-            hitBody,
-            endpoint[1], endpoint[2], endpoint[3],
-            context.weaponType
-        )
+        server.presentationPublisherPublish("impact", {
+            sourceBodyId = context.shipBodyId,
+            weaponType = context.weaponType,
+            targetId = hitBody,
+            position = endpoint,
+            hit = { position = endpoint, normal = normal or Vec(0, 1, 0) },
+            route = "ray.shieldImpact",
+            routeArgs = { hitBody, endpoint[1], endpoint[2], endpoint[3], context.weaponType },
+        })
     end
     if not isChargedRay then
-        ClientCall(
-            0, "client.playWeaponSound",
-            context.weaponType, "fire",
-            origin[1], origin[2], origin[3]
-        )
+        server.presentationPublisherPublish("sound", {
+            sourceBodyId = context.shipBodyId,
+            weaponType = context.weaponType,
+            position = origin,
+            payload = { event = "fire" },
+            route = "weapon.sound",
+            routeArgs = { context.weaponType, "fire", origin[1], origin[2], origin[3] },
+        })
         if hit then
-            ClientCall(
-                0, "client.playWeaponSound",
-                context.weaponType, "hit",
-                endpoint[1], endpoint[2], endpoint[3]
-            )
+            server.presentationPublisherPublish("impact", {
+                sourceBodyId = context.shipBodyId,
+                weaponType = context.weaponType,
+                targetId = hitBody,
+                position = endpoint,
+                hit = { position = endpoint, normal = normal or Vec(0, 1, 0) },
+                payload = { event = "hit" },
+                route = "weapon.sound",
+                routeArgs = { context.weaponType, "hit", endpoint[1], endpoint[2], endpoint[3] },
+            })
         end
     end
     if hit and not didHitShield and not suppressPhysicalExplosion then
@@ -60,15 +70,21 @@ local function _fireRaycast(context)
         end
     end
     if not usesDedicatedEnergyLanceFx then
-        ClientCall(
-            0, "client.spawnGenericRaycastWeaponFx",
-            context.weaponType, tostring(definition.fxProfile or "energyBeam"),
-            origin[1], origin[2], origin[3],
-            endpoint[1], endpoint[2], endpoint[3],
-            normal and normal[1] or 0.0, normal and normal[2] or 1.0, normal and normal[3] or 0.0,
-            hit and 1 or 0,
-            impactLayer or "none"
-        )
+        server.presentationPublisherPublish("beam", {
+            sourceBodyId = context.shipBodyId,
+            weaponType = context.weaponType,
+            effectId = tostring(definition.fxProfile or "energyBeam"),
+            position = origin,
+            hit = { position = endpoint, normal = normal or Vec(0, 1, 0) },
+            payload = { endpoint = endpoint, hit = hit and 1 or 0, impactLayer = impactLayer or "none" },
+            route = "ray.effect",
+            routeArgs = {
+                context.weaponType, tostring(definition.fxProfile or "energyBeam"),
+                origin[1], origin[2], origin[3], endpoint[1], endpoint[2], endpoint[3],
+                normal and normal[1] or 0.0, normal and normal[2] or 1.0, normal and normal[3] or 0.0,
+                hit and 1 or 0, impactLayer or "none",
+            },
+        })
     end
     if isChargedRay then
         server.chargedRayVisualTrigger(context.weaponType, definition)

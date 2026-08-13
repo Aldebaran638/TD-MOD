@@ -483,6 +483,16 @@ local function _fireContexts(behavior, contexts, mounts, cooldown)
     local fired = false
     for i = 1, #contexts do
         if behavior.fire(contexts[i]) then
+            if server.cm2TelemetryRecord ~= nil then
+                local context = contexts[i] or {}
+                server.cm2TelemetryRecord("weapon_released", {
+                    group_id = context.groupId,
+                    slot_type = context.slotType,
+                    weapon_type = context.weaponType,
+                    attacker_body_id = math.floor(tonumber(context.shipBodyId) or 0),
+                    target_body_id = math.floor(tonumber(context.targetBodyId) or 0),
+                })
+            end
             _weaponGroupBreakCloak(contexts[i].shipBodyId)
             mounts[i].cooldownRemain = cooldown
             local definition = contexts[i].weaponDefinition or {}
@@ -512,6 +522,15 @@ function server.weaponGroupRequestFire(groupId, request)
     if state == nil then return false, "unknown weapon group" end
     local weaponType, weaponDef = _resolveWeapon(state)
     if weaponDef == nil or weaponType == "none" then return false, "weapon not found" end
+    if server.cm2TelemetryRecord ~= nil then
+        server.cm2TelemetryRecord("fire_request", {
+            group_id = id,
+            slot_type = state.slotType,
+            weapon_type = weaponType,
+            attacker_body_id = math.floor(tonumber((request or {}).shipBodyId) or 0),
+            target_body_id = math.floor(tonumber((request or {}).targetBodyId) or 0),
+        })
+    end
     if (tonumber(state.fireDelay) or 0.0) > 0.0 then return false, "weapon group pacing" end
 
     local valid, validationError, normalizedRequest = _weaponGroupValidateRequest(
@@ -532,6 +551,16 @@ function server.weaponGroupRequestFire(groupId, request)
             request = normalizedRequest,
         })
         if fired then
+            if server.cm2TelemetryRecord ~= nil then
+                server.cm2TelemetryRecord("weapon_released", {
+                    group_id = id,
+                    slot_type = state.slotType,
+                    weapon_type = weaponType,
+                    attacker_body_id = math.floor(tonumber(normalizedRequest.shipBodyId) or 0),
+                    target_body_id = math.floor(tonumber(normalizedRequest.targetBodyId) or 0),
+                    controller = tostring((weaponDef or {}).controllerType or ""),
+                })
+            end
             _weaponGroupBreakCloak(normalizedRequest.shipBodyId)
             state.fireDelay = math.max(
                 0.0,

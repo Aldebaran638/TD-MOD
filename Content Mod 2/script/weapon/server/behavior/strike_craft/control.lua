@@ -1114,8 +1114,14 @@ local function _hSlotUpdateReplacementFlight(
 
     if flightStatus == "recovered" then
         _hSlotSetDebugReason(slotIndex, "return_recovered_finish", craft)
-        server.netClientCall("weapon.fireFx", 0, "client.spawnHSlotRecoverFx",
-            craft.pos[1], craft.pos[2], craft.pos[3])
+        server.presentationPublisherPublish("craft_recover", {
+            sourceBodyId = shipBody,
+            weaponType = craft.weaponType,
+            position = craft.pos,
+            payload = { craftBodyId = craft.bodyId, slotIndex = slotIndex },
+            route = "craft.recover",
+            routeArgs = { craft.pos[1], craft.pos[2], craft.pos[3] },
+        })
         _hSlotFinishCraft(state, slotIndex, "ready")
     elseif flightStatus == "timeout" then
         _hSlotSetDebugReason(slotIndex, "return_timeout_explode", craft)
@@ -1287,15 +1293,21 @@ function server.hSlotControlTick(dt)
     if server.registryShipSetInterceptorOwner ~= nil then
         server.registryShipSetInterceptorOwner(craftBody, shipBody)
     end
-    server.netClientCall("weapon.fireFx", 0, "client.spawnHSlotLaunchFx", firePos[1], firePos[2], firePos[3], fireDir[1], fireDir[2], fireDir[3])
-    server.netClientCall(
-        "weapon.fireFx",
-        0,
-        "client.registerHSlotCraftFx",
-        craftBody,
-        engineLeft or 0,
-        engineRight or 0
-    )
+    server.presentationPublisherPublish("craft_launch", {
+        sourceBodyId = shipBody,
+        weaponType = tostring(launcher.config.weaponType or ""),
+        position = firePos,
+        payload = { direction = fireDir, craftBodyId = craftBody, slotIndex = slotIndex },
+        route = "craft.launch",
+        routeArgs = { firePos[1], firePos[2], firePos[3], fireDir[1], fireDir[2], fireDir[3] },
+    })
+    server.presentationPublisherPublish("craft_launch", {
+        sourceBodyId = shipBody,
+        weaponType = tostring(launcher.config.weaponType or ""),
+        payload = { craftBodyId = craftBody, slotIndex = slotIndex },
+        route = "craft.register",
+        routeArgs = { craftBody, engineLeft or 0, engineRight or 0 },
+    })
 
     local newCraft = {
         slotIndex = slotIndex,

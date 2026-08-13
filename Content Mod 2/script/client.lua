@@ -3,10 +3,15 @@
 
 client = client or {}
 
+#include "net/presentation_event_v1.lua"
+#include "net/world_protocol_v1.lua"
+#include "net/effect_runtime_authority.lua"
 #include "ship/common/client/bootstrap.lua"
 #include "weapon/client/bootstrap.lua"
 
 function client.init()
+    cm2EffectRuntimeAuthority.init()
+    cm2ShipInstanceAdapterV1.clientInit("ship:" .. tostring(configuredShipType or "ship"))
     local shipType = GetStringParam("shiptype", "")
     local bodyTag = GetStringParam("bodytag", "")
     if shipType == "" or bodyTag == "" then
@@ -17,11 +22,12 @@ function client.init()
 end
 
 function client.clientTick(dt)
+    cm2ShipInstanceAdapterV1.clientTick(dt)
+    client.presentationBudget.beginFrame(dt)
     if client.shipClientIsDestroyed() then
         client.shipClientDestroyedUiTick(dt)
         return
     end
-    client.weaponFxBudgetBeginFrame(dt)
     client.shipClientBeforeWeaponTick(dt)
     client.weaponClientTick(dt)
     client.shipClientAfterWeaponTick(dt)

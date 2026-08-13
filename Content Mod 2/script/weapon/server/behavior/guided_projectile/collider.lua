@@ -86,7 +86,104 @@ local function _guidedProjectileQuerySweepBody(projectile, startPos, endPos, rad
     return { hitPos = VecAdd(startPos, VecScale(dir, dist)), hitBody = GetShapeBody(shape) or 0, normal = normal or dir }
 end
 
+local function _guidedProjectileTargetDistance(projectile, currentPos)
+    local targetBodyId = math.floor(tonumber(projectile.targetBodyId) or 0)
+    if targetBodyId ~= 0
+        and IsHandleValid(targetBodyId)
+        and server.guidedProjectileGetBodyCenterWorld ~= nil then
+        local targetPos = server.guidedProjectileGetBodyCenterWorld(targetBodyId)
+        if targetPos ~= nil then
+            return VecLength(VecSub(targetPos, currentPos))
+        end
+    end
+    local targetVehicleId = math.floor(tonumber(projectile.targetVehicleId) or 0)
+    if targetVehicleId ~= 0 and GetVehicleTransform ~= nil then
+        local vehicleTransform = GetVehicleTransform(targetVehicleId)
+        if vehicleTransform ~= nil and vehicleTransform.pos ~= nil then
+            return VecLength(VecSub(vehicleTransform.pos, currentPos))
+        end
+    end
+    return math.huge
+end
+
+local function _guidedProjectileResolveBudgetedHit(projectile, currentProbes)
+    if cm2GuidedCollisionBudgetV1 == nil
+        or cm2GuidedCollisionBudgetV1.getDiagnostics == nil
+        or cm2GuidedCollisionBudgetV1.plan == nil then
+        return nil, false
+    end
+    local diagnostics = cm2GuidedCollisionBudgetV1.getDiagnostics()
+    if diagnostics == nil or diagnostics.mode ~= "budgeted" then
+        return nil, false
+    end
+
+    local now = (GetTime ~= nil) and GetTime() or 0.0
+    local lastNow = tonumber(projectile.collisionLastTime)
+    local frameDt = now - (lastNow or (now - (1.0 / 60.0)))
+    if frameDt <= 0.0 or frameDt > 0.25 then frameDt = 1.0 / 60.0 end
+    projectile.collisionLastTime = now
+
+    local currentVel = projectile.ignoreGravity
+        and (projectile.kinematicVelocity or Vec(0, 0, 0))
+        or GetBodyVelocity(projectile.bodyId)
+    local previousVel = projectile.collisionPreviousVelocity
+    local turning = previousVel ~= nil
+        and _guidedProjectileVelocityAngleDegrees(currentVel, previousVel) >= 12.0
+    projectile.collisionPreviousVelocity = Vec(currentVel[1], currentVel[2], currentVel[3])
+
+    local currentPos = currentProbes.center
+    local targetDistance = _guidedProjectileTargetDistance(projectile, currentPos)
+    local speed = VecLength(currentVel)
+    local timeToImpact = targetDistance / math.max(1.0, speed)
+    local firstContact = projectile.collisionFirstContact ~= false
+    local projectileId = tostring(projectile.id or 0)
+    local plan = cm2GuidedCollisionBudgetV1.plan(
+        projectileId,
+        projectile.collisionSeed or projectile.id or 0,
+        frameDt,
+        now,
+        targetDistance,
+        timeToImpact,
+        speed,
+        turning,
+        firstContact
+    )
+    if plan == nil then
+        cm2GuidedCollisionBudgetV1.recordPotentialMiss(projectileId)
+        return nil, true
+    end
+
+    local previousCenter = projectile.prePhysicsCenterPos or currentPos
+    local hit = nil
+    if plan.doClosestPoint then
+        hit = _guidedProjectileQueryClosestBody(
+            projectile,
+            currentProbes.head,
+            _guidedProjectileClosestPointDist
+        )
+        projectile.collisionFirstContact = false
+    end
+    if hit == nil and plan.doSweep then
+        hit = _guidedProjectileQuerySweepBody(
+            projectile,
+            previousCenter,
+            currentPos,
+            _guidedProjectileSweepRadius
+        )
+    end
+    if hit ~= nil then
+        cm2GuidedCollisionBudgetV1.recordHit(projectileId)
+        return hit, true
+    end
+    if (tonumber(plan.queryCost) or 0) > 0 then
+        cm2GuidedCollisionBudgetV1.recordPotentialMiss(projectileId)
+    end
+    return nil, true
+end
+
 local function _guidedProjectileResolveHit(projectile, currentProbes)
+    local budgetedHit, budgeted = _guidedProjectileResolveBudgetedHit(projectile, currentProbes)
+    if budgeted then return budgetedHit end
     local previousHead = projectile.prePhysicsHeadPos or currentProbes.head
     local previousMid = projectile.prePhysicsMidPos or currentProbes.mid
     local previousCenter = projectile.prePhysicsCenterPos or currentProbes.center

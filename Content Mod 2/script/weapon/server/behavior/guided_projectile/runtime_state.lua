@@ -89,13 +89,18 @@ function server.guidedProjectileRemoveAt(index)
     local active = server.guidedProjectileRuntimeState.activeProjectiles or {}
     local projectile = active[index]
     if projectile ~= nil then
+        if cm2GuidedCollisionBudgetV1 ~= nil
+            and cm2GuidedCollisionBudgetV1.clear ~= nil then
+            cm2GuidedCollisionBudgetV1.clear(tostring(projectile.id or 0))
+        end
         _guidedProjectileDeleteBody(projectile.bodyId or 0)
-        server.netClientCall(
-            "missile.finish",
-            0,
-            "client.finishMissileVisual",
-            projectile.id or 0
-        )
+        server.presentationPublisherPublish("projectile", {
+            sourceId = "missile:" .. tostring(projectile.id or 0),
+            weaponType = projectile.weaponType,
+            payload = { missileId = projectile.id or 0 },
+            route = "missile.finish",
+            routeArgs = { projectile.id or 0 },
+        })
         _guidedProjectileAdjustGlobalCount(-1)
     end
 
@@ -110,6 +115,10 @@ function server.guidedProjectileClearAll()
     local active = server.guidedProjectileRuntimeState.activeProjectiles or {}
     local removed = #active
     for i = #active, 1, -1 do
+        if cm2GuidedCollisionBudgetV1 ~= nil
+            and cm2GuidedCollisionBudgetV1.clear ~= nil then
+            cm2GuidedCollisionBudgetV1.clear(tostring((active[i] or {}).id or 0))
+        end
         _guidedProjectileDeleteBody((active[i] or {}).bodyId or 0)
         active[i] = nil
     end
@@ -118,28 +127,29 @@ end
 
 function server.guidedProjectilePlayImpactSound(weaponType, hitPos)
     local p = hitPos or Vec(0, 0, 0)
-    server.netClientCall(
-        "weapon.hitFx",
-        0,
-        "client.playMissileImpactSound",
-        weaponType or "",
-        p[1], p[2], p[3]
-    )
+    server.presentationPublisherPublish("sound", {
+        sourceId = "missile:sound",
+        weaponType = weaponType,
+        position = p,
+        payload = { event = "impact" },
+        route = "missile.impactSound",
+        routeArgs = { weaponType or "", p[1], p[2], p[3] },
+    })
 end
 
 function server.guidedProjectilePlayImpactFx(weaponType, hitPos, hitNormal, impactLayer, hitTargetBodyId)
     local p = hitPos or Vec(0, 0, 0)
     local normal = hitNormal or Vec(0, 1, 0)
-    server.netClientCall(
-        "weapon.hitFx",
-        0,
-        "client.playMissileImpactFx",
-        weaponType or "",
-        p[1], p[2], p[3],
-        normal[1], normal[2], normal[3],
-        impactLayer or "body",
-        math.floor(hitTargetBodyId or 0)
-    )
+    server.presentationPublisherPublish("impact", {
+        sourceId = "missile:impact",
+        weaponType = weaponType,
+        targetId = math.floor(hitTargetBodyId or 0),
+        position = p,
+        hit = { position = p, normal = normal },
+        payload = { impactLayer = impactLayer or "body" },
+        route = "missile.impactFx",
+        routeArgs = { weaponType or "", p[1], p[2], p[3], normal[1], normal[2], normal[3], impactLayer or "body", math.floor(hitTargetBodyId or 0) },
+    })
 end
 
 function server.guidedProjectileDestroyIfDeadAt(index)
@@ -240,31 +250,30 @@ function server.guidedProjectileSpawn(ownerShipBody, groupMode, config, firePosW
     local projectileId = state.nextProjectileId or 1
     state.nextProjectileId = projectileId + 1
 
-    server.netClientCall(
-        "missile.spawn",
-        0,
-        "client.spawnMissileVisual",
-        projectileId,
-        tostring(cfg.weaponType or ""),
-        firePosWorld[1], firePosWorld[2], firePosWorld[3],
-        startVelocity[1], startVelocity[2], startVelocity[3],
-        tonumber(cfg.lifetime) or 10.0
-    )
-    server.netClientCall(
-        "weapon.fireFx",
-        0,
-        "client.playMissileFireSound",
-        tostring(cfg.weaponType or ""),
-        firePosWorld[1], firePosWorld[2], firePosWorld[3]
-    )
-    server.netClientCall(
-        "weapon.fireFx",
-        0,
-        "client.spawnWeaponMuzzleFx",
-        tostring(cfg.weaponType or ""),
-        firePosWorld[1], firePosWorld[2], firePosWorld[3],
-        dir[1], dir[2], dir[3]
-    )
+    server.presentationPublisherPublish("projectile", {
+        sourceId = "missile:" .. tostring(projectileId),
+        weaponType = tostring(cfg.weaponType or ""),
+        position = firePosWorld,
+        payload = { velocity = startVelocity, lifetime = tonumber(cfg.lifetime) or 10.0 },
+        route = "missile.spawn",
+        routeArgs = { projectileId, tostring(cfg.weaponType or ""), firePosWorld[1], firePosWorld[2], firePosWorld[3], startVelocity[1], startVelocity[2], startVelocity[3], tonumber(cfg.lifetime) or 10.0 },
+    })
+    server.presentationPublisherPublish("sound", {
+        sourceId = "missile:" .. tostring(projectileId),
+        weaponType = tostring(cfg.weaponType or ""),
+        position = firePosWorld,
+        payload = { event = "fire" },
+        route = "missile.fireSound",
+        routeArgs = { tostring(cfg.weaponType or ""), firePosWorld[1], firePosWorld[2], firePosWorld[3] },
+    })
+    server.presentationPublisherPublish("muzzle", {
+        sourceId = "missile:" .. tostring(projectileId),
+        weaponType = tostring(cfg.weaponType or ""),
+        position = firePosWorld,
+        payload = { direction = dir },
+        route = "missile.muzzle",
+        routeArgs = { tostring(cfg.weaponType or ""), firePosWorld[1], firePosWorld[2], firePosWorld[3], dir[1], dir[2], dir[3] },
+    })
 
     local probes = server.guidedProjectileGetProbePoints(GetBodyTransform(bodyId))
     local projectile = {

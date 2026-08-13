@@ -11,6 +11,11 @@
 #include "interaction/input/main_weapon_input.lua"
 #include "presentation/audio/weapon_sound_catalog.lua"
 #include "presentation/audio/sound_service.lua"
+#include "presentation/event_runtime.lua"
+#include "presentation/effect_player.lua"
+#include "presentation/presentation_budget.lua"
+#include "presentation/slice_runtime.lua"
+#include "presentation/effect_lab.lua"
 #include "interaction/hud/target_lock_reticle.lua"
 #include "interaction/hud/main_weapon_hud.lua"
 #include "interaction/hud/ship_crosshair.lua"
@@ -72,6 +77,7 @@
 client = client or {}
 
 function client.weaponClientInit()
+    client.presentationSliceRuntimeInit()
     client.xSlotRenderStateInit()
     client.soundModuleInit()
     client.weaponFxInitAll()
@@ -79,6 +85,7 @@ end
 
 function client.weaponClientTick(dt)
     client.weaponLoadoutSyncTick(dt)
+    client.presentationSliceRuntimeTick(dt)
     client.guidedTargetingTick(dt)
     client.chargedRayTargetingTick(dt)
     client.mainWeaponInputTick(dt)

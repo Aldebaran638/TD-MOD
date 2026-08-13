@@ -56,7 +56,11 @@ function client.playWeaponSound(weaponType, eventType, x, y, z)
         handles = profile[tostring(eventType or "") .. "Near"]
     end
     local handle = _randomPick(handles)
-    if handle ~= nil and handle ~= 0 then PlaySound(handle, position, 1.0) end
+    client.presentationBudget.playSound(handle, position, 1.0, {
+        effect = requested,
+        priority = eventType == "hit" and "critical" or "normal",
+        distance = distant and _soundDistanceThreshold or 0.0,
+    })
 end
 
 local function _isShipOccupied(shipBodyId)

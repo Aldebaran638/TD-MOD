@@ -196,7 +196,7 @@ function client.tachyonChargingFxTick(dt)
             ParticleDrag(0.10)
             ParticleEmissive(12.0 * pulse, 0.0)
             ParticleCollide(0.0)
-            SpawnParticle(cur, vel, entry.life - entry.age)
+        client.presentationBudget.spawnParticle(cur, vel, entry.life - entry.age, { effect = "tachyonCharge", priority = "ambient" })
         end
 
         i = i - 1

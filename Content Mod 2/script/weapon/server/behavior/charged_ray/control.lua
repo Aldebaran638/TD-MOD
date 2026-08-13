@@ -387,15 +387,23 @@ function server.xSlot_broadcastLaunchingStart(shipBodyId, slotIndex, weaponType,
     local fxProfile = tostring(definition.fxProfile or "")
     if fxProfile == "arcBeam" or fxProfile == "focusedArcBeam" then
         local hitNormal = normal or Vec(0, 1, 0)
-        ClientCall(
-            0, "client.spawnGenericRaycastWeaponFx",
-            weaponType, fxProfile,
-            firePointWorld[1], firePointWorld[2], firePointWorld[3],
-            hitPointWorld[1], hitPointWorld[2], hitPointWorld[3],
-            hitNormal[1], hitNormal[2], hitNormal[3],
-            didHit and 1 or 0,
-            impactLayer
-        )
+        server.presentationPublisherPublish("beam", {
+            sourceBodyId = shipBodyId,
+            weaponType = weaponType,
+            effectId = fxProfile,
+            position = firePointWorld,
+            targetId = hitTargetBodyId,
+            hit = { position = hitPointWorld, normal = hitNormal },
+            payload = { hit = didHit and 1 or 0, impactLayer = impactLayer },
+            route = "ray.effect",
+            routeArgs = {
+                weaponType, fxProfile,
+                firePointWorld[1], firePointWorld[2], firePointWorld[3],
+                hitPointWorld[1], hitPointWorld[2], hitPointWorld[3],
+                hitNormal[1], hitNormal[2], hitNormal[3],
+                didHit and 1 or 0, impactLayer,
+            },
+        })
     end
     server.xSlotRenderPushEvent(shipBodyId, {
         eventType = "launch_start",

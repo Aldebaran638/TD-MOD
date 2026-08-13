@@ -91,7 +91,6 @@ function client.weaponFxInitAll()
 end
 
 function client.weaponFxTickAll(dt)
-    client.weaponFxBudgetBeginFrame(dt)
     for _, system in ipairs(client.weaponFxSystems) do if system.tick then system.tick(dt) end end
 end
 

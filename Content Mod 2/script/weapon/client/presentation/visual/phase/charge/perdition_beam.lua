@@ -86,11 +86,11 @@ local function _updateParticles(dt)
                     ParticleDrag(0.0)
                     ParticleEmissive(50.0 + alpha * 30.0, 0.0)
                     ParticleCollide(0.0)
-                    SpawnParticle(position, Vec(
+                    client.presentationBudget.spawnParticle(position, Vec(
                         (math.random() - 0.5) * 0.1,
                         (math.random() - 0.5) * 0.1,
                         (math.random() - 0.5) * 0.1
-                    ), 0.1)
+                    ), 0.1, { effect = "perditionCharge", priority = "ambient" })
                 end
             elseif lifeProgress >= 1.0 then
                 remove = true
@@ -122,11 +122,11 @@ local function _updateParticles(dt)
                 ParticleDrag(0.0)
                 ParticleEmissive(25.0 + alpha * 15.0, 0.0)
                 ParticleCollide(0.0)
-                SpawnParticle(position, Vec(
+                client.presentationBudget.spawnParticle(position, Vec(
                     (math.random() - 0.5) * 0.1,
                     (math.random() - 0.5) * 0.1,
                     (math.random() - 0.5) * 0.1
-                ), 0.1)
+                ), 0.1, { effect = "perditionCharge", priority = "ambient" })
             end
         end
 
@@ -171,7 +171,7 @@ local function _spawnOriginalChargeParticles(shipBodyId, chargeState, dt)
             spawn[2] = spawn[2] + verticalOffset
             _createParticle(shipBodyId, shipTransform, spawn, target, 2.0 + math.random())
         end
-        PointLight(target, 1.0, 0.8, 0.2, 4.0)
+        client.presentationBudget.pointLight(target, 1.0, 0.8, 0.2, 4.0, 180.0, { effect = "perditionCharge", priority = "ambient" })
     end
 end
 

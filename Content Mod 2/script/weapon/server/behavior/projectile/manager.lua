@@ -6,7 +6,18 @@ server = server or {}
 server.projectileManagerState = server.projectileManagerState or {
     nextId = 1,
     active = {},
+    free = {},
 }
+server.projectileManagerState.free = server.projectileManagerState.free or {}
+server.projectileShieldBroadphaseMode = server.projectileShieldBroadphaseMode or "legacy"
+
+function server.projectileManagerSetShieldBroadphase(mode)
+    local resolved = tostring(mode or "")
+    if resolved ~= "legacy" and resolved ~= "grid" then return false end
+    server.projectileShieldBroadphaseMode = resolved
+    if cm2ProjectileShieldBroadphaseV1 ~= nil then cm2ProjectileShieldBroadphaseV1.setMode(resolved) end
+    return true
+end
 
 local registryShipIndexRoot = "StellarisShips/server/ships/index"
 
@@ -83,49 +94,81 @@ local function _segmentSphereEntryT(a, b, center, radius)
 end
 
 local function _removeProjectileAt(index)
-    local active = server.projectileManagerState.active
+    local state = server.projectileManagerState
+    local active = state.active
     local last = #active
     if index < 1 or index > last then
         return
     end
+    local removed = active[index]
     active[index] = active[last]
     active[last] = nil
+    if removed ~= nil then state.free[#state.free + 1] = removed end
 end
 
 local function _finishProjectileVisual(projectileId, mode, hitPos, hitNormal, impactLayer)
     local p = hitPos or Vec(0, 0, 0)
     local n = hitNormal or Vec(0, 1, 0)
-    ClientCall(0, "client.finishProjectileVisual", projectileId, mode or "none", p[1], p[2], p[3], n[1], n[2], n[3], impactLayer or "none")
+    server.presentationPublisherPublish("impact", {
+        sourceId = "projectile:" .. tostring(projectileId or 0),
+        position = p,
+        hit = { position = p, normal = n },
+        payload = { projectileId = projectileId or 0, mode = mode or "none", impactLayer = impactLayer or "none" },
+        route = "projectile.finish",
+        routeArgs = { projectileId, mode or "none", p[1], p[2], p[3], n[1], n[2], n[3], impactLayer or "none" },
+    })
 end
 
 function server.projectileManagerReset()
-    local active = (server.projectileManagerState or {}).active or {}
+    local state = server.projectileManagerState or {}
+    local active = state.active or {}
+    local free = state.free or {}
     for i = #active, 1, -1 do
         _finishProjectileVisual(active[i].id or 0, "none", active[i].position)
+        free[#free + 1] = active[i]
         active[i] = nil
     end
-    server.projectileManagerState = { nextId = 1, active = {} }
+    state.nextId = 1
+    state.active = active
+    state.free = free
+    server.projectileManagerState = state
 end
 
 local function _playProjectileFireSound(weaponType, firePos)
     local p = firePos or Vec(0, 0, 0)
-    ClientCall(0, "client.playKineticArtilleryFireSound", weaponType or "", p[1], p[2], p[3])
+    server.presentationPublisherPublish("sound", {
+        sourceId = "projectile:sound",
+        weaponType = weaponType,
+        position = p,
+        payload = { event = "fire" },
+        route = "projectile.fireSound",
+        routeArgs = { weaponType or "", p[1], p[2], p[3] },
+    })
 end
 
 local function _playProjectileHitSound(weaponType, hitPos)
     local p = hitPos or Vec(0, 0, 0)
-    ClientCall(0, "client.playKineticArtilleryHitSound", weaponType or "", p[1], p[2], p[3])
+    server.presentationPublisherPublish("sound", {
+        sourceId = "projectile:sound",
+        weaponType = weaponType,
+        position = p,
+        payload = { event = "hit" },
+        route = "projectile.hitSound",
+        routeArgs = { weaponType or "", p[1], p[2], p[3] },
+    })
 end
 
 local function _playShieldImpactFx(hitTargetBodyId, hitPos, weaponType)
     local p = hitPos or Vec(0, 0, 0)
-    ClientCall(
-        0,
-        "client.playProjectileShieldImpactFx",
-        hitTargetBodyId or 0,
-        p[1], p[2], p[3],
-        weaponType or ""
-    )
+    server.presentationPublisherPublish("impact", {
+        sourceId = "projectile:shield",
+        weaponType = weaponType,
+        targetId = hitTargetBodyId or 0,
+        position = p,
+        hit = { position = p },
+        route = "projectile.shieldImpact",
+        routeArgs = { hitTargetBodyId or 0, p[1], p[2], p[3], weaponType or "" },
+    })
 end
 
 local function _applyProjectileShipDamage(hitBody, weaponType, attackerBodyId)
@@ -154,6 +197,23 @@ local function _applyProjectileShipDamage(hitBody, weaponType, attackerBodyId)
 end
 
 local function _resolveShieldHit(projectile, startPos, endPos, settings)
+    if server.projectileShieldBroadphaseMode == "grid"
+        and cm2ProjectileShieldBroadphaseV1 ~= nil then
+        local gridHit = cm2ProjectileShieldBroadphaseV1.findEarliest(
+            startPos,
+            endPos,
+            settings.projectileRadius or 0.0,
+            projectile.ownerShipBody
+        )
+        if gridHit ~= nil then
+            return {
+                t = gridHit.t,
+                bodyId = gridHit.bodyId,
+                hitPos = gridHit.hitPos,
+                normal = gridHit.normal,
+            }
+        end
+    end
     local bestHit = nil
     local count = GetInt(registryShipIndexRoot .. "/count")
     for i = 1, count do
@@ -226,28 +286,35 @@ function server.projectileManagerSpawnProjectile(ownerShipBody, weaponType, fire
     local projectileId = server.projectileManagerState.nextId
     server.projectileManagerState.nextId = projectileId + 1
 
-    local projectile = {
-        id = projectileId,
-        position = Vec(firePointWorld[1], firePointWorld[2], firePointWorld[3]),
-        lastPosition = Vec(firePointWorld[1], firePointWorld[2], firePointWorld[3]),
-        velocity = VecScale(dir, settings.projectileSpeed or 0.0),
-        lifeRemain = settings.projectileLifetime or 0.0,
-        ownerShipBody = ownerShipBody,
-        weaponType = weaponType,
-    }
-
-    table.insert(server.projectileManagerState.active, projectile)
+    local managerState = server.projectileManagerState
+    local projectile = table.remove(managerState.free)
+    if projectile == nil then projectile = {} end
+    projectile.id = projectileId
+    projectile.position = Vec(firePointWorld[1], firePointWorld[2], firePointWorld[3])
+    projectile.lastPosition = Vec(firePointWorld[1], firePointWorld[2], firePointWorld[3])
+    projectile.velocity = VecScale(dir, settings.projectileSpeed or 0.0)
+    projectile.lifeRemain = settings.projectileLifetime or 0.0
+    projectile.ownerShipBody = ownerShipBody
+    projectile.weaponType = weaponType
+    managerState.active[#managerState.active + 1] = projectile
+    if cm2HotpathBudgetV1 ~= nil and cm2HotpathBudgetV1.record ~= nil then
+        cm2HotpathBudgetV1.record("projectile.spawn.reuse", 1)
+    end
     _playProjectileFireSound(projectile.weaponType, projectile.position)
 
-    ClientCall(
-        0,
-        "client.spawnProjectileVisual",
-        projectileId,
-        weaponType or "",
-        projectile.position[1], projectile.position[2], projectile.position[3],
-        projectile.velocity[1], projectile.velocity[2], projectile.velocity[3],
-        projectile.lifeRemain
-    )
+    server.presentationPublisherPublish("projectile", {
+        sourceId = "projectile:" .. tostring(projectileId),
+        weaponType = weaponType,
+        position = projectile.position,
+        payload = { velocity = projectile.velocity, lifetime = projectile.lifeRemain },
+        route = "projectile.spawn",
+        routeArgs = {
+            projectileId, weaponType or "",
+            projectile.position[1], projectile.position[2], projectile.position[3],
+            projectile.velocity[1], projectile.velocity[2], projectile.velocity[3],
+            projectile.lifeRemain,
+        },
+    })
 
     return projectileId
 end
