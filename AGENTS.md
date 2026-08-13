@@ -1,5 +1,13 @@
 # 项目验证要求
 
+## 自主游戏测试政策
+
+修改或验证 CM2 Runtime、武器、伤害、舰船、输入、移动、生命周期、Multiplayer、Loadout、Public API、Presentation、UI、VFX、Strike Craft、Cloak、Battlefield、Registration、Networking，完成 Todo Step、修 Bug、做 Regression，或用户要求“验证”“测试”“确认是否正常”时，必须使用项目 Skill：`$teardown-autonomous-testing`。
+
+编码前必须建立 `cm2.verification-contract/1` 验收合同并选择测试 Profile。测试初始状态允许通过隔离 Scenario 预构造，但不得绕过被测 Behavior。结构化 gameplay 结论以 telemetry 为准，视觉结论以 screenshot 为准，Runtime Health 以增量 log 为准；三类证据不得互相冒充。
+
+涉及真实游戏行为的任务必须完成“识别状态 → 正确 reload → telemetry baseline → 最少真实输入 → telemetry delta → screenshot → log → cleanup → regression”的闭环，证据保存后才能标记完成。具体规则位于 `.codex/skills/teardown-autonomous-testing/SKILL.md`。
+
 ## 目录结构约束
 
 同一目录层级下的文件夹名称必须表达同一种分类维度。不得将作用域（如 `common`）、行为（如 `guided`）、槽位（如 `x`）和实现阶段（如 `beam`）并列在同一层。需要同时表达多个维度时，按“职责 -> 分类维度 -> 具体实现”逐层嵌套。

@@ -1,0 +1,3600 @@
+{
+  "schema": "cm2.todo-verification-coverage/1",
+  "source": "TEARDOWN_SHIP_PLATFORM_TODO.json",
+  "task_count": 80,
+  "contracts": [
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 0.1: 修复当前 Content 主入口",
+      "behavior_under_test": "The production outcome claimed by 修复当前 Content 主入口 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Load the formal CM2 entry and a disposable smoke level with telemetry enabled; preserve a pre-run log cursor."
+      },
+      "trigger": [
+        "Start through the real Mod Manager/editor path, exercise config/UI and one minimal gameplay action."
+      ],
+      "expected_telemetry": [
+        "Every entry/include/resource loads, correct scenario/session appears, UI opens/closes through real input and no new runtime error occurs."
+      ],
+      "expected_state": [
+        "Every entry/include/resource loads, correct scenario/session appears, UI opens/closes through real input and no new runtime error occurs."
+      ],
+      "expected_visual": [
+        "Every entry/include/resource loads, correct scenario/session appears, UI opens/closes through real input and no new runtime error occurs."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_MOD_SESSION; REOPEN_LEVEL_XML for editor XML changes",
+      "regression": [
+        "Entry closure, source-of-truth, schema/compiler/catalog and relevant definition suites."
+      ],
+      "evidence": [
+        "Contract JSON, fixture inputs, command trace, structured report, deterministic hashes and full Harness result."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 0.2: 把所有真实入口纳入验证闭包",
+      "behavior_under_test": "The production outcome claimed by 把所有真实入口纳入验证闭包 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC"
+      ],
+      "setup": {
+        "description": "Use versioned golden source plus valid/invalid deterministic fixtures in an isolated output directory."
+      },
+      "trigger": [
+        "Run the owning checker/fixture twice; compare byte output and structured diagnostics."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE",
+      "regression": [
+        "Entry closure, source-of-truth, schema/compiler/catalog and relevant definition suites."
+      ],
+      "evidence": [
+        "Contract JSON, fixture inputs, command trace, structured report, deterministic hashes and full Harness result."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 0.3: 建立最小 Teardown 实机 smoke matrix",
+      "behavior_under_test": "The production outcome claimed by 建立最小 Teardown 实机 smoke matrix satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Load the formal CM2 entry and a disposable smoke level with telemetry enabled; preserve a pre-run log cursor."
+      },
+      "trigger": [
+        "Start through the real Mod Manager/editor path, exercise config/UI and one minimal gameplay action."
+      ],
+      "expected_telemetry": [
+        "Every entry/include/resource loads, correct scenario/session appears, UI opens/closes through real input and no new runtime error occurs."
+      ],
+      "expected_state": [
+        "Every entry/include/resource loads, correct scenario/session appears, UI opens/closes through real input and no new runtime error occurs."
+      ],
+      "expected_visual": [
+        "Every entry/include/resource loads, correct scenario/session appears, UI opens/closes through real input and no new runtime error occurs."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_MOD_SESSION; REOPEN_LEVEL_XML for editor XML changes",
+      "regression": [
+        "Entry closure, source-of-truth, schema/compiler/catalog and relevant definition suites."
+      ],
+      "evidence": [
+        "Contract JSON, fixture inputs, command trace, structured report, deterministic hashes and full Harness result."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 0.4: 加入低开销诊断计数器",
+      "behavior_under_test": "The production outcome claimed by 加入低开销诊断计数器 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "SCENE",
+        "TELEMETRY",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use versioned golden source plus valid/invalid deterministic fixtures in an isolated output directory."
+      },
+      "trigger": [
+        "Run the owning checker/fixture twice; compare byte output and structured diagnostics."
+      ],
+      "expected_telemetry": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge. Diagnostics are dormant by default, bounded when enabled and add no material disabled-path overhead."
+      ],
+      "expected_state": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge. Diagnostics are dormant by default, bounded when enabled and add no material disabled-path overhead."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE",
+      "regression": [
+        "Entry closure, source-of-truth, schema/compiler/catalog and relevant definition suites."
+      ],
+      "evidence": [
+        "Contract JSON, fixture inputs, command trace, structured report, deterministic hashes and full Harness result."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 0.5: 冻结架构决策与迁移账本",
+      "behavior_under_test": "The production outcome claimed by 冻结架构决策与迁移账本 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC"
+      ],
+      "setup": {
+        "description": "Use versioned golden source plus valid/invalid deterministic fixtures in an isolated output directory."
+      },
+      "trigger": [
+        "Run the owning checker/fixture twice; compare byte output and structured diagnostics."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE",
+      "regression": [
+        "Entry closure, source-of-truth, schema/compiler/catalog and relevant definition suites."
+      ],
+      "evidence": [
+        "Contract JSON, fixture inputs, command trace, structured report, deterministic hashes and full Harness result."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 1.1: 冻结 ID、版本和坐标基础合同",
+      "behavior_under_test": "The production outcome claimed by 冻结 ID、版本和坐标基础合同 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE"
+      ],
+      "setup": {
+        "description": "Use versioned golden source plus valid/invalid deterministic fixtures in an isolated output directory."
+      },
+      "trigger": [
+        "Run the owning checker/fixture twice; compare byte output and structured diagnostics."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE",
+      "regression": [
+        "Entry closure, source-of-truth, schema/compiler/catalog and relevant definition suites."
+      ],
+      "evidence": [
+        "Contract JSON, fixture inputs, command trace, structured report, deterministic hashes and full Harness result."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 1.2: 定义 Source Envelope 与六类核心 Schema v1",
+      "behavior_under_test": "The production outcome claimed by 定义 Source Envelope 与六类核心 Schema v1 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE"
+      ],
+      "setup": {
+        "description": "Use versioned golden source plus valid/invalid deterministic fixtures in an isolated output directory."
+      },
+      "trigger": [
+        "Run the owning checker/fixture twice; compare byte output and structured diagnostics."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE",
+      "regression": [
+        "Entry closure, source-of-truth, schema/compiler/catalog and relevant definition suites."
+      ],
+      "evidence": [
+        "Contract JSON, fixture inputs, command trace, structured report, deterministic hashes and full Harness result."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 1.3: 实现确定性 Definition Compiler MVP",
+      "behavior_under_test": "The production outcome claimed by 实现确定性 Definition Compiler MVP satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE"
+      ],
+      "setup": {
+        "description": "Use versioned golden source plus valid/invalid deterministic fixtures in an isolated output directory."
+      },
+      "trigger": [
+        "Run the owning checker/fixture twice; compare byte output and structured diagnostics."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE",
+      "regression": [
+        "Entry closure, source-of-truth, schema/compiler/catalog and relevant definition suites."
+      ],
+      "evidence": [
+        "Contract JSON, fixture inputs, command trace, structured report, deterministic hashes and full Harness result."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 1.4: 建立现有定义的语义清单和 Golden Snapshot",
+      "behavior_under_test": "The production outcome claimed by 建立现有定义的语义清单和 Golden Snapshot satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE"
+      ],
+      "setup": {
+        "description": "Use versioned golden source plus valid/invalid deterministic fixtures in an isolated output directory."
+      },
+      "trigger": [
+        "Run the owning checker/fixture twice; compare byte output and structured diagnostics."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE",
+      "regression": [
+        "Entry closure, source-of-truth, schema/compiler/catalog and relevant definition suites."
+      ],
+      "evidence": [
+        "Contract JSON, fixture inputs, command trace, structured report, deterministic hashes and full Harness result."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 1.5: 用四个纵切片验证 Compiler",
+      "behavior_under_test": "The production outcome claimed by 用四个纵切片验证 Compiler satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use versioned golden source plus valid/invalid deterministic fixtures in an isolated output directory."
+      },
+      "trigger": [
+        "Run the owning checker/fixture twice; compare byte output and structured diagnostics."
+      ],
+      "expected_telemetry": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge."
+      ],
+      "expected_state": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE",
+      "regression": [
+        "Entry closure, source-of-truth, schema/compiler/catalog and relevant definition suites."
+      ],
+      "evidence": [
+        "Contract JSON, fixture inputs, command trace, structured report, deterministic hashes and full Harness result."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 1.6: 冻结 Identity DTO 与 `WeaponPresentationEvent v1`",
+      "behavior_under_test": "The production outcome claimed by 冻结 Identity DTO 与 `WeaponPresentationEvent v1` satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "MULTIPLAYER"
+      ],
+      "setup": {
+        "description": "Use versioned golden source plus valid/invalid deterministic fixtures in an isolated output directory. Include an identified Host and Client topology."
+      },
+      "trigger": [
+        "Run the owning checker/fixture twice; compare byte output and structured diagnostics."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE",
+      "regression": [
+        "Entry closure, source-of-truth, schema/compiler/catalog and relevant definition suites."
+      ],
+      "evidence": [
+        "Contract JSON, fixture inputs, command trace, structured report, deterministic hashes and full Harness result."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "NEEDS REGRESSION — completion is retained, but current policy requires missing live evidence.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 1.7: 建立候选 Catalog 的 Shadow 模式",
+      "behavior_under_test": "The production outcome claimed by 建立候选 Catalog 的 Shadow 模式 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use versioned golden source plus valid/invalid deterministic fixtures in an isolated output directory."
+      },
+      "trigger": [
+        "Run the owning checker/fixture twice; compare byte output and structured diagnostics."
+      ],
+      "expected_telemetry": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge."
+      ],
+      "expected_state": [
+        "Valid input is deterministic; invalid/missing/future/duplicate input fails closed with stable field diagnostics; source and generated authority do not diverge."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE",
+      "regression": [
+        "Entry closure, source-of-truth, schema/compiler/catalog and relevant definition suites."
+      ],
+      "evidence": [
+        "Contract JSON, fixture inputs, command trace, structured report, deterministic hashes and full Harness result."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 2.1: 增加 Presentation Publisher 与 Legacy Adapter",
+      "behavior_under_test": "The production outcome claimed by 增加 Presentation Publisher 与 Legacy Adapter satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_visual": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 2.2: 建立固定容量、可观测的 Presentation Event Ring",
+      "behavior_under_test": "The production outcome claimed by 建立固定容量、可观测的 Presentation Event Ring satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_visual": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 2.3: 实现 `EffectPlayer` 和固定容量实例存储",
+      "behavior_under_test": "The production outcome claimed by 实现 `EffectPlayer` 和固定容量实例存储 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_visual": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 2.4: 收口 Particle、Light、Sprite、Line、Audio 与 Shake 预算",
+      "behavior_under_test": "The production outcome claimed by 收口 Particle、Light、Sprite、Line、Audio 与 Shake 预算 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_visual": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 2.5: 迁移四条代表性纵切片",
+      "behavior_under_test": "The production outcome claimed by 迁移四条代表性纵切片 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 2.6: 迁移剩余武器表现、音频、舰载机与舰船效果",
+      "behavior_under_test": "The production outcome claimed by 迁移剩余武器表现、音频、舰载机与舰船效果 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_visual": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 2.7: 建立 Creator Preview 的 Effect Lab MVP",
+      "behavior_under_test": "The production outcome claimed by 建立 Creator Preview 的 Effect Lab MVP satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_visual": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 2.8: 切换 Effect Runtime 权威并删除第一批旧路径",
+      "behavior_under_test": "The production outcome claimed by 切换 Effect Runtime 权威并删除第一批旧路径 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_visual": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 3.1: 将全部现有 Effect Profile 转为版本化来源",
+      "behavior_under_test": "The production outcome claimed by 将全部现有 Effect Profile 转为版本化来源 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_visual": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 3.2: 迁移 109 个 Weapon 与 Projectile",
+      "behavior_under_test": "The production outcome claimed by 迁移 109 个 Weapon 与 Projectile satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_visual": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 3.3: 迁移 Vehicle、Mount、Component 和 AI Interceptor 定义",
+      "behavior_under_test": "The production outcome claimed by 迁移 Vehicle、Mount、Component 和 AI Interceptor 定义 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 3.4: 建立版本化 Loadout/Configuration 合同",
+      "behavior_under_test": "The production outcome claimed by 建立版本化 Loadout/Configuration 合同 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Load V0/V1 valid and invalid loadouts, exercise one real selection/fire, save/reload and compare normalized state."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. Migration is idempotent; selected group/mount survives reload; invalid references fail closed."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish. Migration is idempotent; selected group/mount survives reload; invalid references fail closed."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 3.5: 迁移 Harness 合同并切换 Generated Catalog",
+      "behavior_under_test": "The production outcome claimed by 迁移 Harness 合同并切换 Generated Catalog satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 3.6: 冻结 Catalog 并移除 Runtime Legacy Definition 权威",
+      "behavior_under_test": "The production outcome claimed by 冻结 Catalog 并移除 Runtime Legacy Definition 权威 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Build a representative legacy/candidate pair and a deterministic scene containing only the affected definitions/effects."
+      },
+      "trigger": [
+        "Run static parity first, reload the scenario, then use the minimum real fire/preview action required by the profile."
+      ],
+      "expected_telemetry": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_state": [
+        "Compiled identity and legacy semantic golden match or have an approved diff; telemetry names the versioned definition; presentation instances stay within budget and visual output is present; no legacy double-publish."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5 for Lua; REOPEN_LEVEL_XML for XML/catalog placement",
+      "regression": [
+        "Four vertical slices, 109-weapon definition snapshot, presentation sequence/generation guards and legacy fallback."
+      ],
+      "evidence": [
+        "Compiler/parity reports, telemetry event chain, budget counters, screenshots, log slice and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 4.1: 先做“两船、两 Context、一个 Host”技术 Spike",
+      "behavior_under_test": "The production outcome claimed by 先做“两船、两 Context、一个 Host”技术 Spike satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "LOG",
+        "MULTIPLAYER"
+      ],
+      "setup": {
+        "description": "Use a two-ship, two-context fixture with one Host and at least one Client; fixed ownership, generations and command sequence."
+      },
+      "trigger": [
+        "Start official two-player local mode; issue one real command from the owning player and one invalid/non-owner command."
+      ],
+      "expected_telemetry": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection."
+      ],
+      "expected_state": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_MOD_SESSION (terminate and relaunch every teardown_modtest instance)",
+      "regression": [
+        "Single-player authority, presentation ordering, registry lifecycle and multiplayer reconnect/late-join where claimed."
+      ],
+      "evidence": [
+        "Per-window PID/HWND/status, Host and Client traces/screenshots, event generations/sequences, logs, cleanup counts and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 4.2: 定义 World Protocol、Owner Lease 和 Capability",
+      "behavior_under_test": "The production outcome claimed by 定义 World Protocol、Owner Lease 和 Capability satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "LOG",
+        "MULTIPLAYER"
+      ],
+      "setup": {
+        "description": "Use a two-ship, two-context fixture with one Host and at least one Client; fixed ownership, generations and command sequence."
+      },
+      "trigger": [
+        "Start official two-player local mode; issue one real command from the owning player and one invalid/non-owner command."
+      ],
+      "expected_telemetry": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection."
+      ],
+      "expected_state": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_MOD_SESSION (terminate and relaunch every teardown_modtest instance)",
+      "regression": [
+        "Single-player authority, presentation ordering, registry lifecycle and multiplayer reconnect/late-join where claimed."
+      ],
+      "evidence": [
+        "Per-window PID/HWND/status, Host and Client traces/screenshots, event generations/sequences, logs, cleanup counts and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 4.3: 建立 World Host Skeleton 与 Ship Instance Adapter",
+      "behavior_under_test": "The production outcome claimed by 建立 World Host Skeleton 与 Ship Instance Adapter satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "LOG",
+        "MULTIPLAYER"
+      ],
+      "setup": {
+        "description": "Use a two-ship, two-context fixture with one Host and at least one Client; fixed ownership, generations and command sequence."
+      },
+      "trigger": [
+        "Start official two-player local mode; issue one real command from the owning player and one invalid/non-owner command."
+      ],
+      "expected_telemetry": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection."
+      ],
+      "expected_state": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_MOD_SESSION (terminate and relaunch every teardown_modtest instance)",
+      "regression": [
+        "Single-player authority, presentation ordering, registry lifecycle and multiplayer reconnect/late-join where claimed."
+      ],
+      "evidence": [
+        "Per-window PID/HWND/status, Host and Client traces/screenshots, event generations/sequences, logs, cleanup counts and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 4.4: 把 Presentation 与 Audio Ownership 移到 Host",
+      "behavior_under_test": "The production outcome claimed by 把 Presentation 与 Audio Ownership 移到 Host satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG",
+        "MULTIPLAYER"
+      ],
+      "setup": {
+        "description": "Use a two-ship, two-context fixture with one Host and at least one Client; fixed ownership, generations and command sequence."
+      },
+      "trigger": [
+        "Start official two-player local mode; issue one real command from the owning player and one invalid/non-owner command."
+      ],
+      "expected_telemetry": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_state": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_visual": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_MOD_SESSION (terminate and relaunch every teardown_modtest instance)",
+      "regression": [
+        "Single-player authority, presentation ordering, registry lifecycle and multiplayer reconnect/late-join where claimed."
+      ],
+      "evidence": [
+        "Per-window PID/HWND/status, Host and Client traces/screenshots, event generations/sequences, logs, cleanup counts and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 4.5: 建立 Registry Snapshot、Scheduler 与 Damage Inbox",
+      "behavior_under_test": "The production outcome claimed by 建立 Registry Snapshot、Scheduler 与 Damage Inbox satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "LOG",
+        "MULTIPLAYER"
+      ],
+      "setup": {
+        "description": "Use a two-ship, two-context fixture with one Host and at least one Client; fixed ownership, generations and command sequence."
+      },
+      "trigger": [
+        "Start official two-player local mode; issue one real command from the owning player and one invalid/non-owner command."
+      ],
+      "expected_telemetry": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection."
+      ],
+      "expected_state": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_MOD_SESSION (terminate and relaunch every teardown_modtest instance)",
+      "regression": [
+        "Single-player authority, presentation ordering, registry lifecycle and multiplayer reconnect/late-join where claimed."
+      ],
+      "evidence": [
+        "Per-window PID/HWND/status, Host and Client traces/screenshots, event generations/sequences, logs, cleanup counts and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 4.6: 版本化多人 Command/Snapshot 边界",
+      "behavior_under_test": "The production outcome claimed by 版本化多人 Command/Snapshot 边界 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "LOG",
+        "MULTIPLAYER"
+      ],
+      "setup": {
+        "description": "Use a two-ship, two-context fixture with one Host and at least one Client; fixed ownership, generations and command sequence."
+      },
+      "trigger": [
+        "Start official two-player local mode; issue one real command from the owning player and one invalid/non-owner command."
+      ],
+      "expected_telemetry": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection. Server/Client source, player, generation and sequence are explicit in evidence."
+      ],
+      "expected_state": [
+        "Host alone mutates world state; invalid owner/capability/generation/sequence is rejected; Host/Client converge without duplicate presentation, damage or stale resurrection. Server/Client source, player, generation and sequence are explicit in evidence."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_MOD_SESSION (terminate and relaunch every teardown_modtest instance)",
+      "regression": [
+        "Single-player authority, presentation ordering, registry lifecycle and multiplayer reconnect/late-join where claimed."
+      ],
+      "evidence": [
+        "Per-window PID/HWND/status, Host and Client traces/screenshots, event generations/sequences, logs, cleanup counts and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 5.1: 把实体索引从 Registry 全表压缩改为本地 Dense Store",
+      "behavior_under_test": "The production outcome claimed by 把实体索引从 Registry 全表压缩改为本地 Dense Store satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Construct low/high-density deterministic battlefield fixtures with fixed projectiles, ships, cells, mounts and budgets."
+      },
+      "trigger": [
+        "Run identical seeded actions at baseline and pressure scale; collect authoritative counts/timings without manual flight."
+      ],
+      "expected_telemetry": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_state": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5; REOPEN_LEVEL_XML when entity density/placement changes",
+      "regression": [
+        "Direct/guided/PD/interceptor collision golden, lifecycle cleanup and S0–S8 performance baselines."
+      ],
+      "evidence": [
+        "Seed/config, telemetry counts, before/after performance samples, hit traces, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 5.2: 建立 Scene Target Catalog 与简单 Uniform Grid",
+      "behavior_under_test": "The production outcome claimed by 建立 Scene Target Catalog 与简单 Uniform Grid satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Construct low/high-density deterministic battlefield fixtures with fixed projectiles, ships, cells, mounts and budgets."
+      },
+      "trigger": [
+        "Run identical seeded actions at baseline and pressure scale; collect authoritative counts/timings without manual flight."
+      ],
+      "expected_telemetry": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_state": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5; REOPEN_LEVEL_XML when entity density/placement changes",
+      "regression": [
+        "Direct/guided/PD/interceptor collision golden, lifecycle cleanup and S0–S8 performance baselines."
+      ],
+      "evidence": [
+        "Seed/config, telemetry counts, before/after performance samples, hit traces, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 5.3: 重构 Point Defense 为“每舰一次候选 + Mount 分配”",
+      "behavior_under_test": "The production outcome claimed by 重构 Point Defense 为“每舰一次候选 + Mount 分配” satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Construct low/high-density deterministic battlefield fixtures with fixed projectiles, ships, cells, mounts and budgets."
+      },
+      "trigger": [
+        "Run identical seeded actions at baseline and pressure scale; collect authoritative counts/timings without manual flight."
+      ],
+      "expected_telemetry": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_state": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_visual": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5; REOPEN_LEVEL_XML when entity density/placement changes",
+      "regression": [
+        "Direct/guided/PD/interceptor collision golden, lifecycle cleanup and S0–S8 performance baselines."
+      ],
+      "evidence": [
+        "Seed/config, telemetry counts, before/after performance samples, hit traces, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 5.4: 建立统一 Projectile API 与 Logical Dense Store",
+      "behavior_under_test": "The production outcome claimed by 建立统一 Projectile API 与 Logical Dense Store satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Construct low/high-density deterministic battlefield fixtures with fixed projectiles, ships, cells, mounts and budgets."
+      },
+      "trigger": [
+        "Run identical seeded actions at baseline and pressure scale; collect authoritative counts/timings without manual flight."
+      ],
+      "expected_telemetry": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_state": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_visual": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5; REOPEN_LEVEL_XML when entity density/placement changes",
+      "regression": [
+        "Direct/guided/PD/interceptor collision golden, lifecycle cleanup and S0–S8 performance baselines."
+      ],
+      "evidence": [
+        "Seed/config, telemetry counts, before/after performance samples, hit traces, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 5.5: 消除普通弹丸的 `P×S` 护盾扫描",
+      "behavior_under_test": "The production outcome claimed by 消除普通弹丸的 `P×S` 护盾扫描 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Construct low/high-density deterministic battlefield fixtures with fixed projectiles, ships, cells, mounts and budgets."
+      },
+      "trigger": [
+        "Run identical seeded actions at baseline and pressure scale; collect authoritative counts/timings without manual flight."
+      ],
+      "expected_telemetry": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_state": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_visual": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5; REOPEN_LEVEL_XML when entity density/placement changes",
+      "regression": [
+        "Direct/guided/PD/interceptor collision golden, lifecycle cleanup and S0–S8 performance baselines."
+      ],
+      "evidence": [
+        "Seed/config, telemetry counts, before/after performance samples, hit traces, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 5.6: 将 Guided Collision 从五 Query 常态改为受预算连续扫掠",
+      "behavior_under_test": "The production outcome claimed by 将 Guided Collision 从五 Query 常态改为受预算连续扫掠 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Construct low/high-density deterministic battlefield fixtures with fixed projectiles, ships, cells, mounts and budgets."
+      },
+      "trigger": [
+        "Run identical seeded actions at baseline and pressure scale; collect authoritative counts/timings without manual flight."
+      ],
+      "expected_telemetry": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_state": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_visual": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5; REOPEN_LEVEL_XML when entity density/placement changes",
+      "regression": [
+        "Direct/guided/PD/interceptor collision golden, lifecycle cleanup and S0–S8 performance baselines."
+      ],
+      "evidence": [
+        "Seed/config, telemetry counts, before/after performance samples, hit traces, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 5.7: 建立精简 Interceptor Runtime",
+      "behavior_under_test": "The production outcome claimed by 建立精简 Interceptor Runtime satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Construct low/high-density deterministic battlefield fixtures with fixed projectiles, ships, cells, mounts and budgets."
+      },
+      "trigger": [
+        "Run identical seeded actions at baseline and pressure scale; collect authoritative counts/timings without manual flight."
+      ],
+      "expected_telemetry": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_state": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_visual": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5; REOPEN_LEVEL_XML when entity density/placement changes",
+      "regression": [
+        "Direct/guided/PD/interceptor collision golden, lifecycle cleanup and S0–S8 performance baselines."
+      ],
+      "evidence": [
+        "Seed/config, telemetry counts, before/after performance samples, hit traces, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 5.8: 清理剩余固定浪费和 GC 热点",
+      "behavior_under_test": "The production outcome claimed by 清理剩余固定浪费和 GC 热点 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Construct low/high-density deterministic battlefield fixtures with fixed projectiles, ships, cells, mounts and budgets."
+      },
+      "trigger": [
+        "Run identical seeded actions at baseline and pressure scale; collect authoritative counts/timings without manual flight."
+      ],
+      "expected_telemetry": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_state": [
+        "Semantic hit/selection/collision parity holds; stores/queries remain bounded; no P×S fallback or stale handle; p95/p99 and allocation/GC metrics meet the declared budget."
+      ],
+      "expected_visual": [],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "F4_TO_F5; REOPEN_LEVEL_XML when entity density/placement changes",
+      "regression": [
+        "Direct/guided/PD/interceptor collision golden, lifecycle cleanup and S0–S8 performance baselines."
+      ],
+      "evidence": [
+        "Seed/config, telemetry counts, before/after performance samples, hit traces, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 6.1: 用 VehicleInstance 包装现有单根 Body",
+      "behavior_under_test": "The production outcome claimed by 用 VehicleInstance 包装现有单根 Body satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use single-body and minimal multi-body/joint fixtures with named parts/anchors, fixed transforms and spawn/dispose repetitions."
+      },
+      "trigger": [
+        "Resolve anchors, move/fire once where relevant, then repeatedly spawn and dispose the entity graph."
+      ],
+      "expected_telemetry": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_state": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_visual": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for graph/prefab changes; F4_TO_F5 for resolver Lua",
+      "regression": [
+        "Existing single-body ships, weapon muzzle/effect/camera anchors, damage and lifecycle cleanup."
+      ],
+      "evidence": [
+        "Graph snapshot, transform tolerances, spawn/dispose event trace, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 6.2: 建立 EntityGraph 与稳定 Part/Anchor Resolver",
+      "behavior_under_test": "The production outcome claimed by 建立 EntityGraph 与稳定 Part/Anchor Resolver satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use single-body and minimal multi-body/joint fixtures with named parts/anchors, fixed transforms and spawn/dispose repetitions."
+      },
+      "trigger": [
+        "Resolve anchors, move/fire once where relevant, then repeatedly spawn and dispose the entity graph."
+      ],
+      "expected_telemetry": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_state": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_visual": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for graph/prefab changes; F4_TO_F5 for resolver Lua",
+      "regression": [
+        "Existing single-body ships, weapon muzzle/effect/camera anchors, damage and lifecycle cleanup."
+      ],
+      "evidence": [
+        "Graph snapshot, transform tolerances, spawn/dispose event trace, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 6.3: 建立统一 Transform/Anchor API",
+      "behavior_under_test": "The production outcome claimed by 建立统一 Transform/Anchor API satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use single-body and minimal multi-body/joint fixtures with named parts/anchors, fixed transforms and spawn/dispose repetitions."
+      },
+      "trigger": [
+        "Resolve anchors, move/fire once where relevant, then repeatedly spawn and dispose the entity graph."
+      ],
+      "expected_telemetry": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_state": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_visual": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for graph/prefab changes; F4_TO_F5 for resolver Lua",
+      "regression": [
+        "Existing single-body ships, weapon muzzle/effect/camera anchors, damage and lifecycle cleanup."
+      ],
+      "evidence": [
+        "Graph snapshot, transform tolerances, spawn/dispose event trace, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 6.4: 按顺序把现有系统迁移到 AnchorResolver",
+      "behavior_under_test": "The production outcome claimed by 按顺序把现有系统迁移到 AnchorResolver satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use single-body and minimal multi-body/joint fixtures with named parts/anchors, fixed transforms and spawn/dispose repetitions."
+      },
+      "trigger": [
+        "Resolve anchors, move/fire once where relevant, then repeatedly spawn and dispose the entity graph."
+      ],
+      "expected_telemetry": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_state": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_visual": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for graph/prefab changes; F4_TO_F5 for resolver Lua",
+      "regression": [
+        "Existing single-body ships, weapon muzzle/effect/camera anchors, damage and lifecycle cleanup."
+      ],
+      "evidence": [
+        "Graph snapshot, transform tolerances, spawn/dispose event trace, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 6.5: 引入最小多 Body/Joint Fixture，不做正式炮塔",
+      "behavior_under_test": "The production outcome claimed by 引入最小多 Body/Joint Fixture，不做正式炮塔 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use single-body and minimal multi-body/joint fixtures with named parts/anchors, fixed transforms and spawn/dispose repetitions."
+      },
+      "trigger": [
+        "Resolve anchors, move/fire once where relevant, then repeatedly spawn and dispose the entity graph."
+      ],
+      "expected_telemetry": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_state": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_visual": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for graph/prefab changes; F4_TO_F5 for resolver Lua",
+      "regression": [
+        "Existing single-body ships, weapon muzzle/effect/camera anchors, damage and lifecycle cleanup."
+      ],
+      "evidence": [
+        "Graph snapshot, transform tolerances, spawn/dispose event trace, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 6.6: 建立 Vehicle Factory 与动态 Spawn/Dispose API",
+      "behavior_under_test": "The production outcome claimed by 建立 Vehicle Factory 与动态 Spawn/Dispose API satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use single-body and minimal multi-body/joint fixtures with named parts/anchors, fixed transforms and spawn/dispose repetitions."
+      },
+      "trigger": [
+        "Resolve anchors, move/fire once where relevant, then repeatedly spawn and dispose the entity graph."
+      ],
+      "expected_telemetry": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_state": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_visual": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for graph/prefab changes; F4_TO_F5 for resolver Lua",
+      "regression": [
+        "Existing single-body ships, weapon muzzle/effect/camera anchors, damage and lifecycle cleanup."
+      ],
+      "evidence": [
+        "Graph snapshot, transform tolerances, spawn/dispose event trace, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 6.7: 切换现有舰船并删除根 Body 坐标权威",
+      "behavior_under_test": "The production outcome claimed by 切换现有舰船并删除根 Body 坐标权威 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use single-body and minimal multi-body/joint fixtures with named parts/anchors, fixed transforms and spawn/dispose repetitions."
+      },
+      "trigger": [
+        "Resolve anchors, move/fire once where relevant, then repeatedly spawn and dispose the entity graph."
+      ],
+      "expected_telemetry": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_state": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_visual": [
+        "Stable entity/part identity and parent-local transforms resolve correctly; no root-body authority fallback remains; all bodies/joints/anchors/register entries are disposed exactly once."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for graph/prefab changes; F4_TO_F5 for resolver Lua",
+      "regression": [
+        "Existing single-body ships, weapon muzzle/effect/camera anchors, damage and lifecycle cleanup."
+      ],
+      "evidence": [
+        "Graph snapshot, transform tolerances, spawn/dispose event trace, screenshots, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 7.1: 编译 `TurretDefinition v1` 与炮塔 Fixture",
+      "behavior_under_test": "The production outcome claimed by 编译 `TurretDefinition v1` 与炮塔 Fixture satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Place a turret fixture and target at known azimuth/elevation/range, including limits, LOD and joint-budget pressure cases."
+      },
+      "trigger": [
+        "Run solver golden, then use real aim/fire/movement; for network work repeat from Host and Client authority contexts."
+      ],
+      "expected_telemetry": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_state": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_visual": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for turret/joint fixture; F4_TO_F5 for solver/runtime Lua; multiplayer relaunch for network",
+      "regression": [
+        "Fixed-mount weapons, anchor resolver, projectile/hit chain, LOD and multiplayer ownership."
+      ],
+      "evidence": [
+        "Solver vectors, telemetry angles/owners/hits, screenshots/video frames, budget metrics, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 7.2: 实现纯逻辑 TurretSolver",
+      "behavior_under_test": "The production outcome claimed by 实现纯逻辑 TurretSolver satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Place a turret fixture and target at known azimuth/elevation/range, including limits, LOD and joint-budget pressure cases."
+      },
+      "trigger": [
+        "Run solver golden, then use real aim/fire/movement; for network work repeat from Host and Client authority contexts."
+      ],
+      "expected_telemetry": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_state": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_visual": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for turret/joint fixture; F4_TO_F5 for solver/runtime Lua; multiplayer relaunch for network",
+      "regression": [
+        "Fixed-mount weapons, anchor resolver, projectile/hit chain, LOD and multiplayer ownership."
+      ],
+      "evidence": [
+        "Solver vectors, telemetry angles/owners/hits, screenshots/video frames, budget metrics, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 7.3: 增加 Visual Actuator 与 LOD",
+      "behavior_under_test": "The production outcome claimed by 增加 Visual Actuator 与 LOD satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Place a turret fixture and target at known azimuth/elevation/range, including limits, LOD and joint-budget pressure cases."
+      },
+      "trigger": [
+        "Run solver golden, then use real aim/fire/movement; for network work repeat from Host and Client authority contexts."
+      ],
+      "expected_telemetry": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_state": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_visual": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for turret/joint fixture; F4_TO_F5 for solver/runtime Lua; multiplayer relaunch for network",
+      "regression": [
+        "Fixed-mount weapons, anchor resolver, projectile/hit chain, LOD and multiplayer ownership."
+      ],
+      "evidence": [
+        "Solver vectors, telemetry angles/owners/hits, screenshots/video frames, budget metrics, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 7.4: 完成 Turret Network 与多人权威",
+      "behavior_under_test": "The production outcome claimed by 完成 Turret Network 与多人权威 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG",
+        "MULTIPLAYER"
+      ],
+      "setup": {
+        "description": "Place a turret fixture and target at known azimuth/elevation/range, including limits, LOD and joint-budget pressure cases. Include an identified Host and Client topology."
+      },
+      "trigger": [
+        "Run solver golden, then use real aim/fire/movement; for network work repeat from Host and Client authority contexts."
+      ],
+      "expected_telemetry": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget. Server/Client source, player, generation and sequence are explicit in evidence."
+      ],
+      "expected_state": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget. Server/Client source, player, generation and sequence are explicit in evidence."
+      ],
+      "expected_visual": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget. Server/Client source, player, generation and sequence are explicit in evidence."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for turret/joint fixture; F4_TO_F5 for solver/runtime Lua; multiplayer relaunch for network",
+      "regression": [
+        "Fixed-mount weapons, anchor resolver, projectile/hit chain, LOD and multiplayer ownership."
+      ],
+      "evidence": [
+        "Solver vectors, telemetry angles/owners/hits, screenshots/video frames, budget metrics, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 7.5: 用 Hero Fixture 验证 Physical Joint Actuator",
+      "behavior_under_test": "The production outcome claimed by 用 Hero Fixture 验证 Physical Joint Actuator satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Place a turret fixture and target at known azimuth/elevation/range, including limits, LOD and joint-budget pressure cases."
+      },
+      "trigger": [
+        "Run solver golden, then use real aim/fire/movement; for network work repeat from Host and Client authority contexts."
+      ],
+      "expected_telemetry": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_state": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_visual": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for turret/joint fixture; F4_TO_F5 for solver/runtime Lua; multiplayer relaunch for network",
+      "regression": [
+        "Fixed-mount weapons, anchor resolver, projectile/hit chain, LOD and multiplayer ownership."
+      ],
+      "evidence": [
+        "Solver vectors, telemetry angles/owners/hits, screenshots/video frames, budget metrics, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 7.6: 建立 Scene-wide Joint Budget 与自动降级",
+      "behavior_under_test": "The production outcome claimed by 建立 Scene-wide Joint Budget 与自动降级 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Place a turret fixture and target at known azimuth/elevation/range, including limits, LOD and joint-budget pressure cases."
+      },
+      "trigger": [
+        "Run solver golden, then use real aim/fire/movement; for network work repeat from Host and Client authority contexts."
+      ],
+      "expected_telemetry": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_state": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_visual": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for turret/joint fixture; F4_TO_F5 for solver/runtime Lua; multiplayer relaunch for network",
+      "regression": [
+        "Fixed-mount weapons, anchor resolver, projectile/hit chain, LOD and multiplayer ownership."
+      ],
+      "evidence": [
+        "Solver vectors, telemetry angles/owners/hits, screenshots/video frames, budget metrics, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 7.7: 删除固定根 Body 炮口假设并开放炮塔内容",
+      "behavior_under_test": "The production outcome claimed by 删除固定根 Body 炮口假设并开放炮塔内容 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Place a turret fixture and target at known azimuth/elevation/range, including limits, LOD and joint-budget pressure cases."
+      },
+      "trigger": [
+        "Run solver golden, then use real aim/fire/movement; for network work repeat from Host and Client authority contexts."
+      ],
+      "expected_telemetry": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_state": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_visual": [
+        "Angles/limits/convergence match solver tolerance; visual/physical actuator follows logical state; muzzle anchor and hit align; network sequence is monotonic; joint fallback respects budget."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_LEVEL_XML for turret/joint fixture; F4_TO_F5 for solver/runtime Lua; multiplayer relaunch for network",
+      "regression": [
+        "Fixed-mount weapons, anchor resolver, projectile/hit chain, LOD and multiplayer ownership."
+      ],
+      "evidence": [
+        "Solver vectors, telemetry angles/owners/hits, screenshots/video frames, budget metrics, logs and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 8.1: 建立只读 Asset Importer 与 `AssetManifest v1`",
+      "behavior_under_test": "The production outcome claimed by 建立只读 Asset Importer 与 `AssetManifest v1` satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use read-only source assets plus disposable editor/preview projects covering valid, invalid and round-trip cases. Run the artifact through an independent consumer Mod."
+      },
+      "trigger": [
+        "Import/build/edit/wizard-generate twice, validate outputs, then open the generated artifact in the appropriate preview scene."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Source is unchanged; outputs are deterministic/cache-correct; schema and anchors/mounts are valid; UI operations round-trip; preview loads and renders without runtime errors."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE for tools; RESTART_MCP/tool process for code; REOPEN_LEVEL_XML for Teardown preview",
+      "regression": [
+        "Asset manifest, provenance, compiler/schema, VOX orientation/anchors and preview budget."
+      ],
+      "evidence": [
+        "Source/output hashes, cache report, generated definitions, UI screenshots, preview screenshot/log and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 8.2: 把 Asset Build 变成确定性、可缓存的 Pipeline",
+      "behavior_under_test": "The production outcome claimed by 把 Asset Build 变成确定性、可缓存的 Pipeline satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use read-only source assets plus disposable editor/preview projects covering valid, invalid and round-trip cases. Run the artifact through an independent consumer Mod."
+      },
+      "trigger": [
+        "Import/build/edit/wizard-generate twice, validate outputs, then open the generated artifact in the appropriate preview scene."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Source is unchanged; outputs are deterministic/cache-correct; schema and anchors/mounts are valid; UI operations round-trip; preview loads and renders without runtime errors."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE for tools; RESTART_MCP/tool process for code; REOPEN_LEVEL_XML for Teardown preview",
+      "regression": [
+        "Asset manifest, provenance, compiler/schema, VOX orientation/anchors and preview budget."
+      ],
+      "evidence": [
+        "Source/output hashes, cache report, generated definitions, UI screenshots, preview screenshot/log and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 8.3: 把 Preview 扩展为 Effect Lab、Weapon Range 和 Ship Dock",
+      "behavior_under_test": "The production outcome claimed by 把 Preview 扩展为 Effect Lab、Weapon Range 和 Ship Dock satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use read-only source assets plus disposable editor/preview projects covering valid, invalid and round-trip cases."
+      },
+      "trigger": [
+        "Import/build/edit/wizard-generate twice, validate outputs, then open the generated artifact in the appropriate preview scene."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Source is unchanged; outputs are deterministic/cache-correct; schema and anchors/mounts are valid; UI operations round-trip; preview loads and renders without runtime errors. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_visual": [
+        "Source is unchanged; outputs are deterministic/cache-correct; schema and anchors/mounts are valid; UI operations round-trip; preview loads and renders without runtime errors. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE for tools; RESTART_MCP/tool process for code; REOPEN_LEVEL_XML for Teardown preview",
+      "regression": [
+        "Asset manifest, provenance, compiler/schema, VOX orientation/anchors and preview budget."
+      ],
+      "evidence": [
+        "Source/output hashes, cache report, generated definitions, UI screenshots, preview screenshot/log and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 8.4: 先做无 3D 的 Schema-driven Definition Editor MVP",
+      "behavior_under_test": "The production outcome claimed by 先做无 3D 的 Schema-driven Definition Editor MVP satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use read-only source assets plus disposable editor/preview projects covering valid, invalid and round-trip cases."
+      },
+      "trigger": [
+        "Import/build/edit/wizard-generate twice, validate outputs, then open the generated artifact in the appropriate preview scene."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Source is unchanged; outputs are deterministic/cache-correct; schema and anchors/mounts are valid; UI operations round-trip; preview loads and renders without runtime errors."
+      ],
+      "expected_visual": [
+        "Source is unchanged; outputs are deterministic/cache-correct; schema and anchors/mounts are valid; UI operations round-trip; preview loads and renders without runtime errors."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE for tools; RESTART_MCP/tool process for code; REOPEN_LEVEL_XML for Teardown preview",
+      "regression": [
+        "Asset manifest, provenance, compiler/schema, VOX orientation/anchors and preview budget."
+      ],
+      "evidence": [
+        "Source/output hashes, cache report, generated definitions, UI screenshots, preview screenshot/log and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 8.5: 增加 VOX、Anchor、Mount 与 Turret 3D Editor",
+      "behavior_under_test": "The production outcome claimed by 增加 VOX、Anchor、Mount 与 Turret 3D Editor satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use read-only source assets plus disposable editor/preview projects covering valid, invalid and round-trip cases."
+      },
+      "trigger": [
+        "Import/build/edit/wizard-generate twice, validate outputs, then open the generated artifact in the appropriate preview scene."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Source is unchanged; outputs are deterministic/cache-correct; schema and anchors/mounts are valid; UI operations round-trip; preview loads and renders without runtime errors."
+      ],
+      "expected_visual": [
+        "Source is unchanged; outputs are deterministic/cache-correct; schema and anchors/mounts are valid; UI operations round-trip; preview loads and renders without runtime errors."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE for tools; RESTART_MCP/tool process for code; REOPEN_LEVEL_XML for Teardown preview",
+      "regression": [
+        "Asset manifest, provenance, compiler/schema, VOX orientation/anchors and preview budget."
+      ],
+      "evidence": [
+        "Source/output hashes, cache report, generated definitions, UI screenshots, preview screenshot/log and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 8.6: 实现 Creator Ship Wizard MVP",
+      "behavior_under_test": "The production outcome claimed by 实现 Creator Ship Wizard MVP satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "VISUAL",
+        "LOG"
+      ],
+      "setup": {
+        "description": "Use read-only source assets plus disposable editor/preview projects covering valid, invalid and round-trip cases."
+      },
+      "trigger": [
+        "Import/build/edit/wizard-generate twice, validate outputs, then open the generated artifact in the appropriate preview scene."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Source is unchanged; outputs are deterministic/cache-correct; schema and anchors/mounts are valid; UI operations round-trip; preview loads and renders without runtime errors."
+      ],
+      "expected_visual": [
+        "Source is unchanged; outputs are deterministic/cache-correct; schema and anchors/mounts are valid; UI operations round-trip; preview loads and renders without runtime errors."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE for tools; RESTART_MCP/tool process for code; REOPEN_LEVEL_XML for Teardown preview",
+      "regression": [
+        "Asset manifest, provenance, compiler/schema, VOX orientation/anchors and preview budget."
+      ],
+      "evidence": [
+        "Source/output hashes, cache report, generated definitions, UI screenshots, preview screenshot/log and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 9.1: 定义 `PackageManifest v1` 与 Data-only Capability",
+      "behavior_under_test": "The production outcome claimed by 定义 `PackageManifest v1` 与 Data-only Capability satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Install a clean-room disposable consumer package/Mod that depends only on the published manifest, SDK, schema or broker surface."
+      },
+      "trigger": [
+        "Build/install in a clean output, discover it in Mod Manager, start it and invoke one valid plus one invalid public operation."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_MOD_MANAGER for new/metadata Mod; RESTART_MOD_SESSION for runtime; NONE for CLI-only",
+      "regression": [
+        "Basic consumer fixture, package compatibility, clean-room build, Core-only and rollback package."
+      ],
+      "evidence": [
+        "Consumer source, package manifest/hash, install trace, runtime telemetry/screenshot/log when applicable and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 9.2: 实现 Creator SDK CLI Alpha",
+      "behavior_under_test": "The production outcome claimed by 实现 Creator SDK CLI Alpha satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Install a clean-room disposable consumer package/Mod that depends only on the published manifest, SDK, schema or broker surface."
+      },
+      "trigger": [
+        "Build/install in a clean output, discover it in Mod Manager, start it and invoke one valid plus one invalid public operation."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_MOD_MANAGER for new/metadata Mod; RESTART_MOD_SESSION for runtime; NONE for CLI-only",
+      "regression": [
+        "Basic consumer fixture, package compatibility, clean-room build, Core-only and rollback package."
+      ],
+      "evidence": [
+        "Consumer source, package manifest/hash, install trace, runtime telemetry/screenshot/log when applicable and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "NEEDS REGRESSION — completion is retained, but current policy requires missing live evidence.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 9.3: 完成真正独立的 `hello-ship` Clean-room 包",
+      "behavior_under_test": "The production outcome claimed by 完成真正独立的 `hello-ship` Clean-room 包 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Install a clean-room disposable consumer package/Mod that depends only on the published manifest, SDK, schema or broker surface."
+      },
+      "trigger": [
+        "Build/install in a clean output, discover it in Mod Manager, start it and invoke one valid plus one invalid public operation."
+      ],
+      "expected_telemetry": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_state": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_visual": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_MOD_MANAGER for new/metadata Mod; RESTART_MOD_SESSION for runtime; NONE for CLI-only",
+      "regression": [
+        "Basic consumer fixture, package compatibility, clean-room build, Core-only and rollback package."
+      ],
+      "evidence": [
+        "Consumer source, package manifest/hash, install trace, runtime telemetry/screenshot/log when applicable and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 9.4: 把 `sync-cm2-to-global.ps1` 演进为 Release Builder",
+      "behavior_under_test": "The production outcome claimed by 把 `sync-cm2-to-global.ps1` 演进为 Release Builder satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Install a clean-room disposable consumer package/Mod that depends only on the published manifest, SDK, schema or broker surface."
+      },
+      "trigger": [
+        "Build/install in a clean output, discover it in Mod Manager, start it and invoke one valid plus one invalid public operation."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_MOD_MANAGER for new/metadata Mod; RESTART_MOD_SESSION for runtime; NONE for CLI-only",
+      "regression": [
+        "Basic consumer fixture, package compatibility, clean-room build, Core-only and rollback package."
+      ],
+      "evidence": [
+        "Consumer source, package manifest/hash, install trace, runtime telemetry/screenshot/log when applicable and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 9.5: 建立 Schema/Core/Package 兼容与废弃政策",
+      "behavior_under_test": "The production outcome claimed by 建立 Schema/Core/Package 兼容与废弃政策 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Install a clean-room disposable consumer package/Mod that depends only on the published manifest, SDK, schema or broker surface."
+      },
+      "trigger": [
+        "Build/install in a clean output, discover it in Mod Manager, start it and invoke one valid plus one invalid public operation."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_MOD_MANAGER for new/metadata Mod; RESTART_MOD_SESSION for runtime; NONE for CLI-only",
+      "regression": [
+        "Basic consumer fixture, package compatibility, clean-room build, Core-only and rollback package."
+      ],
+      "evidence": [
+        "Consumer source, package manifest/hash, install trace, runtime telemetry/screenshot/log when applicable and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 9.6: 定义 Expert Custom Behavior API，延后开放",
+      "behavior_under_test": "The production outcome claimed by 定义 Expert Custom Behavior API，延后开放 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Install a clean-room disposable consumer package/Mod that depends only on the published manifest, SDK, schema or broker surface."
+      },
+      "trigger": [
+        "Build/install in a clean output, discover it in Mod Manager, start it and invoke one valid plus one invalid public operation."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_MOD_MANAGER for new/metadata Mod; RESTART_MOD_SESSION for runtime; NONE for CLI-only",
+      "regression": [
+        "Basic consumer fixture, package compatibility, clean-room build, Core-only and rollback package."
+      ],
+      "evidence": [
+        "Consumer source, package manifest/hash, install trace, runtime telemetry/screenshot/log when applicable and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 9.7: 独立验证 Global Mod Broker，允许结论为“不采用”",
+      "behavior_under_test": "The production outcome claimed by 独立验证 Global Mod Broker，允许结论为“不采用” satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG",
+        "MULTIPLAYER",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Install a clean-room disposable consumer package/Mod that depends only on the published manifest, SDK, schema or broker surface. Include an identified Host and Client topology."
+      },
+      "trigger": [
+        "Build/install in a clean output, discover it in Mod Manager, start it and invoke one valid plus one invalid public operation."
+      ],
+      "expected_telemetry": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_state": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_visual": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_MOD_MANAGER for new/metadata Mod; RESTART_MOD_SESSION for runtime; NONE for CLI-only",
+      "regression": [
+        "Basic consumer fixture, package compatibility, clean-room build, Core-only and rollback package."
+      ],
+      "evidence": [
+        "Consumer source, package manifest/hash, install trace, runtime telemetry/screenshot/log when applicable and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 9.8: Creator SDK Beta",
+      "behavior_under_test": "The production outcome claimed by Creator SDK Beta satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Install a clean-room disposable consumer package/Mod that depends only on the published manifest, SDK, schema or broker surface."
+      },
+      "trigger": [
+        "Build/install in a clean output, discover it in Mod Manager, start it and invoke one valid plus one invalid public operation."
+      ],
+      "expected_telemetry": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_state": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_visual": [
+        "No private CM2 path is copied; dependency/version/capability checks are explicit; compatible package runs; incompatible input fails closed; release contents and hashes match manifest."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "REOPEN_MOD_MANAGER for new/metadata Mod; RESTART_MOD_SESSION for runtime; NONE for CLI-only",
+      "regression": [
+        "Basic consumer fixture, package compatibility, clean-room build, Core-only and rollback package."
+      ],
+      "evidence": [
+        "Consumer source, package manifest/hash, install trace, runtime telemetry/screenshot/log when applicable and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 10.1: 先建立 AI 评测集、权限边界与 Provenance",
+      "behavior_under_test": "The production outcome claimed by 先建立 AI 评测集、权限边界与 Provenance satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use a fixed AI evaluation corpus and disposable consumer output; deny undeclared network/file/runtime authority. Run the artifact through an independent consumer Mod."
+      },
+      "trigger": [
+        "Generate twice from identical prompt/input, run policy/schema/provenance checks, then preview/package the accepted artifact through production tools."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Deterministic normalized result, explicit provenance and manual fields; no path escape/private code/runtime Lua/budget bypass; output compiles and consumer preview matches declared semantics."
+      ],
+      "expected_visual": [],
+      "expected_log": [],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE for generation; REOPEN_MOD_MANAGER/REOPEN_LEVEL_XML for consumer preview",
+      "regression": [
+        "AI eval negatives, compiler/schema, asset provenance, package security and Core semantic invariance."
+      ],
+      "evidence": [
+        "Prompt/input hash, provider/provenance record, normalized outputs/diff, validator report, consumer preview screenshot/log and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 10.2: 实现 AI Weapon Assistant",
+      "behavior_under_test": "The production outcome claimed by 实现 AI Weapon Assistant satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "VISUAL",
+        "LOG",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use a fixed AI evaluation corpus and disposable consumer output; deny undeclared network/file/runtime authority. Run the artifact through an independent consumer Mod."
+      },
+      "trigger": [
+        "Generate twice from identical prompt/input, run policy/schema/provenance checks, then preview/package the accepted artifact through production tools."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Deterministic normalized result, explicit provenance and manual fields; no path escape/private code/runtime Lua/budget bypass; output compiles and consumer preview matches declared semantics."
+      ],
+      "expected_visual": [
+        "Deterministic normalized result, explicit provenance and manual fields; no path escape/private code/runtime Lua/budget bypass; output compiles and consumer preview matches declared semantics."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE for generation; REOPEN_MOD_MANAGER/REOPEN_LEVEL_XML for consumer preview",
+      "regression": [
+        "AI eval negatives, compiler/schema, asset provenance, package security and Core semantic invariance."
+      ],
+      "evidence": [
+        "Prompt/input hash, provider/provenance record, normalized outputs/diff, validator report, consumer preview screenshot/log and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "NEEDS REGRESSION — completion is retained, but current policy requires missing live evidence.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 10.3: 实现 AI Effect Assistant",
+      "behavior_under_test": "The production outcome claimed by 实现 AI Effect Assistant satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "VISUAL",
+        "LOG",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use a fixed AI evaluation corpus and disposable consumer output; deny undeclared network/file/runtime authority. Run the artifact through an independent consumer Mod."
+      },
+      "trigger": [
+        "Generate twice from identical prompt/input, run policy/schema/provenance checks, then preview/package the accepted artifact through production tools."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Deterministic normalized result, explicit provenance and manual fields; no path escape/private code/runtime Lua/budget bypass; output compiles and consumer preview matches declared semantics. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_visual": [
+        "Deterministic normalized result, explicit provenance and manual fields; no path escape/private code/runtime Lua/budget bypass; output compiles and consumer preview matches declared semantics. A published presentation_event has one visible consumer result and cleanup returns the fixed-capacity store to baseline."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE for generation; REOPEN_MOD_MANAGER/REOPEN_LEVEL_XML for consumer preview",
+      "regression": [
+        "AI eval negatives, compiler/schema, asset provenance, package security and Core semantic invariance."
+      ],
+      "evidence": [
+        "Prompt/input hash, provider/provenance record, normalized outputs/diff, validator report, consumer preview screenshot/log and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "NEEDS REGRESSION — completion is retained, but current policy requires missing live evidence.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 10.4: 先实现 Existing-VOX Ship Import Assistant",
+      "behavior_under_test": "The production outcome claimed by 先实现 Existing-VOX Ship Import Assistant satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "VISUAL",
+        "LOG",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use a fixed AI evaluation corpus and disposable consumer output; deny undeclared network/file/runtime authority. Run the artifact through an independent consumer Mod."
+      },
+      "trigger": [
+        "Generate twice from identical prompt/input, run policy/schema/provenance checks, then preview/package the accepted artifact through production tools."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Deterministic normalized result, explicit provenance and manual fields; no path escape/private code/runtime Lua/budget bypass; output compiles and consumer preview matches declared semantics."
+      ],
+      "expected_visual": [
+        "Deterministic normalized result, explicit provenance and manual fields; no path escape/private code/runtime Lua/budget bypass; output compiles and consumer preview matches declared semantics."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE for generation; REOPEN_MOD_MANAGER/REOPEN_LEVEL_XML for consumer preview",
+      "regression": [
+        "AI eval negatives, compiler/schema, asset provenance, package security and Core semantic invariance."
+      ],
+      "evidence": [
+        "Prompt/input hash, provider/provenance record, normalized outputs/diff, validator report, consumer preview screenshot/log and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "NEEDS REGRESSION — completion is retained, but current policy requires missing live evidence.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 10.5: 接入图片/文本到 3D 的外部 Pipeline",
+      "behavior_under_test": "The production outcome claimed by 接入图片/文本到 3D 的外部 Pipeline satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "VISUAL",
+        "LOG",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use a fixed AI evaluation corpus and disposable consumer output; deny undeclared network/file/runtime authority. Run the artifact through an independent consumer Mod."
+      },
+      "trigger": [
+        "Generate twice from identical prompt/input, run policy/schema/provenance checks, then preview/package the accepted artifact through production tools."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Deterministic normalized result, explicit provenance and manual fields; no path escape/private code/runtime Lua/budget bypass; output compiles and consumer preview matches declared semantics."
+      ],
+      "expected_visual": [
+        "Deterministic normalized result, explicit provenance and manual fields; no path escape/private code/runtime Lua/budget bypass; output compiles and consumer preview matches declared semantics."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE for generation; REOPEN_MOD_MANAGER/REOPEN_LEVEL_XML for consumer preview",
+      "regression": [
+        "AI eval negatives, compiler/schema, asset provenance, package security and Core semantic invariance."
+      ],
+      "evidence": [
+        "Prompt/input hash, provider/provenance record, normalized outputs/diff, validator report, consumer preview screenshot/log and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "finish",
+        "audit": "CURRENTLY COVERED — rerun the listed regression when adjacent contracts change.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 10.6: AI Creator Beta 与质量阈值",
+      "behavior_under_test": "The production outcome claimed by AI Creator Beta 与质量阈值 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "VISUAL",
+        "LOG",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use a fixed AI evaluation corpus and disposable consumer output; deny undeclared network/file/runtime authority. Run the artifact through an independent consumer Mod."
+      },
+      "trigger": [
+        "Generate twice from identical prompt/input, run policy/schema/provenance checks, then preview/package the accepted artifact through production tools."
+      ],
+      "expected_telemetry": [],
+      "expected_state": [
+        "Deterministic normalized result, explicit provenance and manual fields; no path escape/private code/runtime Lua/budget bypass; output compiles and consumer preview matches declared semantics."
+      ],
+      "expected_visual": [
+        "Deterministic normalized result, explicit provenance and manual fields; no path escape/private code/runtime Lua/budget bypass; output compiles and consumer preview matches declared semantics."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "NONE for generation; REOPEN_MOD_MANAGER/REOPEN_LEVEL_XML for consumer preview",
+      "regression": [
+        "AI eval negatives, compiler/schema, asset provenance, package security and Core semantic invariance."
+      ],
+      "evidence": [
+        "Prompt/input hash, provider/provenance record, normalized outputs/diff, validator report, consumer preview screenshot/log and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 11.1: 建立 End-to-end Golden Packages",
+      "behavior_under_test": "The production outcome claimed by 建立 End-to-end Golden Packages satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use immutable versioned release candidates plus independent consumer Mods; include baseline/upgrade/rollback and declared S0–S8 or soak topology."
+      },
+      "trigger": [
+        "Run every gate from a clean install; execute live single-player and required Host/Client scenarios; repeat after upgrade and exact rollback."
+      ],
+      "expected_telemetry": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence."
+      ],
+      "expected_state": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence."
+      ],
+      "expected_visual": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_TEARDOWN between immutable package versions; RESTART_MOD_SESSION for each multiplayer/soak scenario",
+      "regression": [
+        "Golden packages, S0–S8, lifecycle/Save soak, p95/p99 budget, clean-room consumers, upgrade/rollback and support/security gates."
+      ],
+      "evidence": [
+        "Immutable artifacts/hashes, machine/hardware identity, live telemetry/screenshots/logs/replays, per-gate reports, sign-off and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 11.2: 执行多人、存档和生命周期 Soak",
+      "behavior_under_test": "The production outcome claimed by 执行多人、存档和生命周期 Soak satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "REAL_INPUT",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG",
+        "MULTIPLAYER",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use immutable versioned release candidates plus independent consumer Mods; include baseline/upgrade/rollback and declared S0–S8 or soak topology. Include an identified Host and Client topology."
+      },
+      "trigger": [
+        "Run every gate from a clean install; execute live single-player and required Host/Client scenarios; repeat after upgrade and exact rollback."
+      ],
+      "expected_telemetry": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence. Server/Client source, player, generation and sequence are explicit in evidence."
+      ],
+      "expected_state": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence. Server/Client source, player, generation and sequence are explicit in evidence."
+      ],
+      "expected_visual": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence. Server/Client source, player, generation and sequence are explicit in evidence."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_TEARDOWN between immutable package versions; RESTART_MOD_SESSION for each multiplayer/soak scenario",
+      "regression": [
+        "Golden packages, S0–S8, lifecycle/Save soak, p95/p99 budget, clean-room consumers, upgrade/rollback and support/security gates."
+      ],
+      "evidence": [
+        "Immutable artifacts/hashes, machine/hardware identity, live telemetry/screenshots/logs/replays, per-gate reports, sign-off and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 11.3: 建立持续性能回归门禁",
+      "behavior_under_test": "The production outcome claimed by 建立持续性能回归门禁 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG",
+        "MULTIPLAYER",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use immutable versioned release candidates plus independent consumer Mods; include baseline/upgrade/rollback and declared S0–S8 or soak topology. Include an identified Host and Client topology."
+      },
+      "trigger": [
+        "Run every gate from a clean install; execute live single-player and required Host/Client scenarios; repeat after upgrade and exact rollback."
+      ],
+      "expected_telemetry": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence. Diagnostics are dormant by default, bounded when enabled and add no material disabled-path overhead."
+      ],
+      "expected_state": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence. Diagnostics are dormant by default, bounded when enabled and add no material disabled-path overhead."
+      ],
+      "expected_visual": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence. Diagnostics are dormant by default, bounded when enabled and add no material disabled-path overhead."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_TEARDOWN between immutable package versions; RESTART_MOD_SESSION for each multiplayer/soak scenario",
+      "regression": [
+        "Golden packages, S0–S8, lifecycle/Save soak, p95/p99 budget, clean-room consumers, upgrade/rollback and support/security gates."
+      ],
+      "evidence": [
+        "Immutable artifacts/hashes, machine/hardware identity, live telemetry/screenshots/logs/replays, per-gate reports, sign-off and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 11.4: 执行一次真实的版本升级与回滚演练",
+      "behavior_under_test": "The production outcome claimed by 执行一次真实的版本升级与回滚演练 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use immutable versioned release candidates plus independent consumer Mods; include baseline/upgrade/rollback and declared S0–S8 or soak topology."
+      },
+      "trigger": [
+        "Run every gate from a clean install; execute live single-player and required Host/Client scenarios; repeat after upgrade and exact rollback."
+      ],
+      "expected_telemetry": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence."
+      ],
+      "expected_state": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence."
+      ],
+      "expected_visual": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_TEARDOWN between immutable package versions; RESTART_MOD_SESSION for each multiplayer/soak scenario",
+      "regression": [
+        "Golden packages, S0–S8, lifecycle/Save soak, p95/p99 budget, clean-room consumers, upgrade/rollback and support/security gates."
+      ],
+      "evidence": [
+        "Immutable artifacts/hashes, machine/hardware identity, live telemetry/screenshots/logs/replays, per-gate reports, sign-off and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 11.5: 发布物与支持边界分离",
+      "behavior_under_test": "The production outcome claimed by 发布物与支持边界分离 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use immutable versioned release candidates plus independent consumer Mods; include baseline/upgrade/rollback and declared S0–S8 or soak topology."
+      },
+      "trigger": [
+        "Run every gate from a clean install; execute live single-player and required Host/Client scenarios; repeat after upgrade and exact rollback."
+      ],
+      "expected_telemetry": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence."
+      ],
+      "expected_state": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence."
+      ],
+      "expected_visual": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_TEARDOWN between immutable package versions; RESTART_MOD_SESSION for each multiplayer/soak scenario",
+      "regression": [
+        "Golden packages, S0–S8, lifecycle/Save soak, p95/p99 budget, clean-room consumers, upgrade/rollback and support/security gates."
+      ],
+      "evidence": [
+        "Immutable artifacts/hashes, machine/hardware identity, live telemetry/screenshots/logs/replays, per-gate reports, sign-off and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    },
+    {
+      "schema": "cm2.verification-contract/1",
+      "task": "Step 11.6: 正式平台发布门槛",
+      "behavior_under_test": "The production outcome claimed by 正式平台发布门槛 satisfies its versioned contract without bypassing the behavior under test.",
+      "test_profiles": [
+        "STATIC",
+        "FIXTURE",
+        "SCENE",
+        "TELEMETRY",
+        "VISUAL",
+        "LOG",
+        "MULTIPLAYER",
+        "CONSUMER_MOD"
+      ],
+      "setup": {
+        "description": "Use immutable versioned release candidates plus independent consumer Mods; include baseline/upgrade/rollback and declared S0–S8 or soak topology. Include an identified Host and Client topology."
+      },
+      "trigger": [
+        "Run every gate from a clean install; execute live single-player and required Host/Client scenarios; repeat after upgrade and exact rollback."
+      ],
+      "expected_telemetry": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence."
+      ],
+      "expected_state": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence."
+      ],
+      "expected_visual": [
+        "All component gates and negative cases pass; live runtime/soak/performance samples are real, not fixtures; package/save compatibility and exact rollback hashes hold; no-go remains enforced for any missing evidence."
+      ],
+      "expected_log": [
+        "No new in-scope Lua or engine error appears after the baseline cursor."
+      ],
+      "cleanup": [
+        "Release every tracked key/button and confirm empty held-input state.",
+        "Dispose temporary fixtures and preserve formal source plus generated authority."
+      ],
+      "reload_requirement": "RESTART_TEARDOWN between immutable package versions; RESTART_MOD_SESSION for each multiplayer/soak scenario",
+      "regression": [
+        "Golden packages, S0–S8, lifecycle/Save soak, p95/p99 budget, clean-room consumers, upgrade/rollback and support/security gates."
+      ],
+      "evidence": [
+        "Immutable artifacts/hashes, machine/hardware identity, live telemetry/screenshots/logs/replays, per-gate reports, sign-off and Harness."
+      ],
+      "coverage_metadata": {
+        "historical_status": "unable",
+        "audit": "READY TO REASSESS — original unable status is retained; the former missing-Teardown premise is no longer true.",
+        "source": "TEARDOWN_SHIP_PLATFORM_TODO.json"
+      }
+    }
+  ]
+}
