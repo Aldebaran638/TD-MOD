@@ -1,0 +1,4 @@
+interface:
+  display_name: "Teardown Autonomous Testing"
+  short_description: "Operate and verify CM2 in live Teardown"
+  default_prompt: "Use $teardown-autonomous-testing to build a verification contract, operate Teardown, and collect runtime evidence for this CM2 change."

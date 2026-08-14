@@ -1,4 +1,19 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": [".opencode/agents.md"]
+  "instructions": [".opencode/agents.md"],
+  "mcp": {
+    "teardown-control": {
+      "type": "local",
+      "command": [
+        "powershell.exe",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        ".opencode/mcp/teardown_control_mcp/run.ps1"
+      ],
+      "enabled": true,
+      "timeout": 120000
+    }
+  }
 }

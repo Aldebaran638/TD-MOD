@@ -19,4 +19,4 @@ if git diff --cached --name-only -- "Global Mod/script" | grep -q .; then
 fi
 
 echo "Running project Harness before commit..."
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$windows_root/harness/check-all.ps1" $include_global
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Command rg -ErrorAction SilentlyContinue)) { \$env:PATH = (Join-Path \$env:LOCALAPPDATA 'Microsoft\WinGet\Links') + ';' + \$env:PATH }; & '$windows_root/harness/check-all.ps1' $include_global"

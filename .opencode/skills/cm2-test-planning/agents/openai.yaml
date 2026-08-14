@@ -1,0 +1,4 @@
+interface:
+  display_name: "CM2 Test Planning"
+  short_description: "Maintain executable CM2 Step verification contracts"
+  default_prompt: "Update the authoritative CM2 Todo Step with a validated Verification Contract, Eyes/Hands, deterministic setup, reload, assertions, automation level, regression and evidence."
