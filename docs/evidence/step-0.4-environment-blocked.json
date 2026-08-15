@@ -1,0 +1,66 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 0.4",
+  "result": "blocked",
+  "verified_at": "2026-08-15T21:02:22+08:00",
+  "verification_contract_fingerprint": "b05758be8d890c562f1806c24d48a91eeb24a73260ee8d438dd9f7f5407fc154",
+  "profiles": ["STATIC", "SCENE", "TELEMETRY", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_LOG"],
+  "hands": ["HAND_TEST_SETUP"],
+  "behavior_under_test": "Low-overhead diagnostic counters, sampled timings, one-second snapshots, and active entity counts for S0-S7 budget diagnosis.",
+  "static": {
+    "source": "Content Mod 2/script/net/network_debug.lua",
+    "source_sha256": "9C857564D3419461BA969999D43EEFE2839325BC258CF57BFA74B7A3626A5192",
+    "owning_checker": "harness/test-network-debug.ps1",
+    "checker_run_1_sha256": "5C9A563D763C364545A04EC9CAEFBE35DEA9FF29CEAEDB9B00F2359CFC6F9425",
+    "checker_run_2_sha256": "5C9A563D763C364545A04EC9CAEFBE35DEA9FF29CEAEDB9B00F2359CFC6F9425",
+    "checker_output_deterministic": true,
+    "checker_output": "[PASS] low-overhead diagnostic contract is present; Self-test passed.",
+    "lua_check": "pass: 234 Lua files, 0 API issues",
+    "teardown_api_check": "pass: 234 Lua files, 0 API issues",
+    "full_harness": "pass: .\\harness\\check-all.ps1 and both pre-commit Harness runs exited 0"
+  },
+  "runtime": {
+    "run_id": "20260815T130222Z-705e4723",
+    "target_id": "teardown:27312:224336064",
+    "pid": 27312,
+    "window_handle": 224336064,
+    "process_present": true,
+    "process_responding": true,
+    "window_visible": true,
+    "window_focused": false,
+    "observe": {
+      "ok": false,
+      "error": "could not restore and focus Teardown",
+      "fresh_frame": false
+    },
+    "telemetry_probe": {
+      "ok": false,
+      "channel": "unavailable",
+      "ui_text_input_ok": false,
+      "log_ok": false,
+      "clipboard_restore_conflict": true
+    },
+    "log": {
+      "path": "C:/Users/XKWL/AppData/Local/Teardown/log.txt",
+      "cursor": 501996,
+      "next_cursor": 501996,
+      "bytes_read": 0,
+      "new_errors": 0,
+      "new_warnings": 0
+    }
+  },
+  "cleanup": {
+    "emergency_release_run_id": "20260815T130222Z-705e4723",
+    "held_inputs": {"keys": [], "buttons": []},
+    "formal_source_preserved": true,
+    "last_valid_generated_artifact_preserved": true
+  },
+  "environment_blocker": {
+    "classification": "ENVIRONMENT_BLOCKED",
+    "reason": "The target window is outside the agent focus/integrity boundary. The MCP could enumerate the process but could not restore/focus it, so the required fresh CM2_TEST_V1 session, runtime counter snapshot, overhead sample, and leak trace could not be collected.",
+    "recovery": "Run Teardown at the same or lower integrity level as Codex/VS Code, or provide an elevated execution session, then rerun Step 0.4 from a fresh Mod session.",
+    "mcp_evidence": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T130222Z-705e4723"
+  },
+  "scope_boundary": "This record proves deterministic static implementation checks only. It does not claim runtime counter, overhead, GC, or S0-S7 verification."
+}

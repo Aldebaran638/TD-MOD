@@ -482,13 +482,13 @@
         "code_or_document": "Content Mod 2/script/net/network_debug.lua: diagnosticsEnabled gate, integer counters, sampled timings, active runtime counts, and snapshot API.",
         "automated_tests": "harness/test-network-debug.ps1 PASS: required API fields, diagnostics gate, integer counter and snapshot contracts verified.",
         "harness": "harness/check-all.ps1 exited 0; all product checks and self-tests passed.",
-        "runtime_or_performance": "UNABLE: no Teardown.exe is installed or discoverable, so S0–S7 counter behavior and disabled/enabled overhead measurements could not be collected.",
+        "runtime_or_performance": "BLOCKED: the Step 0.4 static fixture is deterministic, but the installed Teardown target could not be restored or focused. No fresh CM2_TEST_V1 session, S0-S7 counter snapshot, enabled/disabled overhead sample, or leak-growth trace can be claimed. The incremental log read was 0 bytes with 0 new ERROR/WARNING lines; emergency release left held inputs empty. Evidence: docs/evidence/step-0.4-environment-blocked.json and TeardownAI run 20260815T130222Z-705e4723.",
         "rollback_record": "Set diagnosticsEnabled=false (the default) or revert the network_debug.lua API additions; runtime semantics remain unchanged when diagnostics are disabled."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-0.4",
-      "status_reason": "Counter/profiler API and static contracts are implemented and Harness-clean; runtime overhead and S0–S7 leak measurements are unable without a Teardown executable.",
+      "status_reason": "Counter/profiler API and static contracts are implemented and deterministic; runtime overhead, S0-S7 counter snapshots, and leak measurements remain blocked because the installed Teardown target cannot be focused from the current agent process boundary.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "BLOCKED: target teardown:27312:224336064 was visible and responding but could not be restored or focused. Evidence: docs/evidence/step-0.4-environment-blocked.json. Do not claim runtime counter or overhead verification until a same-integrity target is available.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "b05758be8d890c562f1806c24d48a91eeb24a73260ee8d438dd9f7f5407fc154",
@@ -556,6 +556,13 @@
         "A valid embedded Verification Contract and the full repository Harness are available before implementation begins.",
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The installed Teardown target was visible and responding, but the agent could not restore/focus its window from the current process integrity boundary. The required fresh telemetry session and runtime performance observations therefore could not start.",
+        "evidence": "docs/evidence/step-0.4-environment-blocked.json; TeardownAI run 20260815T130222Z-705e4723",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-15T21:02:22+08:00"
+      },
       "plan_order": 4
     },
     {
