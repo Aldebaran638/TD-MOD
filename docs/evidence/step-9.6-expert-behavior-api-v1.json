@@ -1,0 +1,97 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 9.6",
+  "result": "pass",
+  "verified_at": "2026-08-15T04:58:44+08:00",
+  "verification_contract_fingerprint": "f32073c1f73803dfd57db33bcefd0fe3967abe0e5323b5eb742ca0d5a134767f",
+  "profiles": ["STATIC", "FIXTURE", "CONSUMER_MOD"],
+  "eyes": [],
+  "hands": ["HAND_TEST_SETUP"],
+  "behavior_under_test": "Expert Custom Behavior remains explicitly deferred, default-deny, isolated on failure, and separate from the Data-only SDK.",
+  "policy": {
+    "path": "docs/expert-behavior-api-v1.json",
+    "sha256": "b3fa2d38c41cdbbd84d9ad7b66c63dc6a87d65b6b1c56812f3bf7af3d5321292",
+    "status": "deferred",
+    "enabled": false,
+    "data_only_prerequisite": false,
+    "denied_capabilities": ["arbitrary-lua", "filesystem", "network", "engine-handle", "process-spawn", "native-code", "reflection"],
+    "review_required": true,
+    "runtime_loader_added": false
+  },
+  "fixture": {
+    "path": "docs/candidates/expert-behavior-api-v1.fixture.json",
+    "sha256": "2b6ba359c430ab61959fe0913352f0f11bbd358d8b78b54917c1180cf828812d",
+    "requests": 7,
+    "capability_denials": 4,
+    "isolation_decisions": 2,
+    "ordinary_requests_deferred": true,
+    "all_execution_not_run": true,
+    "threat_model_entries": 10
+  },
+  "consumer_mod": {
+    "independent_consumers": [
+      "_AI Test Consumer Basic",
+      "_AI Test Consumer Compatibility V1",
+      "_AI Test Consumer SDK Alpha"
+    ],
+    "package_consumer": {
+      "valid_operation": "accepted:Ship",
+      "invalid_operation": "rejected:unknown-capability:ExecuteLua",
+      "runtime_lua_loaded": false,
+      "private_cm2_includes": 0,
+      "two_install_hashes_match": true,
+      "tamper_reinstall_restores_exact_artifact": true
+    },
+    "compatibility_consumer": {
+      "valid_operation": "accepted",
+      "incompatible_operation": "rejected:core-policy-version",
+      "two_install_hashes_match": true,
+      "failed_install_preserves_artifact_and_trace": true,
+      "runtime_lua_loaded": false,
+      "private_cm2_includes": 0
+    },
+    "clean_room": {
+      "fixture": "docs/candidates/clean-room-hello-ship-v1.fixture.json",
+      "fixture_sha256": "5a388e3a386eea1a22f87679887ccf9e796469b44047f0e96d4b728c3d19d003",
+      "result_sha256": "f06b6dc0a320aa3574a8ab11b806a55cce35ea6ed4ac41e159de9ab8ea0d2078",
+      "result": "pass",
+      "core_diff": 0,
+      "runtime_lua": false,
+      "install_uninstall_leftovers": 0,
+      "negative_cases_rejected": ["missing dependency", "future schema", "private reference"]
+    }
+  },
+  "regression": {
+    "expert_policy_checker": "pass",
+    "expert_policy_self_test": "pass",
+    "package_manifest_self_test": "pass:39 assertions",
+    "package_consumer_self_test": "pass",
+    "clean_room_self_test": "pass",
+    "compatibility_policy_self_test": "pass:77 assertions",
+    "compatibility_consumer_self_test": "pass:11 assertions",
+    "creator_sdk_self_test": "pass:99 assertions",
+    "sdk_consumer_self_test": "pass:11 assertions",
+    "core_compiler_self_test": "pass",
+    "todo_contract_validation": "pass:80 contracts"
+  },
+  "harness": {
+    "command": ".\\harness\\check-all.ps1",
+    "result": "pass",
+    "exit_code": 0,
+    "duration_seconds": 147.0,
+    "lua_files": 233,
+    "api_issues": 0,
+    "xml_issues": 0
+  },
+  "changes_under_test": [
+    "docs/candidates/clean-room-hello-ship-v1.fixture.json: synchronize approvedKinds with the public PackageManifest schema",
+    "tools/cm2-sdk/cm2-sdk.ps1: constrain explicit fixture-mode outputs to the fixture-local .cm2-sdk directory"
+  ],
+  "cleanup": {
+    "temporary_clean_roots_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true,
+    "held_inputs": []
+  },
+  "scope_boundary": "This evidence proves the deferred Expert Behavior policy and independent engine-free public consumer boundaries. It does not claim an Expert Runtime loader, arbitrary Lua execution, live gameplay, telemetry, visual output, or multiplayer behavior; those are intentionally disabled or outside this contract."
+}

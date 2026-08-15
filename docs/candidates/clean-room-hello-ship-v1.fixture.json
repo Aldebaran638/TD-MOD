@@ -61,7 +61,7 @@
       { "packageId": "cm2.cleanroom.hello-ship", "version": "1.0.0", "hash": "pending" }
     ]
   },
-  "approvedKinds": [ "Ship", "Weapon", "Projectile", "Effect", "Assets" ],
+  "approvedKinds": [ "Ship", "Mount", "Turret", "Weapon", "Projectile", "Effect", "Localization", "Assets" ],
   "negativeCases": [
     { "name": "missing dependency", "expected": "validate-failed" },
     { "name": "future schema", "expected": "validate-failed" },

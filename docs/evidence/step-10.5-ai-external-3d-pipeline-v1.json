@@ -1,0 +1,139 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 10.5",
+  "result": "pass",
+  "verified_at": "2026-08-15T16:41:03+08:00",
+  "implementation_status": "finish",
+  "verification_status": "human_visual_review",
+  "plan_fingerprint": "ef617fcae3f0944784547aeb3eafea7c8995fc7c81dc594010366ab5ed7de41b",
+  "required_profiles": ["STATIC", "FIXTURE", "SCENE", "VISUAL", "LOG", "CONSUMER_MOD"],
+  "executed_profiles": ["STATIC", "FIXTURE", "SCENE", "VISUAL", "LOG", "CONSUMER_MOD"],
+  "deferred_profiles": [],
+  "failed_profiles": [],
+  "eyes": ["EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_TEST_SETUP"],
+  "behavior_under_test": "Image or text input enters a replaceable, provenance-tracked, human-reviewed 3D asset pipeline without Runtime or Core writes.",
+  "setup": {
+    "policy": "docs/ai-external-3d-pipeline-v1.json",
+    "fixture": "docs/candidates/ai-external-3d-pipeline-v1.fixture.json",
+    "headless_result": "docs/candidates/ai-external-3d-pipeline-v1.result.json",
+    "preview_level": "Content Mod 2/_ai_scenario_preview_suite.xml",
+    "fixed_seed": 424242,
+    "forbidden_shortcuts": [
+      "network provider calls",
+      "Runtime catalog mutation",
+      "Core or generated artifact writes",
+      "private CM2 includes in the Consumer",
+      "automatic publish"
+    ]
+  },
+  "headless": {
+    "checker": "tools/cm2-ai/check-ai-external-3d-pipeline-v1.ps1",
+    "runner": "tools/cm2-ai/run-ai-external-3d-pipeline-v1.ps1",
+    "regression": "tools/cm2-ai/test-ai-external-3d-pipeline-v1.ps1",
+    "result": "pass",
+    "case_count": 8,
+    "accepted": 3,
+    "rejected": 5,
+    "legal_rate": 1.0,
+    "accepted_inputs": ["image", "text", "local VOX/mesh"],
+    "rejection_cases": ["missing-license", "disconnected", "thin-wall", "palette-overflow", "network-provider"],
+    "deterministic_stage_count": 8,
+    "deterministic_stages": true,
+    "determinism_hash": "f1f0ec16b7130c482cadc678d549b86e4ce90a2a01eb7519da1d768da06e4a9a",
+    "provider": {
+      "adapter": "cm2.provider-adapter/1.0.0",
+      "replaceable": true,
+      "network_calls": 0,
+      "arbitrary_execution": 0,
+      "license_bypass": 0
+    },
+    "downstream_asset_build": {
+      "status": "pass",
+      "stage_count": 6,
+      "package_hash": "b7b64a2aefb8a1d7bae6ae66256fb86caf9bd3a82c800adb77e47fc04ea57bd0",
+      "published_artifacts": 0,
+      "disposable_scope": true,
+      "failure_preserves_last_valid": true
+    },
+    "runtime_registration": 0,
+    "preview_runtime": "deferred_until_human_review"
+  },
+  "live_preview": {
+    "target_id": "teardown:27312:224336064",
+    "pid": 27312,
+    "preview_level": "Content Mod 2/_ai_scenario_preview_suite.xml",
+    "preview_screenshots": [
+      {
+        "run_id": "20260815T074610Z-77118604",
+        "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T074610Z-77118604/frame_f000002-4f658c64_pid-27312.png",
+        "facts": ["CM2 PREVIEW SUITE V1", "ACTIVE: PREVIEW EDITOR", "fixed seed: 424242", "replay: 3"]
+      },
+      {
+        "run_id": "20260815T074946Z-469bec0a",
+        "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T074946Z-469bec0a/frame_f000002-8715a0ee_pid-27312.png",
+        "facts": ["ACTIVE: SHIP DOCK", "VOX + graph + anchor/mount/turret lifecycle", "VOX scale=1", "canonical axes", "anchors=5", "mounts=2", "turrets=1", "camera=orbit", "runtime catalog unchanged: true"]
+      }
+    ],
+    "real_hid_trace": ["RIGHT", "RIGHT", "SPACE"],
+    "held_inputs_after_actions": {"keys": [], "buttons": []},
+    "telemetry_boundary": "The Preview contract has no telemetry assertions; live bridge reads were used only for session/focus and cleanup confirmation.",
+    "log": {
+      "baseline_cursor": 461462,
+      "post_preview_cursor": 461462,
+      "cm2_new_errors": 0,
+      "cm2_new_warnings": 0
+    }
+  },
+  "consumer": {
+    "mod": "_AI Test Consumer SDK Alpha",
+    "run_id": "20260815T080703Z-a81dbbc7",
+    "screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T080703Z-a81dbbc7/frame_f000001-00961124_pid-27312.png",
+    "visible_facts": ["CREATOR SDK CLI ALPHA CONSUMER PASS", "accepted Ship", "rejected ExecuteLua", "RUNTIME LUA FORBIDDEN / NOT LOADED"],
+    "runtime_lua_loaded": false,
+    "private_includes": 0,
+    "scope_boundary": "This is independent data-only Creator SDK boundary evidence. It is not claimed as a dedicated 3D package-consumption proof; the external 3D candidate remains candidate-only until human review and provider/package approval."
+  },
+  "formal_entry_cleanup": {
+    "entry": "Content Mod 2/main.xml",
+    "run_id": "20260815T083741Z-65466029",
+    "screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T083741Z-65466029/frame_f000001-294951d3_pid-27312.png",
+    "telemetry_session": "0-d729ae53",
+    "scenario_id": "",
+    "scenario_ready": false,
+    "latest_seq": 0,
+    "events": 0,
+    "held_keys": [],
+    "held_buttons": [],
+    "formal_scene_visible": true,
+    "temporary_fixture_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_generated_authority_preserved": true
+  },
+  "load_window_log": {
+    "baseline_cursor": 481077,
+    "post_load_cursor": 491538,
+    "new_errors": 6,
+    "new_warnings": 6,
+    "attribution": [
+      "4 errors are formal legacy vehicle sound lookups for data/snd/vehicle/-drive.ogg, -ignition.ogg, -idle.ogg and -turnoff.ogg.",
+      "2 errors and 6 warnings identify the external TABS Workshop Mod path 3148138736.",
+      "After the post-load baseline, the formal entry produced 0 additional in-scope errors and 0 additional warnings."
+    ]
+  },
+  "regression": {
+    "todo_contract_validation": "pass: 80 contracts",
+    "external_3d_pipeline": "pass: checker, runner, negative corpus, repeated stage/downstream hashes",
+    "existing_vox_import": "pass",
+    "effect_assistant": "pass",
+    "ai_evaluation_provenance": "pass",
+    "compiler_schema_asset_security_core_invariance": "covered by shared downstream build and full Harness"
+  },
+  "harness": {
+    "command": ".\\harness\\check-all.ps1",
+    "status": "pass",
+    "exit_code": 0
+  },
+  "scope_boundary": "Objective headless pipeline, real Preview UI, attributed logs, independent data-only Consumer boundary, formal-entry cleanup, and rollback preservation pass. Subjective visual quality and dedicated external 3D package-consumer approval remain human review items.",
+  "rollback": "Discard only candidate/intermediate metadata and retain the last valid AssetManifest/package. No VOX binary, generated asset, Runtime catalog, Core source, or published artifact is overwritten."
+}

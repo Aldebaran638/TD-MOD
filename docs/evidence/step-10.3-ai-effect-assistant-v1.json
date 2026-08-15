@@ -1,0 +1,134 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 10.3",
+  "result": "pass",
+  "verified_at": "2026-08-15T17:10:00+08:00",
+  "implementation_status_preserved": "finish",
+  "verification_status": "human_visual_review",
+  "verification_contract_fingerprint": "5cc0b07a442987e895233679e1717ad28271b1114b95f875ce3cfe5abe842810",
+  "required_profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "CONSUMER_MOD"],
+  "executed_profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "CONSUMER_MOD"],
+  "deferred_profiles": [],
+  "failed_profiles": [],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "behavior_under_test": "A bounded EffectIntent becomes a previewable, budgeted, versioned EffectDefinition using the production EffectPlayer and PresentationBudget facade, without Lua particles or a provider-created renderer.",
+  "setup": {
+    "policy": "docs/ai-effect-assistant-v1.json",
+    "fixture": "docs/candidates/ai-effect-assistant-v1.fixture.json",
+    "headless_result": "docs/candidates/ai-effect-assistant-v1.result.json",
+    "preview_contract": "Content Mod 2/testing/scenarios/creator/preview_suite_v1/scenario.json",
+    "preview_level": "Content Mod 2/_ai_scenario_preview_suite.xml",
+    "preview_controller": "Content Mod 2/script/testing/scenario/preview_suite_controller.lua",
+    "fixed_seed": 424242,
+    "forbidden_shortcuts": ["damage_probe", "direct runtime catalog mutation", "gameplay ServerCall", "private CM2 include in Consumer", "Runtime Lua or network/generated/Core writes"]
+  },
+  "headless": {
+    "checker": "tools/cm2-ai/check-ai-effect-assistant-v1.ps1",
+    "runner": "tools/cm2-ai/run-ai-effect-assistant-v1.ps1",
+    "regression": "tools/cm2-ai/test-ai-effect-assistant-v1.ps1",
+    "result": "pass",
+    "case_count": 6,
+    "accepted": 2,
+    "repair": 1,
+    "rejected": 3,
+    "legal_rate": 1.0,
+    "profile_compiler_pass_rate": 1.0,
+    "effect_lab": {"requests": 4, "accepted": 2, "degraded": 2, "rejected": 0, "hard_cap": 12, "fixed_seed": 424242},
+    "determinism_hash": "6f9a64bb0a6842d3f28f154d5d662e77bd5a80e8f4a31518a067e7d31886cbe1",
+    "custom_renderer_lua_rejected": true,
+    "writes": {"generated": 0, "core": 0, "lua": 0, "network": 0}
+  },
+  "live_preview": {
+    "target_id": "teardown:27312:224336064",
+    "pid": 27312,
+    "level": "Content Mod 2/_ai_scenario_preview_suite.xml",
+    "scenario": "preview_suite",
+    "xml_revision": "preview-suite-xml-v1",
+    "lua_revision": "scenario-controller-v2",
+    "session": "0-cbc29785",
+    "ready": true,
+    "telemetry_baseline": {"latest_seq": 0, "events": 0, "input": {"w": false, "lmb": false}},
+    "action_trace": [
+      {"type": "tap", "key": "space", "duration_ms": 80, "method": "hid"},
+      {"type": "wait", "duration_ms": 500}
+    ],
+    "telemetry_after_action": {"latest_seq": 0, "events": 0, "truncated": false, "session_unchanged": true},
+    "visual": {
+      "screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T060045Z-efa9cec9/frame_f000001-0d2d5434_pid-27312.png",
+      "sha256": "FE13C11826FA12D4679714490A99DFD2316CF74DE81EA195BC1F22E573B8BC7A",
+      "facts": ["CM2 PREVIEW SUITE V1 HUD visible", "ACTIVE: EFFECT LAB visible", "replay: 1 after real Space", "EffectPlayer: production visible", "near LOD0 and far LOD1 visible", "PresentationBudget particles/light/lines visible", "runtime catalog unchanged: true", "cyan effect line, cyan origin marker, orange target marker and point-light glow visible", "client area non-black and non-constant"]
+    },
+    "log": {"baseline_cursor": 390253, "next_cursor": 390253, "bytes_read": 0, "errors": 0, "warnings": 0},
+    "cleanup": {"emergency_release": "pass", "held_keys": [], "held_buttons": []},
+    "raw_runs": {
+      "probe": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T055926Z-5dad7558",
+      "baseline": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T060009Z-4444d596",
+      "input": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T060027Z-3054cf24",
+      "delta": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T060045Z-06deb51e",
+      "screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T060045Z-efa9cec9"
+    }
+  },
+  "consumer": {
+    "result": "pass",
+    "mod": "_AI Test Consumer AI Weapon V1",
+    "artifact": "_AI Test Consumer AI Weapon V1/packages/cm2.ai.weapon.assistant/candidate.artifact.json",
+    "artifact_sha256": "0DBB9929B192A38A4F1C80CFEB50D3E0272DB55F86F6B8DA3A1DC79C73EC8F42",
+    "capabilities": ["Weapon", "Projectile", "Effect", "Assets"],
+    "runtime_entrypoint": "data-only",
+    "runtime_lua_loaded": false,
+    "private_includes": 0,
+    "automatic_publish": false,
+    "valid_operation": "accepted:Weapon-Projectile-Effect",
+    "invalid_operation": "rejected:ExecuteLua",
+    "screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T060351Z-e234db43/frame_f000001-173b531b_pid-27312.png",
+    "screenshot_sha256": "01727EF6A640A8EC85471E56512D34263A6290376F4CC75A62BBE0445FB1263A",
+    "visible_facts": ["AI WEAPON V1 CONSUMER PASS", "accepted Weapon-Projectile-Effect", "rejected ExecuteLua", "data-only", "RUNTIME LUA FORBIDDEN"],
+    "telemetry": "not applicable: the independent Consumer intentionally does not load the CM2_TEST_V1 bridge; a probe timeout was recorded and not used as gameplay evidence",
+    "log": {
+      "baseline_cursor": 390253,
+      "next_cursor": 400348,
+      "errors": 2,
+      "warnings": 6,
+      "attribution": "All 2 errors and 6 warnings reference the external TABS Workshop Mod path 3148138736; none reference CM2 or the Consumer."
+    },
+    "consumer_trace": "docs/candidates/ai-weapon-assistant-v1.consumer-trace.json",
+    "consumer_trace_sha256": "5744848FDC08C4B68B111E113524BFF0E41C21E304DAABDD5BC9F0AF32BD79C2",
+    "raw_run": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T060351Z-e234db43"
+  },
+  "formal_entry_cleanup": {
+    "entry": "Content Mod 2/main.xml",
+    "session": "0-91cf239e",
+    "scenario_id": "",
+    "scenario_ready": false,
+    "latest_seq": 0,
+    "candidate_events": 0,
+    "screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T060827Z-c593b629/frame_f000001-90d0dafb_pid-27312.png",
+    "screenshot_sha256": "0E945B53A5DFA2986602C47DC873657395D43D9937C50E2507282D607ACA4FE7",
+    "visible_facts": ["formal Content Mod gameplay visible", "no Preview Suite HUD or candidate markers visible"],
+    "load_window_log": {
+      "baseline_cursor": 400510,
+      "next_cursor": 411000,
+      "errors": 6,
+      "warnings": 6,
+      "attribution": [
+        "4 errors are formal legacy vehicle sound lookups for data/snd/vehicle/-drive.ogg, -ignition.ogg, -idle.ogg and -turnoff.ogg.",
+        "2 errors and 6 warnings reference the external TABS Workshop Mod path 3148138736."
+      ]
+    },
+    "post_load_baseline": {"cursor": 411162, "next_cursor": 411162, "errors": 0, "warnings": 0},
+    "final_status_run": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T060917Z-99d891f9",
+    "cleanup": {"emergency_release": "pass", "held_keys": [], "held_buttons": [], "teardown_processes_remaining": 1, "target_id": "teardown:27312:224336064"}
+  },
+  "regression": {
+    "todo_contract_validation": "pass: 80 contracts",
+    "ai_effect_assistant": "pass: checker, runner, negative corpus, Compiler, Effect Lab and repeat determinism",
+    "compiler_schema": "pass",
+    "asset_provenance": "pass",
+    "package_security": "pass",
+    "core_semantic_invariance": "pass",
+    "full_harness": {"command": ".\\harness\\check-all.ps1", "result": "pass", "exit_code": 0, "entry_closure_lua_files": 262, "lua_files": 234, "api_issues": 0, "xml_files": 15}
+  },
+  "scope_boundary": "This evidence proves the bounded candidate pipeline, real Preview Suite rendering through production EffectPlayer/PresentationBudget, real Space replay, fresh CM2 telemetry session, independent data-only Consumer Effect capability, attributed runtime logs, formal-entry isolation and cleanup. Subjective visual quality remains a human review item; the candidate is not promoted to Runtime catalog ownership.",
+  "rollback": "Discard candidate EffectDefinitions/reports and disable the Assistant; retain the last valid profile catalog and manual Effect Lab path. Only Core experts may add a renderer."
+}
