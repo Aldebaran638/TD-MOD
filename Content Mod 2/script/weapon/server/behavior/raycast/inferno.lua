@@ -52,7 +52,7 @@ local function _pushRenderEvent(context, ray, didHitShield, impactLayer)
         didHit = ray.hit, didHitStellarisBody = ray.hitRegisteredShip,
         didHitShield = didHitShield, hitTargetBodyId = ray.hitBody, normal = ray.normal,
         impactLayer = impactLayer or "none",
-    })
+    }, true)
 end
 
 local function _playShotSound(ray, weaponType)

@@ -404,6 +404,22 @@ function server.xSlot_broadcastLaunchingStart(shipBodyId, slotIndex, weaponType,
                 didHit and 1 or 0, impactLayer,
             },
         })
+    elseif fxProfile == "perditionBeam" and server.tSlotRenderPushEvent ~= nil then
+        local routed = server.tSlotRenderPushEvent(shipBodyId, {
+            eventType = "launch_start",
+            slotIndex = slotIndex,
+            weaponType = weaponType,
+            firePoint = firePointWorld,
+            hitPoint = hitPointWorld,
+            didHit = didHit,
+            didHitStellarisBody = didHitStellarisBody,
+            didHitShield = didHitShield,
+            hitTargetBodyId = hitTargetBodyId,
+            normal = normal,
+            impactLayer = impactLayer,
+            incrementShotId = 1,
+        }, true)
+        if routed then return end
     end
     server.xSlotRenderPushEvent(shipBodyId, {
         eventType = "launch_start",

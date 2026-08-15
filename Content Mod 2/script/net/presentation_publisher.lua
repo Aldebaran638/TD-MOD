@@ -31,6 +31,7 @@ local _routes = {
     ["ray.shieldImpact"] = { channel = "weapon.impact", callback = "client.playProjectileShieldImpactFx" },
     ["weapon.sound"] = { channel = "weapon.sound", callback = "client.playWeaponSound" },
     ["ray.effect"] = { channel = "weapon.beam", callback = "client.spawnGenericRaycastWeaponFx" },
+    ["tSlot.render"] = { channel = "weapon.beam", callback = "client.receiveTSlotRenderEvent" },
     ["projectile.fireSound"] = { channel = "weapon.sound", callback = "client.playKineticArtilleryFireSound" },
     ["projectile.hitSound"] = { channel = "weapon.sound", callback = "client.playKineticArtilleryHitSound" },
     ["projectile.shieldImpact"] = { channel = "weapon.impact", callback = "client.playProjectileShieldImpactFx" },

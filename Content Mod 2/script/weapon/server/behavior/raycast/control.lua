@@ -113,7 +113,7 @@ local function _fireRaycast(context)
         }
         if tostring(context.slotType or "") == "T"
             and server.tSlotRenderPushEvent ~= nil then
-            server.tSlotRenderPushEvent(context.shipBodyId, event)
+            server.tSlotRenderPushEvent(context.shipBodyId, event, true)
         elseif server.xSlotRenderPushEvent ~= nil then
             server.xSlotRenderPushEvent(context.shipBodyId, event)
         end
