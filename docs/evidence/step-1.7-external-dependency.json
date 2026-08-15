@@ -1,0 +1,75 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 1.7",
+  "result": "blocked",
+  "verified_at": "2026-08-15T21:39:33+08:00",
+  "verification_contract_fingerprint": "53b86fb605be40e8e6074e4296191acaefa440fe772701710f9040880b1519e8",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_LOG"],
+  "hands": ["HAND_TEST_SETUP"],
+  "behavior_under_test": "Four candidate Catalog slices compare against the Legacy semantic snapshot during init, record unexplained differences, remain frozen, and preserve Legacy fallback.",
+  "static": {
+    "artifacts": {
+      "shadow_lua_sha256": "D8346CD027A2D8AEA564993DF00A66101BAC03FA8B5ED8A7081AA90B907FD090",
+      "comparison_script_sha256": "FAFA3E7C5ABF29E8AFCC7126976514DEC12F3E41AC266372D0A2B3CABBC5CFEE",
+      "shadow_map_sha256": "8DFDD9D881E7DAF10A59CF7E3A6B6C3C6D449B5D47C85C0856CF23167A77D0F6",
+      "shadow_report_sha256": "F4F179B07A40E2FAA84C164EBA9EF855EAF7DD3B6E347048671539A9C886A233"
+    },
+    "owning_checker": "harness/check-shadow-catalog.ps1",
+    "checker_run_1_sha256": "F1818E4489628E6716FECEF0182320955FBA504B1BF00D9B475B07C55D47206A",
+    "checker_run_2_sha256": "F1818E4489628E6716FECEF0182320955FBA504B1BF00D9B475B07C55D47206A",
+    "checker_output_deterministic": true,
+    "checker_output": "Shadow comparison passed: four slices have no unexplained differences; source=legacy.",
+    "fixture_checker": "harness/test-shadow-catalog.ps1",
+    "fixture_run_1_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "fixture_run_2_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "fixture_output_deterministic": true,
+    "negative_case": "An injected expectedEffectType difference was rejected; candidateRuntimeEnabled=false and Legacy fallback remained selected.",
+    "full_harness": "pass: .\\harness\\check-all.ps1 exited 0; all checks and self-tests passed"
+  },
+  "runtime": {
+    "reload_run_id": "20260815T133735Z-d6ffa2cd",
+    "stable_probe_run_id": "20260815T133827Z-58f87c92",
+    "target_id": "teardown:27312:224336064",
+    "pid": 27312,
+    "window_handle": 224336064,
+    "reload": [
+      {"action": "F5", "method": "hid", "result": "accepted", "frame_id": "f000001-cdf487e2"},
+      {"action": "loading_frame", "result": "rejected", "reason": "black_or_near_constant"},
+      {"action": "stable_frame", "frame_id": "f000001-d5f61d4f", "png_path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T133827Z-58f87c92/frame_f000001-d5f61d4f_pid-27312.png", "width": 1280, "height": 720, "mean_luma": 29.7945, "variance": 999.2264}
+    ],
+    "telemetry": {
+      "ok": true,
+      "protocol": "CM2_TEST_V1",
+      "session": "0-fa97f52f",
+      "latest_seq": 0,
+      "next_after_seq": 0,
+      "truncated": false,
+      "event_count": 0,
+      "scenario": {"id": "", "xml_revision": "", "lua_revision": "", "ready": false},
+      "registered_ship_types": ["enigmaticCruiser", "titan", "riddle_escort"]
+    },
+    "log": {
+      "path": "C:/Users/XKWL/AppData/Local/Teardown/log.txt",
+      "baseline_cursor": 501996,
+      "post_reload_cursor": 512646,
+      "complete_read_cursor": 512484,
+      "new_errors": 6,
+      "new_warnings": 6,
+      "attribution": "Four errors reference empty vehicle sound paths and two reference the external TABS Workshop Mod; all six warnings reference the external TABS ballistics.lua. These lines are retained as runtime-health failures, not passed assertions."
+    }
+  },
+  "cleanup": {
+    "emergency_release_run_id": "20260815T133827Z-58f87c92",
+    "held_inputs": {"keys": [], "buttons": []},
+    "formal_source_preserved": true,
+    "last_valid_generated_artifact_preserved": true
+  },
+  "external_dependency": {
+    "classification": "EXTERNAL_DEPENDENCY",
+    "reason": "The four candidate catalogs are intentionally generated out-of-band and the current Content Mod runtime exposes no approved candidate/Legacy dual-run entry. After a real F5 reload, CM2_TEST_V1 returned a fresh session but scenario.id, XML/Lua revisions and ready remained empty/false, so candidate Shadow runtime evidence cannot be collected.",
+    "recovery": "Provide an approved init-time candidate runtime/dual-run entry that preserves definitionSource=legacy as rollback, then rerun the same Step 1.7 contract with fresh scenario identity, revision and log evidence.",
+    "source": "docs/candidates/ownership-map.json; docs/candidates/shadow-map.json"
+  },
+  "scope_boundary": "This record proves deterministic init-only static/fixture comparison and a real Legacy reload/telemetry attempt. It does not claim candidate runtime parity, promotion, load/memory parity, or a passing runtime-health assertion."
+}

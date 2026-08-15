@@ -1199,11 +1199,11 @@
         "code_or_document": "docs/candidates/shadow-map.json; Content Mod 2/script/data/candidate_catalog_shadow.lua; tools/cm2-shadow/compare-shadow.ps1; generated candidate catalogs under docs/candidates/generated.",
         "automated_tests": "harness/check-shadow-catalog.ps1 -Path . PASS: four slices have no unexplained differences, source=legacy; harness/test-shadow-catalog.ps1 PASS: legacy and candidate-v1 clean, unexplained difference blocks candidate and preserves legacy fallback.",
         "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; all 23 checker/self-test groups passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable in the environment, so S0/four-slice real-runtime smoke and load/memory parity evidence could not be executed. The shadow gate is init-only and no candidate runtime switch is enabled.",
+        "runtime_or_performance": "UNABLE: a real Teardown F5 reload and fresh CM2_TEST_V1 session were obtained, but scenario.id/xml_revision/lua_revision remained empty and ready=false because no approved candidate/Legacy dual-run entry is exposed. Runtime-health evidence also retained six new errors and six warnings for attribution; no candidate parity or promotion claim is made.",
         "rollback_record": "Keep definitionSource=legacy and remove/disable the candidate adapter; generated candidates remain out-of-band. No legacy catalog or runtime path was overwritten. Recovery is the pre-Step-1.7 commit plus the existing legacy snapshot."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-1.7",
-      "status_reason": "Shadow comparison, init-only freeze gate, diagnostics, candidate blocking, and automated verification are implemented and clean; terminal status is unable because the required Teardown S0/four-slice runtime evidence cannot be collected without Teardown.exe.",
+      "status_reason": "Shadow comparison, init-only freeze gate, diagnostics, candidate blocking, and deterministic fixture verification are implemented and clean. A real F5 reload produced a fresh Legacy session, but the runtime has no approved candidate/Legacy dual-run entry: scenario identity and revisions remained empty and ready=false. Preserve Legacy fallback and continue only after the external candidate runtime dependency is supplied.",
       "verification_status": "pending",
       "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
       "verification": {
@@ -1273,6 +1273,13 @@
         "The owning deterministic fixture runner and negative cases are available before product changes.",
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work."
       ],
+      "unable_exception": {
+        "marker": "EXTERNAL_DEPENDENCY",
+        "reason": "A real Teardown F5 reload and fresh CM2_TEST_V1 session were obtained, but the current runtime exposes no approved candidate/Legacy dual-run entry: scenario.id/xml_revision/lua_revision are empty and ready=false. Candidate runtime parity cannot be verified until that external entry is supplied.",
+        "evidence": "docs/evidence/step-1.7-external-dependency.json; TeardownAI runs 20260815T133735Z-d6ffa2cd and 20260815T133827Z-58f87c92",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-15T21:39:33+08:00"
+      },
       "plan_order": 12
     },
     {
