@@ -1,0 +1,63 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 0.3",
+  "result": "blocked",
+  "verified_at": "2026-08-15T20:44:48+08:00",
+  "verification_contract_fingerprint": "c0fef699de8ee8828693f97f0297b6721ddb8d069ffad3d64d0b5985c6b23c47",
+  "profiles": ["STATIC", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "behavior_under_test": "A repeatable S0/S6/S7 Teardown smoke record with aligned documentation, paths, and feature status.",
+  "static": {
+    "contract_validation": "pass: 80 executable Step contracts",
+    "smoke_matrix": "docs/teardown-smoke-matrix.md",
+    "full_harness": "pass: .\\harness\\check-all.ps1 completed after Hook/validator changes on 2026-08-15; all checks passed"
+  },
+  "runtime": {
+    "run_id": "20260815T124447Z-9c21052b",
+    "target_id": "teardown:27312:224336064",
+    "pid": 27312,
+    "window_handle": 224336064,
+    "process_present": true,
+    "process_responding": true,
+    "window_visible": true,
+    "window_focused": false,
+    "observe": {
+      "ok": false,
+      "error": "could not restore and focus Teardown",
+      "fresh_frame": false
+    },
+    "real_input": {
+      "attempted": false,
+      "reason": "The contract forbids input without a valid fresh frame bound to the exact target."
+    },
+    "telemetry_probe": {
+      "ok": false,
+      "channel": "unavailable",
+      "ui_text_input_ok": false,
+      "log_ok": false,
+      "clipboard_restore_conflict": true
+    },
+    "log": {
+      "path": "C:/Users/XKWL/AppData/Local/Teardown/log.txt",
+      "cursor": 501996,
+      "next_cursor": 501996,
+      "bytes_read": 0,
+      "new_errors": 0,
+      "new_warnings": 0
+    }
+  },
+  "cleanup": {
+    "emergency_release_run_id": "20260815T124447Z-9c21052b",
+    "held_inputs": {"keys": [], "buttons": []},
+    "formal_source_preserved": true,
+    "last_valid_generated_artifact_preserved": true
+  },
+  "environment_blocker": {
+    "classification": "ENVIRONMENT_BLOCKED",
+    "reason": "The target window is outside the agent focus/integrity boundary. The MCP could enumerate the process but could not restore/focus it, so the required fresh-frame, real-input, screenshot, and CM2_TEST_V1 session evidence could not be collected.",
+    "recovery": "Run Teardown at the same or lower integrity level as Codex/VS Code, or provide an elevated execution session, then rerun Step 0.3 from a fresh Mod session.",
+    "mcp_evidence": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T124447Z-9c21052b"
+  },
+  "scope_boundary": "This record is a genuine environment block, not a smoke-matrix pass. It does not claim S0, S6, or S7 runtime verification."
+}

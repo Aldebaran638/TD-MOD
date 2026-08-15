@@ -371,13 +371,13 @@
         "code_or_document": "docs/teardown-smoke-matrix.md; docs/weapon-configuration-plan.md status/path alignment.",
         "automated_tests": "Static XML/entry closure and full Harness passed; no runtime smoke substitute claimed.",
         "harness": "harness/check-all.ps1 passed all checks and self-tests.",
-        "runtime_or_performance": "UNABLE: S0, S6, S7 real operations, screenshots, logs, and replay not executable without Teardown.exe.",
+        "runtime_or_performance": "BLOCKED: Step 0.3 execution reached the installed Teardown target, but the protected window could not be restored or focused. No fresh frame, real input, S0/S6/S7 runtime trace, screenshot, or CM2 telemetry baseline can be claimed. Incremental log read was 0 bytes with 0 new ERROR/WARNING lines; emergency release left held inputs empty. Evidence: docs/evidence/step-0.3-environment-blocked.json and TeardownAI run 20260815T124447Z-9c21052b.",
         "rollback_record": "Documentation-only change; revert smoke matrix and historical status/path edits if required."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-0.3",
-      "status_reason": "Smoke matrix and reproducible result template are implemented, but S0/S6/S7 cannot run because no Teardown executable is available in this environment.",
+      "status_reason": "Smoke matrix and reproducible result template are implemented, but the installed Teardown target is outside the agent focus/integrity boundary. The Step 0.3 run could not obtain a fresh frame or telemetry baseline and is retained as an environment-blocked exception.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "BLOCKED: target teardown:27312:224336064 was visible and responding but could not be restored or focused. Evidence: docs/evidence/step-0.3-environment-blocked.json. Do not claim S0/S6/S7 runtime verification until a same-integrity target is available.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "c0fef699de8ee8828693f97f0297b6721ddb8d069ffad3d64d0b5985c6b23c47",
@@ -451,6 +451,13 @@
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work.",
         "Targeted fresh-frame keyboard/mouse control and emergency release are available; setup removes unrelated travel and aiming."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The installed Teardown target was visible and responding, but the agent could not restore/focus its window from the current process integrity boundary. The required fresh-frame, real-input and CM2 telemetry steps therefore could not start.",
+        "evidence": "docs/evidence/step-0.3-environment-blocked.json; TeardownAI run 20260815T124447Z-9c21052b",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-15T20:44:48+08:00"
+      },
       "plan_order": 3
     },
     {
