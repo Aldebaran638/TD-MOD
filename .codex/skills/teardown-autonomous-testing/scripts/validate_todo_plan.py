@@ -41,6 +41,23 @@ def _plan_source(task: dict[str, Any]) -> dict[str, Any]:
     return {field: task.get(field) for field in fields}
 
 
+def _valid_unable_exception(task: dict[str, Any], document: dict[str, Any]) -> bool:
+    policy = document.get("unable_exception_policy")
+    if not isinstance(policy, dict) or policy.get("enabled") is not True:
+        return False
+    field = policy.get("field") if isinstance(policy.get("field"), str) and policy.get("field").strip() else "unable_exception"
+    exception = task.get(field)
+    if not isinstance(exception, dict):
+        return False
+    allowed = policy.get("allowed_markers")
+    required = policy.get("required_fields")
+    if not isinstance(allowed, list) or not allowed or not isinstance(required, list) or not required:
+        return False
+    if not isinstance(exception.get("marker"), str) or exception.get("marker") not in allowed:
+        return False
+    return all(isinstance(exception.get(name), str) and exception[name].strip() for name in required)
+
+
 def expected_ids() -> list[str]:
     return [f"Step {gate}.{step}" for gate, count in enumerate(GATE_COUNTS) for step in range(1, count + 1)]
 
@@ -113,7 +130,8 @@ def validate(document: Any) -> list[str]:
             if contract.get("automation_level") not in AUTOMATION:
                 issues.append(f"{prefix}: invalid automation level")
         if implementation == "unable" and task.get("id") not in developer_ids and not task.get("developer_confirmed"):
-            issues.append(f"{prefix}: unable implementation lacks developer confirmation")
+            if not _valid_unable_exception(task, document):
+                issues.append(f"{prefix}: unable implementation lacks a valid unable_exception or historical developer confirmation")
         evidence = task.get("evidence")
         evidence_fields = ("code_or_document", "automated_tests", "harness", "runtime_or_performance", "rollback_record")
         if not isinstance(evidence, dict) or any(not isinstance(evidence.get(field), str) or not evidence[field].strip() for field in evidence_fields):

@@ -9,6 +9,18 @@ const VALIDATOR_RELS = [
 
 let lastBlock = null
 
+function hasValidUnableException(task, policy) {
+  if (!policy || policy.enabled !== true) return false
+  const field = typeof policy.field === "string" && policy.field.trim() !== "" ? policy.field : "unable_exception"
+  const exception = task?.[field]
+  if (!exception || typeof exception !== "object" || Array.isArray(exception)) return false
+  const allowedMarkers = Array.isArray(policy.allowed_markers) ? policy.allowed_markers.map(String).filter((value) => value.trim() !== "") : []
+  const requiredFields = Array.isArray(policy.required_fields) ? policy.required_fields.map(String).filter((value) => value.trim() !== "") : []
+  if (allowedMarkers.length === 0 || requiredFields.length === 0) return false
+  if (typeof exception.marker !== "string" || !allowedMarkers.includes(exception.marker) || exception.marker.trim() === "") return false
+  return requiredFields.every((field) => typeof exception[field] === "string" && exception[field].trim() !== "")
+}
+
 async function runCheck(directory, shell) {
   const todoPath = join(directory, TODO_FILE)
   if (!existsSync(todoPath)) {
@@ -55,23 +67,16 @@ async function runCheck(directory, shell) {
 
   const completionStatuses = new Set((document.completion_statuses ?? []).map(String))
   const verificationCompletion = new Set((document.verification_completion_statuses ?? []).map(String))
-  const developerUnable = document.developer_confirmed_unable
-  const developerUnableEnabled = !!developerUnable && developerUnable.enabled === true
-  const developerUnableField =
-    typeof developerUnable?.field === "string" && developerUnable.field.trim() !== ""
-      ? developerUnable.field
-      : "developer_confirmed"
-  const developerUnableIds = new Set((developerUnable?.task_ids ?? []).map(String))
+  const unableExceptionPolicy = document.unable_exception_policy
 
   const unfinished = (document.tasks ?? []).filter((task) => {
     const implementation = String(task.implementation_status ?? "")
     const verification = String(task.verification_status ?? "")
-    const unableConfirmed =
-      task[developerUnableField] === true || (developerUnableEnabled && developerUnableIds.has(String(task.id)))
+    const unableExceptionValid = hasValidUnableException(task, unableExceptionPolicy)
     const implementationIncomplete = !completionStatuses.has(implementation)
-    const unableUnconfirmed = implementation === "unable" && !unableConfirmed
-    const verificationIncomplete = implementation !== "unable" && !verificationCompletion.has(verification)
-    return implementationIncomplete || unableUnconfirmed || verificationIncomplete
+    const unableWithoutException = implementation === "unable" && !unableExceptionValid
+    const verificationIncomplete = implementation === "finish" && !verificationCompletion.has(verification)
+    return implementationIncomplete || unableWithoutException || verificationIncomplete
   })
 
   if (unfinished.length === 0) {
@@ -83,7 +88,7 @@ async function runCheck(directory, shell) {
   return {
     blocked: true,
     key: `${next.id}|${unfinished.length}|${next.implementation_status}|${next.verification_status}`,
-    reason: `CM2 executable Todo gate: ${unfinished.length} task(s) still require implementation or verification. Continue with ${next.id} ${next.title ?? ""} (implementation=${next.implementation_status}, verification=${next.verification_status}${automation}). Validate its embedded contract, execute the declared profiles/eyes/hands, persist evidence and regression, then update the independent statuses.`,
+    reason: `CM2 executable Todo gate: ${unfinished.length} task(s) still require implementation or verification. An implementation_status=unable task must be changed to finish unless it has a complete task-level unable_exception special marker with policy-approved marker, reason, evidence, reviewer and review time. Historical developer_confirmed_unable entries do not allow stopping. Continue with ${next.id} ${next.title ?? ""} (implementation=${next.implementation_status}, verification=${next.verification_status}${automation}). Validate its embedded contract, execute the declared profiles/eyes/hands, persist evidence and regression, then update the independent statuses.`,
   }
 }
 

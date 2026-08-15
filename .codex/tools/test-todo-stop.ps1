@@ -51,13 +51,38 @@ try {
     $unable = New-CompletedDocument
     $unable.tasks[0].implementation_status = 'unable'
     $unable.tasks[0].verification_status = 'pending'
-    Invoke-HookCase 'confirmed-unable' $unable $false ''
+    $unable.tasks[0].PSObject.Properties.Remove('unable_exception')
+    Invoke-HookCase 'historical-confirmed-unable' $unable $true 'unable_exception'
 
     $unconfirmed = New-CompletedDocument
     $unconfirmed.tasks[0].implementation_status = 'unable'
     $unconfirmed.tasks[0].verification_status = 'pending'
+    $unconfirmed.tasks[0].PSObject.Properties.Remove('unable_exception')
     $unconfirmed.developer_confirmed_unable.task_ids = @($unconfirmed.developer_confirmed_unable.task_ids | Where-Object { [string]$_ -ne 'Step 0.1' })
-    Invoke-HookCase 'unconfirmed-unable' $unconfirmed $true 'developer confirmation'
+    Invoke-HookCase 'old-allowlist-removed-unable' $unconfirmed $true 'unable_exception'
+
+    $exception = New-CompletedDocument
+    $exception.tasks[0].implementation_status = 'unable'
+    $exception.tasks[0].verification_status = 'pending'
+    $exception.developer_confirmed_unable.task_ids = @($exception.developer_confirmed_unable.task_ids | Where-Object { [string]$_ -ne 'Step 0.1' })
+    $exception.tasks[0] | Add-Member -NotePropertyName unable_exception -NotePropertyValue ([ordered]@{
+        marker = 'ENVIRONMENT_BLOCKED'
+        reason = 'The live run hit a documented environment limitation.'
+        evidence = 'docs/evidence/hook-test-environment.json'
+        reviewed_by = 'human'
+        reviewed_at = '2026-08-15T00:00:00+08:00'
+    }) -Force
+    Invoke-HookCase 'valid-unable-exception' $exception $false ''
+
+    $incompleteException = New-CompletedDocument
+    $incompleteException.tasks[0].implementation_status = 'unable'
+    $incompleteException.tasks[0].verification_status = 'pending'
+    $incompleteException.developer_confirmed_unable.task_ids = @($incompleteException.developer_confirmed_unable.task_ids | Where-Object { [string]$_ -ne 'Step 0.1' })
+    $incompleteException.tasks[0] | Add-Member -NotePropertyName unable_exception -NotePropertyValue ([ordered]@{
+        marker = 'ENVIRONMENT_BLOCKED'
+        reason = 'Missing evidence fields must block stopping.'
+    }) -Force
+    Invoke-HookCase 'incomplete-unable-exception' $incompleteException $true 'unable_exception'
 
     $missing = New-CompletedDocument
     $missing.tasks[0].PSObject.Properties.Remove('verification')
@@ -68,7 +93,7 @@ try {
     $badOutput = (& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $hookPath -TaskPath $badPath 2>&1 | Out-String).Trim() | ConvertFrom-Json
     Assert-Equal 'malformed decision' $badOutput.decision 'block'
 
-    Write-Output 'todo-stop-hook-tests: PASS (8 cases)'
+    Write-Output 'todo-stop-hook-tests: PASS (10 cases)'
 }
 finally {
     if (Test-Path -LiteralPath $tempRoot) { Remove-Item -LiteralPath $tempRoot -Recurse -Force }

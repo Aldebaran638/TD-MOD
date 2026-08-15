@@ -1,0 +1,96 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 0.1",
+  "result": "blocked",
+  "verified_at": "2026-08-15T20:15:00+08:00",
+  "verification_contract_fingerprint": "defc7c0088cb1c2d58376b38a69a885151b90a908e968fd17c98082f2379ed1d",
+  "profiles": ["STATIC", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "behavior_under_test": "Content Mod 2 main.xml -> main.lua -> weapon configuration UI entry, including real T open/close input.",
+  "static": {
+    "entry_path": "Content Mod 2/main.lua",
+    "include_paths": [
+      "script/weapon/client/interaction/config/local_weapon_config.lua",
+      "script/weapon/client/interaction/config/weapon_config_ui.lua"
+    ],
+    "old_config_ui_paths_present": false,
+    "todo_contract_validation": "pass:80 contracts",
+    "full_harness": "pass: .\\harness\\check-all.ps1 completed after Hook/validator changes on 2026-08-15; all checks passed"
+  },
+  "runtime": {
+    "target_id": "teardown:27312:224336064",
+    "pid": 27312,
+    "session": "0-d4bda97b",
+    "log_cursor": 501996,
+    "run_ids": [
+      "20260815T115940Z-0135f50f",
+      "20260815T120240Z-205edc31",
+      "20260815T120822Z-d7ac1098",
+      "20260815T121115Z-5ed05ff6",
+      "20260815T121213Z-dd1bcd7d"
+    ],
+    "real_input_attempts": [
+      {"key": "t", "method": "hid", "result": "no visible UI delta"},
+      {"key": "t", "method": "virtual", "result": "no visible UI delta"},
+      {"key": "t", "method": "scan", "result": "no visible UI delta"},
+      {"key": "escape", "method": "hid", "result": "no visible page delta"},
+      {"key": "escape", "method": "virtual", "result": "no visible page delta"},
+      {"key": "escape", "method": "scan", "result": "no visible page delta"}
+    ],
+    "screenshots": [
+      "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T115940Z-0135f50f/frame_f000002-3479af97_pid-27312.png",
+      "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T120240Z-205edc31/frame_f000002-e8554ebf_pid-27312.png",
+      "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T120240Z-205edc31/frame_f000003-29b96814_pid-27312.png"
+    ],
+    "telemetry": {
+      "initial_probe": "pass on CM2_TEST_V1 session 0-d4bda97b",
+      "observed_registered_ships": ["enigmaticCruiser", "titan", "riddle_escort"],
+      "post_action_probe": "timeout after bridge became unavailable",
+      "last_successful_events": ["weapon_input_evaluated", "input_edge", "weapon_hold_sent", "weapon_hold_received", "weapon_hold_applied", "fire_request"],
+      "ui_toggle_event": "not observed; UI did not open"
+    },
+    "log": {
+      "incremental_cursor": 501996,
+      "bytes_read": 0,
+      "new_cm2_errors": 0,
+      "new_cm2_warnings": 0,
+      "historical_load_errors": [
+        "data/snd/vehicle/-drive.ogg",
+        "data/snd/vehicle/-turnoff.ogg",
+        "data/snd/vehicle/-idle.ogg",
+        "data/snd/vehicle/-ignition.ogg"
+      ]
+    }
+  },
+  "environment_blocker": {
+    "classification": "ENVIRONMENT_BLOCKED",
+    "reason": "The live Teardown target is outside the agent process integrity boundary. The agent is Medium Mandatory Level; exact-target Stop-Process, taskkill /PID /F /T, and Win32 WM_CLOSE all returned Access is denied (5). Relaunch forwarded to the existing protected process, so a clean RESTART_TEARDOWN baseline cannot be established.",
+    "commands": [
+      "Stop-Process -Id 27312 -Force",
+      "taskkill /PID 27312 /F /T",
+      "PostMessageW(224336064, WM_CLOSE, 0, 0)"
+    ],
+    "recovery": "Run Teardown at the same or lower integrity level as the Codex/VS Code process, or provide an elevated execution session, then rerun Step 0.1 from a fresh Mod session.",
+    "evidence": [
+      "PowerShell whoami /groups reports Medium Mandatory Level.",
+      "The exact-target process operations returned Access is denied (5).",
+      "Fresh-frame HID, virtual, and scan input action records are saved in the listed run directories.",
+      "Screenshots before and after T are non-black gameplay frames with no configuration panel delta."
+    ]
+  },
+  "cleanup": {
+    "emergency_release_runs": [
+      "20260815T115940Z-0135f50f",
+      "20260815T120240Z-205edc31",
+      "20260815T120822Z-d7ac1098",
+      "20260815T120907Z-9e56ac1b",
+      "20260815T121115Z-5ed05ff6",
+      "20260815T121213Z-dd1bcd7d"
+    ],
+    "held_inputs": [],
+    "formal_source_preserved": true,
+    "last_valid_generated_artifact_preserved": true
+  },
+  "scope_boundary": "This record is a genuine environment block, not a runtime pass. It does not claim that the weapon configuration UI opens or that Step 0.1 is verified."
+}

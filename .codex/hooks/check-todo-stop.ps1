@@ -8,6 +8,28 @@ function Write-Continuation([string]$reason) {
     [ordered]@{ decision = 'block'; reason = $reason } | ConvertTo-Json -Compress
 }
 
+function Test-UnableException($task, $policy) {
+    if ($null -eq $policy -or $policy.enabled -ne $true) { return $false }
+    $field = if ([string]::IsNullOrWhiteSpace([string]$policy.field)) { 'unable_exception' } else { [string]$policy.field }
+    $property = $task.PSObject.Properties[$field]
+    if ($null -eq $property -or $null -eq $property.Value -or $property.Value -is [Array]) { return $false }
+
+    $exception = $property.Value
+    $allowedMarkers = @($policy.allowed_markers | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $requiredFields = @($policy.required_fields | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    if ($allowedMarkers.Count -eq 0 -or $requiredFields.Count -eq 0) { return $false }
+
+    $markerProperty = $exception.PSObject.Properties['marker']
+    if ($null -eq $markerProperty -or [string]::IsNullOrWhiteSpace([string]$markerProperty.Value) -or $allowedMarkers -notcontains [string]$markerProperty.Value) {
+        return $false
+    }
+    foreach ($requiredField in $requiredFields) {
+        $requiredProperty = $exception.PSObject.Properties[$requiredField]
+        if ($null -eq $requiredProperty -or [string]::IsNullOrWhiteSpace([string]$requiredProperty.Value)) { return $false }
+    }
+    return $true
+}
+
 try {
     $repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
     if ([string]::IsNullOrWhiteSpace($TaskPath)) {
@@ -33,26 +55,21 @@ try {
     $tasks = @($document.tasks)
     $completionStatuses = @($document.completion_statuses)
     $verificationCompletion = @($document.verification_completion_statuses)
-    $developerUnable = $document.developer_confirmed_unable
-    $developerUnableEnabled = $null -ne $developerUnable -and [bool]$developerUnable.enabled
-    $developerUnableField = if ($null -eq $developerUnable -or [string]::IsNullOrWhiteSpace([string]$developerUnable.field)) { 'developer_confirmed' } else { [string]$developerUnable.field }
-    $developerUnableIds = if ($null -eq $developerUnable) { @() } else { @($developerUnable.task_ids | ForEach-Object { [string]$_ }) }
+    $unableExceptionPolicy = $document.unable_exception_policy
 
     $unfinished = @($tasks | Where-Object {
         $implementation = [string]$_.implementation_status
         $verification = [string]$_.verification_status
-        $unableConfirmed = (($null -ne $_.PSObject.Properties[$developerUnableField]) -and [bool]$_.$developerUnableField) -or ($developerUnableEnabled -and ($developerUnableIds -contains [string]$_.id))
+        $unableExceptionValid = Test-UnableException $_ $unableExceptionPolicy
         $implementationIncomplete = $implementation -notin $completionStatuses
-        $unableUnconfirmed = $implementation -eq 'unable' -and -not $unableConfirmed
-        # A developer-confirmed unable retains its historical terminal implementation
-        # status. All other terminal implementations must also finish verification.
-        $verificationIncomplete = $implementation -ne 'unable' -and $verification -notin $verificationCompletion
-        $implementationIncomplete -or $unableUnconfirmed -or $verificationIncomplete
+        $unableWithoutException = $implementation -eq 'unable' -and -not $unableExceptionValid
+        $verificationIncomplete = $implementation -eq 'finish' -and $verification -notin $verificationCompletion
+        $implementationIncomplete -or $unableWithoutException -or $verificationIncomplete
     })
     if ($unfinished.Count -eq 0) { exit 0 }
 
     $next = $unfinished[0]
-    $reason = "CM2 executable Todo gate: $($unfinished.Count) task(s) still require implementation or verification. Continue with $($next.id) $($next.title) (implementation=$($next.implementation_status), verification=$($next.verification_status), automation=$($next.verification.automation_level)). Validate its embedded contract, execute the declared profiles/eyes/hands, persist evidence and regression, then update the independent statuses."
+    $reason = "CM2 executable Todo gate: $($unfinished.Count) task(s) still require implementation or verification. An implementation_status=unable task must be changed to finish unless it has a complete task-level unable_exception special marker with policy-approved marker, reason, evidence, reviewer and review time. Historical developer_confirmed_unable entries do not allow stopping. Continue with $($next.id) $($next.title) (implementation=$($next.implementation_status), verification=$($next.verification_status), automation=$($next.verification.automation_level)). Validate its embedded contract, execute the declared profiles/eyes/hands, persist evidence and regression, then update the independent statuses."
     Write-Continuation($reason)
     exit 0
 }
