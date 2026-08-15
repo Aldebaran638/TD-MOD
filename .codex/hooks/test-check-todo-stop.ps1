@@ -12,7 +12,7 @@ function Assert-True([bool]$condition, [string]$message) {
 try {
     $document = Get-Content -Raw -Encoding utf8 -LiteralPath $source | ConvertFrom-Json
     $output = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $hook -TaskPath $source
-    Assert-True ([string]$output -match 'block' -and [string]$output -match 'Step 1\.5' -and [string]$output -notmatch 'Continue with Step 0\.1|Continue with Step 0\.3|Continue with Step 0\.4') 'current source skips the exceptional Step 0.1, Step 0.3, and Step 0.4 and requests the next unresolved task'
+    Assert-True ([string]$output -match 'block' -and [string]$output -match 'Step 1\.7' -and [string]$output -notmatch 'Continue with Step 0\.1|Continue with Step 0\.3|Continue with Step 0\.4|Continue with Step 1\.5') 'current source skips the exceptional Step 0.1, Step 0.3, Step 0.4, and Step 1.5 and requests the next unresolved task'
 
     foreach ($task in @($document.tasks)) { $task.implementation_status = 'finish'; $task.verification_status = 'verified' }
     $document.tasks[0].implementation_status = 'unable'

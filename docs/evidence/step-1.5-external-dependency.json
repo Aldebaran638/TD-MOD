@@ -1,0 +1,76 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 1.5",
+  "result": "blocked",
+  "verified_at": "2026-08-15T21:16:48+08:00",
+  "verification_contract_fingerprint": "e61dc68f40bf074470cf00cc5bf5116aa282b926d637b46e628df875f3627fdb",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_LOG"],
+  "hands": ["HAND_TEST_SETUP"],
+  "behavior_under_test": "Four Compiler vertical slices with explicit generated-candidate and Legacy ownership, independently rollbackable without replacing the Legacy catalog.",
+  "static": {
+    "ownership_map_sha256": "0F87CE32A695C9FDE51B62A6EE1CE51DF5792E52E2A2B935084625325CDD2E2A",
+    "slices": [
+      {"name": "guided-missile", "catalog_sha256": "D798A15DCD08566930BA5FB3CC11F8DD616C01195AF8D186D681CFE995976FE9"},
+      {"name": "logical-projectile-impact", "catalog_sha256": "4657978B67212D888FE95A94E870BAF3D677A1F94FC68C110FB805F9542FADF6"},
+      {"name": "ray-beam", "catalog_sha256": "37C93A70588F630DAA793B19B0BDB6D3E954B50FD4FCA41484E3121F79D816DE"},
+      {"name": "tachyon-charge-beam-impact", "catalog_sha256": "BC5CD7B0E2A6A266758F19188F27F2812564E2186A5EA3DA2176745150B38A98"}
+    ],
+    "owning_checker": "harness/test-vertical-slices.ps1",
+    "checker_run_1_sha256": "0CEDEF47F0D0BCCED95D1B10934B937732DCEC8CA57A581E0C0E64E4224ED7F8",
+    "checker_run_2_sha256": "0CEDEF47F0D0BCCED95D1B10934B937732DCEC8CA57A581E0C0E64E4224ED7F8",
+    "checker_output_deterministic": true,
+    "negative_case": "missing explicit generated/legacy ownership rejected",
+    "full_harness": "pass: .\\harness\\check-all.ps1 completed before this evidence record and all checks/self-tests passed"
+  },
+  "runtime": {
+    "run_id": "20260815T131648Z-0692b9b5",
+    "target_id": "teardown:27312:224336064",
+    "pid": 27312,
+    "window_handle": 224336064,
+    "reload": [
+      {"action": "F4", "method": "hid", "result": "accepted", "frame_id": "f000001-66164b73"},
+      {"action": "F5", "method": "hid", "result": "accepted", "frame_id": "f000002-34a94540"}
+    ],
+    "post_reload_frame": {
+      "frame_id": "f000003-05f54eb3",
+      "png_path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T131648Z-0692b9b5/frame_f000003-05f54eb3_pid-27312.png",
+      "width": 1280,
+      "height": 720,
+      "mean_luma": 30.306,
+      "variance": 1072.1311
+    },
+    "telemetry": {
+      "ok": true,
+      "protocol": "CM2_TEST_V1",
+      "session": "0-d4bda97b",
+      "latest_seq": 5,
+      "next_after_seq": 5,
+      "truncated": false,
+      "scenario": {"id": "", "xml_revision": "", "lua_revision": "", "ready": false},
+      "event_count": 11,
+      "registered_ship_types": ["enigmaticCruiser", "titan", "riddle_escort"]
+    },
+    "log": {
+      "path": "C:/Users/XKWL/AppData/Local/Teardown/log.txt",
+      "cursor": 501996,
+      "next_cursor": 501996,
+      "bytes_read": 0,
+      "new_errors": 0,
+      "new_warnings": 0
+    }
+  },
+  "cleanup": {
+    "emergency_release_run_id": "20260815T131648Z-0692b9b5",
+    "held_inputs": {"keys": [], "buttons": []},
+    "formal_source_preserved": true,
+    "last_valid_generated_artifact_preserved": true
+  },
+  "external_dependency": {
+    "classification": "EXTERNAL_DEPENDENCY",
+    "reason": "docs/candidates/ownership-map.json declares runtimePolicy as candidate catalogs out-of-band and generated-candidate-only. The current Content Mod session therefore reloads Legacy content, not the four candidate catalogs; live candidate/legacy parity and load/memory comparison cannot be performed without an approved candidate runtime entry.",
+    "recovery": "Provide an isolated candidate runtime/dual-run entry that preserves Legacy as rollback, then rerun the same contract with fresh session and revision evidence.",
+    "source": "docs/candidates/ownership-map.json"
+  },
+  "scope_boundary": "This record proves deterministic four-slice Compiler/ownership behavior and a healthy Legacy reload/telemetry path. It does not claim candidate runtime parity, load-time, memory, or promotion approval."
+}

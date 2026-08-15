@@ -1008,13 +1008,13 @@
         "code_or_document": "docs/candidates/ownership-map.json; docs/candidates/README.md; tools/cm2-slices/source/*; tools/cm2-slices/build-vertical-slices.ps1; docs/candidates/generated/* (four candidate catalogs, 11 explicitly owned IDs).",
         "automated_tests": "harness/test-vertical-slices.ps1 PASS: all four slices compile deterministically, catalog IDs match ownership, generated headers are present, duplicate IDs and implicit ownership are rejected.",
         "harness": "harness/check-all.ps1 exited 0; all product checks and self-tests passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so in-game load-time/memory baseline and normalized-definition parity against live runtime cannot be collected. Candidate/legacy runtime switch remains disabled.",
+        "runtime_or_performance": "BLOCKED: the four candidate catalogs compile deterministically and the live target accepted F4→F5, but the current session remains Legacy-only (`scenario.id` is empty and `ready=false`). Candidate/legacy dual-run, live load-time/memory baseline, and normalized-definition parity cannot be collected while candidate runtime ownership remains explicitly disabled. Evidence: docs/evidence/step-1.5-external-dependency.json and TeardownAI run 20260815T131648Z-0692b9b.",
         "rollback_record": "Delete/disable docs/candidates/generated candidate outputs and select the ownership map’s legacyPath for each slice; Content Mod 2 legacy catalog was never replaced."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-1.5",
-      "status_reason": "Four source-to-candidate compiler slices and explicit generated/legacy ownership are implemented and Harness-verified, but live load/memory/parity evidence is unable without a Teardown executable.",
+      "status_reason": "Four source-to-candidate compiler slices and explicit generated/legacy ownership are implemented and deterministic. Live load/memory/parity remains blocked because the ownership map keeps candidates out-of-band and no candidate/legacy runtime dual-run entry is available; the current F4→F5 session remains Legacy-only.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "BLOCKED: F4→F5 and CM2_TEST_V1 succeeded on target teardown:27312:224336064, but the session reported scenario.id empty and ready=false, so the four candidate slices were not loaded. Evidence: docs/evidence/step-1.5-external-dependency.json. Do not claim live parity or load/memory verification until candidate runtime ownership is available.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "e61dc68f40bf074470cf00cc5bf5116aa282b926d637b46e628df875f3627fdb",
@@ -1082,6 +1082,13 @@
         "The owning deterministic fixture runner and negative cases are available before product changes.",
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work."
       ],
+      "unable_exception": {
+        "marker": "EXTERNAL_DEPENDENCY",
+        "reason": "The required live candidate/legacy dual-run entry and candidate runtime ownership are not available. The ownership map explicitly keeps candidate catalogs out-of-band until Gate 1 approval, so F4→F5 can only reload the existing Legacy session.",
+        "evidence": "docs/evidence/step-1.5-external-dependency.json; TeardownAI run 20260815T131648Z-0692b9b",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-15T21:16:48+08:00"
+      },
       "plan_order": 10
     },
     {
