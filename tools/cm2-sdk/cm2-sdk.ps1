@@ -236,6 +236,7 @@ function Run-Preview([string]$reportPath) {
 }
 function Get-SdkOutputRoot {
     if ($script:ProjectPath -ne "") { return Join-Path (Get-ProjectRoot) ".cm2-sdk" }
+    if ($script:FixturePath -ne "") { return Join-Path (Split-Path -Parent (Resolve-Rooted $script:FixturePath)) ".cm2-sdk" }
     return Join-Path $root ".cm2-sdk"
 }
 function Get-OutputTarget([string]$leaf) {

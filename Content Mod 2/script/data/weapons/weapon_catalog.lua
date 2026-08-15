@@ -4,6 +4,7 @@
 weaponData = weaponData or {}
 
 #include "schema.lua"
+#include "ai_candidate_runtime_projection.lua"
 #include "s/stellaris.lua"
 #include "g/stellaris.lua"
 #include "h/stellaris.lua"
@@ -41,6 +42,42 @@ for _, pool in pairs(weaponSlotPools) do
         if leftTier ~= rightTier then return leftTier < rightTier end
         return tostring(left.englishName or leftId) < tostring(right.englishName or rightId)
     end)
+end
+
+function weaponCatalogRegisterRuntimeDefinition(weaponType)
+    local requested = tostring(weaponType or "")
+    local definition = weaponData[requested]
+    if requested == "" or definition == nil or definition.runtimeReady == false then
+        return false, "runtime weapon definition is unavailable"
+    end
+    if weaponBehaviorProfiles[tostring(definition.behaviorType or "")] ~= true then
+        return false, "runtime weapon behavior is not registered"
+    end
+    for _, slot in ipairs(definition.slotTypes or {}) do
+        local slotType = string.upper(tostring(slot or ""))
+        if slotType ~= "" then
+            weaponSlotPools[slotType] = weaponSlotPools[slotType] or {}
+            local present = false
+            for _, candidate in ipairs(weaponSlotPools[slotType]) do
+                if tostring(candidate) == requested then
+                    present = true
+                    break
+                end
+            end
+            if not present then
+                weaponSlotPools[slotType][#weaponSlotPools[slotType] + 1] = requested
+                table.sort(weaponSlotPools[slotType], function(leftId, rightId)
+                    local left = weaponData[leftId] or {}
+                    local right = weaponData[rightId] or {}
+                    local leftTier = tonumber(left.catalogTier) or math.huge
+                    local rightTier = tonumber(right.catalogTier) or math.huge
+                    if leftTier ~= rightTier then return leftTier < rightTier end
+                    return tostring(left.englishName or leftId) < tostring(right.englishName or rightId)
+                end)
+            end
+        end
+    end
+    return true, nil
 end
 
 function weaponCatalogGetSlotPool(slotType)

@@ -33,6 +33,9 @@
 local configuredShipType = GetStringParam("shiptype", "")
 local configuredBodyTag = GetStringParam("bodytag", "")
 local destroyedControlsDisabled = false
+local aiCandidateProjectionSyncTicks = 0
+local aiCandidateRuntimeInitialized = false
+local aiCandidateProjectionTelemetryRecorded = false
 
 local function requireShipParameter(name, value)
     if value == nil or value == "" then
@@ -49,6 +52,74 @@ local function disableDestroyedControls()
     destroyedControlsDisabled = true
 end
 
+local function aiCandidateProjectionIsActive()
+    local aiProjection = cm2AiWeaponRuntimeProjection
+    if configuredBodyTag ~= "shipTitanAiCandidate"
+        or aiProjection == nil
+        or aiProjection.active == nil
+        or not aiProjection.active() then
+        return false
+    end
+
+    return true
+end
+
+local function applyAiCandidateLoadout(rebuildRuntime)
+    if not aiCandidateProjectionIsActive() then return true, nil, false end
+
+    local aiProjection = cm2AiWeaponRuntimeProjection
+    local desiredWeapon = aiProjection.weaponType()
+    local state = server.shipSlotLoadoutGetState(configuredShipType) or {}
+    local loadout = state.loadout or {}
+    local changed = tostring(loadout.M or "") ~= tostring(desiredWeapon)
+
+    if changed then
+        local applied, applyError = server.shipSlotLoadoutSetLoadout(
+            configuredShipType,
+            { M = desiredWeapon }
+        )
+        if not applied then return false, applyError, false end
+    end
+
+    local body = server.shipContextGetBody()
+    local currentMode = server.shipRuntimeGetCurrentMainWeapon(body)
+    if currentMode ~= "mSlot" then
+        server.shipRuntimeSetCurrentMainWeapon(body, "mSlot")
+        server.shipRuntimeSyncMainWeapon(body, true)
+    end
+
+    if changed and rebuildRuntime and aiCandidateRuntimeInitialized then
+        server.weaponRuntimeRebuild(configuredShipType)
+        server.shipRuntimeSetCurrentMainWeapon(body, "mSlot")
+        server.shipRuntimeSyncMainWeapon(body, true)
+    end
+
+    server.shipWeaponSyncConfiguration(configuredShipType)
+    return true, nil, changed
+end
+
+local function recordAiCandidateProjectionTelemetry()
+    if aiCandidateProjectionTelemetryRecorded then
+        return
+    end
+    if not aiCandidateProjectionIsActive() then
+        return
+    end
+    local aiProjection = cm2AiWeaponRuntimeProjection
+    if aiProjection == nil or aiProjection.getReport == nil then return end
+    server.cm2TelemetryRecord("ai_candidate_runtime_projection", aiProjection.getReport())
+    aiCandidateProjectionTelemetryRecorded = true
+end
+
+server.cm2AiCandidateProjectionObserveWeapon = function(weaponType)
+    local aiProjection = cm2AiWeaponRuntimeProjection
+    if aiProjection == nil or aiProjection.weaponType == nil
+        or tostring(weaponType or "") ~= tostring(aiProjection.weaponType()) then
+        return
+    end
+    recordAiCandidateProjectionTelemetry()
+end
+
 -- server = server or {}
 
 -- -- registry 访问
@@ -63,6 +134,13 @@ end
 -- 服务端初始化
 function server.init()
     server.cm2TelemetryInit(false)
+    local aiProjection = cm2AiWeaponRuntimeProjection
+    if configuredBodyTag == "shipTitanAiCandidate"
+        and aiProjection ~= nil and aiProjection.activateForScenario ~= nil then
+        aiProjection.activateForScenario("ai_weapon_candidate_preview")
+    end
+    server.cm2AiCandidateProjectionIsActive = aiCandidateProjectionIsActive
+    server.cm2AiCandidateProjectionActive = aiCandidateProjectionIsActive()
     cm2EffectRuntimeAuthority.init()
     cm2CatalogAuthorityV1.init()
     cm2HotpathBudgetV1.serverInit(cm2WorldHostV1.generation())
@@ -87,7 +165,16 @@ function server.init()
 
     -- 初始化当前飞船
     local shipBody = server.shipServerInit(configuredShipType, configuredBodyTag)
+    if aiCandidateProjectionIsActive() then
+        local applied, applyError = applyAiCandidateLoadout(false)
+        if not applied then
+            error("AI candidate loadout projection failed: " .. tostring(applyError or "unknown"))
+        end
+        recordAiCandidateProjectionTelemetry()
+    end
     server.weaponRuntimeInit(configuredShipType)
+    aiCandidateRuntimeInitialized = true
+    applyAiCandidateLoadout(true)
     server.shipRuntimeSyncMainWeapon(shipBody, true)
     server.shipWeaponSyncConfiguration(configuredShipType)
     cm2VehicleInstanceV1.serverInit(
@@ -139,6 +226,14 @@ end
 -- server.chargeTime 飞船充能所需时间
 -- server.launchTime 飞船发射持续时间
 function server.serverTick(dt)
+    recordAiCandidateProjectionTelemetry()
+    if aiCandidateProjectionIsActive() and aiCandidateProjectionSyncTicks < 30 then
+        local applied, applyError = applyAiCandidateLoadout(true)
+        if not applied then
+            error("AI candidate loadout resync failed: " .. tostring(applyError or "unknown"))
+        end
+        aiCandidateProjectionSyncTicks = aiCandidateProjectionSyncTicks + 1
+    end
     server.cm2TelemetryServerTick(dt)
     local destroyed = server.shipServerIsDestroyed()
     cm2VehicleInstanceV1.serverTick(dt, destroyed)

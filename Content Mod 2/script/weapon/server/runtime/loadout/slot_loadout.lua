@@ -303,6 +303,24 @@ function _loadoutAPI.setLoadout(shipType, requestedLoadout)
     for slotType, weaponType in pairs(incoming) do
         merged[tostring(slotType)] = tostring(weaponType)
     end
+
+    -- Keep the slot-type, group-id, and numbered-slot aliases coherent. The
+    -- resolver intentionally prefers the group id, so updating only M would
+    -- otherwise leave a stale mSlot value in front of the requested weapon.
+    for _, group in ipairs(configuration.slotGroups or {}) do
+        local groupId = tostring(group.groupId or "")
+        local slotType = tostring(group.slotType or "")
+        local loadoutKey = shipDefinitionGetGroupLoadoutKey(groupId, slotType)
+        local requested = incoming[groupId]
+            or incoming[loadoutKey]
+            or incoming[slotType]
+        if requested ~= nil then
+            local value = tostring(requested)
+            merged[groupId] = value
+            merged[loadoutKey] = value
+            merged[slotType] = value
+        end
+    end
     
     local loadout, loadoutError = _buildResolvedLoadout(definition, configuration, merged)
     if loadout == nil then

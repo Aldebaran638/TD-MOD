@@ -181,6 +181,13 @@ local function _shipWeaponBindingResult(
     )
 end
 
+local function _aiCandidateProjectionIsActive()
+    if type(server.cm2AiCandidateProjectionIsActive) == "function" then
+        return server.cm2AiCandidateProjectionIsActive()
+    end
+    return server.cm2AiCandidateProjectionActive == true
+end
+
 function server.shipWeaponBindLocalConfiguration(
     playerId,
     shipBody,
@@ -216,6 +223,16 @@ function server.shipWeaponBindLocalConfiguration(
     if tostring(shipType or "") ~= server.shipContextGetType() then
         _shipWeaponBindingResult(pid, body, 0, "ship type mismatch")
         return false
+    end
+
+    -- The reviewed AI candidate projection owns this disposable scenario's
+    -- loadout. Accept the driver's bind handshake without replacing it with
+    -- the persisted manual configuration.
+    if _aiCandidateProjectionIsActive() then
+        server.weaponLocalConfigurationBound = true
+        server.weaponLocalConfigurationPlayerId = pid
+        _shipWeaponBindingResult(pid, body, 1, "")
+        return true
     end
 
     if server.weaponLocalConfigurationBound then

@@ -14,14 +14,15 @@ client.weaponConfigurationBindingState = client.weaponConfigurationBindingState 
     lastError = "",
 }
 
-function client.weaponConfigurationBindingInit(shipType, shipBody)
+function client.weaponConfigurationBindingInit(shipType, shipBody, bodyTag)
     local state = client.weaponConfigurationBindingState
     state.shipType = tostring(shipType or client.shipContextGetType())
     state.shipBody = math.floor(shipBody or 0)
     state.snapshot = client.weaponLocalConfigRead(state.shipType)
     state.serverProfile = nil
     local definition = (shipTypeRegistryData or {})[state.shipType] or {}
-    state.complete = not shipDefinitionIsPlayerConfigurable(definition)
+    state.complete = tostring(bodyTag or "") == "shipTitanAiCandidate"
+        or not shipDefinitionIsPlayerConfigurable(definition)
     state.requestPending = false
     state.retryRemain = 0.0
     state.lastError = ""

@@ -113,7 +113,18 @@ function client.getShipSensorProfile(shipBodyId)
 end
 
 function client.getShipWeaponType(shipBodyId, groupId)
-    local state = client.weaponLoadoutStateByShip[math.floor(shipBodyId or 0)] or {}
+    local body = math.floor(shipBodyId or 0)
+    if body ~= 0
+        and tostring(groupId or "") == "mSlot"
+        and HasTag ~= nil
+        and HasTag(body, "shipTitanAiCandidate")
+        and cm2AiWeaponRuntimeProjection ~= nil
+        and cm2AiWeaponRuntimeProjection.active ~= nil
+        and cm2AiWeaponRuntimeProjection.active() then
+        return cm2AiWeaponRuntimeProjection.weaponType()
+    end
+
+    local state = client.weaponLoadoutStateByShip[body] or {}
     local mode = tostring(groupId or "")
     local synchronized = tostring((state.groupWeapons or {})[mode] or "")
     if synchronized ~= "" then return synchronized end

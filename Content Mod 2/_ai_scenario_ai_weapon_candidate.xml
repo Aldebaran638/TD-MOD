@@ -1,0 +1,8 @@
+<scene version="2.0.1" shadowVolume="100 40 100">
+    <environment template="night"/>
+    <script file="MOD/main.lua"/>
+    <script file="MOD/script/testing/scenario/scenario_controller.lua" param0="scenario=ai_weapon_candidate_preview" param1="revision=ai-candidate-preview-xml-v1"/>
+
+    <instance pos="0 60 0" rot="0 0 0" file="MOD/prefabs/ships/ai_candidate_titan.xml"/>
+    <instance pos="0.1 60 -42.2" rot="0 180 0" file="MOD/prefabs/ships/enigma_battlecruiser.xml"/>
+</scene>

@@ -1,0 +1,212 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 10.2",
+  "result": "pass",
+  "verified_at": "2026-08-15T13:25:19+08:00",
+  "verification_contract_fingerprint": "d4f6d50cb6c8f7fe90b2f1940ed02653c464ab16113b62d56176573cf9b18fa5",
+  "required_profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "CONSUMER_MOD"],
+  "executed_profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "CONSUMER_MOD"],
+  "deferred_profiles": [],
+  "failed_profiles": [],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "behavior_under_test": "User can create and fire-test a weapon from natural language while using existing Runtime capabilities.",
+  "setup": {
+    "policy": "docs/ai-weapon-assistant-v1.json",
+    "fixture": "docs/candidates/ai-weapon-assistant-v1.fixture.json",
+    "candidate_result": "docs/candidates/ai-weapon-assistant-v1.result.json",
+    "scenario_contract": "Content Mod 2/testing/scenarios/weapons/ai_candidate_preview/contract.json",
+    "projection": "Content Mod 2/script/data/weapons/ai_candidate_runtime_projection.lua",
+    "forbidden_shortcuts": [
+      "generated/Core/Lua/network writes",
+      "arbitrary Lua or private Runtime code",
+      "automatic publish without human approval",
+      "using headless Range/Effect Lab as proof of live firing, collision, damage, or presentation",
+      "using damage_probe as proof of weapon firing"
+    ]
+  },
+  "artifacts": {
+    "policy_sha256": "d315685773a492fdbc97788dd5cfeeec9699289d7f2fdf2d2dc3c736c1742661",
+    "fixture_sha256": "272eb6a4d55a22a3628e725216b16ebc04fd7166253ad2877c0a57a96d5b7d03",
+    "candidate_result_sha256": "4659de7a4ded192cddab252ad8f9f509d9dc07938df733db9d89507614468130",
+    "checker_sha256": "bfad019fcad201489b98278b3c31f28d685de737c919291c8d57fc1783773e9e",
+    "test_sha256": "4c2be6e363c202e75bafeafec0ea5c9788f39aa624389b02cc44591d8e12da14",
+    "scenario_contract_sha256": "864dea1920df711d869ae5e518e8730e059e8594508e77ac1ec5b0df4b6933c0",
+    "scenario_xml_sha256": "7ff211c1a010c4c196838d3e4750399dce3e7b9266c2461a65d106aaf5f43e0b",
+    "candidate_prefab_sha256": "8a4378d155511ab8e45d4f2e7acd7738ccdd5743970f47271147686e0134f006"
+  },
+  "assertions": {
+    "candidate_cases": 6,
+    "accepted_candidates": 2,
+    "repair_cases": 1,
+    "rejected_cases": 3,
+    "legal_rate": 1.0,
+    "saved_compiler_pass_rate": 1.0,
+    "determinism_hash": "b84853a80758d56bc1fbb125275a9d75edfab2149ba476b5ee19549fce4002f3",
+    "human_diff_required": true,
+    "automatic_publish": false,
+    "generated_core_lua_network_writes": 0,
+    "repository_core_diff": 0,
+    "headless_range_effect_lab": "pass",
+    "headless_performance_gate": "pass; S0-S8 replay and budget slices passed",
+    "candidate_live_runtime": "pass; disposable projection completed real LMB fire path",
+    "candidate_projection_telemetry": "pass; ai_candidate_runtime_projection seq 1 in session 0-cb0c9619",
+    "candidate_weapon_chain": "pass; weapon_hold_received, fire_request, hit, damage_applied, hp_changed, presentation_event(beam), and weapon_released observed",
+    "candidate_target_shield_delta": "11700 -> 11663.228516",
+    "candidate_damage_applied_events": 2,
+    "candidate_hp_changed_events": 2,
+    "candidate_gamma_beam_events": 2,
+    "candidate_visual_assertion": "pass; timestamped screenshot visibly shows candidate presentation and HUD",
+    "consumer_assertion": "pass; independent Consumer accepted Weapon-Projectile-Effect and rejected ExecuteLua"
+  },
+  "regression": {
+    "todo_contract_validation": "pass: 80 contracts",
+    "ai_weapon_assistant": "pass: checker, six-case runner, compiler provenance, negative corpus, repeat determinism",
+    "compiler_schema": "pass: compiler and Schema v1 self-tests",
+    "asset_provenance": "pass: asset importer and asset build pipeline self-tests",
+    "package_security": "pass: PackageManifest and independent package consumer self-tests",
+    "core_semantic_invariance": "pass: semantic snapshot self-test",
+    "golden_packages": "pass headless: 8/8 package suites and six negative contracts; runtime visual/consumer gaps remain",
+    "full_harness": {
+      "command": ".\\harness\\check-all.ps1",
+      "result": "pass",
+      "exit_code": 0,
+      "entry_closure_lua_files": 262,
+      "lua_files": 234,
+      "api_issues": 0,
+      "xml_files": 15,
+      "duration_seconds": 133.2
+    }
+  },
+  "runtime": {
+    "status": "pass",
+    "reason": "The disposable candidate projection completed the real-input fire path, candidate presentation is visible, the projection event is present in telemetry, the independent Consumer Mod passed, and the formal entry was reopened with no candidate scenario events.",
+    "latest_candidate_live_run": {
+      "result": "pass",
+      "run_id": "20260815T044149Z-5640c854",
+      "target_id": "teardown:27312:224336064",
+      "scenario": "ai_weapon_candidate_preview",
+      "xml_revision": "ai-candidate-preview-xml-v1",
+      "lua_revision": "scenario-controller-v2",
+      "session": "0-cb0c9619",
+      "target_body_id": 13,
+      "baseline": {
+        "fresh_frame": "f000003-bf59f76c",
+        "telemetry_latest_seq": 0,
+        "target_shield_hp": 11700,
+        "held_keys": [],
+        "held_buttons": []
+      },
+      "action_trace": [
+        {"type": "mouse_down", "button": "lmb", "method": "hid"},
+        {"type": "wait", "duration_ms": 50},
+        {"type": "wait", "duration_ms": 35, "repeat": 7},
+        {"type": "mouse_up", "button": "lmb", "method": "hid"},
+        {"type": "mouse_up", "button": "rmb", "method": "hid"},
+        {"type": "wait", "duration_ms": 200}
+      ],
+      "telemetry": {
+        "protocol": "CM2_TEST_V1",
+        "read_ok": true,
+        "read_at": "2026-08-15T04:42:14.114884Z",
+        "latest_seq": 57,
+        "returned_events": 64,
+        "projection_event": {"type": "ai_candidate_runtime_projection", "seq": 1},
+        "observed_types": ["ai_candidate_runtime_projection", "weapon_hold_received", "fire_request", "weapon_released", "hit", "damage_applied", "hp_changed", "presentation_event"],
+        "presentation_beam": {"effect_id": "gammaBeam", "kind": "beam", "count": 2},
+        "target_shield_hp_after": 11663.228516,
+        "damage_applied_events": 2,
+        "hp_changed_events": 2
+      },
+      "screenshots": {
+        "frames_captured": 7,
+        "representative_frame": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T044149Z-5640c854/frame_f000007-fac6abc1_pid-27312.png",
+        "representative_frame_sha256": "7e9f45e9802f158ab98c709f7898d6753a27ec9b16bdd1be4171bab1354c8f2e",
+        "visible_facts": ["Teardown gameplay is visible", "AI Pulse Candidate (Disposable) HUD is visible", "candidate beam/presentation is visible"]
+      },
+      "log": {
+        "baseline_cursor": 348544,
+        "next_cursor": 348544,
+        "bytes_read": 0,
+        "cm2_errors": 0,
+        "cm2_warnings": 0
+      },
+      "raw_evidence": {
+        "actions": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T044149Z-5640c854/actions.jsonl",
+        "telemetry_probe": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T044149Z-5640c854/telemetry_probe.json",
+        "telemetry_reads": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T044149Z-5640c854/telemetry_reads.jsonl",
+        "observations": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T044149Z-5640c854/observations.jsonl",
+        "log_reads": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T044149Z-5640c854/log_reads.jsonl"
+      },
+      "cleanup": {
+        "emergency_release": "pass",
+        "held_keys": [],
+        "held_buttons": []
+      }
+    },
+    "consumer_live_run": {
+      "run_id": "20260815T044612Z-5fab6ec1",
+      "consumer_mod": "_AI Test Consumer AI Weapon V1",
+      "representative_frame": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T044612Z-5fab6ec1/frame_f000006-792672ae_pid-27312.png",
+      "representative_frame_sha256": "29bde0fa66f3215789d9d4b9eaff7a494bcc5ad78e78eae0ecf2e69899ee66de",
+      "visible_facts": ["CM2 AI WEAPON ASSISTANT CONSUMER", "AI WEAPON V1 CONSUMER PASS", "runtimeEntrypoint=data-only", "RUNTIME LUA FORBIDDEN"],
+      "install_trace": "docs/candidates/ai-weapon-assistant-v1.consumer-trace.json",
+      "package_hash": "0dbb9929b192a38a4f1c80cfeb50f3e0272db55f86f6b8da3a1dc79c73ec8f42",
+      "runtime_entrypoint": "data-only",
+      "runtime_lua_loaded": false,
+      "consumer_private_includes": 0,
+      "automatic_publish": false,
+      "result": "pass",
+      "log": {
+        "run_id": "20260815T044758Z-c0ee8e8d",
+        "baseline_cursor": 348706,
+        "next_cursor": 358805,
+        "errors": 2,
+        "warnings": 6,
+        "attribution": "All 2 errors and 6 warnings reference the external TABS Workshop Mod; none reference CM2 or the Consumer."
+      },
+      "cleanup": {"emergency_release": "pass", "held_keys": [], "held_buttons": []}
+    },
+    "formal_entry_cleanup": {
+      "run_id": "20260815T052516Z-a1c1d711",
+      "session": "0-847208e4",
+      "scenario_id": "",
+      "scenario_revision": "",
+      "candidate_events": 0,
+      "entry": "main.xml",
+      "frame": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T052516Z-a1c1d711/frame_f000001-8cf1ec1e_pid-27312.png",
+      "frame_sha256": "bf9d695da2482352ad301dac487e4cdf67c88d15e218255e41091a309167eaa",
+      "latest_seq": 0,
+      "scenario_ready": false,
+      "log_cursor": 379855,
+      "log_next_cursor": 379855,
+      "log_errors": 0,
+      "log_warnings": 0,
+      "emergency_release": "pass",
+      "held_keys": [],
+      "held_buttons": []
+    },
+    "live_preview_adjacent": {
+      "result": "pass-as-adjacent-preview-only",
+      "run_id": "20260814T220928Z-56d0571a",
+      "target_id": "teardown:27312:224336064",
+      "scenario": "Content Mod 2/_ai_scenario_preview_suite.xml",
+      "action_trace": ["right", "space", "f4"],
+      "visual_facts": ["ACTIVE: WEAPON RANGE", "shots: 4 hits: 4 damage: 40", "budget: accepted=2 degraded=1 rejected=1", "runtime catalog unchanged: true"],
+      "cleanup": {"returned_to_editor": true, "held_keys": [], "held_buttons": [], "emergency_release": "pass"}
+    },
+    "missing_evidence": []
+  },
+  "cleanup": {
+    "headless_temporary_roots_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true,
+    "real_input_actions_issued": true,
+    "live_emergency_release": "pass",
+    "formal_entry_reopened": true,
+    "next_session_has_no_candidate_scenario": true,
+    "formal_session_candidate_events": 0
+  },
+  "rollback": "Discard candidate source/report and disable the Assistant; retain the prior manual Editor/CLI path and last valid catalog. Do not promote without human approval.",
+  "scope_boundary": "This evidence proves the candidate-only static/fixture pipeline, a disposable candidate Runtime projection, the real LMB weapon chain and target shield delta, visible candidate presentation, an independent data-only Consumer Mod, runtime log attribution, formal-entry isolation, cleanup, and full Harness verification. The Runtime projection remains disposable and is not promoted or published."
+}

@@ -20,6 +20,15 @@ local function _fireRaycast(context)
         context.shipBodyId
     )
     local hitRegisteredShip = ray.hitRegisteredShip
+    if hit and server.cm2TelemetryRecord ~= nil then
+        server.cm2TelemetryRecord("hit", {
+            attacker_body_id = math.floor(tonumber(context.shipBodyId) or 0),
+            target_body_id = math.floor(tonumber(hitBody) or 0),
+            weapon_type = context.weaponType,
+            impact_layer = impactLayer or "none",
+            registered_ship = hitRegisteredShip and true or false,
+        })
+    end
     local suppressPhysicalExplosion = definition.suppressShipExplosion == true
         and hitRegisteredShip
     if didHitShield then

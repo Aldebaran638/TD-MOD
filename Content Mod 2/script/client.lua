@@ -19,6 +19,16 @@ function client.init()
         error("missing required ship script parameter: shiptype/bodytag")
     end
     client.shipClientInit(shipType, bodyTag)
+    local aiProjection = cm2AiWeaponRuntimeProjection
+    if bodyTag == "shipTitanAiCandidate"
+        and aiProjection ~= nil and aiProjection.activateForScenario ~= nil then
+        aiProjection.activateForScenario("ai_weapon_candidate_preview")
+        client.updateShipWeaponGroupConfiguration(
+            client.shipContextGetBody(),
+            "mSlot",
+            aiProjection.weaponType()
+        )
+    end
     client.weaponClientInit()
 end
 

@@ -1,5 +1,16 @@
 # AI Weapon Assistant v1
 
+## Test-only runtime projection
+
+The assistant remains candidate-only. A separate, human-approved disposable
+projection is available only for the Step 10.2 live Scenario. It requires the
+accepted candidate hash, final compiler hash, approval token and explicit
+`disposable-test-scenario` scope. It maps the accepted `pulse` DTO to already
+registered ray, muzzle, impact and sound profiles; it is never an AI permission,
+never writes Core/generated/Lua artifacts, and never promotes or publishes a
+candidate. The projection records its provenance in `CM2_TEST_V1` and is
+disabled for every normal ship entrypoint.
+
 ## 目标
 
 Weapon Assistant 是 Gate 10 的第一个创作入口。它把自然语言先解析成可审计的 WeaponIntent，再生成受 Schema 约束的 Weapon、Projectile、Effect source candidate。它不会生成 Lua，不会写 Core/Global/generated，也不会自动发布。
@@ -31,4 +42,3 @@ Weapon Assistant 是 Gate 10 的第一个创作入口。它把自然语言先解
 ## 回退
 
 撤销时删除候选和报告，保留最后一个有效 source/generated catalog；关闭 AI provider 不影响 Editor、CLI、Compiler 或 Runtime。任何模型、prompt、Schema、预算或验证器升级都必须提升版本并重新运行全部固定语料。
-

@@ -1,0 +1,40 @@
+{
+  "schema": "cm2.test-scenario/1",
+  "id": "weapons/ai_candidate_preview_v1",
+  "step": "Step 10.2",
+  "level": "Content Mod 2/_ai_scenario_ai_weapon_candidate.xml",
+  "projection": "human-approved-disposable-runtime-projection",
+  "candidate": {
+    "id": "pulse",
+    "candidateHash": "b7080a17d0199833e0140cfbb1c20d648e1f3d2d51894f25ea3b403f80efb92b",
+    "finalBuildHash": "e20eeef9197937db461605c41ee9cff284474f86a15ee42614518efdbba728cf",
+    "behavior": "ray",
+    "slotType": "M",
+    "fireRateHz": 4,
+    "damage": 18,
+    "rangeM": 1800,
+    "effectType": "beam"
+  },
+  "setup": {
+    "attacker": "human-approved AI pulse projection on Titan at 0 60 0",
+    "target": "enigmaticCruiser body near 0 60 -25",
+    "runtimeCatalog": "projection-only; normal catalog remains legacy",
+    "candidateWrites": { "generated": 0, "core": 0, "lua": 0, "network": 0 }
+  },
+  "trigger": ["observe fresh frame", "press and release LMB once"],
+  "expected_telemetry": [
+    "ai_candidate_runtime_projection",
+    "input_edge",
+    "fire_request",
+    "weapon_released",
+    "hit",
+    "damage_applied",
+    "hp_changed"
+  ],
+  "expected_visual": ["candidate beam and impact at the target", "weapon HUD release cooldown"],
+  "expected_log": ["no new in-scope CM2 Lua or engine ERROR"],
+  "cleanup": ["release every held input", "F4 back to editor", "projection absent in the next session"],
+  "consumer": "_AI Test Consumer AI Weapon V1",
+  "reload_requirement": "REOPEN_LEVEL_XML",
+  "forbidden_shortcuts": ["automatic publish", "Core/generated/Lua/network AI writes", "damage_probe as firing proof", "private-code consumer include"]
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "cm2.ai-weapon-runtime-approval/1",
+  "status": "disposable-test-only",
+  "candidateId": "pulse",
+  "candidateHash": "b7080a17d0199833e0140cfbb1c20d648e1f3d2d51894f25ea3b403f80efb92b",
+  "finalBuildHash": "e20eeef9197937db461605c41ee9cff284474f86a15ee42614518efdbba728cf",
+  "promptHash": "dcbe5b3bacd206004cc67822c5c94d206bb66805463f3617a682682b5fee9362",
+  "humanApprovalRequired": true,
+  "approvalMode": "explicit-test-fixture-token",
+  "approvalToken": "step-10.2-pulse-runtime-v1",
+  "projectionScope": "disposable-test-scenario",
+  "promotion": "forbidden",
+  "automaticPublish": false,
+  "runtimeMapping": {
+    "behavior": "ray",
+    "slotType": "M",
+    "fireRateHz": 4,
+    "damage": 18,
+    "speedMps": 600,
+    "effectType": "beam",
+    "effectPriority": 55,
+    "existingEffectProfile": "gammaBeam",
+    "existingMuzzleProfile": "gammaMedium",
+    "existingImpactProfile": "gammaMedium",
+    "existingSoundProfile": "mediumGammaLaser",
+    "mountProfile": "mLaser",
+    "maxRangeM": 1800,
+    "powerUse": 360
+  },
+  "aiWrites": { "generated": 0, "core": 0, "lua": 0, "network": 0 },
+  "rollback": "Remove the disposable Scenario projection and retain the last valid catalog; never promote this adapter."
+}

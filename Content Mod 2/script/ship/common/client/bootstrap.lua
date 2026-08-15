@@ -26,7 +26,7 @@ function client.shipClientInit(shipType, bodyTag)
     client.shipRuntimeStateInit()
     client.shipControlSnapshotInit(context.bodyId)
     client.engineThrusterFxInit()
-    client.weaponConfigurationBindingInit(context.shipType, context.bodyId)
+    client.weaponConfigurationBindingInit(context.shipType, context.bodyId, context.bodyTag)
     client.shipSensorHudInit()
 end
 

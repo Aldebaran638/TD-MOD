@@ -24,5 +24,14 @@
   },
   "provenanceRequired": [ "promptHash", "candidateHash", "modelVersion", "toolVersion", "parserVersion", "validatorVersion", "humanDiff", "finalBuildHash" ],
   "pipeline": [ "prompt", "WeaponIntent", "schema-constrained-patch", "deterministic-lint", "human-diff", "source-definition", "compiler", "weapon-range-effect-lab" ],
-  "rollback": "Discard candidate source and report; preserve the last valid source/generated catalog. Never promote a candidate without human approval."
+  "rollback": "Discard candidate source and report; preserve the last valid source/generated catalog. Never promote a candidate without human approval.",
+  "humanTestProjection": {
+    "status": "disposable-test-only",
+    "operation": "human-approved-disposable-runtime-projection",
+    "aiPermission": "not-granted",
+    "scope": "scenario-param-bound",
+    "requires": [ "candidateHash", "finalBuildHash", "humanApprovalToken", "disposableScope" ],
+    "promotion": "forbidden",
+    "automaticPublish": false
+  }
 }

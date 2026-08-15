@@ -531,6 +531,9 @@ function server.weaponGroupRequestFire(groupId, request)
             target_body_id = math.floor(tonumber((request or {}).targetBodyId) or 0),
         })
     end
+    if server.cm2AiCandidateProjectionObserveWeapon ~= nil then
+        server.cm2AiCandidateProjectionObserveWeapon(weaponType)
+    end
     if (tonumber(state.fireDelay) or 0.0) > 0.0 then return false, "weapon group pacing" end
 
     local valid, validationError, normalizedRequest = _weaponGroupValidateRequest(
