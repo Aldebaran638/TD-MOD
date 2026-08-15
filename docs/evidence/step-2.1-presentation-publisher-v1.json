@@ -1,0 +1,107 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 2.1",
+  "result": "pass",
+  "verified_at": "2026-08-16T04:24:41+08:00",
+  "verification_contract_fingerprint": "9bf6cfb8a447bac941f1eac854dcfaa136f0c13c1196d07020d4e42da5120d43",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "behavior_under_test": "A real T-slot charged weapon crosses the Presentation Publisher boundary while preserving the legacy adapter and applies authoritative damage to the registered target.",
+  "static": {
+    "owning_checker": "harness/check-presentation-publisher.ps1",
+    "owning_checker_result": "pass",
+    "owning_self_test": "pass",
+    "todo_contract_validation": "pass: 80 executable Step contracts",
+    "integrated_live_entry": "Content Mod 2/script/weapon/server/behavior/raycast/inferno.lua -> tSlotRenderPushEvent(..., true)",
+    "source_hashes": {
+      "presentation_publisher.lua": "A94B12BFF47DAA57E77FDDF1EC5DD2F39B59192A733BD07C1B3DC80FBD9B9440",
+      "t_slot_render_state.lua": "0EF620D48975704197EFDEECB8DB713176745D9945F13C4B898FAA3250172FAC",
+      "raycast_inferno.lua": "5A8B35D9D160E87E76EABD9277458541A905B349A4F79A59A61A44CE0F0597A0",
+      "raycast_control.lua": "E0393107AE4A21B09D1FA2699DEDA7EFFCCFB8410F80091B7D2A18953AC35C9B"
+    }
+  },
+  "runtime": {
+    "reload_run_id": "20260815T195859Z-449c3dc4",
+    "run_id": "20260815T195936Z-2171b1a9",
+    "target_id": "teardown:35012:145495354",
+    "pid": 35012,
+    "session": "0-921e243c",
+    "scenario": {
+      "id": "weapon_direct_fire",
+      "xml_revision": "direct-fire-xml-v2",
+      "lua_revision": "scenario-controller-v2",
+      "ready": true
+    },
+    "reload": {
+      "mode": "F4_TO_F5",
+      "f4": "accepted",
+      "f5": "accepted",
+      "stable_probe": "pass"
+    },
+    "input": {
+      "action": "mouse_down lmb; wait 2.10s; mouse_up lmb",
+      "transport": "virtual HID",
+      "held_inputs_after_action": {"keys": [], "buttons": []},
+      "emergency_release": {"keys": [], "buttons": []}
+    },
+    "telemetry": {
+      "baseline_server_seq": 0,
+      "latest_server_seq": 32,
+      "truncated": false,
+      "presentation_event": {
+        "seq": 12,
+        "kind": "beam",
+        "route": "tSlot.render",
+        "source_body_id": 6,
+        "target_body_id": 13,
+        "weapon_type": "perditionBeam",
+        "presentation_sequence": 1
+      },
+      "weapon_chain": ["fire_request", "hit", "damage_applied", "presentation_event", "weapon_released", "hp_changed"],
+      "first_damage": {
+        "hit_seq": 7,
+        "damage_applied_seq": 8,
+        "hp_changed_seq": 6,
+        "target_body_id": 13,
+        "impact_layer": "shield",
+        "requested_damage": 9145.481735,
+        "applied_damage": 7006.170647,
+        "shield_before": 11700,
+        "shield_after": 4693.82959
+      },
+      "baseline_target": {"body_id": 13, "registered": true, "destroyed": false, "shield_hp": 11700, "armor_hp": 11700, "body_hp": 10000},
+      "post_run_target": {"body_id": 13, "registered": true, "destroyed": false, "shield_hp": 2063.867432, "armor_hp": 11700, "body_hp": 10000}
+    },
+    "visual": {
+      "baseline_screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T195936Z-2171b1a9/frame_f000001-2cf02442_pid-35012.png",
+      "action_screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260815T195936Z-2171b1a9/frame_f000003-314f1d46_pid-35012.png",
+      "action_observation": "Client-area scene remained non-black; configured beam presentation was visible and the weapon HUD showed RECOVER 12%.",
+      "screenshot_sha256": {
+        "baseline": "80118F131F0C317DB40F4F97D325EDCA4DAD9D0316620B5534B41AE7E3BF22F3",
+        "action": "05F55F6C652301A4271B5811F5A62C53594EF13A0D2FAA0207008612B80E6610"
+      }
+    },
+    "log": {
+      "baseline_cursor": 28155,
+      "post_action_cursor": 28155,
+      "new_error_count": 0,
+      "new_warning_count": 0
+    }
+  },
+  "regression": {
+    "presentation_publisher_checker": "pass",
+    "presentation_publisher_self_test": "pass",
+    "lua_checker": "pass: 234 files, 0 issues",
+    "teardown_api_checker": "pass: 234 files, 0 issues",
+    "full_harness": "pass: .\\harness\\check-all.ps1, all checks and self-tests, exit code 0"
+  },
+  "cleanup": {
+    "held_inputs": {"keys": [], "buttons": []},
+    "temporary_runtime_entities": "scenario remains isolated and no new registration was created",
+    "formal_source_preserved": true,
+    "last_valid_generated_artifact_preserved": true
+  },
+  "rollback": "Keep presentationRuntime=legacy (the default), or remove the Publisher route call and retain the direct Legacy callback. The existing renderer callback remains registered under tSlot.render.",
+  "scope_boundary": "Runtime evidence proves the real direct-fire T-slot path and Publisher legacy route. Event-v1 DTO validation/dispatch remains covered by the owning static/self-test contract; subjective visual polish remains outside this objective evidence record."
+}

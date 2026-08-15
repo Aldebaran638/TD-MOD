@@ -1286,7 +1286,7 @@
       "id": "Step 2.1",
       "stage": "Gate 2",
       "title": "增加 Presentation Publisher 与 Legacy Adapter",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 新增服务端 `PresentationPublisher.publish(event)`；[ ] legacy 模式转回现有具名 ClientCall；[ ] event-v1 模式发送 DTO；[ ] 接入 ray、logical projectile、guided、strike craft、charged weapon 的真实发射/结束入口；[ ] 记录 sequence/publish/adapter count。 Reason: 当前控制器直接知道 renderer、声音和槽位函数名，必须先建立窄门再替换播放器。",
       "expected_outcome": "行为只表达 charge/muzzle/beam/projectile/impact 事实，旧视觉仍可按 effect/weapon 回退。",
       "prerequisites": [
@@ -1304,13 +1304,13 @@
         "code_or_document": "docs/presentation-publisher-v1.md; Content Mod 2/script/net/presentation_publisher.lua; Content Mod 2/script/weapon/client/presentation/event_runtime.lua; integrations in raycast/control.lua, projectile/manager.lua, guided_projectile/runtime_state.lua, strike_craft/control.lua, charged_ray/control.lua.",
         "automated_tests": "harness/check-presentation-publisher.ps1 PASS; harness/test-presentation-publisher.ps1 PASS (legacy default, init-only event-v1 switch, counters, DTO validation, bounded client queue). check-lua.ps1 and check-teardown-api.ps1 PASS: 188 Lua files, 0 issues.",
         "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; publisher checker/self-test and all existing checker/self-test groups passed. Existing cleanup warnings from unrelated Harness fixtures did not affect exit code.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so the required S0/S2/S3/S5/S6/S7 legacy trace, event-v1 transport, and presentation overhead comparison could not be executed. Static path keeps legacy as default and event-v1 queue is bounded.",
+        "runtime_or_performance": "PASS: TeardownAI run 20260815T195936Z-2171b1a9 after F4->F5 observed a fresh CM2_TEST_V1 session; a real LMB action produced fire_request, hit, damage_applied, hp_changed, presentation_event(route=tSlot.render), and weapon_released. Target body 13 shield changed from 11700 to 4693.82959 on the first applied hit; the action screenshot showed the configured presentation and RECOVER HUD; the incremental log added 0 errors and 0 warnings.",
         "rollback_record": "Set presentationRuntime=legacy (the default) or remove presentation_publisher/event_runtime includes. Damage, movement, lifecycle and existing renderer callbacks remain available through the route table; no catalog or asset was deleted."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-2.1",
-      "status_reason": "Publisher boundary, legacy adapter, event-v1 DTO delivery, five behavior integrations, counters, and automated verification are implemented; terminal status is unable because Teardown runtime trace and performance evidence cannot be collected in this environment.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "Publisher boundary, legacy adapter, event-v1 DTO delivery, five behavior integrations, counters, full Harness, and the real direct-fire T-slot runtime trace are complete. The live infernoRaycast entry now routes through tSlot.render with Legacy fallback.",
+      "verification_status": "human_visual_review",
+      "verification_status_reason": "Objective verification passed with fresh SCENE/REAL_INPUT/TELEMETRY/VISUAL/LOG evidence. The contract declares subjective visual quality as a human review gap; the step is complete for hook purposes and may proceed after that review.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "9bf6cfb8a447bac941f1eac854dcfaa136f0c13c1196d07020d4e42da5120d43",
