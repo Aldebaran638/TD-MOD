@@ -106,11 +106,12 @@ local function _removeProjectileAt(index)
     if removed ~= nil then state.free[#state.free + 1] = removed end
 end
 
-local function _finishProjectileVisual(projectileId, mode, hitPos, hitNormal, impactLayer)
+local function _finishProjectileVisual(projectileId, weaponType, mode, hitPos, hitNormal, impactLayer)
     local p = hitPos or Vec(0, 0, 0)
     local n = hitNormal or Vec(0, 1, 0)
     server.presentationPublisherPublish("impact", {
         sourceId = "projectile:" .. tostring(projectileId or 0),
+        weaponType = weaponType,
         position = p,
         hit = { position = p, normal = n },
         payload = { projectileId = projectileId or 0, mode = mode or "none", impactLayer = impactLayer or "none" },
@@ -124,7 +125,7 @@ function server.projectileManagerReset()
     local active = state.active or {}
     local free = state.free or {}
     for i = #active, 1, -1 do
-        _finishProjectileVisual(active[i].id or 0, "none", active[i].position)
+        _finishProjectileVisual(active[i].id or 0, active[i].weaponType, "none", active[i].position)
         free[#free + 1] = active[i]
         active[i] = nil
     end
@@ -328,7 +329,7 @@ function server.projectileManagerTick(dt)
         local stepDt = math.min(math.max(projectile.lifeRemain or 0.0, 0.0), math.max(dt or 0.0, 0.0))
         local removed = false
         if stepDt <= 0.0 then
-            _finishProjectileVisual(projectile.id, "none", projectile.position)
+            _finishProjectileVisual(projectile.id, projectile.weaponType, "none", projectile.position)
             _removeProjectileAt(i)
             removed = true
         else
@@ -343,7 +344,7 @@ function server.projectileManagerTick(dt)
                     projectile.weaponType,
                     projectile.ownerShipBody
                 )
-                _finishProjectileVisual(projectile.id, "impact", shieldHit.hitPos, shieldHit.normal, "shield")
+                _finishProjectileVisual(projectile.id, projectile.weaponType, "impact", shieldHit.hitPos, shieldHit.normal, "shield")
                 _playProjectileHitSound(projectile.weaponType, shieldHit.hitPos)
                 _playShieldImpactFx(
                     shieldHit.bodyId,
@@ -392,16 +393,16 @@ function server.projectileManagerTick(dt)
 
                     if shouldPlayImpact then
                         _playProjectileHitSound(projectile.weaponType, bodyHit.hitPos)
-                        _finishProjectileVisual(projectile.id, "impact", bodyHit.hitPos, bodyHit.normal, impactLayer)
+                        _finishProjectileVisual(projectile.id, projectile.weaponType, "impact", bodyHit.hitPos, bodyHit.normal, impactLayer)
                     else
-                        _finishProjectileVisual(projectile.id, "none", bodyHit.hitPos)
+                        _finishProjectileVisual(projectile.id, projectile.weaponType, "none", bodyHit.hitPos)
                     end
 
                     _removeProjectileAt(i)
                     removed = true
                 else
                     if projectile.lifeRemain <= 0.0 then
-                        _finishProjectileVisual(projectile.id, "none", projectile.position)
+                        _finishProjectileVisual(projectile.id, projectile.weaponType, "none", projectile.position)
                         _removeProjectileAt(i)
                         removed = true
                     end

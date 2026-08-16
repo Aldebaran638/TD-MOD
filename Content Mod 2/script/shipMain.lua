@@ -32,6 +32,10 @@
 
 local configuredShipType = GetStringParam("shiptype", "")
 local configuredBodyTag = GetStringParam("bodytag", "")
+local configuredPresentationLoadout = GetStringParam("presentationLoadout", "")
+local configuredPresentationLoadoutSlot = string.upper(
+    GetStringParam("presentationLoadoutSlot", "X")
+)
 local destroyedControlsDisabled = false
 local aiCandidateProjectionSyncTicks = 0
 local aiCandidateRuntimeInitialized = false
@@ -111,6 +115,35 @@ local function recordAiCandidateProjectionTelemetry()
     aiCandidateProjectionTelemetryRecorded = true
 end
 
+local function applyPresentationScenarioLoadout()
+    if configuredBodyTag ~= "shipPresentationEnigmaPlayer"
+        or configuredPresentationLoadout == ""
+        or server.shipSlotLoadoutSetLoadout == nil then
+        return true, nil
+    end
+    local modeBySlot = { X = "xSlot", M = "mSlot", P = "pSlot" }
+    local mainWeaponMode = modeBySlot[configuredPresentationLoadoutSlot]
+    if mainWeaponMode == nil then
+        return false, "unsupported presentation loadout slot: "
+            .. tostring(configuredPresentationLoadoutSlot)
+    end
+    local requestedLoadout = {}
+    requestedLoadout[configuredPresentationLoadoutSlot] = configuredPresentationLoadout
+    local applied, applyError = server.shipSlotLoadoutSetLoadout(
+        configuredShipType,
+        requestedLoadout
+    )
+    if not applied then return false, applyError end
+    local shipBody = server.shipContextGetBody()
+    server.shipRuntimeSetCurrentMainWeapon(shipBody, mainWeaponMode)
+    server.shipRuntimeSyncMainWeapon(shipBody, true)
+    -- The isolated presentation fixture owns its deterministic loadout for
+    -- this spawn; reject the later local-config handshake from replacing it.
+    server.weaponLocalConfigurationBound = true
+    server.weaponLocalConfigurationPlayerId = nil
+    return true, nil
+end
+
 server.cm2AiCandidateProjectionObserveWeapon = function(weaponType)
     local aiProjection = cm2AiWeaponRuntimeProjection
     if aiProjection == nil or aiProjection.weaponType == nil
@@ -165,6 +198,11 @@ function server.init()
 
     -- 初始化当前飞船
     local shipBody = server.shipServerInit(configuredShipType, configuredBodyTag)
+    local presentationLoadoutApplied, presentationLoadoutError =
+        applyPresentationScenarioLoadout()
+    if not presentationLoadoutApplied then
+        error("presentation scenario loadout failed: " .. tostring(presentationLoadoutError or "unknown"))
+    end
     if aiCandidateProjectionIsActive() then
         local applied, applyError = applyAiCandidateLoadout(false)
         if not applied then

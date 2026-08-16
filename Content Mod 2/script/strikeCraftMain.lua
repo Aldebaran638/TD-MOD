@@ -120,6 +120,9 @@ function client.init()
 end
 
 function client.tick(dt)
+    if shipDefinitionIsAiControlled(client.shipContextGetDefinition() or {}) then
+        return
+    end
     cm2ShipInstanceAdapterV1.clientTick(dt)
     client.presentationBudget.beginFrame(dt, "strikeCraftMain.tick")
     if client.shipClientIsDestroyed() then

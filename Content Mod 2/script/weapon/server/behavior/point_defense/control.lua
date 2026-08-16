@@ -117,7 +117,28 @@ local function _pdRollDamage(weapon)
     return officialDamage
 end
 
-local function _pdSendFx(role, origin, destination, duration)
+local function _pdSendFx(role, origin, destination, duration, weapon, attackerBody, targetBody)
+    local weaponType = tostring((weapon or {}).weaponType or "")
+    local sliceMode = (((server.presentationPublisherState or {}).sliceMode or {})["ray-beam"])
+    if weaponType == "flakArtillery"
+        and sliceMode == "event-v1"
+        and server.presentationPublisherPublish ~= nil then
+        local published = server.presentationPublisherPublish("beam", {
+            playerId = 0,
+            sourceBodyId = attackerBody,
+            targetId = targetBody,
+            weaponType = weaponType,
+            effectId = weaponType,
+            position = origin,
+            payload = {
+                role = tostring(role or "flak"),
+                destination = destination,
+                duration = math.max(0.03, tonumber(duration) or 0.08),
+            },
+            route = "point-defense.fx",
+        })
+        if published then return end
+    end
     server.netClientCall(
         "weapon.fireFx",
         0,
@@ -160,7 +181,7 @@ local function _pdFireFlak(state, origin, target, weapon, attackerBody)
         attackerBody = attackerBody,
         hitRadius = target.class == "strike_craft" and 6.0 or 3.5,
     }
-    _pdSendFx("flak", origin, predicted, flightTime)
+    _pdSendFx("flak", origin, predicted, flightTime, weapon, attackerBody, target.bodyId)
 end
 
 local function _pdFireEnergy(origin, target, weapon, attackerBody)
@@ -169,7 +190,10 @@ local function _pdFireEnergy(origin, target, weapon, attackerBody)
         tostring((weapon or {}).pointDefenseFxRole or "laser"),
         origin,
         target.center,
-        0.10
+        0.10,
+        weapon,
+        attackerBody,
+        target.bodyId
     )
 end
 

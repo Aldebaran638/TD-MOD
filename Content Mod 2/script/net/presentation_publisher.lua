@@ -10,6 +10,7 @@ server.presentationPublisherState = server.presentationPublisherState or {
     initialized = false,
     mode = "legacy",
     sequence = 0,
+    sourceSequenceById = {},
     published = 0,
     legacyAdapterCalls = 0,
     eventV1Calls = 0,
@@ -32,6 +33,7 @@ local _routes = {
     ["weapon.sound"] = { channel = "weapon.sound", callback = "client.playWeaponSound" },
     ["ray.effect"] = { channel = "weapon.beam", callback = "client.spawnGenericRaycastWeaponFx" },
     ["tSlot.render"] = { channel = "weapon.beam", callback = "client.receiveTSlotRenderEvent" },
+    ["xSlot.render"] = { channel = "weapon.beam", callback = "client.receiveXSlotRenderEvent" },
     ["projectile.fireSound"] = { channel = "weapon.sound", callback = "client.playKineticArtilleryFireSound" },
     ["projectile.hitSound"] = { channel = "weapon.sound", callback = "client.playKineticArtilleryHitSound" },
     ["projectile.shieldImpact"] = { channel = "weapon.impact", callback = "client.playProjectileShieldImpactFx" },
@@ -61,6 +63,15 @@ local function _nextSequence()
     return state.sequence
 end
 
+local function _nextSourceSequence(sourceId)
+    local state = server.presentationPublisherState
+    local key = tostring(sourceId or "world")
+    local nextValue = math.floor((state.sourceSequenceById[key] or 0) + 1)
+    if nextValue > 2000000000 then nextValue = 1 end
+    state.sourceSequenceById[key] = nextValue
+    return nextValue
+end
+
 local function _sliceFor(data)
     local weapon = tostring((data or {}).weaponType or (data or {}).weaponId or "")
     return _sliceByWeapon[weapon] or tostring((data or {}).slice or "")
@@ -75,7 +86,7 @@ local function _position(value)
     }
 end
 
-local function _buildEvent(kind, data, sequence)
+local function _buildEvent(kind, data, sequence, sourceSequence)
     data = data or {}
     local sourceId = tostring(data.sourceId or data.sourceBodyId or "world")
     local weaponId = data.weaponId or data.weaponType
@@ -89,6 +100,7 @@ local function _buildEvent(kind, data, sequence)
         priority = tonumber(data.priority) or 0,
         serverTime = (GetTime ~= nil and GetTime()) or 0.0,
         payload = data.payload or {},
+        extensions = { sourceSequence = sourceSequence },
     }
     if weaponId ~= nil and tostring(weaponId) ~= "" then
         result.weapon = cm2PresentationEventV1.newDefinitionRef(
@@ -128,6 +140,7 @@ function server.presentationPublisherInit()
     if requested ~= "legacy" and requested ~= "event-v1" then requested = "legacy" end
     state.mode = requested
     state.sequence = 0
+    state.sourceSequenceById = {}
     state.published = 0
     state.legacyAdapterCalls = 0
     state.eventV1Calls = 0
@@ -183,7 +196,9 @@ function server.presentationPublisherPublish(kind, data)
     local selectedMode = server.presentationPublisherState.sliceMode[slice]
         or server.presentationPublisherState.mode
     local sequence = _nextSequence()
-    local eventValue = _buildEvent(kindName, data, sequence)
+    local sourceId = tostring(data.sourceId or data.sourceBodyId or "world")
+    local sourceSequence = _nextSourceSequence(sourceId)
+    local eventValue = _buildEvent(kindName, data, sequence, sourceSequence)
     local encoded, encodeError = cm2PresentationEventV1.encode(eventValue)
     if encoded == nil then
         state.rejected = state.rejected + 1
@@ -199,6 +214,8 @@ function server.presentationPublisherPublish(kind, data)
             weapon_type = tostring(data.weaponType or data.weaponId or ""),
             effect_id = tostring(data.effectId or ""),
             presentation_sequence = sequence,
+            source_sequence = sourceSequence,
+            event_type = tostring((data.payload or {}).eventType or ""),
         })
     end
     state.byKind[kindName] = math.floor(state.byKind[kindName] or 0) + 1

@@ -32,7 +32,7 @@ function server.xSlotRenderStateInit()
     return server.xSlotRenderState
 end
 
-function server.xSlotRenderPushEvent(shipBodyId, payload)
+function server.xSlotRenderPushEvent(shipBodyId, payload, publishThroughBoundary)
     if shipBodyId == nil or shipBodyId == 0 then
         return false
     end
@@ -61,9 +61,7 @@ function server.xSlotRenderPushEvent(shipBodyId, payload)
         impactLayer = "none"
     end
 
-    ClientCall(
-        0,
-        "client.receiveXSlotRenderEvent",
+    local routeArgs = {
         shipBodyId,
         state.seq,
         state.shotId or 0,
@@ -78,8 +76,32 @@ function server.xSlotRenderPushEvent(shipBodyId, payload)
         (p.didHitShield and 1 or 0),
         math.floor(p.hitTargetBodyId or 0),
         normal[1], normal[2], normal[3],
-        impactLayer
-    )
+        impactLayer,
+    }
+    if publishThroughBoundary and server.presentationPublisherPublish ~= nil then
+        local published = server.presentationPublisherPublish("beam", {
+            sourceBodyId = shipBodyId,
+            weaponType = p.weaponType,
+            effectId = p.weaponType,
+            position = firePoint,
+            targetId = p.hitTargetBodyId,
+            hit = { position = hitPoint, normal = normal },
+            payload = {
+                eventType = tostring(p.eventType or "idle"),
+                slotIndex = math.floor(p.slotIndex or 1),
+                shotId = state.shotId or 0,
+                didHit = p.didHit and 1 or 0,
+                didHitStellarisBody = p.didHitStellarisBody and 1 or 0,
+                didHitShield = p.didHitShield and 1 or 0,
+                impactLayer = impactLayer,
+            },
+            route = "xSlot.render",
+            routeArgs = routeArgs,
+        })
+        if published then return true end
+    end
+    local unpackFunction = table.unpack or unpack
+    ClientCall(0, "client.receiveXSlotRenderEvent", unpackFunction(routeArgs))
 
     return true
 end

@@ -44,9 +44,9 @@ local function _weaponGroupPushChargedRayEvent(context, eventType, payload)
 
     local slotType = tostring(source.slotType or "")
     if slotType == "T" and server.tSlotRenderPushEvent ~= nil then
-        server.tSlotRenderPushEvent(source.shipBodyId, event)
+        server.tSlotRenderPushEvent(source.shipBodyId, event, true)
     elseif server.xSlotRenderPushEvent ~= nil then
-        server.xSlotRenderPushEvent(source.shipBodyId, event)
+        server.xSlotRenderPushEvent(source.shipBodyId, event, true)
     end
 end
 
@@ -682,12 +682,17 @@ function server.weaponGroupTick(dt)
                 end
                 if state.releaseRequested then
                     if pending.charged then
-                        _fireContexts(
+                        local fired = _fireContexts(
                             pending.behavior,
                             pending.contexts or {},
                             pending.mounts or {},
                             pending.cooldown or 0.0
                         )
+                        if fired and _weaponGroupIsChargedRay(weaponDef) then
+                            local context = (pending.contexts or {})[1] or {}
+                            _weaponGroupPushChargedRayEvent(context, "idle")
+                            server.chargedRayVisualStop(context.weaponType, weaponDef)
+                        end
                         state.fireDelay = math.max(
                             0.0,
                             tonumber(((weaponDef or {}).salvoProfile or {}).interval) or 0.0

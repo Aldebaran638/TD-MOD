@@ -115,7 +115,7 @@ local function _fireRaycast(context)
             and server.tSlotRenderPushEvent ~= nil then
             server.tSlotRenderPushEvent(context.shipBodyId, event, true)
         elseif server.xSlotRenderPushEvent ~= nil then
-            server.xSlotRenderPushEvent(context.shipBodyId, event)
+            server.xSlotRenderPushEvent(context.shipBodyId, event, true)
         end
     end
     return true

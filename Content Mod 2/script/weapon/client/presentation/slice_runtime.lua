@@ -48,11 +48,22 @@ local function _record(state, event, slice, operation, handle)
     state.trace[#state.trace + 1] = {
         sequence = event.sequence,
         kind = event.kind,
+        event_type = tostring(((event.payload or {}).eventType) or ""),
         slice = slice,
         operation = operation,
         handle = handle,
     }
     while #state.trace > 256 do table.remove(state.trace, 1) end
+    if client.cm2TelemetryRecord ~= nil then
+        client.cm2TelemetryRecord("presentation_slice_trace", {
+            sequence = event.sequence,
+            kind = event.kind,
+            slice = slice,
+            operation = operation,
+            handle_index = handle ~= nil and math.floor(tonumber(handle.index) or 0) or 0,
+            handle_generation = handle ~= nil and math.floor(tonumber(handle.generation) or 0) or 0,
+        })
+    end
 end
 
 function runtime.init()
@@ -138,14 +149,22 @@ end
 function runtime.disposeOwner(sourceId)
     local state = _state()
     local prefix = "|" .. tostring(sourceId) .. "|"
+    local disposed = 0
     for key, handle in pairs(state.handles) do
         if string.find(key, prefix, 1, true) ~= nil then
             client.effectPlayer.destroy(handle, "owner-dispose")
             state.handles[key] = nil
             state.disposed = state.disposed + 1
+            disposed = disposed + 1
         end
     end
     client.presentationEventDisposeOwner(sourceId)
+    if client.cm2TelemetryRecord ~= nil then
+        client.cm2TelemetryRecord("presentation_slice_dispose", {
+            source_id = tostring(sourceId),
+            disposed = disposed,
+        })
+    end
 end
 
 function runtime.disposeAll()

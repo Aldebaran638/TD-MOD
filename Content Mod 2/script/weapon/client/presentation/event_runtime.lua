@@ -15,6 +15,7 @@ end
 client.presentationEventRuntime = client.presentationEventRuntime or {
     lastSequence = 0,
     lastSequenceBySource = {},
+    lastSourceSequenceBySource = {},
     accepted = 0,
     rejected = 0,
     duplicate = 0,
@@ -123,6 +124,8 @@ function client.receiveWeaponPresentationEventV1(value)
     end
     local source = _sourceKey(decoded)
     local previousSourceSequence = state.lastSequenceBySource[source]
+    local sourceSequence = tonumber(((decoded.extensions or {}).sourceSequence))
+    local previousLocalSequence = state.lastSourceSequenceBySource[source]
     if previousSourceSequence ~= nil then
         if decoded.sequence == previousSourceSequence then
             state.duplicate = state.duplicate + 1
@@ -141,16 +144,20 @@ function client.receiveWeaponPresentationEventV1(value)
                 previous_sequence = previousSourceSequence,
             })
             return false, "out-of-order source sequence"
-        elseif decoded.sequence > previousSourceSequence + 1 then
-            state.gap = state.gap + (decoded.sequence - previousSourceSequence - 1)
+        end
+    end
+    if sourceSequence ~= nil and sourceSequence == math.floor(sourceSequence) and sourceSequence > 0 then
+        if previousLocalSequence ~= nil and sourceSequence > previousLocalSequence + 1 then
+            state.gap = state.gap + (sourceSequence - previousLocalSequence - 1)
             _telemetry("presentation_ring_diagnostic", {
                 action = "gap",
                 source_id = source,
-                sequence = decoded.sequence,
-                previous_sequence = previousSourceSequence,
-                missing = decoded.sequence - previousSourceSequence - 1,
+                sequence = sourceSequence,
+                previous_sequence = previousLocalSequence,
+                missing = sourceSequence - previousLocalSequence - 1,
             })
         end
+        state.lastSourceSequenceBySource[source] = sourceSequence
     end
     state.lastSequenceBySource[source] = decoded.sequence
     state.lastSequence = math.max(state.lastSequence, decoded.sequence)

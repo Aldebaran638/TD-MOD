@@ -377,7 +377,7 @@ function server.xSlot_broadcastChargingStart(shipBodyId, slotIndex, weaponType, 
         normal = { x = 0, y = 1, z = 0 },
         impactLayer = "none",
         incrementShotId = 0,
-    })
+    }, true)
 end
 
 -- 写入渲染事件：开始发射
@@ -434,7 +434,7 @@ function server.xSlot_broadcastLaunchingStart(shipBodyId, slotIndex, weaponType,
         normal = normal,
         impactLayer = impactLayer,
         incrementShotId = 1,
-    })
+    }, true)
 end
 
 -- 写入渲染事件：武器回到 idle
@@ -453,7 +453,7 @@ function server.xSlot_broadcastWeaponIdle(shipBodyId, slotIndex, weaponType, fir
         normal = { x = 0, y = 1, z = 0 },
         impactLayer = "none",
         incrementShotId = 0,
-    })
+    }, true)
 end
 
 -- x 槽控制主 Tick
