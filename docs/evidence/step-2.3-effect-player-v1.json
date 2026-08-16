@@ -1,0 +1,126 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 2.3",
+  "result": "pass",
+  "verified_at": "2026-08-16T18:26:54+08:00",
+  "verification_contract_fingerprint": "fccaf21d510d61fc77f299fa069a8d73f2a255b4e45fbe623fa3a9af2e816669",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_TEST_SETUP"],
+  "behavior_under_test": "All effects share owner, clock, termination and bounded storage policy; a synthetic context can play and clean up independently.",
+  "static": {
+    "todo_contract_validation": "pass: 80 executable Step contracts",
+    "owning_checker": "harness/check-effect-player.ps1",
+    "owning_checker_result": "pass",
+    "owning_self_test": "pass",
+    "effect_lab_checker": "pass",
+    "effect_lab_self_test": "pass",
+    "fixture": {
+      "path": "harness/data/presentation/effect-player-fixtures.json",
+      "capacity": 128,
+      "critical_burst": 100,
+      "operations": ["play", "update", "fade", "stop", "destroy", "owner-lost", "anchor-lost", "scene-reload"],
+      "invariant": "active + free = capacity",
+      "stale_handle": "reject without mutation",
+      "resource_policy": "cache by key and reuse handle"
+    },
+    "source_hashes": {
+      "Content Mod 2/script/weapon/client/presentation/effect_player.lua": "EDD8A6CF62C4F64E1BF7E1D02888337A057066FF1F9A1EA38FAE733C21C56821",
+      "Content Mod 2/script/weapon/client/presentation/effect_lab.lua": "27EF433CE7DF110C264E956918E63C58591B03B743EEDE21D4953FE74A20376D",
+      "Content Mod 2/script/testing/scenario/preview_suite_controller.lua": "C262FD5FFB2F644F5CD3E86D637565D23FBDBA705BA4A9B27C084AE4C20B0A0F",
+      "Content Mod 2/script/testing/ai_agent/telemetry.lua": "7C37F21557E577F0D9200731FD4F3509C525F30241D07B51BDCAF0BA88EA2762",
+      "Content Mod 2/script/world/adapter/preview_suite_v1.lua": "1AB9FBF68DE44998505C541CD4F494AE8E5F031A0DD3EA6A1F0DA88177C40B0B",
+      "Content Mod 2/testing/scenarios/creator/preview_suite_v1/scenario.json": "357346CF4AD7B5CCC1505754A058DD05E7AB18AFC2F70713011E7BC108F9AD96",
+      "Content Mod 2/_ai_scenario_preview_suite.xml": "BAF573A41E8AC042274AED84A6E6407A56AD900469B5E61569F088F2760F895F"
+    },
+    "targeted_regression": [
+      "check/test-effect-player.ps1: pass",
+      "check/test-effect-lab.ps1: pass",
+      "check/test-presentation-slices.ps1: pass",
+      "check/test-presentation-budget.ps1: pass",
+      "check/test-presentation-migration.ps1: pass",
+      "check-lua.ps1: 234 files, 0 issues",
+      "check-teardown-api.ps1: 234 files, 0 issues"
+    ]
+  },
+  "runtime": {
+    "target_id": "teardown:4992:530198",
+    "pid": 4992,
+    "scene": "Content Mod 2/_ai_scenario_preview_suite.xml",
+    "controller": "Content Mod 2/script/testing/scenario/preview_suite_controller.lua",
+    "scenario": {
+      "id": "preview_suite",
+      "xml_revision": "preview-suite-xml-v1",
+      "lua_revision": "scenario-controller-v2",
+      "ready": true,
+      "fixed_seed": 424242,
+      "runtime_catalog_hash": "cm2.preview-live-catalog/1"
+    },
+    "baseline": {
+      "run_id": "20260816T100809Z-48ed0296",
+      "session": "0-d8b2b165",
+      "log_cursor": 111971,
+      "server_latest_seq": 0,
+      "client_latest_seq": 0,
+      "events": 0,
+      "effect_player": {"capacity": 128, "active": 0, "free": 128, "invariant": true, "played": 2, "updated": 2, "stopped": 2, "destroyed": 2, "owner_lost": 0, "anchor_lost": 0, "stale": 0},
+      "held_inputs": {"keys": [], "buttons": []}
+    },
+    "real_input_and_soak": {
+      "run_id": "20260816T101142Z-7367756c",
+      "action": "120 fresh-frame HID SPACE replay actions; each action used a 90 ms tap and 4.85 s bounded wait",
+      "cycles": 120,
+      "elapsed_seconds": 632.29,
+      "telemetry_samples": 6,
+      "sessions": ["0-d8b2b165"],
+      "cursor": {"server_latest_seq": 0, "client_latest_seq": 0, "events": 0, "truncated": false},
+      "samples": [
+        {"cycle": 20, "elapsed_seconds": 105.41, "played": 42, "updated": 42, "stopped": 42, "destroyed": 42, "active": 0, "free": 128, "invariant": true, "owner_lost": 0, "anchor_lost": 0, "stale": 0, "teardown_working_set": 1586733056},
+        {"cycle": 40, "elapsed_seconds": 210.82, "played": 82, "updated": 82, "stopped": 82, "destroyed": 82, "active": 0, "free": 128, "invariant": true, "owner_lost": 0, "anchor_lost": 0, "stale": 0, "teardown_working_set": 1579466752},
+        {"cycle": 60, "elapsed_seconds": 316.22, "played": 122, "updated": 122, "stopped": 122, "destroyed": 122, "active": 0, "free": 128, "invariant": true, "owner_lost": 0, "anchor_lost": 0, "stale": 0, "teardown_working_set": 1579536384},
+        {"cycle": 80, "elapsed_seconds": 421.55, "played": 162, "updated": 162, "stopped": 162, "destroyed": 162, "active": 0, "free": 128, "invariant": true, "owner_lost": 0, "anchor_lost": 0, "stale": 0, "teardown_working_set": 1579692032},
+        {"cycle": 100, "elapsed_seconds": 526.92, "played": 202, "updated": 202, "stopped": 202, "destroyed": 202, "active": 0, "free": 128, "invariant": true, "owner_lost": 0, "anchor_lost": 0, "stale": 0, "teardown_working_set": 1499488256},
+        {"cycle": 120, "elapsed_seconds": 632.29, "played": 242, "updated": 242, "stopped": 242, "destroyed": 242, "active": 0, "free": 128, "invariant": true, "owner_lost": 0, "anchor_lost": 0, "stale": 0, "teardown_working_set": 1499906048}
+      ],
+      "result": "pass: 10-minute synthetic replay loop reached a bounded memory plateau; lifecycle counts remained balanced and capacity invariant held at every sample"
+    },
+    "visual": {
+      "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T101142Z-7367756c/frame_f000120-9609e0f7_pid-4992.png",
+      "sha256": "9C29A01F3B83ADA8EEE4D06906C006982130EAD70C2602FA0007C447509325D2",
+      "mean_luma": 11.8444,
+      "variance": 117.1088,
+      "fact": "non-black client area with CM2 PREVIEW SUITE V1, EffectPlayer production, near LOD0/far LOD1, and runtime catalog unchanged"
+    },
+    "log": {
+      "baseline_cursor": 111971,
+      "soak_new_errors": 0,
+      "soak_new_warnings": 0,
+      "attribution": "The separate F5 load slices contained 2 ERROR and 6 WARNING lines from the external TABS Workshop Mod; no CM2 path was present. The soak started after cursor 111971 and added none."
+    }
+  },
+  "cleanup": {
+    "soak_release": {"run_id": "20260816T101142Z-7367756c", "keys": [], "buttons": []},
+    "f4_to_editor": {"run_id": "20260816T102304Z-b87ded4f", "screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T102304Z-b87ded4f/frame_f000002-9d37419c_pid-4992.png", "sha256": "9CAF296AA599C73A41461F3E4591D4D0130D3C6B81CDBB59C205A697EADF4C11"},
+    "fresh_reload": {
+      "run_id": "20260816T102332Z-a67ac53e",
+      "session": "0-fb47f68f",
+      "scenario": {"id": "preview_suite", "xml_revision": "preview-suite-xml-v1", "lua_revision": "scenario-controller-v2", "ready": true},
+      "effect_player": {"capacity": 128, "active": 0, "free": 128, "invariant": true, "played": 2, "stopped": 2, "destroyed": 2, "owner_lost": 0, "anchor_lost": 0, "stale": 0},
+      "server_latest_seq": 0,
+      "client_latest_seq": 0,
+      "events": 0,
+      "held_inputs": {"keys": [], "buttons": []},
+      "screenshot": {"path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T102332Z-a67ac53e/frame_f000001-2b73ed5a_pid-4992.png", "sha256": "2CD5173871F2BF3D6FC10419A15AC3DA537FC9AA343884BF6204F33F83636E1D"}
+    }
+  },
+  "regression": {
+    "presentation_event_ring": "pass: owning checker/self-test and prior Step 2.2 runtime evidence retained",
+    "presentation_publisher": "pass",
+    "presentation_slices": "pass",
+    "presentation_budget": "pass",
+    "effect_lab": "pass",
+    "full_harness": "pass: .\\harness\\check-all.ps1, exit code 0, 132 seconds"
+  },
+  "rollback": "Remove the preview telemetry projection or stop consuming it; keep EffectPlayer include/API. sceneReload() resets client-local instances without changing catalogs/assets. The prior phase-specific renderer registry remains the fallback.",
+  "scope_boundary": "Live telemetry owns lifecycle, capacity, invariant, balanced cleanup, session/cursor continuity and synthetic tick facts. Screenshots own only visible presentation. Logs own only runtime health. Owner/anchor negative paths, stale-handle rejection, fade idempotence and resource cache reuse remain covered by the owning fixture/checker; they are not claimed from the live preview screenshot."
+}

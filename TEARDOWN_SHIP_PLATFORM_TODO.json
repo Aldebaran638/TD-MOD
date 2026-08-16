@@ -1492,7 +1492,7 @@
       "id": "Step 2.3",
       "stage": "Gate 2",
       "title": "实现 `EffectPlayer` 和固定容量实例存储",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 固定 API `play/update/stop/destroy`；[ ] generation handle + dense store/free-list；[ ] Instance 包含 effect、owner、anchor、clock、seed、LOD、priority、renderer state；[ ] lifecycle 幂等，owner/anchor 失效有策略；[ ] 复用资源 cache；[ ] renderer 保留专用热循环，不为每个粒子创建通用 ECS entity。 Reason: 现有 phase 私有数组无法统一生命周期、Editor/AI、回放和 owner cleanup。",
       "expected_outcome": "所有效果共享 owner/时钟/终止条件，synthetic context 可独立播放。",
       "prerequisites": [
@@ -1507,16 +1507,16 @@
       ],
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
-        "code_or_document": "docs/effect-player-v1.md; Content Mod 2/script/weapon/client/presentation/effect_player.lua; client bootstrap include; harness/data/presentation/effect-player-fixtures.json.",
-        "automated_tests": "harness/check-effect-player.ps1 PASS; harness/test-effect-player.ps1 PASS: play/update/stop/destroy, generation stale rejection, fixed capacity, dense active indices, owner/anchor policy and resource cache. check-lua.ps1/check-teardown-api.ps1 PASS: 189 Lua files, 0 issues.",
+        "code_or_document": "docs/effect-player-v1.md; docs/evidence/step-2.3-effect-player-v1.json; Content Mod 2/script/weapon/client/presentation/effect_player.lua; Content Mod 2/script/weapon/client/presentation/effect_lab.lua; Content Mod 2/script/testing/scenario/preview_suite_controller.lua; Content Mod 2/script/testing/ai_agent/telemetry.lua; client bootstrap include; harness/data/presentation/effect-player-fixtures.json.",
+        "automated_tests": "harness/check-effect-player.ps1 PASS; harness/test-effect-player.ps1 PASS: play/update/stop/destroy, generation stale rejection, fixed capacity, dense active indices, owner/anchor policy and resource cache. Effect Lab, presentation slices/budget/migration, check-lua.ps1 and check-teardown-api.ps1 PASS: 234 Lua files, 0 issues.",
         "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; EffectPlayer checker/self-test plus all existing checker/self-test groups passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so synthetic 100-event/10-minute lifecycle loop, memory plateau and live renderer integration evidence cannot be collected. Static invariant reports active + free = capacity and storage is bounded.",
+        "runtime_or_performance": "PASS: run 20260816T101142Z-7367756c completed 120 fresh-frame HID SPACE replays in 632.29 seconds. CM2_TEST_V1 session 0-d8b2b165 reported capacity=128, active=0, free=128, invariant=true at all six samples; played/updated/stopped/destroyed remained balanced through 242 plays, owner_lost/anchor_lost/stale remained 0, and Teardown working set settled from 1,586,733,056 to 1,499,906,048 bytes without monotonic growth. Live EffectPlayer/LOD presentation screenshot and incremental log are retained in the evidence file.",
         "rollback_record": "Remove the EffectPlayer include or stop consuming its APIs; existing phase-specific renderer registry remains the fallback. `sceneReload()` resets client-local instances without changing catalogs/assets."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-2.3",
-      "status_reason": "Fixed-capacity generation-handle EffectPlayer and lifecycle/owner policies are implemented with complete static verification; terminal status is unable because required live synthetic loop and memory evidence require unavailable Teardown.exe.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "Fixed-capacity generation-handle EffectPlayer, lifecycle/owner policies, telemetry projection and deterministic preview evidence are complete. The live 10-minute synthetic replay loop held the capacity invariant and reached a bounded memory plateau.",
+      "verification_status": "verified",
+      "verification_status_reason": "PASS: contract fingerprint fccaf21d510d61fc77f299fa069a8d73f2a255b4e45fbe623fa3a9af2e816669, live telemetry/screenshot/log evidence, F4→F5 fresh-session cleanup, targeted regression and full Harness are recorded in docs/evidence/step-2.3-effect-player-v1.json.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "fccaf21d510d61fc77f299fa069a8d73f2a255b4e45fbe623fa3a9af2e816669",
