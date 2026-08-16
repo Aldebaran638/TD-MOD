@@ -2043,13 +2043,13 @@
         "code_or_document": "docs/effect-runtime-cutover-v1.md; Content Mod 2/script/net/effect_runtime_authority.lua; frozen per-slice authority in presentation_publisher.lua; first-batch cleanup in client/effect dispatch and facade integrations.",
         "automated_tests": "harness/check-effect-runtime-authority.ps1 PASS; harness/test-effect-runtime-authority.ps1 PASS: legacy/event-v1 mutual exclusion, init gates, dual-playback reject/count, duplicate budget owner removal and rollback fixture. Full Lua/API checks PASS: 193 Lua files, 0 issues.",
         "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; authority checker/self-test and all prior checker/self-test groups passed. Existing fixture cleanup warnings did not change exit code.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so S0–S7/10-minute soak cannot prove legacy adapter calls=0, Critical duplicate/drop=0, or visual/audio smoke. Authority remains legacy by default; candidate is opt-in and init-only.",
+        "runtime_or_performance": "BLOCKED: Teardown.exe is present, but the Windows input desktop is Screen-saver and the control bridge cannot restore/focus the target. S0–S7/10-minute soak cannot prove legacy adapter calls=0, Critical duplicate/drop=0, or visual/audio smoke until the interactive desktop is restored.",
         "rollback_record": "Set `effectRuntime=legacy` plus per-slice `presentationRuntime_<slice>=legacy` before context init. This atomically restores the stable adapter/catalog; do not restore individual latest-event paths while candidate authority is selected."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-2.8",
-      "status_reason": "Effect Runtime authority gate, mutual exclusion, first duplicate-budget/direct-path cleanup and executable legacy rollback are implemented/static-verified; terminal status is unable because live S0–S7/soak call-count and smoke evidence requires Teardown.exe.",
+      "status_reason": "Effect Runtime authority gate, mutual exclusion, first duplicate-budget/direct-path cleanup and executable legacy rollback are implemented/static-verified; terminal status remains unable under the task-level environment exception because live S0–S7/soak call-count and smoke evidence cannot start while Windows is on the Screen-saver input desktop.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "BLOCKED: fresh observe cannot focus the running Teardown target while Windows reports the Screen-saver input desktop. Evidence: docs/evidence/step-2.8-environment-blocked.json. Re-run the same contract after unlocking the interactive desktop.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "8aa73ff621e1ea4e9d539cb87f3776d0226151f651aec405449c21ad5e99fca7",
@@ -2127,6 +2127,13 @@
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work.",
         "Targeted fresh-frame keyboard/mouse control and emergency release are available; setup removes unrelated travel and aiming."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The Teardown process is running and enumerable, but Windows is on the Screen-saver input desktop with foreground handle 0. The control bridge cannot obtain a fresh focused frame, so the required screenshot, telemetry baseline, and real-input evidence cannot be collected safely.",
+        "evidence": "docs/evidence/step-2.8-environment-blocked.json",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-17T07:16:05+08:00"
+      },
       "plan_order": 20
     },
     {

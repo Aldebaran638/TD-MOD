@@ -1,0 +1,60 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 2.8",
+  "result": "blocked",
+  "verified_at": "2026-08-17T07:16:05+08:00",
+  "verification_contract_fingerprint": "8aa73ff621e1ea4e9d539cb87f3776d0226151f651aec405449c21ad5e99fca7",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "behavior_under_test": "Effect Runtime authority cutover with legacy rollback, single publication authority, and first-batch duplicate-path cleanup.",
+  "static": {
+    "todo_contract_validation": "PASS: 80 executable Step contracts",
+    "implementation_commit": "4637004 feat: 接通 Effect Runtime authority telemetry",
+    "authority_check": "PASS: harness/check-effect-runtime-authority.ps1 and test-effect-runtime-authority.ps1",
+    "publisher_check": "PASS: harness/check-presentation-publisher.ps1 and test-presentation-publisher.ps1",
+    "full_harness": "PASS: .\\harness\\check-all.ps1; 234 Lua files, 25 XML files, 0 API issues"
+  },
+  "runtime": {
+    "target_id": "teardown:58912:39783188",
+    "pid": 58912,
+    "process": "teardown.exe running and responding",
+    "client": "1280x720",
+    "mcp_run_ids": [
+      "20260816T231536Z-b7f9b22f",
+      "20260816T231605Z-ced2e23f",
+      "20260816T231414Z-8354961b"
+    ],
+    "input_desktop": "Screen-saver",
+    "foreground_handle": 0,
+    "fresh_observe": {
+      "result": "BLOCKED",
+      "error": "could not restore and focus Teardown",
+      "screenshot_captured": false,
+      "telemetry_baseline_started": false,
+      "real_input_sent": false
+    },
+    "log": {
+      "available": true,
+      "runtime_claim": "NOT RUN: no post-baseline log slice was taken because a fresh frame could not be established"
+    }
+  },
+  "environment_blocker": {
+    "classification": "ENVIRONMENT_BLOCKED",
+    "reason": "The Windows input desktop is Screen-saver and GetForegroundWindow returns 0. The Teardown window is visible and enumerable but cannot be restored to the foreground by the control bridge, so the required fresh screenshot, telemetry bridge, and real-input steps cannot be performed safely.",
+    "recovery": "Unlock Windows and leave the Teardown target on the interactive desktop, then rerun Step 2.8 from fresh observe.",
+    "evidence": [
+      "teardown_instances returned target teardown:58912:39783188",
+      "teardown_observe returned could not restore and focus Teardown",
+      "OpenInputDesktop reported Screen-saver",
+      "teardown_emergency_release reported held_inputs keys=[] and buttons=[]"
+    ]
+  },
+  "cleanup": {
+    "held_inputs": {"keys": [], "buttons": []},
+    "emergency_release": "PASS",
+    "formal_source_preserved": true,
+    "last_valid_generated_artifact_preserved": true
+  },
+  "scope_boundary": "This is a genuine environment block, not a runtime pass. It does not claim S0-S7, legacyAdapterCalls=0, candidateCalls>0, visual smoke, or log health after a live action."
+}
