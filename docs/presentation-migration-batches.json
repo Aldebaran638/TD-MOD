@@ -10,7 +10,7 @@
       "rendererId": "cm2.phase-renderer",
       "rendererVersion": "1",
       "declaredWorstCaseCost": { "particles": 96, "sprites": 8, "lines": 4, "lights": 2, "voices": 0 },
-      "status": "transitional-budgeted",
+      "status": "event-v1-routable-budgeted",
       "eventSource": "legacy-adapter-or-event-v1",
       "fallback": "per-slice legacy"
     },
@@ -21,7 +21,7 @@
       "rendererId": "cm2.strike-craft-renderer",
       "rendererVersion": "1",
       "declaredWorstCaseCost": { "particles": 96, "sprites": 12, "lines": 8, "lights": 4, "voices": 2 },
-      "status": "transitional-budgeted",
+      "status": "event-v1-routable-budgeted",
       "eventSource": "legacy-adapter-or-event-v1",
       "fallback": "craft legacy adapter"
     },

@@ -3,7 +3,10 @@
   "generatedBy": "harness/check-presentation-migration.ps1",
   "scope": ["weapon/client/presentation/visual/phase", "weapon/client/presentation/visual/entity/strike_craft", "weapon/client/presentation/audio", "ship/common/client/effects"],
   "facadeMigrated": ["ship_destroyed_fx.lua", "engine_thruster_fx.lua", "sound_service.lua"],
+  "eventConsumer": "script/weapon/client/presentation/slice_runtime.lua",
+  "eventRoutes": ["ray.shieldImpact", "ray.effect", "weapon.sound", "tSlot.render", "xSlot.render", "projectile.spawn", "projectile.finish", "missile.spawn", "missile.finish", "missile.muzzle", "missile.impactFx", "craft.launch", "craft.register", "craft.recover", "point-defense.fx"],
+  "ownerCleanup": "EffectPlayer handles and Presentation Event Ring are disposed by source or scene owner",
   "transitionalRendererPolicy": "direct calls may remain only in manifest-scoped specialised renderers with declared worst-case cost and explicit budget reservation",
-  "runtimeStatus": "static-only; Teardown executable unavailable for owner-dispose and p95 verification",
+  "runtimeStatus": "static-pass; live owner-dispose and S1/S3/S5 performance verification pending foreground recovery",
   "rollback": "Use per-slice legacy adapter and retain current specialised renderer registrations"
 }
