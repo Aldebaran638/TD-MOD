@@ -1916,7 +1916,7 @@
       "id": "Step 2.7",
       "stage": "Gate 2",
       "title": "建立 Creator Preview 的 Effect Lab MVP",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 使用 synthetic context 播放 EffectDefinition；[ ] 支持固定 seed、near/far、LOD、预算 accepted/degraded/rejected；[ ] 展示事件时间线、owner 和资源引用；[ ] Preview 与 Runtime 使用同一 EffectPlayer/Compiler；[ ] 不引入第二套 renderer 语义。 Reason: 创作者必须在进入真实战场前看见效果、预算和降级，AI/Editor 也需要可重复反馈。",
       "expected_outcome": "Effect 可在低成本环境中预览、比较和回放。",
       "prerequisites": [
@@ -1932,15 +1932,15 @@
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
         "code_or_document": "docs/effect-lab-mvp.md; Content Mod 2/script/weapon/client/presentation/effect_lab.lua; harness/data/presentation/effect-lab-fixtures.json. The lab uses production EffectPlayer and PresentationBudget with synthetic origin/direction/hit/anchor context and four generated candidate catalog paths.",
-        "automated_tests": "harness/check-effect-lab.ps1 PASS; harness/test-effect-lab.ps1 PASS: no registry/body dependency, fixed seed 424242, near/far LOD, three budget profiles, play/pause/stop/replay/update/reset and bounded trace. Full Lua/API checks PASS: 192 Lua files, 0 issues.",
+        "automated_tests": "harness/check-effect-lab.ps1 PASS; harness/test-effect-lab.ps1 PASS: no registry/body dependency, fixed seed 424242, near/far LOD, three budget profiles, play/pause/stop/replay/update/reset and bounded trace. Targeted vertical-slice, 109-weapon snapshot, shadow/legacy fallback, presentation sequence/generation, migration, EffectPlayer, runtime-authority and profile-source regressions PASS.",
         "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; Effect Lab checker/self-test and all existing checker/self-test groups passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so the required four-slice Preview-vs-runtime generated-definition trace, fixed-seed replay, visual capture and budget report cannot be executed in-engine. Preview entrypoint is isolated and not auto-played.",
+        "runtime_or_performance": "PASS: Teardown.exe accepted the disposable Preview XML through the real editor File/Open path, F4->F5 loaded preview_suite with fixed seed 424242, real Space replay produced near/far EffectPlayer LOD evidence, and real Right/Space replay produced deterministic budget and lifecycle screenshots. Telemetry, screenshot, cleanup and attributed incremental-log evidence are persisted in docs/evidence/step-2.7-effect-lab-mvp-v1.json.",
         "rollback_record": "Disable/remove the effect_lab include or do not invoke the preview API; Runtime and generated catalogs remain unchanged. `effectLab.reset()` destroys synthetic instances and resets the shared Player capacity."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-2.7",
-      "status_reason": "Synthetic Effect Lab MVP with production EffectPlayer/Budget reuse, four definitions, deterministic seed/LOD/report APIs and isolation checks is implemented; terminal status is unable because in-engine preview/replay evidence requires Teardown.exe.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "Synthetic Effect Lab MVP with production EffectPlayer/Budget reuse, four definitions, deterministic seed/LOD/report APIs and isolation checks is implemented. Live Preview Suite evidence now proves the real editor reload, replay, budget/lifecycle surfaces, catalog isolation and cleanup.",
+      "verification_status": "human_visual_review",
+      "verification_status_reason": "Objective engineering verification passed on 2026-08-17: static/fixture checks, real Preview XML selection, F4->F5 reload, fresh-frame HID replay, telemetry session/reset, screenshots, incremental log attribution, F4 cleanup and targeted regressions are evidenced. Only subjective visual polish remains for human review.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "c761bafe8095fba9929177581d2e8de0bc43f3a4de97bc01fc00591788b8e99b",
