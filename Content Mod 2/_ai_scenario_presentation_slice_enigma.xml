@@ -4,7 +4,8 @@
     <script file="MOD/script/testing/scenario/scenario_controller.lua"
             param0="scenario=presentation_s5_budget_pressure"
             param1="revision=presentation-slice-enigma-xml-v1"
-            param2="presentationRuntime=event-v1"/>
+            param2="presentationRuntime=event-v1"
+            param3="effectRuntime=event-v1"/>
 
     <!-- Disposable Step 2.5 variant: Enigma is the driven player so X-slot
          gigaCannon and tachyonLance can be exercised with real LMB input. -->

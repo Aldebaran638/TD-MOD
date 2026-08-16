@@ -11,12 +11,18 @@ function server.init()
     -- Scenario-level presentation mode is an opt-in test configuration. Clear
     -- the replicated value first so a later legacy reload cannot inherit it.
     SetString(ROOT .. "presentationRuntime", "", true)
+    SetString(ROOT .. "effectRuntime", "", true)
     local requestedPresentationRuntime = tostring(
         GetStringParam("presentationRuntime", "") or ""
     )
+    local requestedEffectRuntime = tostring(GetStringParam("effectRuntime", "") or "")
     if requestedPresentationRuntime == "legacy"
         or requestedPresentationRuntime == "event-v1" then
         SetString(ROOT .. "presentationRuntime", requestedPresentationRuntime, true)
+    end
+    if requestedEffectRuntime == "legacy"
+        or requestedEffectRuntime == "event-v1" then
+        SetString(ROOT .. "effectRuntime", requestedEffectRuntime, true)
     end
     SetString(ROOT .. "id", GetStringParam("scenario", "unknown"), true)
     SetString(ROOT .. "xmlRevision", GetStringParam("revision", "unversioned"), true)

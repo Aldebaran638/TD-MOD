@@ -4,7 +4,8 @@
     <script file="MOD/script/testing/scenario/scenario_controller.lua"
             param0="scenario=presentation_s5_budget_pressure"
             param1="revision=presentation-slice-flak-xml-v1"
-            param2="presentationRuntime=event-v1"/>
+            param2="presentationRuntime=event-v1"
+            param3="effectRuntime=event-v1"/>
     <instance pos="0 60 0" rot="0 0 0" file="MOD/prefabs/ships/presentation_player_enigma_flak.xml"/>
     <instance pos="0 60 -42" rot="0 180 0" file="MOD/prefabs/gammaStrikeCraft.xml"/>
 </scene>

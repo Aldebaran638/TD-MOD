@@ -402,6 +402,24 @@ local function _presentationBudgetSnapshot()
     return aggregate
 end
 
+local function _presentationRuntimeSnapshot()
+    local root = "StellarisShips/testing/presentationRuntime/"
+    if not _boolean(GetBool(root .. "ready")) then return nil end
+    return {
+        mode = _string(GetString(root .. "mode"), "legacy"),
+        authority_mode = _string(GetString(root .. "authorityMode"), "legacy"),
+        published = _integer(GetInt(root .. "published"), 0),
+        legacy_adapter_calls = _integer(GetInt(root .. "legacyAdapterCalls"), 0),
+        event_v1_calls = _integer(GetInt(root .. "eventV1Calls"), 0),
+        rejected = _integer(GetInt(root .. "rejected"), 0),
+        dual_playback_rejected = _integer(GetInt(root .. "dualPlaybackRejected"), 0),
+        candidate_calls = _integer(GetInt(root .. "candidateCalls"), 0),
+        authority_legacy_adapter_calls = _integer(
+            GetInt(root .. "authorityLegacyAdapterCalls"), 0
+        ),
+    }
+end
+
 local function _newSession()
     local now = _integer((GetTime ~= nil) and GetTime() * 1000 or 0, 0)
     local randomPart = math.random(0, 2147483647)
@@ -752,6 +770,8 @@ local function _snapshot(maxShips)
     if preview ~= nil then snapshot.preview = preview end
     local presentationBudget = _presentationBudgetSnapshot()
     if presentationBudget ~= nil then snapshot.presentation_budget = presentationBudget end
+    local presentationRuntime = _presentationRuntimeSnapshot()
+    if presentationRuntime ~= nil then snapshot.presentation_runtime = presentationRuntime end
     return snapshot
 end
 

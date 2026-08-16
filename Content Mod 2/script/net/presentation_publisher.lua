@@ -153,6 +153,25 @@ local function _buildEvent(kind, data, sequence, sourceSequence)
     return result
 end
 
+local function _publishDiagnostics()
+    if SetString == nil or SetInt == nil or SetBool == nil then return end
+    local state = server.presentationPublisherState
+    local authorityReport = (cm2EffectRuntimeAuthority ~= nil
+        and cm2EffectRuntimeAuthority.getReport ~= nil
+        and cm2EffectRuntimeAuthority.getReport()) or {}
+    local root = "StellarisShips/testing/presentationRuntime/"
+    SetBool(root .. "ready", true, true)
+    SetString(root .. "mode", tostring(state.mode or "legacy"), true)
+    SetString(root .. "authorityMode", tostring(authorityReport.mode or "legacy"), true)
+    SetInt(root .. "published", math.floor(state.published or 0), true)
+    SetInt(root .. "legacyAdapterCalls", math.floor(state.legacyAdapterCalls or 0), true)
+    SetInt(root .. "eventV1Calls", math.floor(state.eventV1Calls or 0), true)
+    SetInt(root .. "rejected", math.floor(state.rejected or 0), true)
+    SetInt(root .. "dualPlaybackRejected", math.floor(authorityReport.dualPlaybackRejected or 0), true)
+    SetInt(root .. "candidateCalls", math.floor(authorityReport.candidateCalls or 0), true)
+    SetInt(root .. "authorityLegacyAdapterCalls", math.floor(authorityReport.legacyAdapterCalls or 0), true)
+end
+
 function server.presentationPublisherInit()
     local state = server.presentationPublisherState
     if state.initialized then return state end
@@ -184,6 +203,7 @@ function server.presentationPublisherInit()
         state.bySlice[slice] = { published = 0, legacyAdapterCalls = 0, eventV1Calls = 0, rejected = 0 }
     end
     state.initialized = true
+    _publishDiagnostics()
     return state
 end
 
@@ -213,6 +233,9 @@ function server.presentationPublisherGetDiagnostics()
         rejected = state.rejected,
         byKind = state.byKind,
         byRoute = state.byRoute,
+        authority = (cm2EffectRuntimeAuthority ~= nil
+            and cm2EffectRuntimeAuthority.getReport ~= nil
+            and cm2EffectRuntimeAuthority.getReport()) or {},
     }
 end
 
@@ -228,6 +251,7 @@ function server.presentationPublisherPublish(kind, data)
     local route = _routes[routeName]
     if route == nil then
         state.rejected = state.rejected + 1
+        _publishDiagnostics()
         return false, "unknown presentation route: " .. routeName
     end
     local sequence = _nextSequence()
@@ -237,8 +261,30 @@ function server.presentationPublisherPublish(kind, data)
     local encoded, encodeError = cm2PresentationEventV1.encode(eventValue)
     if encoded == nil then
         state.rejected = state.rejected + 1
+        _publishDiagnostics()
         return false, encodeError
     end
+    local sliceStats = state.bySlice[slice]
+    if sliceStats == nil then
+        sliceStats = { published = 0, legacyAdapterCalls = 0, eventV1Calls = 0, rejected = 0 }
+        state.bySlice[slice] = sliceStats
+    end
+
+    local authorityAllowed = false
+    if selectedMode == "event-v1" and cm2EffectRuntimeAuthority ~= nil
+        and cm2EffectRuntimeAuthority.recordCandidateCall ~= nil then
+        authorityAllowed = cm2EffectRuntimeAuthority.recordCandidateCall()
+    elseif selectedMode == "legacy" and cm2EffectRuntimeAuthority ~= nil
+        and cm2EffectRuntimeAuthority.recordLegacyAdapterCall ~= nil then
+        authorityAllowed = cm2EffectRuntimeAuthority.recordLegacyAdapterCall()
+    end
+    if not authorityAllowed then
+        state.rejected = state.rejected + 1
+        sliceStats.rejected = sliceStats.rejected + 1
+        _publishDiagnostics()
+        return false, "effect runtime authority rejected: " .. selectedMode
+    end
+
     state.published = state.published + 1
     if server.cm2TelemetryRecord ~= nil then
         server.cm2TelemetryRecord("presentation_event", {
@@ -255,11 +301,6 @@ function server.presentationPublisherPublish(kind, data)
     end
     state.byKind[kindName] = math.floor(state.byKind[kindName] or 0) + 1
     state.byRoute[routeName] = math.floor(state.byRoute[routeName] or 0) + 1
-    local sliceStats = state.bySlice[slice]
-    if sliceStats == nil then
-        sliceStats = { published = 0, legacyAdapterCalls = 0, eventV1Calls = 0, rejected = 0 }
-        state.bySlice[slice] = sliceStats
-    end
     sliceStats.published = sliceStats.published + 1
     if server.netDebugCount ~= nil then server.netDebugCount("presentation.publish", 1) end
 
@@ -273,6 +314,7 @@ function server.presentationPublisherPublish(kind, data)
         )
         state.eventV1Calls = state.eventV1Calls + 1
         sliceStats.eventV1Calls = sliceStats.eventV1Calls + 1
+        _publishDiagnostics()
         return true, encoded
     end
 
@@ -280,5 +322,6 @@ function server.presentationPublisherPublish(kind, data)
     server.netClientCall(route.channel, math.floor(tonumber(data.playerId) or 0), route.callback, _unpack(args))
     state.legacyAdapterCalls = state.legacyAdapterCalls + 1
     sliceStats.legacyAdapterCalls = sliceStats.legacyAdapterCalls + 1
+    _publishDiagnostics()
     return true, encoded
 end

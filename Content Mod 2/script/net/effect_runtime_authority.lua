@@ -4,6 +4,7 @@
 -- a context and gives cutover/rollback one auditable switch.
 cm2EffectRuntimeAuthority = cm2EffectRuntimeAuthority or {}
 local authority = cm2EffectRuntimeAuthority
+local SCENARIO_ROOT = "StellarisShips/testing/scenario/"
 
 authority.state = authority.state or {
     initialized = false,
@@ -18,7 +19,11 @@ authority.state = authority.state or {
 function authority.init()
     local state = authority.state
     if state.initialized then return state end
-    local selected = (GetStringParam ~= nil and GetStringParam("effectRuntime", "legacy")) or "legacy"
+    local selected = (GetStringParam ~= nil and GetStringParam("effectRuntime", "")) or ""
+    if tostring(selected or "") == "" and GetString ~= nil then
+        selected = GetString(SCENARIO_ROOT .. "effectRuntime")
+    end
+    if tostring(selected or "") == "" then selected = "legacy" end
     selected = tostring(selected or "legacy")
     if selected ~= "legacy" and selected ~= "event-v1" then selected = "legacy" end
     state.mode = selected

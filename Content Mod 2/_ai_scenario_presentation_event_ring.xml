@@ -4,7 +4,8 @@
     <script file="MOD/script/testing/scenario/scenario_controller.lua"
             param0="scenario=presentation_s5_budget_pressure"
             param1="revision=presentation-ring-xml-v1"
-            param2="presentationRuntime=event-v1"/>
+            param2="presentationRuntime=event-v1"
+            param3="effectRuntime=event-v1"/>
 
     <!-- The fixture intentionally contains only the player ship, one target,
          and the production presentation paths under pressure. -->
