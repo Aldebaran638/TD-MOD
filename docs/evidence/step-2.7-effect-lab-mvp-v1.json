@@ -1,0 +1,191 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 2.7",
+  "result": "engineering_pass_subjective_visual_review",
+  "verified_at": "2026-08-17T06:32:14+08:00",
+  "verification_contract_fingerprint": "c761bafe8095fba9929177581d2e8de0bc43f3a4de97bc01fc00591788b8e99b",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "behavior_under_test": "Effect can be previewed, compared and replayed in a low-cost synthetic context without introducing a second renderer authority.",
+  "setup": {
+    "scene": "Content Mod 2/_ai_scenario_preview_suite.xml",
+    "controller": "Content Mod 2/script/testing/scenario/preview_suite_controller.lua",
+    "scenario": "Content Mod 2/testing/scenarios/creator/preview_suite_v1/scenario.json",
+    "fixture": "presentation/s5_budget_pressure",
+    "fixed_seed": 424242,
+    "target_id": "teardown:58912:39783188",
+    "forbidden_shortcuts_used": [],
+    "runtime_catalog_mutation": "forbidden"
+  },
+  "static_fixture": {
+    "todo_validator": "PASS: 80 executable Step contracts",
+    "owning_checker": "harness/check-effect-lab.ps1: PASS",
+    "owning_self_test": "harness/test-effect-lab.ps1: PASS",
+    "preview_self_test": "tools/cm2-preview/test-preview-suite-v1.ps1: PASS",
+    "effect_lab_contract": {
+      "registry_dependency": false,
+      "fixed_seed": 424242,
+      "distances": ["near", "far"],
+      "lods": [0, 1],
+      "budget_profiles": ["normal", "critical", "ambient"],
+      "operations": ["init", "definition", "play", "pause", "stop", "replay", "update", "reset"],
+      "generated_definition_count": 4,
+      "bounded_trace": true,
+      "production_authority": ["EffectPlayer", "PresentationBudget"],
+      "synthetic_owner": "lab:synthetic",
+      "context": ["origin", "direction", "hitPoint", "hitNormal", "targetAnchor"],
+      "resource_provenance": "definition.sourceArtifact and rendererId/rendererVersion are retained in the report"
+    },
+    "preview_parity": {
+      "report": "docs/candidates/preview-suite-v1.result.json",
+      "same_normalized_runtime_dto": true,
+      "compiler": "cm2.runtime-compiler/1",
+      "catalog": "cm2.generated-catalog-manifest/1",
+      "world_entity_adapter": "cm2.world/1",
+      "effect_replay_hash": "6493f13453f42ba32bd964af5d54408237e702c72235c50293c8757cb813e3c3",
+      "weapon_replay_hash": "a3092a1f2b6566905cc276abf34a412ee74ea7324234149b31ab455b1932a93a",
+      "runtime_catalog_unchanged": true
+    },
+    "targeted_regression": [
+      "test-vertical-slices.ps1: PASS",
+      "test-semantic-snapshot.ps1: PASS (109 weapons / 5 vehicles)",
+      "test-shadow-catalog.ps1: PASS (legacy fallback negative case)",
+      "test-weapon-projectile-catalog.ps1: PASS (109 weapons / 75 projectiles)",
+      "test-presentation-slices.ps1: PASS",
+      "test-presentation-event-ring.ps1: PASS",
+      "test-presentation-event-v1.ps1: PASS",
+      "test-presentation-migration.ps1: PASS",
+      "test-effect-player.ps1: PASS",
+      "test-effect-runtime-authority.ps1: PASS",
+      "test-effect-profile-source.ps1: PASS"
+    ],
+    "source_hashes": {
+      "Content Mod 2/script/weapon/client/presentation/effect_lab.lua": "83605033E12DA34F20FC35914A9621F86E7B15D5400F7B28E936D95533141346",
+      "Content Mod 2/script/testing/scenario/preview_suite_controller.lua": "61E85360BA33FEC4229EA66FA13DB1D9931AA527409EAC38F0B46CEE5C7DD961",
+      "Content Mod 2/script/world/adapter/preview_suite_v1.lua": "1AB9FBF68DE44998505C541CD4F494AE8E5F031A0DD3EA6A1F0DA88177C40B0B",
+      "Content Mod 2/_ai_scenario_preview_suite.xml": "BAF573A41E8AC042274AED84A6E6407A56AD900469B5E61569F088F2760F895F",
+      "Content Mod 2/testing/scenarios/creator/preview_suite_v1/scenario.json": "357346CF4AD7B5CCC1505754A058DD05E7AB18AFC2F70713011E7BC108F9AD96",
+      "harness/data/presentation/effect-lab-fixtures.json": "2CC4147F21445D0A8E944DE388324EABCC52447965188DC997F85983F50EDBA1",
+      "docs/candidates/preview-suite-v1.result.json": "87F070DFFF5FC41E9C62CAD5287C7758D095AC6BBA2ABE3C275714345804942D"
+    }
+  },
+  "runtime": {
+    "reload": {
+      "mode": "REOPEN_LEVEL_XML + F4_TO_F5",
+      "file_open_run": "20260816T222158Z-b97bb50c",
+      "selected_xml": "_ai_scenario_preview_suite.xml",
+      "editor_frame": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T222317Z-c03b0f43/frame_f000002-5292e51f_pid-58912.png",
+      "f5_loading_was_retried": true,
+      "reason": "The first editor F5 was intentionally diagnosed as the previously selected presentation XML; the target XML was then selected through the real File/Open UI and reloaded."
+    },
+    "initial_live_session": {
+      "run_id": "20260816T222419Z-63bd18f1",
+      "session": "0-a4334866",
+      "scenario": {
+        "id": "preview_suite",
+        "xml_revision": "preview-suite-xml-v1",
+        "lua_revision": "scenario-controller-v2",
+        "ready": true
+      },
+      "fixed_seed": 424242,
+      "runtime_catalog_hash": "cm2.preview-live-catalog/1",
+      "ships": [],
+      "telemetry_events": 0,
+      "client_latest_seq": 0,
+      "server_latest_seq": 0
+    },
+    "effect_lab_replay": {
+      "run_id": "20260816T222523Z-48ff67e0",
+      "baseline": {
+        "log_cursor": 91021,
+        "mode": "EFFECT LAB",
+        "replay": 0,
+        "effect_player": {"played": 2, "updated": 2, "stopped": 2, "destroyed": 2, "active": 0, "free": 128, "invariant": true, "owner_lost": 0, "anchor_lost": 0, "stale": 0}
+      },
+      "real_input": [{"type": "key_tap", "key": "space", "duration_ms": 100, "backend": "virtual HID"}],
+      "screenshot": {
+        "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T222523Z-48ff67e0/frame_f000002-6738fe57_pid-58912.png",
+        "sha256": "B5192AA566DEB8F6461C84F6106A87ACB3778471F10692EC04AB147EFE93E645",
+        "facts": ["CM2 PREVIEW SUITE V1", "ACTIVE: EFFECT LAB", "fixed seed 424242", "replay=1", "EffectPlayer production", "near LOD0 and far LOD1", "PresentationBudget", "runtime catalog unchanged=true"]
+      },
+      "after": {
+        "session": "0-a4334866",
+        "mode": "EFFECT LAB",
+        "replay": 1,
+        "action": "S2 replay: EffectPlayer near LOD0 + far LOD1",
+        "effect_player": {"played": 4, "updated": 4, "stopped": 4, "destroyed": 4, "active": 0, "free": 128, "invariant": true, "owner_lost": 0, "anchor_lost": 0, "stale": 0},
+        "events": 0,
+        "truncated": false,
+        "input_released": true
+      }
+    },
+    "preview_suite_regression": {
+      "run_id": "20260816T222646Z-4c279c0e",
+      "session": "0-a4334866",
+      "actions": ["right", "space", "right", "space"],
+      "weapon_range": {
+        "mode": "WEAPON RANGE",
+        "action": "S2 replay: 4 deterministic shots / budget 2+1+1",
+        "replay": 5,
+        "screenshot": {
+          "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T222646Z-4c279c0e/frame_f000004-4aa1fcf4_pid-58912.png",
+          "sha256": "1F66E229FB8446A1A3758EC05F9C0D0B976B24D12E4B592D32F37E7B0C363037",
+          "facts": ["4 shots", "4 hits", "damage 40", "accepted=2", "degraded=1", "rejected=1", "runtime catalog unchanged=true"]
+        }
+      },
+      "ship_dock": {
+        "mode": "SHIP DOCK",
+        "action": "S5 replay: VOX + graph + anchor/mount/turret lifecycle",
+        "replay": 7,
+        "screenshot": {
+          "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T222646Z-4c279c0e/frame_f000008-fe45adfb_pid-58912.png",
+          "sha256": "3BF8147C8F5DCC70570B50EC2350F88D37887811A2A5FB5738F3F3588D05FDEB",
+          "facts": ["real gamma VOX", "canonical axes", "graph ship:gamma.graph", "anchors=5", "mounts=2", "turrets=1", "camera=orbit", "runtime catalog unchanged=true"]
+        }
+      },
+      "telemetry": {"events": 0, "latest_seq": 0, "truncated": false, "input_down": {"w": false, "lmb": false}}
+    }
+  },
+  "log": {
+    "path": "%LOCALAPPDATA%/Teardown/log.txt",
+    "action_baseline_cursor": 91021,
+    "action_delta_errors": 0,
+    "action_delta_warnings": 0,
+    "reload_load_errors": 2,
+    "reload_load_warnings": 6,
+    "reload_load_attribution": "External Steam Workshop Mod 3148138736 / TABS Vehicle Framework; all lines point outside Content Mod 2.",
+    "post_baseline_cm2_errors": 0,
+    "post_baseline_cm2_warnings": 0
+  },
+  "cleanup": {
+    "run_id": "20260816T222746Z-417bb92f",
+    "f4_editor_screenshot": {
+      "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T222746Z-417bb92f/frame_f000002-9ba2dc9f_pid-58912.png",
+      "sha256": "D118D0A49790406E460ADB942649C7EDD8DFD6902A3297BDC33BEFB41BCEE341",
+      "returned_to_editor": true
+    },
+    "fresh_reload": {
+      "screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T222746Z-417bb92f/frame_f000004-a5ffb933_pid-58912.png",
+      "sha256": "62E171549C4950D023AD4C67EB735241F1897DDBA67E429D9CF44B6A8C41F122",
+      "session": "0-fe0cfc19",
+      "previous_session": "0-a4334866",
+      "scenario": {"id": "preview_suite", "xml_revision": "preview-suite-xml-v1", "lua_revision": "scenario-controller-v2", "ready": true},
+      "initial_replay": 0,
+      "effect_player": {"active": 0, "free": 128, "invariant": true, "played": 2, "stopped": 2, "destroyed": 2, "owner_lost": 0, "anchor_lost": 0, "stale": 0},
+      "ships": [],
+      "events": 0,
+      "held_inputs": {"keys": [], "buttons": []}
+    },
+    "emergency_release": {"keys": [], "buttons": []}
+  },
+  "regression": {
+    "four_vertical_slices": "PASS",
+    "109_weapon_snapshot": "PASS",
+    "presentation_sequence_generation_guards": "PASS",
+    "legacy_fallback": "PASS",
+    "full_harness": "PASS: .\\harness\\check-all.ps1, exit code 0, 132.8 seconds; 234 Lua files, 25 XML files, 0 API issues"
+  },
+  "rollback": "Disable/remove the Preview include or stop invoking the preview API; keep the production EffectPlayer, generated catalogs and Runtime entrypoint unchanged. effectLab.reset() disposes synthetic instances and sceneReload() resets client-local capacity.",
+  "scope_boundary": "Telemetry owns scenario/session/replay/lifecycle/capacity/input state; screenshots own visible HUD, markers, VOX and diagnostics; logs own runtime health. Subjective visual polish remains human review."
+}
