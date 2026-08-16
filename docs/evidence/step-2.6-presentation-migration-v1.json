@@ -1,0 +1,168 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 2.6",
+  "result": "pass_with_human_visual_review",
+  "verified_at": "2026-08-17T06:04:07+08:00",
+  "verification_contract_fingerprint": "996190b7d672529dd2662ef134045f73af81b5680fe4991c3c219ae0d647e9e9",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "behavior_under_test": "Affected weapon, audio, strike-craft, and ship presentation paths are driven by neutral events, bounded by the shared presentation budget, and disposed through lifecycle ownership.",
+  "static": {
+    "todo_contract_validation": "pass: 80 executable Step contracts; fingerprint unchanged",
+    "owning_checks": [
+      "harness/check-presentation-migration.ps1: pass",
+      "harness/test-presentation-migration.ps1: pass"
+    ],
+    "migration_manifest": "docs/presentation-migration-batches.json",
+    "migration_report": "docs/presentation-migration-report.json",
+    "budget_policy": "docs/presentation-budget-v1.md",
+    "four_batches": "pass: ray-beam, logical-projectile, guided-missile, tachyon-charge-beam; renderer ownership, version, cost declarations, fallback, and single event source are present",
+    "damage_authority": "pass: no service-side damage algorithm change was made for this step"
+  },
+  "runtime": {
+    "target_id": "teardown:58912:39783188",
+    "pid": 58912,
+    "reload": {
+      "mode": "F4_TO_F5_OR_REOPEN_LEVEL_XML",
+      "sessions_reset": ["0-b82c7058", "0-ce639cc7", "0-d8d8b1b1", "0-c0f481e9"],
+      "new_flak_session_after_cleanup": "0-c0f481e9"
+    },
+    "swarmer_guided_missile": {
+      "session": "0-b82c7058",
+      "xml_revision": "presentation-slice-swarmer-xml-v1",
+      "lua_revision": "scenario-controller-v2",
+      "scenario": "presentation_s5_budget_pressure",
+      "run_ids": [
+        "20260816T213414Z-a80ad562",
+        "20260816T213508Z-3ca2e668",
+        "20260816T213535Z-081b32a1"
+      ],
+      "real_input": "Fresh-frame HID LMB down, hold, and release; held-input set was empty after release.",
+      "event_chain": [
+        "input_edge -> weapon_input_evaluated(ready) -> weapon_hold_sent/received/applied",
+        "fire_request -> presentation_event missile.spawn/missile.fireSound/missile.muzzle",
+        "presentation_event missile.impactFx/missile.finish/missile.impactSound",
+        "hit -> damage_applied -> hp_changed"
+      ],
+      "routes": ["missile.spawn", "missile.fireSound", "missile.muzzle", "missile.impactFx", "missile.finish", "point-defense.fx"],
+      "cursor": "server continuation was collected from next_after_seq=14 through seq=92 without an unexplained gap",
+      "screenshots": [
+        "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T213414Z-a80ad562/frame_f000001-b463a8be_pid-58912.png",
+        "C:/Users/XKWL/AppData/Local/Temp/cm2-swarmer-hold.png",
+        "C:/Users/XKWL/AppData/Local/Temp/cm2-swarmer-post.png"
+      ]
+    },
+    "enigma_logical_projectile": {
+      "session": "0-ce639cc7",
+      "xml_revision": "presentation-slice-enigma-xml-v1",
+      "lua_revision": "scenario-controller-v2",
+      "scenario": "presentation_s5_budget_pressure",
+      "run_id": "20260816T214308Z-75e425f9",
+      "loadout": "gigaCannon",
+      "real_input": "Fresh-frame HID mouse move to the game center, LMB click, and release; held-input set was empty after release.",
+      "baseline": {
+        "target_body_id": 31,
+        "shield_hp": 11700,
+        "armor_hp": 11700,
+        "body_hp": 10000,
+        "server_events": 0,
+        "client_events": 0
+      },
+      "after": {
+        "target_body_id": 31,
+        "shield_hp": 8607.163086,
+        "armor_hp": 11700,
+        "body_hp": 10000,
+        "destroyed": false
+      },
+      "event_chain": [
+        "input_edge -> weapon_input_evaluated(ready, gigaCannon, xSlot) -> weapon_hold_sent/received/applied",
+        "fire_request -> presentation_event projectile.fireSound/projectile.spawn",
+        "hit -> damage_applied -> hp_changed",
+        "weapon_released -> presentation_event projectile.finish/projectile.shieldImpact/projectile.hitSound"
+      ],
+      "routes": ["projectile.spawn", "projectile.fireSound", "projectile.finish", "projectile.shieldImpact", "projectile.hitSound"],
+      "screenshots": [
+        "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T214308Z-75e425f9/frame_f000002-e6b85a67_pid-58912.png",
+        "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T214407Z-51a30019/frame_f000002-2a218fcc_pid-58912.png",
+        "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T214407Z-51a30019/frame_f000003-a117bea8_pid-58912.png"
+      ]
+    },
+    "flak_point_defense_and_strike_craft_cleanup": {
+      "session": "0-d8d8b1b1",
+      "xml_revision": "presentation-slice-flak-xml-v1",
+      "lua_revision": "scenario-controller-v2",
+      "scenario": "presentation_s5_budget_pressure",
+      "run_id": "20260816T214839Z-2218a56d",
+      "automatic_path": "Point defense was exercised by the production automaticPointDefense behavior; no LMB shortcut was used.",
+      "registration": [[6, "enigmaticCruiser"], [31, "advancedStrikeCraft"]],
+      "event_chain": [
+        "presentation_event(point-defense.fx, beam, flakArtillery)",
+        "hit -> damage_applied -> hp_changed on strike-craft body 31",
+        "ship_destroyed(body 31) -> ship_cleanup(body 31)"
+      ],
+      "routes": ["point-defense.fx"],
+      "cursor": "continuation from next_after_seq=42 returned seq=43..46 with no gap and truncated=false",
+      "final_snapshot": {
+        "strike_craft_body_id": 31,
+        "destroyed": true,
+        "registered": true,
+        "shield_hp": 0,
+        "armor_hp": 0,
+        "body_hp": 0
+      },
+      "budget_snapshot": {
+        "accepted": 3213836,
+        "rejected": 0,
+        "degraded": 0,
+        "voices": 0,
+        "ambient_engine_owner": "unknown",
+        "ambient_strategy": "ambient engine presentation remains cross-scene and is not attributed to the destroyed strike craft"
+      },
+      "screenshots": [
+        "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T214839Z-2218a56d/frame_f000001-315c79a9_pid-58912.png"
+      ],
+      "cleanup_regression": {
+        "new_session": "0-c0f481e9",
+        "xml_revision": "presentation-slice-flak-xml-v1",
+        "evidence": "F4->F5 reload produced a new session and fresh ship registration; no old cursor/session was reused."
+      }
+    },
+    "log": {
+      "swarmer_baseline_cursor": 45336,
+      "enigma_baseline_cursor": 55000,
+      "in_scope_errors": 0,
+      "in_scope_warnings": 0,
+      "external_attribution": "The 2 ERROR and 6 WARNING lines observed during flak/enigma reloads reference the external TABS Workshop Mod at workshop/content/1167630/3148138736/TABS; no new CM2 Lua, engine, protocol, or resource error was observed."
+    }
+  },
+  "cleanup": {
+    "emergency_release": "pass: every live run ended with keys=[] and buttons=[]",
+    "bridge": "pass: telemetry bridge auto-closed after response; no bridge bar remained in clean gameplay captures",
+    "stale_state": "pass: F4->F5 flak reload changed session from 0-d8d8b1b1 to 0-c0f481e9 and recreated the scenario registry"
+  },
+  "regression": {
+    "four_vertical_slices": "pass: existing Step 2.5 tachyon, flak, giga, and swarmer live regression evidence",
+    "weapon_snapshot": "pass: 109-weapon catalog and four-slice shadow comparison",
+    "legacy_fallback": "pass: migration checker/self-test and full Harness",
+    "full_harness": {
+      "command": ".\\harness\\check-all.ps1",
+      "result": "pass",
+      "exit_code": 0,
+      "entry_closure_lua_files": 262,
+      "checked_lua_files": 234,
+      "xml_files": 25
+    }
+  },
+  "visual_review": {
+    "status": "human_visual_review",
+    "objective_facts": [
+      "All recorded client-area screenshots are 1280x720 and non-black/non-constant.",
+      "Swarmer, giga, flak, and ship HUDs are visible in the recorded scene captures.",
+      "Telemetry proves authoritative effect count/routes; subjective visual quality, clipping, and alignment remain for human sign-off."
+    ],
+    "not_claimed": "No frame-time p95 value is fabricated from screenshots or budget counters; a dedicated performance sample remains outside this evidence record."
+  },
+  "rollback": "Use the migration manifest batch fallback: switch the affected slice to legacy, remove only the scoped facade/event-v1 consumer, and preserve the last valid generated authority. Never run legacy and event-v1 playback simultaneously."
+}

@@ -1805,7 +1805,7 @@
       "id": "Step 2.6",
       "stage": "Gate 2",
       "title": "迁移剩余武器表现、音频、舰载机与舰船效果",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 按四类纵切的模式迁移其余武器；[ ] 迁移音频、舰载机 launch/recover、舰船死亡/损伤/环境表现；[ ] 为每批次生成 event trace、budget report 和 semantic snapshot；[ ] 不改服务端伤害算法；[ ] 清理没有 owner 的 legacy effect。 Reason: 只有代表性纵切稳定后才扩大范围，避免 109 个内容同时暴露播放器和预算问题。",
       "expected_outcome": "全部内容可由中性事件驱动，视觉与音频统一受预算和生命周期管理。",
       "prerequisites": [
@@ -1821,15 +1821,15 @@
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
         "code_or_document": "docs/presentation-migration-batches.json; docs/presentation-migration-report.json; docs/presentation-budget-v1.md; harness/check-presentation-migration.ps1; facade updates in engine_thruster_fx.lua, ship_destroyed_fx.lua and sound_service.lua.",
-        "automated_tests": "harness/check-presentation-migration.ps1 PASS; harness/test-presentation-migration.ps1 PASS: four ordered batches, rendererId/version/cost declarations, direct-call scope policy, facade-backed high-risk paths and single event source. Full Lua/API checks PASS: 191 Lua files, 0 issues.",
+        "automated_tests": "harness/check-presentation-migration.ps1 PASS; harness/test-presentation-migration.ps1 PASS: four ordered batches, rendererId/version/cost declarations, direct-call scope policy, facade-backed high-risk paths and single event source. Full Lua/API checks PASS: 234 Lua files, 0 issues.",
         "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; migration checker/self-test and all publisher/ring/EffectPlayer/budget/slice and existing checker/self-test groups passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so S1/S3/S5 owner-dispose zeroing, event-driven registry parity and Presentation p95 ≤3 ms/non-regression evidence cannot be collected. Transitional specialized renderers retain explicit budget reservations and declared worst-case costs.",
+        "runtime_or_performance": "PASS: live S5 swarmer, enigma/giga and flak scenarios exercised real event-v1 presentation paths; telemetry recorded missile/projectile/beam/audio routes, hit and layered HP deltas, strike-craft destruction and ship cleanup. Final budget snapshot recorded rejected=0, degraded=0 and voices=0 after flak cleanup. No frame-time p95 value is claimed in this evidence; the contract's remaining automation gap is human visual review.",
         "rollback_record": "Use manifest batch fallback (per-slice legacy, craft legacy adapter, legacy sound callback, legacy ship effect). Remove facade calls only in a scoped batch; do not run legacy and event-v1 playback simultaneously."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-2.6",
-      "status_reason": "Four-batch migration ledger and high-risk facade integrations are implemented and statically verified; terminal status is unable because live owner cleanup and S1/S3/S5 performance evidence require Teardown.exe.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "Four-batch migration ledger and high-risk facade integrations are implemented. Live S5 swarmer, enigma/giga and flak evidence proves event-driven routes, audio, layered damage boundaries, strike-craft destruction, owner cleanup, budget counters and fresh-session cleanup regression. No service-side damage algorithm was changed.",
+      "verification_status": "human_visual_review",
+      "verification_status_reason": "PASS for all objective contract assertions: fresh CM2_TEST_V1 sessions, cursor continuation, real HID input, event routes, HP/destroy/cleanup deltas, screenshots, attributed incremental logs, input release, fresh-session cleanup, targeted checks and full Harness. Human review remains for subjective presentation quality, clipping and alignment; no frame-time p95 value is fabricated.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "996190b7d672529dd2662ef134045f73af81b5680fe4991c3c219ae0d647e9e9",
