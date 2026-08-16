@@ -1,0 +1,165 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 2.5",
+  "result": "pass",
+  "verified_at": "2026-08-17T02:32:56+08:00",
+  "verification_contract_fingerprint": "97560f88665798f0704dc4fa0f919db818943f303369100249e00778c8cb99e9",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "behavior_under_test": "Four representative presentation vertical slices use the Event Ring to EffectPlayer path with bounded budgets, single authority, and legacy fallback.",
+  "static": {
+    "todo_contract_validation": "pass: 80 executable Step contracts; fingerprint unchanged",
+    "owning_checks": [
+      "harness/check-presentation-event-ring.ps1: pass",
+      "harness/check-presentation-event-v1.ps1: pass",
+      "harness/check-presentation-publisher.ps1: pass",
+      "harness/check-presentation-slices.ps1: pass",
+      "harness/check-presentation-migration.ps1: pass",
+      "harness/test-presentation-event-ring.ps1: pass",
+      "harness/test-presentation-event-v1.ps1: pass",
+      "harness/test-presentation-publisher.ps1: pass",
+      "harness/test-presentation-slices.ps1: pass"
+    ],
+    "four_slice_mapping": {
+      "flakArtillery": "ray-beam",
+      "gigaCannon": "logical-projectile",
+      "swarmerMissile": "guided-missile",
+      "tachyonLance": "tachyon-charge-beam"
+    },
+    "source_hashes": {
+      "Content Mod 2/script/net/presentation_publisher.lua": "1A8F59A0DE994F975E45172A3B7E5E3807394D5C16314E36FC0E6A4B4EABF944",
+      "Content Mod 2/script/weapon/client/presentation/event_runtime.lua": "B681B32BB1E8362DE26DA0172C2E5F49BD4A37F422EB1168BC893B4D46608E5F",
+      "Content Mod 2/script/weapon/client/presentation/slice_runtime.lua": "1208CCA0397F30AF2A522CE7F8C37878B1B69A3C7645D44143FD9A17937C1AB1",
+      "Content Mod 2/script/weapon/server/behavior/charged_ray/control.lua": "5A91ECB03F9C66A1BCF1B6474C829BBF92F93E07AAD8A63B95A55E5C2CD142FF",
+      "Content Mod 2/script/weapon/server/behavior/raycast/control.lua": "B45DD646745E33ECBE7E742A528035C6E7B7D3E6FB395F4A6420BF29593A3215",
+      "Content Mod 2/script/weapon/server/runtime/state/weapon_group.lua": "F36D56203421CD52311FF67D409716CF22BAD80FC550BA9BBDCE22845BE20B49",
+      "Content Mod 2/script/weapon/server/slot/x/render_state.lua": "E497336B68FD3BF2A004E88D5DF28956CAB3767045E0350C4BDD7CA692EA6F2E"
+    },
+    "full_harness": {
+      "command": ".\\harness\\check-all.ps1",
+      "result": "pass",
+      "exit_code": 0,
+      "lua_files": 234,
+      "xml_files": 25,
+      "summary": "All Harness checks passed; all checker and self-test groups passed."
+    }
+  },
+  "runtime": {
+    "target_id": "teardown:22148:56492882",
+    "pid": 22148,
+    "scene": "Content Mod 2/_ai_scenario_presentation_slice_tachyon.xml",
+    "reload": {
+      "mode": "F4_TO_F5",
+      "run_id": "20260816T182534Z-1543480c",
+      "session_reset": true,
+      "post_reload_observe": "non-black client area after the expected loading interval"
+    },
+    "scenario": {
+      "id": "presentation_s5_budget_pressure",
+      "xml_revision": "presentation-slice-tachyon-xml-v1",
+      "lua_revision": "scenario-controller-v2",
+      "ready": true,
+      "ships": [6, 31],
+      "initial_target_shield": 11700
+    },
+    "baseline": {
+      "run_id": "20260816T182626Z-cf70be43",
+      "session": "0-abbf577e",
+      "server_latest_seq": 0,
+      "client_latest_seq": 0,
+      "events": 0,
+      "target_shield": 11700,
+      "held_inputs": {"keys": [], "buttons": []}
+    },
+    "real_input": {
+      "run_id": "20260816T182626Z-cf70be43",
+      "action": "fresh-frame HID mouse_down lmb, charge wait 850 ms, mouse_up lmb",
+      "input_released": true,
+      "server_latest_seq": 14,
+      "client_latest_seq": 13,
+      "event_count": 27,
+      "oldest_seq": 1,
+      "next_after_seq": 14,
+      "truncated": false,
+      "source_sequence": "1..4 contiguous for body 6; no unexplained gap or duplicate",
+      "event_chain": [
+        "input_edge -> weapon_input_evaluated(ready) -> weapon_hold_sent/received/applied",
+        "presentation_event charging_start, route=xSlot.render, source_sequence=1, presentation_sequence=1",
+        "hit -> damage_applied -> hp_changed on registered target body 31, impact_layer=shield",
+        "presentation_event impact, route=ray.shieldImpact, source_sequence=2, presentation_sequence=2",
+        "presentation_event launch_start, route=xSlot.render, source_sequence=3, presentation_sequence=3",
+        "weapon_released -> presentation_event idle, route=xSlot.render, source_sequence=4, presentation_sequence=4"
+      ],
+      "target_shield": {"before": 11700, "after": 10700.459961},
+      "target_armor": {"before": 11700, "after": 11700},
+      "target_body": {"before": 10000, "after": 10000},
+      "target_destroyed": false,
+      "client_trace": [
+        "presentation_slice_trace beam/play slice=tachyon-charge-beam",
+        "presentation_slice_trace impact/play slice=tachyon-charge-beam",
+        "presentation_slice_trace beam/play slice=tachyon-charge-beam"
+      ]
+    },
+    "screenshots": {
+      "charge": {
+        "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T182626Z-cf70be43/frame_f000005-6ef0639f_pid-22148.png",
+        "sha256": "E06E216C85F386D4A30B06159FF8FCEECBB78AE45785759B99809CEAA5CC1FCA",
+        "fact": "1280x720 non-black client area with the presentation scenario ship and weapon HUD"
+      },
+      "impact": {
+        "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T182626Z-cf70be43/frame_f000006-b66b0bdf_pid-22148.png",
+        "sha256": "9298C00EDD0C82B0F2619C7FA9590F7D2E135DBC116C587E81216F98A501E18B",
+        "fact": "1280x720 non-black client area with the presentation scenario ship and weapon HUD"
+      },
+      "clean_final": {
+        "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T182626Z-cf70be43/frame_f000008-38a0d7cf_pid-22148.png",
+        "sha256": "ACD66FE3FC9C64C25E592E2A13679E1E3F6427D6D64C3BF09FB96BEE250AD61B",
+        "fact": "Non-black client area, no telemetry bridge bar"
+      }
+    },
+    "log": {
+      "baseline_cursor": 25005104,
+      "next_cursor": 25014041,
+      "new_errors": 0,
+      "new_warnings": 0,
+      "attribution": "Incremental log read after the live baseline"
+    }
+  },
+  "cleanup": {
+    "input_release": {
+      "run_id": "20260816T182626Z-cf70be43",
+      "keys": [],
+      "buttons": []
+    },
+    "bridge_bar": false,
+    "fresh_reload": {
+      "run_id": "20260816T182534Z-1543480c",
+      "scenario_ready": true,
+      "stale_entities_or_events": false
+    }
+  },
+  "regression": {
+    "flak_ray_beam": {
+      "run_id": "20260816T170511Z-5b4ff0a5",
+      "session": "0-f7efefdf",
+      "result": "pass: real LMB, ray-beam presentation trace, hit/damage, destruction and ship cleanup"
+    },
+    "giga_logical_projectile": {
+      "run_id": "20260816T173339Z-71b55b4e",
+      "session": "0-c6de8dbd",
+      "result": "pass: real LMB, projectile/sound presentation, hit/damage and shield 11700 -> 8135.405762"
+    },
+    "swarmer_guided_missile": {
+      "run_id": "20260816T174131Z-cfe4d9ad",
+      "session": "0-c6158c2b",
+      "result": "pass: real LMB, guided spawn/muzzle/sound/impact/finish, hit/damage and armor regression"
+    },
+    "tachyon_charge_beam": "pass: final live run above",
+    "weapon_snapshot": "pass: 109-weapon catalog and four-slice shadow comparison",
+    "legacy_fallback": "pass: presentation migration checker/self-test and full Harness",
+    "full_harness": "pass: .\\harness\\check-all.ps1, exit code 0"
+  },
+  "rollback": "Set presentationRuntime and per-slice presentationRuntime_* parameters to legacy, or remove the slice_runtime consumer include; retain the last valid legacy renderer and do not alter damage authority.",
+  "scope_boundary": "Telemetry owns gameplay/event boundaries and HP. Screenshots own only visible scene/HUD/non-black facts. Incremental log owns runtime health. Subjective visual quality remains outside the automated contract."
+}
