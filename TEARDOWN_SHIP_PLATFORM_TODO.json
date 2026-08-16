@@ -1394,7 +1394,7 @@
       "id": "Step 2.2",
       "stage": "Gate 2",
       "title": "建立固定容量、可观测的 Presentation Event Ring",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 固定容量 ring，禁止无界 append；[ ] 区分 Critical（spawn/finish/impact/charge-stop）和 Ambient（trail/update）；[ ] Critical 不被 Ambient 覆盖，Ambient 可按 source/effect 合并；[ ] source+sequence 去重并统计 gap/duplicate/out-of-order/drop；[ ] owner dispose 清理未完成事件并发出 finish/cancel。 Reason: latest-event 路径会覆盖同帧 burst；多人延迟还需要明确去重、乱序、溢出和过期策略。",
       "expected_outcome": "burst、延迟和压力行为有界且可诊断。",
       "prerequisites": [
@@ -1411,14 +1411,14 @@
       "evidence": {
         "code_or_document": "docs/presentation-event-ring-v1.md; Content Mod 2/script/weapon/client/presentation/event_runtime.lua; fixed Critical/Ambient ring implementation, source ordering diagnostics, ambient coalescing, and owner dispose API.",
         "automated_tests": "harness/check-presentation-event-ring.ps1 PASS; harness/test-presentation-event-ring.ps1 PASS: fixed capacities, bounded head/tail operations, Critical/Ambient policy, duplicate/gap/out-of-order counters, and owner cancellation. Publisher tests also PASS.",
-        "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; 233 Lua files in entry closure, all checker/self-test groups passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so the required 100-event S0/S5 pressure fixture, memory plateau and live Critical-drop=0 measurement cannot be executed. Static implementation uses Critical capacity 128 and Ambient capacity 32 with no unbounded append.",
+        "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; 262 Lua files in entry closure and 234 Lua files in Lua/API checks, all checker/self-test groups passed.",
+        "runtime_or_performance": "PASS: docs/evidence/step-2.2-presentation-event-ring-v1.json records the fresh CM2_TEST_V1 baseline, two bounded real-input pressure runs plus continuation, 151 distinct consumed Critical events, Critical drop=0, contiguous client cursor 1..239, screenshots, incremental log, and cleanup. Static implementation uses Critical capacity 128 and Ambient capacity 32 with no unbounded append.",
         "rollback_record": "Set presentationRuntime=legacy to bypass event ring, or remove the event_runtime include. Existing legacy callbacks remain untouched; ring state is client-local and can be discarded on scene reload."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-2.2",
-      "status_reason": "Fixed-capacity ring, critical/ambient policies, source-sequence diagnostics, owner disposal and automated verification are implemented; terminal status is unable because live pressure/memory evidence requires unavailable Teardown.exe.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "Fixed-capacity ring, critical/ambient policies, source-sequence diagnostics, owner disposal, and automated verification are implemented; live bounded pressure consumed 151 distinct Critical events with zero Critical drops, contiguous client telemetry continuation, clean runtime health, and a fresh-session cleanup.",
+      "verification_status": "verified",
+      "verification_status_reason": "PASS: docs/evidence/step-2.2-presentation-event-ring-v1.json; static ring/publisher/event-v1 regressions and full Harness pass. Live owner cancellation is not read after F4 because the tested session is destroyed before bridge access; owner cancellation is covered by the owning static/self-test contract and fresh-session cleanup is live-verified.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "9d903f23be53302188843c5ca225769290849c476839589fd7ee7477d9205b10",

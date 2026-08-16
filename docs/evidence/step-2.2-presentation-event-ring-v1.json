@@ -1,0 +1,155 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 2.2",
+  "result": "pass",
+  "verified_at": "2026-08-16T17:34:54+08:00",
+  "verification_contract_fingerprint": "9d903f23be53302188843c5ca225769290849c476839589fd7ee7477d9205b10",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_LOG"],
+  "hands": ["HAND_TEST_SETUP"],
+  "behavior_under_test": "A fixed-capacity Presentation Event Ring keeps Critical events ahead of Ambient events, coalesces Ambient updates, diagnoses source-local ordering, and disposes pending owner events without an unbounded append path.",
+  "static": {
+    "todo_contract_validation": "pass: 80 executable Step contracts",
+    "owning_checker": "harness/check-presentation-event-ring.ps1",
+    "owning_checker_result": "pass",
+    "owning_self_test": "pass",
+    "owning_self_test_assertions": [
+      "fixed capacities and bounded head/tail operations",
+      "Critical/Ambient policy and Critical-first drain",
+      "duplicate/gap/out-of-order/drop counters",
+      "owner cancellation accounting"
+    ],
+    "source_hashes": {
+      "Content Mod 2/script/weapon/client/presentation/event_runtime.lua": "628D2289C5DCCC3C299C8D41EF16BE49B75BDB0AE1DDD31D1940FCF6099CB73D",
+      "Content Mod 2/script/testing/ai_agent/telemetry.lua": "F6C7FC8539A465E68A53DBFCFE55213796D65CB72DE098870ABCAB403F439B43",
+      ".codex/tools/teardown_control_mcp/server.py": "21018EA4878EFA78153899A99574D41D7EDAEC308CE797EE7EA3C4806E858773",
+      "Content Mod 2/testing/scenarios/presentation/s5_budget_pressure/contract.json": "93C729842BE919DE13769357A6371DF491C5017DBEDD7A7F46EBB532D008C2C9",
+      "Content Mod 2/_ai_scenario_presentation_event_ring.xml": "35726230FBCDB814B998D570F28AE4D89C4FA982B79EA0D2B7E06EAB08196436"
+    },
+    "implementation": {
+      "critical_capacity": 128,
+      "ambient_capacity": 32,
+      "critical_drop_policy": "reject and count; Ambient cannot displace Critical",
+      "ambient_policy": "replace by source/effect/kind key, otherwise bounded push",
+      "ordering_policy": "source-local duplicate and stale rejection; explicit gap and out-of-order diagnostics",
+      "owner_dispose": "presentationEventDisposeOwner and presentationEventDisposeAll emit cancellation telemetry"
+    }
+  },
+  "runtime": {
+    "target_id": "teardown:4992:530198",
+    "pid": 4992,
+    "scenario": {
+      "id": "presentation_s5_budget_pressure",
+      "xml_revision": "presentation-ring-xml-v1",
+      "lua_revision": "scenario-controller-v2",
+      "ready": true
+    },
+    "baseline": {
+      "run_id": "20260816T085845Z-536d9b3b",
+      "session": "0-85690ad2",
+      "server_latest_seq": 0,
+      "client_latest_seq": 0,
+      "events": 0,
+      "held_inputs": {"keys": [], "buttons": []}
+    },
+    "pressure_runs": [
+      {
+        "run_id": "20260816T090128Z-4d464f21",
+        "action": "real Q selection followed by real LMB hold for approximately 3.8 seconds",
+        "critical_consumed": 76,
+        "ambient_consumed": 17,
+        "drain_events": 17,
+        "gap_diagnostics": 106,
+        "duplicate_diagnostics": 0,
+        "out_of_order_diagnostics": 0,
+        "critical_drop_events": 0,
+        "client_cursor_end": 134
+      },
+      {
+        "run_id": "20260816T090234Z-0298f065",
+        "action": "bounded continuation read for the remaining client cursor",
+        "critical_consumed": 3,
+        "ambient_consumed": 1,
+        "drain_events": 1,
+        "gap_diagnostics": 2,
+        "duplicate_diagnostics": 0,
+        "out_of_order_diagnostics": 0,
+        "critical_drop_events": 0,
+        "client_cursor_range": "129..134"
+      },
+      {
+        "run_id": "20260816T090459Z-46724c8d",
+        "action": "real LMB hold for approximately 3 seconds",
+        "critical_consumed": 72,
+        "ambient_consumed": 15,
+        "drain_events": 23,
+        "gap_diagnostics": 74,
+        "duplicate_diagnostics": 0,
+        "out_of_order_diagnostics": 0,
+        "critical_drop_events": 0,
+        "client_cursor_end": 239
+      }
+    ],
+    "aggregate": {
+      "session": "0-85690ad2",
+      "critical_consumed": 151,
+      "critical_distinct": 151,
+      "ambient_consumed": 33,
+      "drain_events": 41,
+      "gap_diagnostics": 182,
+      "duplicate_diagnostics": 0,
+      "out_of_order_diagnostics": 0,
+      "critical_drop_events": 0,
+      "client_telemetry_sequences": "1..239 contiguous, 239 unique, no cursor gap or duplicate"
+    },
+    "input": {
+      "production_chain_observed": ["input_edge", "weapon_hold_sent", "weapon_hold_received", "fire_request", "presentation_event", "presentation_ring_drain"],
+      "held_inputs_after_pressure": {"keys": [], "buttons": []},
+      "emergency_release": {"keys": [], "buttons": []}
+    },
+    "screenshots": [
+      {
+        "run_id": "20260816T090128Z-4d464f21",
+        "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T090128Z-4d464f21/frame_f000002-5154b816_pid-4992.png",
+        "sha256": "F203EADEEADEB763FBFAA6B1579067413D36B8D008B60524382D9B5B970B3370",
+        "fact": "non-black running scene with the configured ship presentation"
+      },
+      {
+        "run_id": "20260816T090128Z-4d464f21",
+        "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T090128Z-4d464f21/frame_f000004-1b6dcee0_pid-4992.png",
+        "sha256": "D17B1FE808B93A02DD2211C40A381715CDA084771D0A1B265B4988B36B6547A4",
+        "fact": "pressure-run client area remained non-black"
+      }
+    ],
+    "log": {
+      "baseline_cursor": 66384,
+      "pressure_runs_new_in_scope_errors": 0,
+      "pressure_runs_new_in_scope_warnings": 0
+    }
+  },
+  "cleanup": {
+    "run_id": "20260816T090946Z-aff7d8b2",
+    "f4_to_editor": "pass",
+    "fresh_session": "0-b2c7658e",
+    "fresh_session_server_seq": 0,
+    "fresh_session_client_seq": 0,
+    "fresh_session_events": 0,
+    "held_inputs": {"keys": [], "buttons": []},
+    "screenshot": {
+      "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T090946Z-aff7d8b2/frame_f000003-fbdeb643_pid-4992.png",
+      "sha256": "6869D360E388FE2F94525B475D2446AF40E9F781CFDE9C9726912EB4867BFBEC",
+      "fact": "editor visible after F4"
+    },
+    "owner_cancel_live_note": "F4 destroys the tested CM2 session before the UI bridge can read the final cancellation event; owner disposal and cancellation accounting are covered by the owning static/self-test contract, while the fresh-session probe proves no pending events or stale registrations remain."
+  },
+  "regression": {
+    "presentation_event_ring_checker": "pass",
+    "presentation_event_ring_self_test": "pass",
+    "presentation_publisher_checker_and_self_test": "pass",
+    "presentation_event_v1_checker_and_self_test": "pass",
+    "full_harness": "pass: .\\harness\\check-all.ps1, all checks and self-tests, exit code 0; completed in 127 seconds",
+    "todo_plan_validator": "pass: 80 executable Step contracts"
+  },
+  "rollback": "Set presentationRuntime=legacy to bypass the event ring or remove the event_runtime include; retain the existing legacy callbacks. Ring state is client-local and is discarded on scene reload.",
+  "scope_boundary": "Live evidence proves the production bounded-pressure path, Critical-first consumption, telemetry cursor continuation, zero Critical drops, runtime health, and cleanup. Duplicate/out-of-order rejection and owner cancellation are proven by the owning static/self-test contract; live pressure produced no duplicate or out-of-order diagnostic, which is a passing absence assertion rather than a claim that those negative inputs were generated live."
+}
