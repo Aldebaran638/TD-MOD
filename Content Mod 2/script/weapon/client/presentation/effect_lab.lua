@@ -144,7 +144,7 @@ end
 function lab.tick(dt)
     local state = _state()
     if not state.initialized then return end
-    client.presentationBudget.beginFrame(dt)
+    -- The host client tick owns presentationBudget.beginFrame; the lab only updates its handle.
     if not state.paused and state.handle ~= nil then
         local delta = math.max(0.0, tonumber(dt) or 0.0)
         state.elapsed = state.elapsed + delta

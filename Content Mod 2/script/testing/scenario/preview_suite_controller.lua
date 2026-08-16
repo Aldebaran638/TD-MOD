@@ -220,7 +220,7 @@ function client.tick(dt)
     state.flash = math.max(0.0, state.flash - delta)
     cm2SyntheticWorldAdapterV1.tick(delta)
     publishDiagnostics()
-    client.presentationBudget.beginFrame(delta)
+    client.presentationBudget.beginFrame(delta, "preview_suite.client.tick")
     SetCameraTransform(Transform(Vec(0, 7.5, 19), QuatLookAt(Vec(0, 7.5, 19), Vec(0, 1.5, -2))))
 
     if InputPressed("leftarrow") then selectMode(state.mode == 1 and 3 or state.mode - 1)
@@ -306,6 +306,7 @@ function client.destroy()
     cm2PreviewSuiteV1.dispose()
     cm2SyntheticWorldAdapterV1.dispose("preview-level-destroy")
     client.effectPlayer.sceneReload()
+    client.presentationBudget.sceneReload()
     state.ready = false
     publishStatus()
 end

@@ -321,6 +321,87 @@ local function _previewSnapshot()
     }
 end
 
+local function _presentationBudgetSnapshot()
+    local root = "StellarisShips/testing/presentationBudget/"
+    local indexRoot = "StellarisShips/server/ships/index"
+    local count = math.min(telemetry.maxShips, math.max(0, _integer(GetInt(indexRoot .. "/count"), 0)))
+    local clients = {}
+    local aggregate = {
+        requests = 0, accepted = 0, degraded = 0, rejected = 0,
+        duplicate_begin_count = 0, primitive = {},
+    }
+    for index = 1, count do
+        local body = _integer(GetInt(indexRoot .. "/" .. tostring(index) .. "/bodyId"), 0)
+        local prefix = root .. tostring(body) .. "/"
+        if body ~= 0 and GetBool(prefix .. "ready") then
+            local item = {
+                body_id = body,
+                frame = _integer(GetInt(prefix .. "frame"), 0),
+                begin_count = _integer(GetInt(prefix .. "beginCount"), 0),
+                begin_owner = _string(GetString(prefix .. "beginOwner")),
+                duplicate_begin_count = _integer(GetInt(prefix .. "duplicateBeginCount"), 0),
+                requests = _integer(GetInt(prefix .. "requests"), 0),
+                accepted = _integer(GetInt(prefix .. "accepted"), 0),
+                degraded = _integer(GetInt(prefix .. "degraded"), 0),
+                rejected = _integer(GetInt(prefix .. "rejected"), 0),
+                voices = _integer(GetInt(prefix .. "voices"), 0),
+                max_voices = _integer(GetInt(prefix .. "maxVoices"), 0),
+                shakes = _integer(GetInt(prefix .. "shakes"), 0),
+                max_shakes = _integer(GetInt(prefix .. "maxShakes"), 0),
+                primitive = {
+                    particles = _integer(GetInt(prefix .. "particlesThisFrame"), 0),
+                    point_lights = _integer(GetInt(prefix .. "pointLightsThisFrame"), 0),
+                    sprites = _integer(GetInt(prefix .. "spritesThisFrame"), 0),
+                    lines = _integer(GetInt(prefix .. "linesThisFrame"), 0),
+                    max_particles = _integer(GetInt(prefix .. "maxParticles"), 0),
+                    max_point_lights = _integer(GetInt(prefix .. "maxPointLights"), 0),
+                    max_sprites = _integer(GetInt(prefix .. "maxSprites"), 0),
+                    max_lines = _integer(GetInt(prefix .. "maxLines"), 0),
+                },
+                kinds = {},
+                metadata = {},
+            }
+            local kindCount = math.min(32, math.max(0, _integer(GetInt(prefix .. "kindCount"), 0)))
+            for kindIndex = 1, kindCount do
+                local kindRoot = prefix .. "kinds/" .. tostring(kindIndex) .. "/"
+                local kind = _string(GetString(kindRoot .. "kind"), "unknown")
+                item.kinds[kind] = {
+                    requested = _integer(GetInt(kindRoot .. "requested"), 0),
+                    accepted = _integer(GetInt(kindRoot .. "accepted"), 0),
+                    degraded = _integer(GetInt(kindRoot .. "degraded"), 0),
+                    rejected = _integer(GetInt(kindRoot .. "rejected"), 0),
+                }
+            end
+            local metadataCount = math.min(32, math.max(0, _integer(GetInt(prefix .. "metadataCount"), 0)))
+            for metadataIndex = 1, metadataCount do
+                local metadataRoot = prefix .. "metadata/" .. tostring(metadataIndex) .. "/"
+                item.metadata[#item.metadata + 1] = {
+                    effect = _string(GetString(metadataRoot .. "effect"), "unknown"),
+                    package = _string(GetString(metadataRoot .. "package"), "unknown"),
+                    owner = _string(GetString(metadataRoot .. "owner"), "unknown"),
+                    priority = _string(GetString(metadataRoot .. "priority"), "normal"),
+                    distance = _string(GetString(metadataRoot .. "distance"), "unknown"),
+                    requested = _integer(GetInt(metadataRoot .. "requested"), 0),
+                    accepted = _integer(GetInt(metadataRoot .. "accepted"), 0),
+                    degraded = _integer(GetInt(metadataRoot .. "degraded"), 0),
+                    rejected = _integer(GetInt(metadataRoot .. "rejected"), 0),
+                }
+            end
+            clients[#clients + 1] = item
+            for _, field in ipairs({ "requests", "accepted", "degraded", "rejected", "duplicate_begin_count" }) do
+                aggregate[field] = aggregate[field] + item[field]
+            end
+            for field, value in pairs(item.primitive) do
+                aggregate.primitive[field] = (aggregate.primitive[field] or 0) + value
+            end
+        end
+    end
+    if #clients == 0 then return nil end
+    aggregate.clients = clients
+    aggregate.client_count = #clients
+    return aggregate
+end
+
 local function _newSession()
     local now = _integer((GetTime ~= nil) and GetTime() * 1000 or 0, 0)
     local randomPart = math.random(0, 2147483647)
@@ -669,6 +750,8 @@ local function _snapshot(maxShips)
     }
     local preview = _previewSnapshot()
     if preview ~= nil then snapshot.preview = preview end
+    local presentationBudget = _presentationBudgetSnapshot()
+    if presentationBudget ~= nil then snapshot.presentation_budget = presentationBudget end
     return snapshot
 end
 

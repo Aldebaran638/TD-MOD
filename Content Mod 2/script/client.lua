@@ -37,7 +37,7 @@ end
 
 function client.clientTick(dt)
     cm2ShipInstanceAdapterV1.clientTick(dt)
-    client.presentationBudget.beginFrame(dt)
+    client.presentationBudget.beginFrame(dt, "client.clientTick")
     if client.shipClientIsDestroyed() then
         if not client.presentationRuntimeDisposed
             and client.presentationSliceRuntimeDisposeAll ~= nil then
@@ -51,6 +51,10 @@ function client.clientTick(dt)
     client.shipClientBeforeWeaponTick(dt)
     client.weaponClientTick(dt)
     client.shipClientAfterWeaponTick(dt)
+    client.presentationBudget.publishTelemetry(
+        "StellarisShips/testing/presentationBudget/",
+        client.shipContextGetBody()
+    )
 end
 
 function client.destroy()
@@ -58,6 +62,7 @@ function client.destroy()
         client.presentationSliceRuntimeDisposeAll()
     end
     client.presentationRuntimeDisposed = true
+    if client.presentationBudget.sceneReload ~= nil then client.presentationBudget.sceneReload() end
 end
 
 function client.clientDraw()
@@ -76,4 +81,8 @@ function client.render()
     client.shipClientRender()
     client.weaponClientRender()
     client.shipClientRenderEffects()
+    client.presentationBudget.publishTelemetry(
+        "StellarisShips/testing/presentationBudget/",
+        client.shipContextGetBody()
+    )
 end

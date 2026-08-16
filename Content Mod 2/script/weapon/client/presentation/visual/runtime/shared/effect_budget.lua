@@ -26,6 +26,7 @@ client.weaponFxBudgetConfig = client.weaponFxBudgetConfig or {
     criticalSpriteReserve = 24,
     criticalPointLightReserve = 2,
     maxLinesPerFrame = 384,
+    criticalLineReserve = 32,
     maxActiveMuzzles = 128,
     maxActiveImpacts = 128,
     maxActiveBeams = 96,
@@ -84,11 +85,15 @@ function client.weaponFxTakeSprite(count, priority)
     return true
 end
 
-function client.weaponFxTakeLine(count)
+function client.weaponFxTakeLine(count, priority)
     local state = client.weaponFxBudgetState
     local cfg = client.weaponFxBudgetConfig
     count = math.max(1, math.floor(tonumber(count) or 1))
-    if state.linesThisFrame + count > cfg.maxLinesPerFrame then return false end
+    local limit = cfg.maxLinesPerFrame
+    if priority ~= "critical" then
+        limit = math.max(0, limit - math.max(0, cfg.criticalLineReserve or 0))
+    end
+    if state.linesThisFrame + count > limit then return false end
     state.linesThisFrame = state.linesThisFrame + count
     return true
 end

@@ -121,7 +121,7 @@ end
 
 function client.tick(dt)
     cm2ShipInstanceAdapterV1.clientTick(dt)
-    client.presentationBudget.beginFrame(dt)
+    client.presentationBudget.beginFrame(dt, "strikeCraftMain.tick")
     if client.shipClientIsDestroyed() then
         client.shipClientDestroyedUiTick(dt)
         return
