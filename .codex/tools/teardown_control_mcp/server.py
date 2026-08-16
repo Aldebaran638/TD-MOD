@@ -1406,7 +1406,10 @@ def teardown_telemetry_read(after_seq: int = 0, timeout: float = 2.5) -> dict[st
             result["events"] = response.get("events", [])
             result["truncated"] = bool(response.get("truncated"))
             client_latest = response.get("client_latest_seq")
-            if client_latest is not None:
+            client_next = response.get("client_next_after_seq")
+            if client_next is not None:
+                STATE.telemetry_client_cursor = max(0, int(client_next or 0))
+            elif client_latest is not None and not bool(response.get("truncated")):
                 STATE.telemetry_client_cursor = max(0, int(client_latest or 0))
         _write_run_result({"telemetry_read": result})
         STATE.append_jsonl("telemetry_reads.jsonl", {"at": _now_iso(), **result})

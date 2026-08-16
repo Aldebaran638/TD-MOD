@@ -704,22 +704,30 @@ local function _damageResultForNonce(nonce)
 end
 
 local function _response(request, damageResult)
-    local events, latest, oldest, truncated = _readServerEvents(request.after_seq)
+    local serverEvents, latest, oldest, truncated = _readServerEvents(request.after_seq)
     local clientEvents, clientLatest = _readClientEvents(request.client_after_seq)
-    for _, event in ipairs(clientEvents) do events[#events + 1] = event end
     local shipsLimit = telemetry.maxShips
     local eventLimit = telemetry.maxEvents
-    while #events > eventLimit do table.remove(events); truncated = true end
-    local function continuationFor(eventList)
+    local events = {}
+    local clientBudget = math.min(#clientEvents, eventLimit)
+    local serverBudget = math.max(0, eventLimit - clientBudget)
+    for index = 1, clientBudget do events[#events + 1] = clientEvents[index] end
+    for index = 1, math.min(#serverEvents, serverBudget) do
+        events[#events + 1] = serverEvents[index]
+    end
+    if #clientEvents > clientBudget or #serverEvents > serverBudget then truncated = true end
+    local function continuationFor(eventList, source, fallback)
         for index = #eventList, 1, -1 do
             local event = eventList[index]
-            if type(event) == "table" and tostring(event.source or "server") ~= "client" then
-                return _integer(event.seq, request.after_seq)
+            if type(event) == "table"
+                and tostring(event.source or "server") == source then
+                return _integer(event.seq, fallback)
             end
         end
-        return request.after_seq
+        return fallback
     end
-    local continuation = continuationFor(events)
+    local continuation = continuationFor(events, "server", request.after_seq)
+    local clientContinuation = continuationFor(events, "client", request.client_after_seq)
     local payload = {
         protocol = telemetry.protocol,
         type = "response",
@@ -731,6 +739,7 @@ local function _response(request, damageResult)
         oldest_seq = oldest,
         next_after_seq = continuation,
         client_latest_seq = clientLatest,
+        client_next_after_seq = clientContinuation,
         truncated = truncated,
         snapshot = _snapshot(shipsLimit),
         events = events,
@@ -740,10 +749,16 @@ local function _response(request, damageResult)
     while #encoded > telemetry.maxResponseBytes and #payload.events > 0 do
         table.remove(payload.events)
         payload.truncated = true
-        payload.next_after_seq = continuationFor(payload.events)
+        payload.next_after_seq = continuationFor(payload.events, "server", request.after_seq)
+        payload.client_next_after_seq = continuationFor(
+            payload.events, "client", request.client_after_seq
+        )
         encoded = telemetry.protocol .. "|response=" .. cm2TelemetryJsonEncode(payload)
     end
-    payload.next_after_seq = continuationFor(payload.events)
+    payload.next_after_seq = continuationFor(payload.events, "server", request.after_seq)
+    payload.client_next_after_seq = continuationFor(
+        payload.events, "client", request.client_after_seq
+    )
     while #encoded > telemetry.maxResponseBytes and #payload.snapshot.ships > 0 do
         table.remove(payload.snapshot.ships)
         payload.truncated = true

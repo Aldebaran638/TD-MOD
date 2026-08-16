@@ -58,7 +58,12 @@ end
 function runtime.init()
     local state = _state()
     if state.initialized then return state end
-    state.mode = (GetStringParam ~= nil and GetStringParam("presentationRuntime", "legacy")) or "legacy"
+    local requestedMode = (GetStringParam ~= nil and GetStringParam("presentationRuntime", "")) or ""
+    if tostring(requestedMode or "") == "" and GetString ~= nil then
+        requestedMode = GetString("StellarisShips/testing/scenario/presentationRuntime")
+    end
+    state.mode = tostring(requestedMode or "legacy")
+    if state.mode == "" then state.mode = "legacy" end
     if state.mode ~= "event-v1" then state.mode = "legacy" end
     for _, slice in ipairs({ "ray-beam", "logical-projectile", "guided-missile", "tachyon-charge-beam" }) do
         local parameterName = "presentationRuntime_" .. slice:gsub("-", "_")
@@ -143,6 +148,16 @@ function runtime.disposeOwner(sourceId)
     client.presentationEventDisposeOwner(sourceId)
 end
 
+function runtime.disposeAll()
+    local state = _state()
+    for key, handle in pairs(state.handles) do
+        client.effectPlayer.destroy(handle, "client-dispose")
+        state.handles[key] = nil
+        state.disposed = state.disposed + 1
+    end
+    return client.presentationEventDisposeAll()
+end
+
 function runtime.getDiagnostics()
     local state = _state()
     return {
@@ -159,3 +174,4 @@ end
 function client.presentationSliceRuntimeInit() return runtime.init() end
 function client.presentationSliceRuntimeTick(dt) return runtime.tick(dt) end
 function client.presentationSliceRuntimeDisposeOwner(sourceId) return runtime.disposeOwner(sourceId) end
+function client.presentationSliceRuntimeDisposeAll() return runtime.disposeAll() end

@@ -118,7 +118,12 @@ function server.presentationPublisherInit()
     local state = server.presentationPublisherState
     if state.initialized then return state end
     local authorityMode = (cm2EffectRuntimeAuthority ~= nil and cm2EffectRuntimeAuthority.init().mode) or "legacy"
-    local requested = (GetStringParam ~= nil and GetStringParam("presentationRuntime", authorityMode)) or authorityMode
+    local requestedParam = (GetStringParam ~= nil and GetStringParam("presentationRuntime", "")) or ""
+    if tostring(requestedParam or "") == "" and GetString ~= nil then
+        requestedParam = GetString("StellarisShips/testing/scenario/presentationRuntime")
+    end
+    local requested = tostring(requestedParam or "")
+    if requested == "" then requested = authorityMode end
     requested = tostring(requested or "legacy")
     if requested ~= "legacy" and requested ~= "event-v1" then requested = "legacy" end
     state.mode = requested

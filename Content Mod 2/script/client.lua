@@ -3,6 +3,8 @@
 
 client = client or {}
 
+client.presentationRuntimeDisposed = false
+
 #include "net/presentation_event_v1.lua"
 #include "net/world_protocol_v1.lua"
 #include "net/effect_runtime_authority.lua"
@@ -19,6 +21,7 @@ function client.init()
         error("missing required ship script parameter: shiptype/bodytag")
     end
     client.shipClientInit(shipType, bodyTag)
+    client.presentationRuntimeDisposed = false
     local aiProjection = cm2AiWeaponRuntimeProjection
     if bodyTag == "shipTitanAiCandidate"
         and aiProjection ~= nil and aiProjection.activateForScenario ~= nil then
@@ -36,12 +39,25 @@ function client.clientTick(dt)
     cm2ShipInstanceAdapterV1.clientTick(dt)
     client.presentationBudget.beginFrame(dt)
     if client.shipClientIsDestroyed() then
+        if not client.presentationRuntimeDisposed
+            and client.presentationSliceRuntimeDisposeAll ~= nil then
+            client.presentationSliceRuntimeDisposeAll()
+            client.presentationRuntimeDisposed = true
+        end
         client.shipClientDestroyedUiTick(dt)
         return
     end
+    client.presentationRuntimeDisposed = false
     client.shipClientBeforeWeaponTick(dt)
     client.weaponClientTick(dt)
     client.shipClientAfterWeaponTick(dt)
+end
+
+function client.destroy()
+    if client.presentationSliceRuntimeDisposeAll ~= nil then
+        client.presentationSliceRuntimeDisposeAll()
+    end
+    client.presentationRuntimeDisposed = true
 end
 
 function client.clientDraw()

@@ -43,9 +43,32 @@ local function _resolveCurrentShipDefinition()
     return shipDefinitionGet(shipType, shipType)
 end
 
+local function _definitionWeaponGroups(definition)
+    local directGroups = (definition or {}).weaponGroups or {}
+    if #directGroups > 0 then return directGroups end
+
+    local defaultId = tostring((definition or {}).defaultSlotConfigurationId or "")
+    local fallback = nil
+    for _, configuration in ipairs((definition or {}).slotConfigurations or {}) do
+        fallback = fallback or configuration.slotGroups
+        if tostring(configuration.configurationId or "") == defaultId then
+            return configuration.slotGroups or {}
+        end
+    end
+    return fallback or {}
+end
+
+local function _groupHasMounts(definition, group)
+    local mountCollection = tostring((group or {}).mountCollection or "")
+    if mountCollection ~= "" then
+        return #((definition or {})[mountCollection] or {}) > 0
+    end
+    return math.floor(tonumber((group or {}).count) or 0) > 0
+end
+
 local function _nextAvailableWeaponMode(current)
     local definition = _resolveCurrentShipDefinition()
-    local groups = definition.weaponGroups or {}
+    local groups = _definitionWeaponGroups(definition)
     if #groups == 0 then return "" end
     local currentIndex = 1
     for i = 1, #groups do
@@ -57,8 +80,7 @@ local function _nextAvailableWeaponMode(current)
     for offset = 1, #groups do
         local index = ((currentIndex - 1 + offset) % #groups) + 1
         local group = groups[index] or {}
-        local mounts = definition[tostring(group.mountCollection or "")] or {}
-        if not group.automatic and #mounts > 0 then
+        if not group.automatic and _groupHasMounts(definition, group) then
             return tostring(group.groupId or "")
         end
     end

@@ -1,0 +1,26 @@
+{
+  "schema": "cm2.scenario-contract/1",
+  "id": "presentation_s5_budget_pressure",
+  "level": "MOD/_ai_scenario_presentation_event_ring.xml",
+  "revision": "presentation-ring-xml-v1",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "LOG"],
+  "setup": {
+    "entities": ["one Titan player ship", "one stationary enigmatic cruiser target"],
+    "runtime": "presentationRuntime=event-v1",
+    "fixed": "fixed transforms, zero initial velocity, deterministic loadouts and scenario revision"
+  },
+  "trigger": [
+    "reload with F4_TO_F5",
+    "select the production L-slot projectile group",
+    "hold the real weapon input long enough for at least 100 publisher Critical events",
+    "release input and allow the client ring to drain"
+  ],
+  "assertions": [
+    "presentation_ring_drain sequences contain 100 distinct consumed Critical events",
+    "Critical events are drained before Ambient events",
+    "presentation_ring_diagnostic records duplicate, gap and out-of-order behavior",
+    "presentation_ring_drop reports critical=0 during the bounded pressure run",
+    "presentation_ring_cancel records owner disposal and no pending events remain"
+  ],
+  "cleanup": ["emergency release", "F4 to editor", "fresh session has no stale fixture state"]
+}

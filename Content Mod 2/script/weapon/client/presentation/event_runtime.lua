@@ -6,6 +6,12 @@ local function _newRing(capacity)
     return { capacity = capacity, slots = {}, head = 1, tail = 1, count = 0 }
 end
 
+local function _telemetry(eventName, data)
+    if client.cm2TelemetryRecord ~= nil then
+        client.cm2TelemetryRecord(eventName, data)
+    end
+end
+
 client.presentationEventRuntime = client.presentationEventRuntime or {
     lastSequence = 0,
     lastSequenceBySource = {},
@@ -81,6 +87,15 @@ local function _ringRemoveOwner(ring, sourceId)
     return removed
 end
 
+local function _ringCollectSources(ring, sources)
+    local index = ring.head
+    for _ = 1, ring.count do
+        local value = ring.slots[index]
+        if value ~= nil then sources[_sourceKey(value)] = true end
+        index = (index % ring.capacity) + 1
+    end
+end
+
 local function _ambientReplaceOrPush(ring, value)
     local key = _ambientKey(value)
     local index = ring.head
@@ -103,6 +118,7 @@ function client.receiveWeaponPresentationEventV1(value)
     local decoded, errorText = cm2PresentationEventV1.decode(value)
     if decoded == nil then
         state.rejected = state.rejected + 1
+        _telemetry("presentation_ring_rejected", { reason = tostring(errorText or "invalid event") })
         return false, errorText
     end
     local source = _sourceKey(decoded)
@@ -110,25 +126,58 @@ function client.receiveWeaponPresentationEventV1(value)
     if previousSourceSequence ~= nil then
         if decoded.sequence == previousSourceSequence then
             state.duplicate = state.duplicate + 1
+            _telemetry("presentation_ring_diagnostic", {
+                action = "duplicate",
+                source_id = source,
+                sequence = decoded.sequence,
+            })
             return false, "duplicate source sequence"
         elseif decoded.sequence < previousSourceSequence then
             state.outOfOrder = state.outOfOrder + 1
+            _telemetry("presentation_ring_diagnostic", {
+                action = "out-of-order",
+                source_id = source,
+                sequence = decoded.sequence,
+                previous_sequence = previousSourceSequence,
+            })
             return false, "out-of-order source sequence"
         elseif decoded.sequence > previousSourceSequence + 1 then
             state.gap = state.gap + (decoded.sequence - previousSourceSequence - 1)
+            _telemetry("presentation_ring_diagnostic", {
+                action = "gap",
+                source_id = source,
+                sequence = decoded.sequence,
+                previous_sequence = previousSourceSequence,
+                missing = decoded.sequence - previousSourceSequence - 1,
+            })
         end
     end
     state.lastSequenceBySource[source] = decoded.sequence
     state.lastSequence = math.max(state.lastSequence, decoded.sequence)
     state.accepted = state.accepted + 1
-    if _eventIsCritical(decoded) then
+    local isCritical = _eventIsCritical(decoded)
+    if isCritical then
         if not _ringPush(state.critical, decoded) then
             state.droppedCritical = state.droppedCritical + 1
+            _telemetry("presentation_ring_drop", {
+                class = "critical",
+                source_id = source,
+                sequence = decoded.sequence,
+                kind = decoded.kind,
+            })
             return false, "critical event ring is full"
         end
     else
         local pushed, replaced = _ambientReplaceOrPush(state.ambient, decoded)
-        if not pushed and not replaced then state.droppedAmbient = state.droppedAmbient + 1 end
+        if not pushed and not replaced then
+            state.droppedAmbient = state.droppedAmbient + 1
+            _telemetry("presentation_ring_drop", {
+                class = "ambient",
+                source_id = source,
+                sequence = decoded.sequence,
+                kind = decoded.kind,
+            })
+        end
     end
     return true
 end
@@ -156,8 +205,31 @@ end
 function client.presentationEventDrain()
     local state = client.presentationEventRuntime
     local result = {}
-    while state.critical.count > 0 do result[#result + 1] = _ringPop(state.critical) end
-    while state.ambient.count > 0 do result[#result + 1] = _ringPop(state.ambient) end
+    local criticalCount, ambientCount = 0, 0
+    local sequences, kinds = {}, {}
+    while state.critical.count > 0 do
+        local value = _ringPop(state.critical)
+        result[#result + 1] = value
+        criticalCount = criticalCount + 1
+        sequences[#sequences + 1] = value.sequence
+        kinds[#kinds + 1] = value.kind
+    end
+    while state.ambient.count > 0 do
+        local value = _ringPop(state.ambient)
+        result[#result + 1] = value
+        ambientCount = ambientCount + 1
+        sequences[#sequences + 1] = value.sequence
+        kinds[#kinds + 1] = value.kind
+    end
+    if #result > 0 then
+        _telemetry("presentation_ring_drain", {
+            critical_count = criticalCount,
+            ambient_count = ambientCount,
+            count = #result,
+            sequences = sequences,
+            kinds = kinds,
+        })
+    end
     return result
 end
 
@@ -167,5 +239,30 @@ function client.presentationEventDisposeOwner(sourceId)
     removed = removed + _ringRemoveOwner(state.ambient, sourceId)
     state.disposed = state.disposed + removed
     if removed > 0 then state.cancelled = state.cancelled + 1 end
+    _telemetry("presentation_ring_cancel", {
+        source_id = tostring(sourceId),
+        removed = removed,
+        cancelled = removed > 0,
+    })
+    return removed
+end
+
+function client.presentationEventDisposeAll()
+    local state = client.presentationEventRuntime
+    local sources = {}
+    _ringCollectSources(state.critical, sources)
+    _ringCollectSources(state.ambient, sources)
+    local removed = 0
+    for sourceId, _ in pairs(sources) do
+        removed = removed + client.presentationEventDisposeOwner(sourceId)
+    end
+    if next(sources) == nil then
+        _telemetry("presentation_ring_cancel", {
+            source_id = "*",
+            removed = 0,
+            cancelled = false,
+            owner_scope = "client",
+        })
+    end
     return removed
 end
