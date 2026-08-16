@@ -26,6 +26,7 @@ local function _state()
             rejected = 0,
             consumed = 0,
             disposed = 0,
+            dispatchRejected = 0,
         }
     end
     return runtime.state
@@ -40,8 +41,65 @@ local function _key(event, slice)
     local source = tostring(((event or {}).source or {}).id or "world")
     local weapon = tostring(((event or {}).weapon or {}).id or "")
     local payload = (event or {}).payload or {}
-    local entity = tostring(payload.projectileId or payload.missileId or payload.craftBodyId or "")
+    local presentation = payload.presentation or {}
+    local entity = tostring(
+        payload.projectileId or payload.missileId or payload.craftBodyId
+            or presentation.entityId or ""
+    )
     return slice .. "|" .. source .. "|" .. weapon .. "|" .. entity
+end
+
+local function _unpack(values)
+    if type(values) ~= "table" then return end
+    local unpackFunction = table.unpack or unpack
+    return unpackFunction(values)
+end
+
+local function _dispatchRoute(event)
+    local payload = event.payload or {}
+    local presentation = payload.presentation or {}
+    local route = tostring(presentation.route or "")
+    local args = presentation.args or {}
+    local callbackByRoute = {
+        ["ray.shieldImpact"] = "playProjectileShieldImpactFx",
+        ["ray.effect"] = "spawnGenericRaycastWeaponFx",
+        ["weapon.sound"] = "playWeaponSound",
+        ["tSlot.render"] = "receiveTSlotRenderEvent",
+        ["xSlot.render"] = "receiveXSlotRenderEvent",
+        ["projectile.fireSound"] = "playKineticArtilleryFireSound",
+        ["projectile.hitSound"] = "playKineticArtilleryHitSound",
+        ["projectile.shieldImpact"] = "playProjectileShieldImpactFx",
+        ["projectile.spawn"] = "spawnProjectileVisual",
+        ["projectile.finish"] = "finishProjectileVisual",
+        ["missile.finish"] = "finishMissileVisual",
+        ["missile.spawn"] = "spawnMissileVisual",
+        ["missile.fireSound"] = "playMissileFireSound",
+        ["missile.impactSound"] = "playMissileImpactSound",
+        ["missile.impactFx"] = "playMissileImpactFx",
+        ["missile.muzzle"] = "spawnWeaponMuzzleFx",
+        ["craft.launch"] = "spawnHSlotLaunchFx",
+        ["craft.register"] = "registerHSlotCraftFx",
+        ["craft.recover"] = "spawnHSlotRecoverFx",
+    }
+    local callbackName = callbackByRoute[route]
+    if callbackName ~= nil and client[callbackName] ~= nil then
+        client[callbackName](_unpack(args))
+        return true, route
+    end
+    if route == "point-defense.fx" and client.spawnPointDefenseFx ~= nil then
+        local destination = payload.destination or { 0.0, 0.0, 0.0 }
+        local origin = event.transform ~= nil and event.transform.position or { 0.0, 0.0, 0.0 }
+        client.spawnPointDefenseFx(
+            payload.role or "flak",
+            origin[1] or 0.0, origin[2] or 0.0, origin[3] or 0.0,
+            destination[1] or destination.x or 0.0,
+            destination[2] or destination.y or 0.0,
+            destination[3] or destination.z or 0.0,
+            payload.duration or 0.08
+        )
+        return true, route
+    end
+    return false, route
 end
 
 local function _record(state, event, slice, operation, handle)
@@ -49,6 +107,7 @@ local function _record(state, event, slice, operation, handle)
         sequence = event.sequence,
         kind = event.kind,
         event_type = tostring(((event.payload or {}).eventType) or ""),
+        route = tostring((((event.payload or {}).presentation or {}).route) or ""),
         slice = slice,
         operation = operation,
         handle = handle,
@@ -59,6 +118,7 @@ local function _record(state, event, slice, operation, handle)
             sequence = event.sequence,
             kind = event.kind,
             slice = slice,
+            route = tostring((((event.payload or {}).presentation or {}).route) or ""),
             operation = operation,
             handle_index = handle ~= nil and math.floor(tonumber(handle.index) or 0) or 0,
             handle_generation = handle ~= nil and math.floor(tonumber(handle.generation) or 0) or 0,
@@ -88,7 +148,9 @@ end
 
 local function _consumeEvent(state, event)
     local slice = _slice(event)
-    if slice == "" or state.sliceMode[slice] ~= "event-v1" then return end
+    local enabled = (slice == "" and state.mode == "event-v1")
+        or (slice ~= "" and state.sliceMode[slice] == "event-v1")
+    if not enabled then return end
     local key = _key(event, slice)
     local payload = event.payload or {}
     local owner = event.source or { id = "world", generation = 0 }
@@ -96,7 +158,13 @@ local function _consumeEvent(state, event)
     local effectId = tostring(((event.effect or {}).id) or ((event.weapon or {}).id) or ("cm2:effect/" .. tostring(event.kind)))
     local operation = "play"
     local handle = state.handles[key]
-    if event.kind == "craft_recover" or (event.kind == "impact" and tostring(payload.mode or "") == "finish") then
+    local presentation = payload.presentation or {}
+    local route = tostring(presentation.route or "")
+    local isFinish = route == "projectile.finish"
+        or route == "missile.finish"
+        or event.kind == "craft_recover"
+        or (event.kind == "impact" and tostring(payload.mode or "") == "finish")
+    if isFinish then
         if handle ~= nil then
             client.effectPlayer.stop(handle, event.kind, 0.0)
             state.handles[key] = nil
@@ -130,13 +198,19 @@ local function _consumeEvent(state, event)
             state.rejected = state.rejected + 1
         end
     end
+    local dispatched = _dispatchRoute(event)
+    if not dispatched then state.dispatchRejected = state.dispatchRejected + 1 end
     state.accepted = state.accepted + 1
     _record(state, event, slice, operation, handle)
 end
 
 function runtime.tick(dt)
     local state = runtime.init()
-    if state.mode == "event-v1" then
+    local hasEventSlice = false
+    for _, mode in pairs(state.sliceMode) do
+        if mode == "event-v1" then hasEventSlice = true; break end
+    end
+    if state.mode == "event-v1" or hasEventSlice then
         local events = client.presentationEventDrain()
         for _, event in ipairs(events) do
             state.consumed = state.consumed + 1
@@ -185,6 +259,7 @@ function runtime.getDiagnostics()
         rejected = state.rejected,
         consumed = state.consumed,
         disposed = state.disposed,
+        dispatchRejected = state.dispatchRejected,
         activeHandles = (client.effectPlayer.getDiagnostics() or {}).active or 0,
         trace = state.trace,
     }

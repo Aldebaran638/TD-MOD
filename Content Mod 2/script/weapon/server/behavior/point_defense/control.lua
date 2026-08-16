@@ -136,6 +136,12 @@ local function _pdSendFx(role, origin, destination, duration, weapon, attackerBo
                 duration = math.max(0.03, tonumber(duration) or 0.08),
             },
             route = "point-defense.fx",
+            routeArgs = {
+                tostring(role or "flak"),
+                origin[1], origin[2], origin[3],
+                destination[1], destination[2], destination[3],
+                math.max(0.03, tonumber(duration) or 0.08),
+            },
         })
         if published then return end
     end

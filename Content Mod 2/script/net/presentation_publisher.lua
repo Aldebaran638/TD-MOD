@@ -16,6 +16,7 @@ server.presentationPublisherState = server.presentationPublisherState or {
     eventV1Calls = 0,
     rejected = 0,
     byKind = {},
+    byRoute = {},
     sliceMode = {},
     bySlice = {},
 }
@@ -48,12 +49,23 @@ local _routes = {
     ["craft.launch"] = { channel = "weapon.fireFx", callback = "client.spawnHSlotLaunchFx" },
     ["craft.register"] = { channel = "weapon.fireFx", callback = "client.registerHSlotCraftFx" },
     ["craft.recover"] = { channel = "weapon.fireFx", callback = "client.spawnHSlotRecoverFx" },
+    ["point-defense.fx"] = { channel = "weapon.fireFx", callback = "client.spawnPointDefenseFx" },
 }
 
 local function _unpack(values)
     if type(values) ~= "table" then return end
     local unpackFunction = table.unpack or unpack
     return unpackFunction(values)
+end
+
+local function _clone(value, seen)
+    if type(value) ~= "table" then return value end
+    seen = seen or {}
+    if seen[value] ~= nil then return seen[value] end
+    local copy = {}
+    seen[value] = copy
+    for key, child in pairs(value) do copy[key] = _clone(child, seen) end
+    return copy
 end
 
 local function _nextSequence()
@@ -90,6 +102,21 @@ local function _buildEvent(kind, data, sequence, sourceSequence)
     data = data or {}
     local sourceId = tostring(data.sourceId or data.sourceBodyId or "world")
     local weaponId = data.weaponId or data.weaponType
+    local payload = _clone(data.payload or {})
+    local route = tostring(data.route or "")
+    local entityId = payload.projectileId or payload.missileId or payload.craftBodyId
+    if entityId == nil and type(data.routeArgs) == "table" then
+        if route == "projectile.spawn" or route == "missile.spawn"
+            or route == "projectile.finish" or route == "missile.finish"
+            or route == "craft.register" then
+            entityId = data.routeArgs[1]
+        end
+    end
+    payload.presentation = {
+        route = route,
+        args = _clone(data.routeArgs or {}),
+        entityId = entityId ~= nil and tostring(entityId) or "",
+    }
     local source = cm2PresentationEventV1.newEntityRef(sourceId, math.floor(tonumber(data.generation) or 0))
     local result = {
         protocolVersion = cm2PresentationEventV1.protocolVersion,
@@ -99,7 +126,7 @@ local function _buildEvent(kind, data, sequence, sourceSequence)
         seed = math.max(0, math.floor(tonumber(data.seed) or sequence)),
         priority = tonumber(data.priority) or 0,
         serverTime = (GetTime ~= nil and GetTime()) or 0.0,
-        payload = data.payload or {},
+        payload = payload,
         extensions = { sourceSequence = sourceSequence },
     }
     if weaponId ~= nil and tostring(weaponId) ~= "" then
@@ -146,6 +173,7 @@ function server.presentationPublisherInit()
     state.eventV1Calls = 0
     state.rejected = 0
     state.byKind = {}
+    state.byRoute = {}
     state.sliceMode = {}
     state.bySlice = {}
     for _, slice in ipairs({ "ray-beam", "logical-projectile", "guided-missile", "tachyon-charge-beam" }) do
@@ -184,6 +212,7 @@ function server.presentationPublisherGetDiagnostics()
         eventV1Calls = state.eventV1Calls,
         rejected = state.rejected,
         byKind = state.byKind,
+        byRoute = state.byRoute,
     }
 end
 
@@ -195,6 +224,12 @@ function server.presentationPublisherPublish(kind, data)
     local slice = _sliceFor(data)
     local selectedMode = server.presentationPublisherState.sliceMode[slice]
         or server.presentationPublisherState.mode
+    local routeName = tostring(data.route or "")
+    local route = _routes[routeName]
+    if route == nil then
+        state.rejected = state.rejected + 1
+        return false, "unknown presentation route: " .. routeName
+    end
     local sequence = _nextSequence()
     local sourceId = tostring(data.sourceId or data.sourceBodyId or "world")
     local sourceSequence = _nextSourceSequence(sourceId)
@@ -219,6 +254,7 @@ function server.presentationPublisherPublish(kind, data)
         })
     end
     state.byKind[kindName] = math.floor(state.byKind[kindName] or 0) + 1
+    state.byRoute[routeName] = math.floor(state.byRoute[routeName] or 0) + 1
     local sliceStats = state.bySlice[slice]
     if sliceStats == nil then
         sliceStats = { published = 0, legacyAdapterCalls = 0, eventV1Calls = 0, rejected = 0 }
@@ -240,12 +276,6 @@ function server.presentationPublisherPublish(kind, data)
         return true, encoded
     end
 
-    local route = _routes[tostring(data.route or "")]
-    if route == nil then
-        state.rejected = state.rejected + 1
-        sliceStats.rejected = sliceStats.rejected + 1
-        return false, "unknown legacy presentation route: " .. tostring(data.route)
-    end
     local args = data.routeArgs or {}
     server.netClientCall(route.channel, math.floor(tonumber(data.playerId) or 0), route.callback, _unpack(args))
     state.legacyAdapterCalls = state.legacyAdapterCalls + 1
