@@ -1,0 +1,163 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 2.4",
+  "result": "pass",
+  "verified_at": "2026-08-16T19:17:02+08:00",
+  "verification_contract_fingerprint": "93a6c057d62af25cd9f24ddc4172e076d1a0757733c014cd52980fa721e8ea39",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_TEST_SETUP"],
+  "behavior_under_test": "Each expensive presentation request has a bounded, explainable budget result, and S5 hard caps are enforced without changing gameplay authority.",
+  "static": {
+    "todo_contract_validation": "pass: 80 executable Step contracts; fingerprint unchanged",
+    "owning_checker": "harness/check-presentation-budget.ps1",
+    "owning_checker_result": "pass",
+    "owning_self_test": "pass",
+    "effect_lab_checker": "pass",
+    "effect_lab_self_test": "pass",
+    "direct_call_fixture": "pass: harness/data/presentation/direct-call-fixtures.json",
+    "source_hashes": {
+      "Content Mod 2/script/client.lua": "DA84154DF874288140A354001BF660FD7B997197D1B30F450C7F8BFB639A5A91",
+      "Content Mod 2/script/strikeCraftMain.lua": "9DB46CA74392BC64F01C25E704FB1C762111D506BC410A7D1164338A34E14AD6",
+      "Content Mod 2/script/testing/ai_agent/telemetry.lua": "33F732635831268C7ECE9B2A63E3CA8FC89728741B7FA9C931A69B60A056B58D",
+      "Content Mod 2/script/testing/scenario/preview_suite_controller.lua": "61E85360BA33FEC4229EA66FA13DB1D9931AA527409EAC38F0B46CEE5C7DD961",
+      "Content Mod 2/script/weapon/client/presentation/effect_lab.lua": "83605033E12DA34F20FC35914A9621F86E7B15D5400F7B28E936D95533141346",
+      "Content Mod 2/script/weapon/client/presentation/presentation_budget.lua": "931AD9220F5B519F6F3D292A18D7C3DAEFB424761B5661570C2328484669463F",
+      "Content Mod 2/script/weapon/client/presentation/visual/runtime/shared/effect_budget.lua": "4543F59463A6A9150BF1C54A125B5D199D52579CA03A8F1608F5114339F30CE0"
+    },
+    "targeted_regression": [
+      "check-presentation-budget.ps1: pass",
+      "test-presentation-budget.ps1: pass",
+      "check-effect-lab.ps1: pass",
+      "test-effect-lab.ps1: pass",
+      "check-lua.ps1: 234 files, 0 issues",
+      "check-teardown-api.ps1: 234 files, 0 issues"
+    ]
+  },
+  "runtime": {
+    "target_id": "teardown:4992:530198",
+    "pid": 4992,
+    "scene": "Content Mod 2/_ai_scenario_presentation_event_ring.xml",
+    "scenario": {
+      "id": "presentation_s5_budget_pressure",
+      "xml_revision": "presentation-ring-xml-v1",
+      "lua_revision": "scenario-controller-v2",
+      "ready": true,
+      "fixture": "Content Mod 2/testing/scenarios/presentation/s5_budget_pressure/contract.json"
+    },
+    "fresh_baseline": {
+      "run_id": "20260816T110655Z-15c995ef",
+      "session": "0-e7efcfdf",
+      "events": 0,
+      "client_count": 2,
+      "presentation_budget": {
+        "requests": 0,
+        "accepted": 0,
+        "degraded": 0,
+        "rejected": 0,
+        "duplicate_begin_count": 0,
+        "clients": [
+          {"body_id": 6, "begin_count": 4013, "begin_owner": "client.clientTick", "frame": 4013},
+          {"body_id": 13, "begin_count": 4013, "begin_owner": "client.clientTick", "frame": 4013}
+        ]
+      },
+      "held_inputs": {"keys": [], "buttons": []},
+      "log_probe_errors": 0,
+      "log_probe_warnings": 0
+    },
+    "real_input_pressure": {
+      "run_id": "20260816T110544Z-e453475a",
+      "session": "0-99f233e4",
+      "action": "One control batch: mouse_down lmb -> wait 4000 ms -> mouse_up lmb, HID method",
+      "telemetry": {
+        "latest_seq": 13,
+        "next_after_seq": 13,
+        "truncated": false,
+        "client_sequence": "1..11 contiguous",
+        "server_sequence": "1..13 contiguous",
+        "events": [
+          "weapon_input_evaluated(stage=ready, weapon=perditionBeam)",
+          "fire_request(attacker_body_id=6, slot_type=T)",
+          "weapon_hold_applied(active=true)",
+          "hit x2 (impact_layer=shield, did_damage=true)",
+          "damage_applied x2",
+          "presentation_event(effect_id=perditionBeam, kind=beam)",
+          "weapon_released"
+        ],
+        "target_shield": {"before": 11700, "after": 2809.348145},
+        "target_armor": {"before": 11700, "after": 11700},
+        "target_body": {"before": 10000, "after": 10000},
+        "target_destroyed": false
+      },
+      "presentation_budget": {
+        "client_count": 2,
+        "requests": 156813,
+        "accepted": 14504,
+        "degraded": 0,
+        "rejected": 142309,
+        "duplicate_begin_count": 0,
+        "clients": [
+          {
+            "body_id": 6,
+            "frame": 8905,
+            "begin_count": 8905,
+            "begin_owner": "client.clientTick",
+            "requests": 156813,
+            "accepted": 14504,
+            "degraded": 0,
+            "rejected": 142309,
+            "primitive_this_frame": {"particles": 35, "point_lights": 10, "sprites": 37, "lines": 0},
+            "primitive_caps": {"particles": 280, "point_lights": 28, "sprites": 512, "lines": 384},
+            "kinds": {
+              "audio": {"requested": 3, "accepted": 3, "degraded": 0, "rejected": 0},
+              "particle": {"requested": 154210, "accepted": 11901, "degraded": 0, "rejected": 142309},
+              "pointLight": {"requested": 2600, "accepted": 2600, "degraded": 0, "rejected": 0}
+            },
+            "metadata": [
+              {"effect": "perditionCharge", "package": "unknown", "owner": "unknown", "priority": "ambient", "distance": "unknown", "requested": 156810, "accepted": 14501, "degraded": 0, "rejected": 142309},
+              {"effect": "perditionBeam", "package": "unknown", "owner": "unknown", "priority": "normal", "distance": "0", "requested": 2, "accepted": 2, "degraded": 0, "rejected": 0},
+              {"effect": "perditionBeam", "package": "unknown", "owner": "unknown", "priority": "critical", "distance": "0", "requested": 1, "accepted": 1, "degraded": 0, "rejected": 0}
+            ]
+          },
+          {"body_id": 13, "frame": 8905, "begin_count": 8905, "begin_owner": "client.clientTick", "requests": 0, "accepted": 0, "degraded": 0, "rejected": 0}
+        ]
+      },
+      "screenshot": {
+        "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260816T110544Z-e453475a/frame_f000001-1e7ead95_pid-4992.png",
+        "sha256": "867F25A6577274C456A771FC39A45FAF6DCF59DD42129291B10158765C011C68",
+        "fact": "1280x720 non-black client area with S5 ship, weapon HUD and visible presentation effect"
+      },
+      "log": {
+        "baseline_cursor": 167741,
+        "new_errors": 0,
+        "new_warnings": 0,
+        "source": "control/observe incremental feedback"
+      }
+    }
+  },
+  "cleanup": {
+    "input_release": {
+      "run_id": "20260816T110544Z-e453475a",
+      "released_keys": [],
+      "released_buttons": [],
+      "held_inputs": {"keys": [], "buttons": []}
+    },
+    "fresh_reload": {
+      "run_id": "20260816T110655Z-15c995ef",
+      "session": "0-e7efcfdf",
+      "scenario_ready": true,
+      "events": 0,
+      "stale_entities_or_events": false
+    }
+  },
+  "regression": {
+    "presentation_budget": "pass",
+    "effect_lab": "pass",
+    "presentation_event_ring": "pass via owning checker/self-test and live ring drain",
+    "presentation_publisher": "pass",
+    "presentation_slices": "pass",
+    "full_harness": "pass: .\\harness\\check-all.ps1, exit code 0, 133.6 seconds"
+  },
+  "rollback": "Remove facade include/calls or disable presentation requests; retain effect_budget hard caps. Damage, hit and lifecycle paths are unchanged.",
+  "scope_boundary": "Telemetry owns budget counters, primitive caps, begin ownership, gameplay event chain and cleanup. Screenshot owns visible scene/presentation only. Log feedback owns runtime health. Subjective visual quality remains a human review item under AUTO_WITH_VISUAL_REVIEW."
+}

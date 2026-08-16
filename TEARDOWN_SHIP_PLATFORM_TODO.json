@@ -1596,7 +1596,7 @@
       "id": "Step 2.4",
       "stage": "Gate 2",
       "title": "收口 Particle、Light、Sprite、Line、Audio 与 Shake 预算",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 每客户端每帧只允许一个 budget begin/reset owner；[ ] 为 Particle/PointLight/Sprite/Line/Audio voice/Camera Shake 建唯一 facade；[ ] 记录 effect/package/owner/priority/distance 与 accepted/degraded/rejected；[ ] 静态检查禁止 facade 白名单外直调底层表现 API；[ ] 优先接入死亡、guided/craft、tachyon/perdition；[ ] 超限只改变表现，不改变伤害、命中和生命周期。 Reason: 当前底层 API 可被多路径绕过，配置上限不是硬边界，无法接受第三方/AI 内容。",
       "expected_outcome": "每个昂贵效果都有可解释的预算结果，S5 hard cap 可执行。",
       "prerequisites": [
@@ -1612,15 +1612,15 @@
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
         "code_or_document": "docs/presentation-budget-v1.md; Content Mod 2/script/weapon/client/presentation/presentation_budget.lua; client.lua/strikeCraftMain.lua single beginFrame ownership; ship_destroyed_fx.lua and sound_service.lua facade integrations; tachyon/perdition transitional explicit budget reservations.",
-        "automated_tests": "harness/check-presentation-budget.ps1 PASS; harness/test-presentation-budget.ps1 PASS: five primitive direct-call fixture, facade whitelist, one begin owner, accepted/degraded/rejected counters. check-lua.ps1/check-teardown-api.ps1 PASS: 190 Lua files, 0 issues.",
+        "automated_tests": "harness/check-presentation-budget.ps1 PASS; harness/test-presentation-budget.ps1 PASS: five primitive direct-call fixture, facade whitelist, one begin owner, accepted/degraded/rejected counters. check-effect-lab.ps1/check-presentation-budget.ps1 and their self-tests PASS. check-lua.ps1/check-teardown-api.ps1 PASS: 234 Lua files, 0 issues.",
         "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; budget checker/self-test plus all existing checker/self-test groups passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so S5 three-ship death hard-cap evidence, real API-call parity, and facade overhead cannot be measured. Static hard caps delegate to the existing budget implementation and reject/degrade only presentation requests.",
+        "runtime_or_performance": "PASS: target teardown:4992:530198 ran presentation_s5_budget_pressure with XML revision presentation-ring-xml-v1 and Lua revision scenario-controller-v2. Fresh CM2_TEST_V1 session 0-99f233e4 completed a real 4-second LMB HID hold/release. Two clients reported frame=8905, begin_count=8905, begin_owner=client.clientTick, duplicate_begin_count=0. Aggregate requests=156813, accepted=14504, degraded=0, rejected=142309; per-client primitive usage stayed within particles 35/280, point lights 10/28, sprites 37/512, lines 0/384. Metadata recorded perditionCharge and perditionBeam priority/distance buckets. The same trace produced fire_request, two shield hits and damage_applied events, with target shield 11700 -> 2809.348 and armor/body unchanged; budget rejection affected presentation only. Read was contiguous (client seq 1..11 and server seq 1..13, truncated=false).",
         "rollback_record": "Revert to direct legacy calls by removing presentation_budget include/calls, or keep facade with presentation requests disabled. Damage, hit and lifecycle code is unchanged; old effect_budget remains available."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-2.4",
-      "status_reason": "Budget facade, single begin owner, metrics, direct-call gate and high-risk integrations are implemented and statically verified; terminal status is unable because required S5 runtime hard-cap and overhead evidence needs Teardown.exe.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "Budget facade, single begin owner, metrics, direct-call gate, high-risk integrations and live S5 hard-cap evidence are complete. Presentation pressure rejected/degraded only visual requests while the real weapon hit and damage chain remained authoritative.",
+      "verification_status": "verified",
+      "verification_status_reason": "PASS: docs/evidence/step-2.4-presentation-budget-v1.json records contract validation, targeted regressions, full Harness, fresh CM2_TEST_V1 runtime evidence, screenshot, log feedback and F4->F5 cleanup. Contract fingerprint remains 93a6c057d62af25cd9f24ddc4172e076d1a0757733c014cd52980fa721e8ea39.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "93a6c057d62af25cd9f24ddc4172e076d1a0757733c014cd52980fa721e8ea39",
