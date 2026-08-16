@@ -1,0 +1,53 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 3.1",
+  "result": "blocked",
+  "verified_at": "2026-08-17T07:26:54+08:00",
+  "verification_contract_fingerprint": "ab8d3fa785f1ec3b3a1929189a9e51585810680023ea81afe26f7e460d2a5817",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_TEST_SETUP"],
+  "behavior_under_test": "All existing Effect Profiles have auditable, compilable, versioned sources with aliases, renderer contracts, budget/LOD metadata, owner/termination policy, and legacy parity coverage.",
+  "static": {
+    "todo_contract_validation": "PASS: 80 executable Step contracts",
+    "source_schema": "PASS: cm2.effect-profile-source/1",
+    "inventory": "PASS: 108 profiles, 108 aliases, 437 references, 0 unresolved",
+    "owning_check": "PASS: harness/check-effect-profile-source.ps1 and test-effect-profile-source.ps1",
+    "full_harness": "PASS: prior full .\\harness\\check-all.ps1; 234 Lua files, 25 XML files, 0 API issues"
+  },
+  "runtime": {
+    "target_id": "teardown:58912:39783188",
+    "pid": 58912,
+    "process": "teardown.exe running and responding",
+    "client": "1280x720",
+    "mcp_run_id": "20260816T232654Z-9c165ade",
+    "input_desktop": "Screen-saver",
+    "foreground_handle": 0,
+    "fresh_observe": {
+      "result": "BLOCKED",
+      "error": "could not restore and focus Teardown",
+      "screenshot_captured": false,
+      "telemetry_baseline_started": false,
+      "real_input_required": false
+    },
+    "runtime_claim": "NOT RUN: Preview per-profile playback, legacy lookup call count, live resource validation, and post-baseline log slice require a focused interactive target"
+  },
+  "environment_blocker": {
+    "classification": "ENVIRONMENT_BLOCKED",
+    "reason": "The Windows input desktop is Screen-saver and GetForegroundWindow returns 0. The visible Teardown target is enumerable but the control bridge cannot focus it, so scene reload, telemetry bridge, screenshot, and runtime profile playback cannot be executed safely.",
+    "recovery": "Unlock Windows and leave the Teardown target on the interactive desktop, then rerun Step 3.1 from fresh observe.",
+    "evidence": [
+      "teardown_instances returned target teardown:58912:39783188",
+      "teardown_observe returned could not restore and focus Teardown",
+      "OpenInputDesktop reported Screen-saver",
+      "teardown_emergency_release reported held_inputs keys=[] and buttons=[]"
+    ]
+  },
+  "cleanup": {
+    "held_inputs": {"keys": [], "buttons": []},
+    "emergency_release": "PASS",
+    "formal_source_preserved": true,
+    "last_valid_generated_artifact_preserved": true
+  },
+  "scope_boundary": "This is a genuine environment block, not a runtime pass. It does not claim per-profile visual playback, runtime lookup-zero, resource loading, or live budget validation."
+}

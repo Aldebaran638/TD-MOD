@@ -2158,13 +2158,13 @@
         "code_or_document": "docs/effect-profile-source-v1.md; docs/effect-profiles-v1.json; tools/cm2-profiles/build-effect-profile-source.ps1. Generated source contains 108 profiles, 108 aliases and 437 weapon references with renderer/version, cost, LOD, owner and termination metadata.",
         "automated_tests": "harness/check-effect-profile-source.ps1 PASS; harness/test-effect-profile-source.ps1 PASS: source schema, unique IDs/aliases, costs/LOD/renderer contracts, zero unresolved references and byte-deterministic builder.",
         "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; profile source checker/self-test and all prior checker/self-test groups passed. Lua/API checks PASS: 193 Lua files, 0 issues.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so Preview per-profile playback, runtime legacy lookup call count=0 and live budget/resource validation cannot be executed. Legacy profile registry remains rollback path.",
+        "runtime_or_performance": "BLOCKED: Teardown.exe is present, but the Windows input desktop is Screen-saver and the control bridge cannot focus the target. Preview per-profile playback, runtime legacy lookup call count=0 and live budget/resource validation cannot be executed until the interactive desktop is restored. Legacy profile registry remains rollback path.",
         "rollback_record": "Keep `docs/effect-profiles-v1.json` out-of-band and continue legacy profile lookup; revert generated source/builder only. Per-profile aliases preserve old IDs and no runtime catalog was overwritten."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-3.1",
-      "status_reason": "All current effect/sound profile vocabulary is represented by deterministic versioned source with aliases and zero static unresolved references; terminal status is unable because Preview/live lookup-zero/resource evidence requires Teardown.exe.",
+      "status_reason": "All current effect/sound profile vocabulary is represented by deterministic versioned source with aliases and zero static unresolved references; terminal status remains unable under the task-level environment exception because Preview/live lookup-zero/resource evidence cannot start while Windows is on the Screen-saver input desktop.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "BLOCKED: fresh observe cannot focus the running Teardown target while Windows reports the Screen-saver input desktop. Evidence: docs/evidence/step-3.1-environment-blocked.json. Re-run the same contract after unlocking the interactive desktop.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "ab8d3fa785f1ec3b3a1929189a9e51585810680023ea81afe26f7e460d2a5817",
@@ -2238,6 +2238,13 @@
         "The owning deterministic fixture runner and negative cases are available before product changes.",
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The Teardown process is running and enumerable, but Windows is on the Screen-saver input desktop with foreground handle 0. The control bridge cannot obtain a focused frame, so the required scene, screenshot, telemetry, and live profile playback evidence cannot be collected safely.",
+        "evidence": "docs/evidence/step-3.1-environment-blocked.json",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-17T07:26:54+08:00"
+      },
       "plan_order": 21
     },
     {
