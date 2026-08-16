@@ -287,6 +287,40 @@ local function _shipRoot(body)
     return "StellarisShips/server/ships/byId/" .. tostring(body)
 end
 
+local function _previewSnapshot()
+    local scenarioId = tostring(GetString("StellarisShips/testing/scenario/id") or "")
+    if scenarioId ~= "preview_suite" then return nil end
+    local root = "StellarisShips/testing/previewSuite/"
+    local effectRoot = root .. "effectPlayer/"
+    local syntheticRoot = root .. "synthetic/"
+    return {
+        mode = GetString(root .. "modeName"),
+        replay = _integer(GetInt(root .. "replay"), 0),
+        action = GetString(root .. "action"),
+        error = GetString(root .. "error"),
+        runtime_catalog_hash = GetString(root .. "runtimeCatalogHash"),
+        effect_player = {
+            capacity = _integer(GetInt(effectRoot .. "capacity"), 0),
+            active = _integer(GetInt(effectRoot .. "active"), 0),
+            free = _integer(GetInt(effectRoot .. "free"), 0),
+            invariant = _boolean(GetBool(effectRoot .. "invariant")),
+            played = _integer(GetInt(effectRoot .. "played"), 0),
+            updated = _integer(GetInt(effectRoot .. "updated"), 0),
+            stopped = _integer(GetInt(effectRoot .. "stopped"), 0),
+            destroyed = _integer(GetInt(effectRoot .. "destroyed"), 0),
+            owner_lost = _integer(GetInt(effectRoot .. "ownerLost"), 0),
+            anchor_lost = _integer(GetInt(effectRoot .. "anchorLost"), 0),
+            stale = _integer(GetInt(effectRoot .. "stale"), 0),
+            runs = _integer(GetInt(effectRoot .. "runs"), 0),
+        },
+        synthetic = {
+            tick_count = _integer(GetInt(syntheticRoot .. "tickCount"), 0),
+            heartbeat = _integer(GetInt(syntheticRoot .. "heartbeat"), 0),
+            preview_instances = _integer(GetInt(syntheticRoot .. "previewInstances"), 0),
+        },
+    }
+end
+
 local function _newSession()
     local now = _integer((GetTime ~= nil) and GetTime() * 1000 or 0, 0)
     local randomPart = math.random(0, 2147483647)
@@ -610,7 +644,7 @@ local function _snapshot(maxShips)
             ships[#ships + 1] = _shipSnapshot(body)
         end
     end
-    return {
+    local snapshot = {
         scenario = {
             id = GetString("StellarisShips/testing/scenario/id"),
             xml_revision = GetString("StellarisShips/testing/scenario/xmlRevision"),
@@ -633,6 +667,9 @@ local function _snapshot(maxShips)
         },
         ships = ships,
     }
+    local preview = _previewSnapshot()
+    if preview ~= nil then snapshot.preview = preview end
+    return snapshot
 end
 
 local function _readServerEvents(afterSequence)

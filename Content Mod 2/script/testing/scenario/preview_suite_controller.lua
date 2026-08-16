@@ -33,6 +33,8 @@ local state = {
     errorText = "",
     effectNear = nil,
     effectFar = nil,
+    effectDiagnostics = nil,
+    effectRuns = 0,
     range = nil,
     dock = nil,
     diagnostics = nil,
@@ -78,6 +80,28 @@ local catalog = {
     lookup = function(id) return definitions[tostring(id or "")] end,
 }
 
+local function publishDiagnostics()
+    local diagnostics = client.effectPlayer.getDiagnostics()
+    state.effectDiagnostics = diagnostics
+    SetInt(ROOT .. "effectPlayer/capacity", diagnostics.capacity)
+    SetInt(ROOT .. "effectPlayer/active", diagnostics.active)
+    SetInt(ROOT .. "effectPlayer/free", diagnostics.free)
+    SetBool(ROOT .. "effectPlayer/invariant", diagnostics.invariant)
+    SetInt(ROOT .. "effectPlayer/played", diagnostics.metrics.played)
+    SetInt(ROOT .. "effectPlayer/updated", diagnostics.metrics.updated)
+    SetInt(ROOT .. "effectPlayer/stopped", diagnostics.metrics.stopped)
+    SetInt(ROOT .. "effectPlayer/destroyed", diagnostics.metrics.destroyed)
+    SetInt(ROOT .. "effectPlayer/ownerLost", diagnostics.metrics.ownerLost)
+    SetInt(ROOT .. "effectPlayer/anchorLost", diagnostics.metrics.anchorLost)
+    SetInt(ROOT .. "effectPlayer/stale", diagnostics.metrics.stale)
+    SetInt(ROOT .. "effectPlayer/runs", state.effectRuns)
+    local world = cm2SyntheticWorldAdapterV1.getReport()
+    SetInt(ROOT .. "synthetic/tickCount", world.tickCount)
+    SetInt(ROOT .. "synthetic/heartbeat", world.heartbeat)
+    SetInt(ROOT .. "synthetic/previewInstances", world.previewInstances.count)
+    SetString(ROOT .. "runtimeCatalogHash", catalog.hash)
+end
+
 local function publishStatus()
     SetBool(ROOT .. "ready", state.ready)
     SetInt(ROOT .. "mode", state.mode)
@@ -85,6 +109,7 @@ local function publishStatus()
     SetString(ROOT .. "modeName", MODES[state.mode])
     SetString(ROOT .. "action", state.action)
     SetString(ROOT .. "error", state.errorText)
+    publishDiagnostics()
 end
 
 local function runEffectLab()
@@ -93,6 +118,8 @@ local function runEffectLab()
     if near == nil or far == nil then return false, nearError or farError or "Effect Lab failed" end
     state.effectNear = near
     state.effectFar = far
+    state.effectRuns = state.effectRuns + 2
+    publishDiagnostics()
     state.flash = 1.0
     state.action = "S2 replay: EffectPlayer near LOD0 + far LOD1"
     return true
@@ -192,6 +219,7 @@ function client.tick(dt)
     state.clock = state.clock + delta
     state.flash = math.max(0.0, state.flash - delta)
     cm2SyntheticWorldAdapterV1.tick(delta)
+    publishDiagnostics()
     client.presentationBudget.beginFrame(delta)
     SetCameraTransform(Transform(Vec(0, 7.5, 19), QuatLookAt(Vec(0, 7.5, 19), Vec(0, 1.5, -2))))
 
