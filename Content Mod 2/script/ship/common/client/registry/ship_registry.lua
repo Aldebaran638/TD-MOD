@@ -153,6 +153,7 @@ function client.shipRequestWeaponHold(
     if not client.registryShipExists(shipBodyId) then return false end
     if client.cm2TelemetryRecord ~= nil then
         client.cm2TelemetryRecord("weapon_hold_sent", {
+            player_id = math.floor(tonumber(GetLocalPlayer()) or 0),
             ship_body_id = math.floor(shipBodyId or 0),
             group_id = tostring(groupId or ""),
             active = active and true or false,

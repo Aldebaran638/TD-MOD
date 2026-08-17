@@ -49,6 +49,7 @@ function server.shipRequestWeaponHold(
     local function reject(reason)
         if server.cm2TelemetryRecord ~= nil then
             server.cm2TelemetryRecord("weapon_hold_rejected", {
+                player_id = math.floor(tonumber(playerId) or 0),
                 ship_body_id = math.floor(tonumber(shipBodyId) or 0),
                 group_id = id,
                 active = held,

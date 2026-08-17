@@ -527,6 +527,7 @@ end
 
 local function _recordClientInputEdge(wDown, lmbDown)
     return client.cm2TelemetryRecord("input_edge", {
+        player_id = _integer((GetLocalPlayer ~= nil) and GetLocalPlayer() or 0, 0),
         changed = {
             w = telemetry.inputEdge.w and true or false,
             lmb = telemetry.inputEdge.lmb and true or false,
@@ -744,6 +745,46 @@ local function _shipSnapshot(body)
     }
 end
 
+-- World Host state is published as DTO fields so every client can observe the
+-- same owner/generation boundary without receiving Lua tables or engine handles.
+local function _worldHostSnapshot()
+    local root = "cm2/world-host/v1"
+    if GetString == nil or GetInt == nil or GetBool == nil then return nil end
+    local contexts = {}
+    local maxInstances = math.max(0, math.min(64, _integer(GetInt(root .. "/maxInstances"), 12)))
+    for slot = 1, maxInstances do
+        local prefix = root .. "/announcement/slot/" .. tostring(slot)
+        local identity = _string(GetString(prefix .. "/id"), "")
+        if identity ~= "" then
+            contexts[#contexts + 1] = {
+                slot = slot,
+                identity = identity,
+                owner_id = _string(GetString(prefix .. "/owner"), ""),
+                mode = _string(GetString(prefix .. "/mode"), "local"),
+                generation = _integer(GetInt(prefix .. "/generation"), 0),
+                heartbeat = _integer(GetInt(prefix .. "/heartbeat"), 0),
+                active = _boolean(GetBool(prefix .. "/active")),
+            }
+        end
+    end
+    return {
+        protocol_version = _string(GetString(root .. "/protocolVersion"), ""),
+        host_id = _string(GetString(root .. "/hostId"), ""),
+        mode = _string(GetString(root .. "/mode"), "local"),
+        ready = _boolean(GetBool(root .. "/ready")),
+        generation = _integer(GetInt(root .. "/generation"), 0),
+        heartbeat = _integer(GetInt(root .. "/heartbeat"), 0),
+        tick_count = _integer(GetInt(root .. "/tickCount"), 0),
+        active_instances = _integer(GetInt(root .. "/activeInstances"), 0),
+        max_instances = maxInstances,
+        register_count = _integer(GetInt(root .. "/registerCount"), 0),
+        unregister_count = _integer(GetInt(root .. "/unregisterCount"), 0),
+        rejected_count = _integer(GetInt(root .. "/rejectedCount"), 0),
+        fallback_count = _integer(GetInt(root .. "/fallbackCount"), 0),
+        contexts = contexts,
+    }
+end
+
 local function _snapshot(maxShips)
     local playerId = _integer((GetLocalPlayer ~= nil) and GetLocalPlayer() or 0, 0)
     local vehicleId = _integer((GetPlayerVehicle ~= nil) and GetPlayerVehicle(playerId) or 0, 0)
@@ -778,6 +819,7 @@ local function _snapshot(maxShips)
             velocity = _vec(playerVelocity),
         },
         camera = { position = _vec(camera.pos), rotation = _quat(camera.rot) },
+        world_host = _worldHostSnapshot(),
         input = {
             down = { w = telemetry.lastW, lmb = telemetry.lastLmb },
             edge = { w = telemetry.inputEdge.w, lmb = telemetry.inputEdge.lmb },

@@ -97,7 +97,13 @@ local function _publishStatus()
     _writeString(host.rootKey .. "/mode", state.mode)
     _writeInt(host.rootKey .. "/generation", state.generation)
     _writeInt(host.rootKey .. "/heartbeat", state.heartbeat)
+    _writeInt(host.rootKey .. "/tickCount", state.tickCount)
     _writeInt(host.rootKey .. "/activeInstances", #state.dense)
+    _writeInt(host.rootKey .. "/maxInstances", host.maxInstances)
+    _writeInt(host.rootKey .. "/registerCount", state.registerCount)
+    _writeInt(host.rootKey .. "/unregisterCount", state.unregisterCount)
+    _writeInt(host.rootKey .. "/rejectedCount", state.rejectedCount)
+    _writeInt(host.rootKey .. "/fallbackCount", state.fallbackCount)
     _writeBool(host.rootKey .. "/ready", state.initialized and state.mode == "content-host")
 end
 
