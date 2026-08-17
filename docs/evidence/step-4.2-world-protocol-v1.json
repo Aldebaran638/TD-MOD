@@ -34,12 +34,13 @@
   },
   "runtime": {
     "status": "BLOCKED",
-    "instances_run": "20260817T172540Z-116ff07f",
+    "instances_run": "20260817T174114Z-2f90eeb5 (latest; prior 20260817T172540Z-116ff07f)",
     "target": {"target_id": "teardown:57656:53613200", "pid": 57656, "hwnd": 53613200, "process": "teardown.exe", "responding": true},
-    "observed": {"visible": true, "minimized": false, "foreground_handle": 0, "focused": false},
+    "observed": {"visible": true, "minimized": false, "foreground_handle": 0, "focused": false, "input_desktop": "Screen-saver"},
     "attempts": [
       "teardown_instances succeeded and enumerated the exact Teardown target.",
       "teardown_observe with the exact target_id returned could not restore and focus Teardown.",
+      "Win32 OpenInputDesktop reported the active input desktop as Screen-saver, confirming that the target is outside the interactive input desktop.",
       "A normal Teardown executable launch did not produce a controllable foreground target; no multiplayer session was started."
     ],
     "safety_decision": "No real input, telemetry baseline, screenshot, or protocol command assertion was performed after the focus guard failed. This record does not claim live owner lease, reconnect, late-join, queue-pressure, or Host/Client convergence."
@@ -50,5 +51,5 @@
     "held_inputs": {"keys": [], "buttons": []},
     "original_manager_preserved": true
   },
-  "next_action": "Re-run the same RESTART_MOD_SESSION contract after Teardown exposes a focused interactive window; then record one valid owner command and one rejected non-owner/stale command with fresh CM2_TEST_V1 telemetry and incremental log evidence."
+  "next_action": "Unlock or dismiss the Screen-saver so Teardown is on the interactive input desktop, then re-run the same RESTART_MOD_SESSION contract and record one valid owner command plus one rejected non-owner/stale command with fresh CM2_TEST_V1 telemetry and incremental log evidence."
 }
