@@ -1,0 +1,89 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 4.5",
+  "title": "Registry Snapshot, Scheduler and Damage Inbox",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "aff3dfbef284a862fa3a0d685a6dfbc7184d6ebe701435c96b53509fac643edb",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "LOG", "MULTIPLAYER"],
+    "eyes": ["EYE_TELEMETRY", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "RESTART_MOD_SESSION",
+    "automation_level": "PARTIAL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The immutable registry snapshot, fixed scheduler, owner-scoped Damage Inbox, sequence/generation guards, dedupe/stale policies, and zero-event Transform-read invariant are implemented and fixture-verified. Live physics, cleanup, scaling, and CPU evidence remains pending because the installed Teardown target is outside the interactive Windows input desktop.",
+    "verification_status_reason": "The focus-safe live probe enumerated the exact Teardown target but refused capture and input while the input desktop was Screen-saver. This record does not claim live registry authority, damage application, owner cleanup, or scaling behavior.",
+    "implementation_scope": [
+      "Root Host initializes and ticks cm2RegistrySchedulerDamageV1 at the Host generation boundary.",
+      "One immutable cm2.entity-snapshot/1 is frozen per cycle with generation/revision guards.",
+      "Scheduler work is fixed-Hz, priority, stagger, and budget controlled.",
+      "cm2.damage-inbox/1 is owner/sequence ordered with duplicate and stale rejection plus disposal cleanup.",
+      "A zero-event cycle performs no entity Transform reads."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "registry_scheduler_damage_runner": "PASS: generation=4, revision=12, snapshot entities=2, scheduler tasks=3, registryReadPasses=1, globalDamageReads=4, entityTransformReads=0, enqueued=2, duplicateRejected=1, staleRejected=1, applied=2, globalEnumerationPasses=1, perShipGlobalScans=0.",
+    "registry_scheduler_damage_self_test": "PASS: valid immutable snapshot and owner inbox accepted; mutable snapshot and per-Ship global scan multiplication negatives rejected.",
+    "live_performance_boundary": "cpuCurveEvidence=requires-live-Teardown; fixture values are not live CPU evidence."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": "20260817T185017Z-6cb1f1f9",
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "foreground_handle": 0,
+      "focused": false,
+      "input_desktop": "Screen-saver",
+      "client": {"left": 800, "top": 450, "width": 1280, "height": 720}
+    },
+    "attempts": [
+      "teardown_instances enumerated the exact target.",
+      "teardown_status confirmed the target was responding and not minimized, with no held inputs.",
+      "teardown_observe(True, exact target_id) returned 'could not restore and focus Teardown'.",
+      "Win32 OpenInputDesktop returned Screen-saver and GetForegroundWindow returned 0.",
+      "No real input, telemetry probe, scene reload, or multiplayer child was started after the focus guard failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the contract's live profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely."
+  },
+  "log": {
+    "baseline_cursor": 8486708,
+    "final_cursor": 8486708,
+    "new_bytes": 0,
+    "in_scope_errors": 0,
+    "in_scope_warnings": 0,
+    "continuation": "PASS: incremental log read returned zero new bytes, errors, or warnings. This does not prove runtime snapshot or damage behavior."
+  },
+  "cleanup": {
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "summary": "All Harness checks passed: 4 entry points/264 Lua files in closure, 237 Lua files/2 engine includes/0 API issues, XML, weapon, component, ship, executable Todo and all self-tests passed."
+  },
+  "evidence_roots": [
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T185017Z-6cb1f1f9"
+  ],
+  "rollback": "Stop root cm2RegistrySchedulerDamageV1 initialization/tick and retain the existing per-Ship scheduler and damage authority. Preserve the last valid snapshot/report; revert only the root wiring and data-plane module/docs/tools."
+}
