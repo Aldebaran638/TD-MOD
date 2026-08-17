@@ -1,0 +1,17 @@
+<scene version="2.0.1" shadowVolume="160 60 160">
+    <environment template="night"/>
+    <script file="MOD/main.lua"/>
+    <script file="MOD/script/testing/scenario/scenario_controller.lua"
+            param0="scenario=vehicle_component_catalog_v1"
+            param1="revision=vehicle-component-catalog-xml-v1"/>
+    <script file="MOD/script/testing/scenario/vehicle_component_catalog_controller.lua"/>
+
+    <!-- Five real production ship entry points. The three AI definitions use
+         disposable catalog-only bodies so every Vehicle ID is registered by
+         the normal ship/strike-craft bootstrap. -->
+    <instance pos="0 60 0" rot="0 0 0" file="MOD/prefabs/ships/catalog_titan.xml"/>
+    <instance pos="0 60 -42" rot="0 180 0" file="MOD/prefabs/ships/catalog_enigma_battlecruiser.xml"/>
+    <instance pos="-14 60 -20" rot="0 180 0" file="MOD/prefabs/ships/catalog_advanced_strike_craft.xml"/>
+    <instance pos="-5 60 -20" rot="0 180 0" file="MOD/prefabs/ships/catalog_advanced_swarmer_missile.xml"/>
+    <instance pos="5 60 -20" rot="0 180 0" file="MOD/prefabs/ships/catalog_devastator_torpedo.xml"/>
+</scene>

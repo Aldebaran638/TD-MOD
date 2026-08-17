@@ -1,0 +1,52 @@
+{
+  "schema": "cm2.scenario-contract/1",
+  "id": "catalog/s1_definition_parity",
+  "step": "Step 3.3",
+  "level": "MOD/_ai_scenario_vehicle_component_catalog.xml",
+  "controller": "MOD/script/testing/scenario/vehicle_component_catalog_controller.lua",
+  "xml_revision": "vehicle-component-catalog-xml-v1",
+  "lua_revision": "scenario-controller-v2",
+  "candidate": {
+    "catalog": "docs/generated/cm2-vehicle-definitions-v1.json",
+    "catalog_lua": "docs/generated/cm2-vehicle-catalog-v1.lua",
+    "catalog_sha256": "c9ac30aefa68a83b1f24acc6537e52b7b4d82ffcb06802dceafe17c4f37d4d29",
+    "ownership": "legacy-active / candidate-v1 shadow",
+    "promotion_allowed": false
+  },
+  "setup": {
+    "vehicles": [
+      "titan",
+      "enigmaticCruiser",
+      "advancedStrikeCraft",
+      "advancedSwarmerMissile",
+      "devastatorTorpedo"
+    ],
+    "fixed_transforms": true,
+    "zero_initial_velocity": true,
+      "production_entrypoints": true,
+      "unrelated_point_defense_disabled": true,
+    "forbidden_shortcuts": [
+      "Do not mutate generated artifacts or call damage/interceptor behavior directly to manufacture a pass.",
+      "Do not include the aggregate generated catalog as a second Runtime authority."
+    ]
+  },
+  "trigger": [
+    "Open the root XML and run it through the normal editor F5 path.",
+    "Wait for all five production ship registrations, then capture the CM2_TEST_V1 live snapshot event.",
+    "Use the existing interceptor-runtime-v1 deterministic replay as the bounded S1-S4 lifecycle and budget fixture."
+  ],
+  "expected": {
+    "registered_vehicle_count": 5,
+    "catalog_counts": {"vehicles": 5, "parts": 5, "mounts": 32, "components": 26, "interceptors": 3, "target_filters": 2},
+    "coordinate_frame": "parent-local; +X right, +Y up, -Z forward; meter",
+    "component_application": "production ship bootstrap applies default profile before live snapshot",
+    "interceptor_budget": {"max_per_owner": 4, "max_global": 24, "think_hz": 5, "update_hz": 30, "max_think_per_tick": 4, "max_update_per_tick": 24},
+    "cleanup": "fresh session has zero retained scenario events and no held input"
+  },
+  "profiles": ["STATIC", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_TEST_SETUP"],
+  "reload": "REOPEN_LEVEL_XML",
+  "cleanup": ["F4_TO_EDITOR", "EMERGENCY_RELEASE", "NO_HELD_INPUTS", "FRESH_SESSION_NO_STALE_ENTITIES"],
+  "regression": ["vehicle/component catalog checker", "interceptor-runtime-v1 fixture", "109/5 semantic snapshot", "catalog authority shadow gate"]
+}

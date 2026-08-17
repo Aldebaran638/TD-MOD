@@ -33,6 +33,8 @@
 local configuredShipType = GetStringParam("shiptype", "")
 local configuredBodyTag = GetStringParam("bodytag", "")
 local configuredPresentationLoadout = GetStringParam("presentationLoadout", "")
+local catalogObserverScenario = GetStringParam("cm2_catalog_observer", "")
+    == "vehicle_component_catalog_v1"
 local configuredPresentationLoadoutSlot = string.upper(
     GetStringParam("presentationLoadoutSlot", "X")
 )
@@ -211,6 +213,12 @@ function server.init()
         recordAiCandidateProjectionTelemetry()
     end
     server.weaponRuntimeInit(configuredShipType)
+    if catalogObserverScenario then
+        -- The catalog scene observes registration and definitions. Disable
+        -- unrelated automatic point-defense fire so low-HP interceptor
+        -- fixtures remain stable long enough for the S1 snapshot.
+        server.weaponRuntimeDeactivate()
+    end
     aiCandidateRuntimeInitialized = true
     applyAiCandidateLoadout(true)
     server.shipRuntimeSyncMainWeapon(shipBody, true)

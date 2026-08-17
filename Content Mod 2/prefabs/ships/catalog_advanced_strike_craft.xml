@@ -1,0 +1,14 @@
+<prefab version="2.0.0">
+    <group name="catalog_advancedStrikeCraft">
+        <script file="MOD/script/strikeCraftMain.lua" param0="shiptype=advancedStrikeCraft">
+            <vehicle name="catalogStrikeCraft" tags="stellarisShip stellarisStrikeCraft cm2CatalogFixture" driven="false" sound="electric1 0" spring="0.5" damping="0" topspeed="0" acceleration="0" strength="0" friction="0.5">
+                <body name="body" tags="stellarisShip stellarisStrikeCraft cm2CatalogFixture" dynamic="false">
+                    <vox name="catalogStrikeCraftVox" tags="strikeCraft strikeCraftModel" pos="-2.25 -0.6 2.55" file="MOD/vox/gammaStrikeCraftTest.vox"/>
+                </body>
+                <location name="muzzle" tags="strikeCraftMuzzle" pos="0 0 -2.61"/>
+                <location name="engineLeft" tags="strikeCraftEngineLeft" pos="-0.70 -0.15 2.58"/>
+                <location name="engineRight" tags="strikeCraftEngineRight" pos="0.70 -0.15 2.58"/>
+            </vehicle>
+        </script>
+    </group>
+</prefab>
