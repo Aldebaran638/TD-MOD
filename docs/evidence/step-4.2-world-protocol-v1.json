@@ -1,0 +1,54 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 4.2",
+  "title": "World Protocol, Owner Lease and Capability v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "13ca0d03f85d2696032fa7c543990a62d3e3cac1030c4ad68c38a7d1638e7885",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "LOG", "MULTIPLAYER"],
+    "eyes": ["EYE_TELEMETRY", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "RESTART_MOD_SESSION",
+    "automation_level": "PARTIAL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The transport-neutral cm2.world/1 DTO contract, owner lease rules, capability allow-list, generation/sequence guards, forbidden-reference rejection, and fixed-capacity queue are implemented and covered by deterministic negative fixtures. Production World Host/adapter authority remains owned by Step 4.3 and later.",
+    "verification_status_reason": "STATIC and FIXTURE assertions pass. Required SCENE, REAL_INPUT, TELEMETRY, LOG, and MULTIPLAYER evidence is pending because the installed Teardown process was visible and responding but Windows returned foreground handle 0; the control bridge correctly refused to capture or inject without a fresh focused frame.",
+    "implementation_scope": [
+      "Content Mod 2/script/net/world_protocol_v1.lua defines cm2.world/1 message kinds, DTO identity, owner lease acquire/renew/release/expiry, capability allow-list, generation and sequence validation, forbidden runtime-reference rejection, and a fixed-capacity transport queue.",
+      "docs/world-protocol-v1.md and docs/candidates/world-protocol-v1.fixture.json document the boundary and negative cases.",
+      "The protocol contract is included without claiming production fire/damage authority; runtime World Host integration remains a later Step."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "protocol_runner": "PASS: valid register accepted; stale generation, duplicate sequence, incompatible version, payload budget overflow, forbidden engine handle, and unknown capability rejected (1 accepted/6 rejected). Lease and fixed-capacity queue assertions also passed.",
+    "protocol_self_test": "PASS: valid replay, duplicate owner acquire rejection, and hidden queue-overflow fixture passed.",
+    "targeted_checks": [
+      "check-lua.ps1 -Path .\\Content Mod 2\\script: PASS",
+      "check-teardown-api.ps1 -Path .\\Content Mod 2\\script: PASS"
+    ],
+    "harness": "NOT RUN after this documentation-only status/evidence update; the prior product implementation Harness and pre-commit result remain PASS. Full Harness is required before the next code-affecting commit."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "instances_run": "20260817T172540Z-116ff07f",
+    "target": {"target_id": "teardown:57656:53613200", "pid": 57656, "hwnd": 53613200, "process": "teardown.exe", "responding": true},
+    "observed": {"visible": true, "minimized": false, "foreground_handle": 0, "focused": false},
+    "attempts": [
+      "teardown_instances succeeded and enumerated the exact Teardown target.",
+      "teardown_observe with the exact target_id returned could not restore and focus Teardown.",
+      "A normal Teardown executable launch did not produce a controllable foreground target; no multiplayer session was started."
+    ],
+    "safety_decision": "No real input, telemetry baseline, screenshot, or protocol command assertion was performed after the focus guard failed. This record does not claim live owner lease, reconnect, late-join, queue-pressure, or Host/Client convergence."
+  },
+  "cleanup": {
+    "emergency_release": "No inputs were injected in the blocked attempt.",
+    "test_children_remaining": 0,
+    "held_inputs": {"keys": [], "buttons": []},
+    "original_manager_preserved": true
+  },
+  "next_action": "Re-run the same RESTART_MOD_SESSION contract after Teardown exposes a focused interactive window; then record one valid owner command and one rejected non-owner/stale command with fresh CM2_TEST_V1 telemetry and incremental log evidence."
+}
