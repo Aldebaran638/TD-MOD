@@ -1,8 +1,9 @@
 ---@diagnostic disable: undefined-global
 
 -- Catalog Authority v1. Generated projections are selected, parity-checked
--- and frozen once per Runtime context. Legacy tables remain init-only rollback
--- sources until the later legacy-removal step.
+-- and frozen once per Runtime context. Legacy definition files are accepted
+-- only through the init-time import boundary below; Runtime never uses their
+-- registries as an authority.
 cm2CatalogAuthorityV1 = cm2CatalogAuthorityV1 or {}
 local authority = cm2CatalogAuthorityV1
 
@@ -42,28 +43,65 @@ local function _newState()
         initialized = false,
         frozen = false,
         requestedSource = "candidate-v1",
-        source = "legacy",
-        runtimePolicy = "legacy-fallback",
+        source = "uninitialized",
+        runtimePolicy = "candidate-required",
         candidateAvailable = false,
         candidateCatalogHash = "",
         rollbackCatalogHash = "",
         fallbackReason = "not-initialized",
         candidateCalls = 0,
         legacyAdapterCalls = 0,
+        legacyDefinitionImportCalls = 0,
+        legacyDefinitionRegisterCalls = 0,
+        legacyDefinitionOverrideCalls = 0,
         rejectedAfterFreeze = 0,
         parityChecks = 0,
         parityPasses = 0,
         parityMismatches = 0,
         effectiveVehicles = {},
         effectiveWeapons = {},
-        legacyVehicles = {},
-        legacyWeapons = {},
+        bootstrapVehicles = {},
+        bootstrapWeapons = {},
+        bootstrapComponents = {},
+        rollbackVehicles = {},
+        rollbackWeapons = {},
+        rollbackComponents = {},
         candidateVehicles = {},
         candidateWeapons = {},
+        effectiveComponents = {},
+        rollbackRequested = false,
     }
 end
 
 authority.state = authority.state or _newState()
+
+local function _captureDefinition(kind, definitionId, definition)
+    local state = authority.state
+    if state.initialized or state.frozen then
+        return false, "legacy definition import is closed"
+    end
+    local normalizedKind = tostring(kind or "")
+    local id = tostring(definitionId or "")
+    local bucket = normalizedKind == "vehicle" and state.bootstrapVehicles
+        or normalizedKind == "weapon" and state.bootstrapWeapons
+        or normalizedKind == "component" and state.bootstrapComponents
+    if bucket == nil or id == "" or type(definition) ~= "table" then
+        return false, "invalid legacy definition import"
+    end
+    if bucket[id] ~= nil then
+        return false, "duplicate imported definition " .. id
+    end
+    bucket[id] = definition
+    state.legacyDefinitionImportCalls = state.legacyDefinitionImportCalls + 1
+    return true, nil
+end
+
+-- Legacy schema functions use this only while the entry closure is being
+-- assembled. The table is private to the authority and is copied before the
+-- freeze; no Runtime lookup reads these bootstrap buckets.
+function authority.captureLegacyDefinition(kind, definitionId, definition)
+    return _captureDefinition(kind, definitionId, definition)
+end
 
 local function _defaultManifest()
     return {
@@ -198,21 +236,56 @@ local function _buildWeaponProjection(legacyDefinitions, candidates, state)
         merged.catalogProjectileId = candidate.projectile
         result[id] = merged
     end
+    -- A disposable, human-approved AI candidate may be imported before the
+    -- freeze for its own scenario. It is still published through this one
+    -- frozen projection; it never calls a Runtime definition register.
+    for id, definition in pairs(legacyDefinitions or {}) do
+        if definition.aiCandidate == true then
+            local copied = _copy(definition)
+            copied.catalogId = id
+            copied.catalogSource = "scenario-v1"
+            result[id] = copied
+        end
+    end
     if _count(result) ~= _count(legacyDefinitions) then
         return nil, "candidate weapon catalog does not cover the legacy registry"
     end
     return result, nil
 end
 
-local function _activateProjection(state, vehicles, weapons)
+local function _buildComponentProjection(rollbackDefinitions)
+    return _copy(rollbackDefinitions or {})
+end
+
+local function _activateProjection(state, vehicles, weapons, components)
     state.effectiveVehicles = vehicles
     state.effectiveWeapons = weapons
-    -- Existing runtime modules resolve these globals dynamically. They now
-    -- point at the frozen generated projection for this context.
+    state.effectiveComponents = components or {}
+    -- Existing Runtime modules resolve these globals dynamically. They now
+    -- point at the frozen projection, never at the bootstrap import buckets.
     shipTypeRegistryData = vehicles
     weaponData = weapons
+    shipComponentData = state.effectiveComponents
     if weaponCatalogUseRuntimeDefinitions ~= nil then
         weaponCatalogUseRuntimeDefinitions(weapons)
+    end
+    if shipComponentUseRuntimeDefinitions ~= nil then
+        shipComponentUseRuntimeDefinitions(state.effectiveComponents)
+    end
+end
+
+local function _clearRuntimeProjection(state)
+    state.effectiveVehicles = {}
+    state.effectiveWeapons = {}
+    state.effectiveComponents = {}
+    shipTypeRegistryData = {}
+    weaponData = {}
+    shipComponentData = {}
+    if weaponCatalogUseRuntimeDefinitions ~= nil then
+        weaponCatalogUseRuntimeDefinitions({})
+    end
+    if shipComponentUseRuntimeDefinitions ~= nil then
+        shipComponentUseRuntimeDefinitions({})
     end
 end
 
@@ -222,8 +295,9 @@ function authority.init(requestedSource, manifest, generatedCatalog, rollbackHas
 
     state.requestedSource = tostring(requestedSource or "candidate-v1")
     state.rollbackCatalogHash = tostring(rollbackHash or "")
-    state.legacyVehicles = shipTypeRegistryData or {}
-    state.legacyWeapons = weaponData or {}
+    state.rollbackVehicles = _copy(state.bootstrapVehicles)
+    state.rollbackWeapons = _copy(state.bootstrapWeapons)
+    state.rollbackComponents = _copy(state.bootstrapComponents)
 
     local runtimeManifest = manifest or _defaultManifest()
     local candidate = generatedCatalog or {
@@ -251,35 +325,56 @@ function authority.init(requestedSource, manifest, generatedCatalog, rollbackHas
         )
     state.candidateCatalogHash = vehicleHash .. ":" .. weaponHash
 
-    if state.requestedSource == "candidate-v1" and state.candidateAvailable then
+    local rollbackRequested = state.rollbackRequested
+        or state.requestedSource == "legacy"
+        or state.requestedSource == "rollback"
+    if rollbackRequested then
+        _activateProjection(
+            state,
+            state.rollbackVehicles,
+            state.rollbackWeapons,
+            _buildComponentProjection(state.rollbackComponents)
+        )
+        state.source = "rollback"
+        state.runtimePolicy = "rollback-only"
+        state.fallbackReason = "explicit-init-rollback"
+    elseif state.requestedSource == "candidate-v1" and state.candidateAvailable then
         local vehicles, vehicleError = _buildVehicleProjection(
-            state.legacyVehicles,
+            state.rollbackVehicles,
             state.candidateVehicles,
             state
         )
         local weapons, weaponError = _buildWeaponProjection(
-            state.legacyWeapons,
+            state.rollbackWeapons,
             state.candidateWeapons,
             state
         )
         if vehicles ~= nil and weapons ~= nil then
-            _activateProjection(state, vehicles, weapons)
+            _activateProjection(
+                state,
+                vehicles,
+                weapons,
+                _buildComponentProjection(state.rollbackComponents)
+            )
             state.source = "candidate-v1"
             state.runtimePolicy = "candidate-active"
             state.fallbackReason = ""
         else
-            state.source = "legacy"
-            state.runtimePolicy = "legacy-fallback"
+            _clearRuntimeProjection(state)
+            state.source = "blocked"
+            state.runtimePolicy = "candidate-required"
             state.fallbackReason = vehicleError or weaponError or "candidate parity failed"
         end
     else
-        state.source = "legacy"
-        state.runtimePolicy = "legacy-fallback"
-        state.fallbackReason = state.requestedSource == "legacy"
-            and "explicit-legacy-source"
-            or "candidate-manifest-or-artifact-invalid"
+        _clearRuntimeProjection(state)
+        state.source = "blocked"
+        state.runtimePolicy = "candidate-required"
+        state.fallbackReason = "candidate-manifest-or-artifact-invalid"
     end
 
+    state.bootstrapVehicles = {}
+    state.bootstrapWeapons = {}
+    state.bootstrapComponents = {}
     state.frozen = true
     state.initialized = true
     return state
@@ -290,7 +385,7 @@ function authority.isFrozen()
 end
 
 function authority.source()
-    return tostring(authority.state.source or "legacy")
+    return tostring(authority.state.source or "uninitialized")
 end
 
 function authority.lookup(catalog, definitionId)
@@ -308,44 +403,45 @@ function authority.lookupDefinition(kind, definitionId)
     local state = authority.state
     if not state.initialized then return nil, "catalog authority is not initialized" end
     local id = tostring(definitionId or "")
-    if state.source == "candidate-v1" then
-        local catalog = tostring(kind or "") == "weapon"
-            and state.effectiveWeapons or state.effectiveVehicles
-        local value = catalog[id]
-        if value == nil then return nil, "definition is not in the frozen projection" end
-        state.candidateCalls = state.candidateCalls + 1
-        return value, nil
-    end
-    return tostring(kind or "") == "weapon"
-        and state.legacyWeapons[id] or state.legacyVehicles[id], nil
+    local normalizedKind = tostring(kind or "")
+    local catalog = normalizedKind == "weapon" and state.effectiveWeapons
+        or normalizedKind == "component" and state.effectiveComponents
+        or state.effectiveVehicles
+    local value = catalog[id]
+    if value == nil then return nil, "definition is not in the frozen projection" end
+    state.candidateCalls = state.candidateCalls + 1
+    return value, nil
 end
 
 function authority.registerLegacyDefinition(definitionId)
     local state = authority.state
+    state.legacyDefinitionRegisterCalls = state.legacyDefinitionRegisterCalls + 1
     if state.frozen then
         state.rejectedAfterFreeze = state.rejectedAfterFreeze + 1
         return false, "legacy definition registration is frozen"
     end
     state.legacyAdapterCalls = state.legacyAdapterCalls + 1
-    return tostring(definitionId or "") ~= "", nil
+    return false, "legacy definition registration is init-only import"
 end
 
 function authority.overrideDefinition(definitionId)
     local state = authority.state
+    state.legacyDefinitionOverrideCalls = state.legacyDefinitionOverrideCalls + 1
     if state.frozen then
         state.rejectedAfterFreeze = state.rejectedAfterFreeze + 1
         return false, "definition override is frozen"
     end
     state.legacyAdapterCalls = state.legacyAdapterCalls + 1
-    return tostring(definitionId or "") ~= "", nil
+    return false, "definition override is init-only import"
 end
 
 function authority.rollbackAtInit()
     if authority.state.initialized then
         return false, "rollback requires a new context initialization"
     end
-    authority.state.source = "legacy"
-    authority.state.runtimePolicy = "legacy-fallback"
+    authority.state.rollbackRequested = true
+    authority.state.source = "rollback"
+    authority.state.runtimePolicy = "rollback-only"
     authority.state.fallbackReason = "explicit-rollback"
     return true, nil
 end
@@ -365,12 +461,20 @@ function authority.getReport()
         fallbackReason = state.fallbackReason,
         candidateCalls = state.candidateCalls,
         legacyAdapterCalls = state.legacyAdapterCalls,
+        legacyDefinitionImportCalls = state.legacyDefinitionImportCalls,
+        legacyDefinitionRegisterCalls = state.legacyDefinitionRegisterCalls,
+        legacyDefinitionOverrideCalls = state.legacyDefinitionOverrideCalls,
         rejectedAfterFreeze = state.rejectedAfterFreeze,
         parityChecks = state.parityChecks,
         parityPasses = state.parityPasses,
         parityMismatches = state.parityMismatches,
         vehicleCount = _count(state.candidateVehicles),
         weaponCount = _count(state.candidateWeapons),
+        componentCount = _count(state.effectiveComponents),
+        runtimeAuthority = state.source,
+        bootstrapCleared = _count(state.bootstrapVehicles) == 0
+            and _count(state.bootstrapWeapons) == 0
+            and _count(state.bootstrapComponents) == 0,
     }
 end
 

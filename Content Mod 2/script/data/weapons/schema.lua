@@ -134,7 +134,6 @@ local function _finish(definition)
         local accepted, registerError = cm2CatalogAuthorityV1.registerLegacyDefinition(id)
         if not accepted then error(registerError) end
     end
-    if weaponData[id] ~= nil then error("duplicate weapon definition " .. id) end
     _fillMissing(definition, {
         catalogTier = "highest",
         runtimeReady = true,
@@ -166,7 +165,16 @@ local function _finish(definition)
             )
         )
     )
-    weaponData[id] = definition
+    if cm2CatalogAuthorityV1 ~= nil
+        and cm2CatalogAuthorityV1.captureLegacyDefinition ~= nil then
+        local accepted, importError = cm2CatalogAuthorityV1.captureLegacyDefinition(
+            "weapon", id, definition
+        )
+        if not accepted then error(importError) end
+    else
+        if weaponData[id] ~= nil then error("duplicate weapon definition " .. id) end
+        weaponData[id] = definition
+    end
     return definition
 end
 

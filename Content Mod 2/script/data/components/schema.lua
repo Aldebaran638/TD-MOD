@@ -25,10 +25,6 @@ function shipComponentDefine(definition)
     definition = definition or {}
     local componentId = tostring(definition.componentId or "")
     if componentId == "" then error("component definition is missing componentId") end
-    if shipComponentData[componentId] ~= nil then
-        error("duplicate component definition " .. componentId)
-    end
-
     local slotType = tostring(definition.slotType or "")
     if not _componentSlotTypes[slotType] then
         error("component " .. componentId .. " has invalid slotType " .. slotType)
@@ -66,6 +62,22 @@ function shipComponentDefine(definition)
         error("sensor component " .. componentId .. " requires sensorRange and sensorInterval")
     end
 
-    shipComponentData[componentId] = definition
+    if cm2CatalogAuthorityV1 ~= nil
+        and cm2CatalogAuthorityV1.isFrozen ~= nil
+        and cm2CatalogAuthorityV1.isFrozen() then
+        error("component definition registration is frozen")
+    end
+    if cm2CatalogAuthorityV1 ~= nil
+        and cm2CatalogAuthorityV1.captureLegacyDefinition ~= nil then
+        local accepted, importError = cm2CatalogAuthorityV1.captureLegacyDefinition(
+            "component", componentId, definition
+        )
+        if not accepted then error(importError) end
+    else
+        if shipComponentData[componentId] ~= nil then
+            error("duplicate component definition " .. componentId)
+        end
+        shipComponentData[componentId] = definition
+    end
     return definition
 end

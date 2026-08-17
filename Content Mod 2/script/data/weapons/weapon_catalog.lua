@@ -46,6 +46,11 @@ end
 
 function weaponCatalogRegisterRuntimeDefinition(weaponType)
     local requested = tostring(weaponType or "")
+    if cm2CatalogAuthorityV1 ~= nil
+        and cm2CatalogAuthorityV1.isFrozen ~= nil
+        and cm2CatalogAuthorityV1.isFrozen() then
+        return false, "runtime weapon definition registration is frozen"
+    end
     local definition = weaponData[requested]
     if requested == "" or definition == nil or definition.runtimeReady == false then
         return false, "runtime weapon definition is unavailable"

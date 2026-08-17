@@ -264,10 +264,18 @@ function shipDefinitionRegister(definition)
     else
         error("ship " .. shipType .. " has invalid controlMode " .. controlMode)
     end
-    if shipTypeRegistryData[shipType] ~= nil then
-        error("duplicate ship definition " .. shipType)
+    if cm2CatalogAuthorityV1 ~= nil
+        and cm2CatalogAuthorityV1.captureLegacyDefinition ~= nil then
+        local accepted, importError = cm2CatalogAuthorityV1.captureLegacyDefinition(
+            "vehicle", shipType, definition
+        )
+        if not accepted then error(importError) end
+    else
+        if shipTypeRegistryData[shipType] ~= nil then
+            error("duplicate ship definition " .. shipType)
+        end
+        shipTypeRegistryData[shipType] = definition
     end
-    shipTypeRegistryData[shipType] = definition
     return definition
 end
 
@@ -275,9 +283,7 @@ function shipDefinitionGet(shipType, fallbackType)
     local requested = tostring(shipType or "")
     local fallback = tostring(fallbackType or "")
     if cm2CatalogAuthorityV1 ~= nil
-        and cm2CatalogAuthorityV1.lookupDefinition ~= nil
-        and cm2CatalogAuthorityV1.source ~= nil
-        and cm2CatalogAuthorityV1.source() == "candidate-v1" then
+        and cm2CatalogAuthorityV1.lookupDefinition ~= nil then
         local candidate = cm2CatalogAuthorityV1.lookupDefinition("vehicle", requested)
         if candidate ~= nil then return candidate end
         if fallback ~= "" then
@@ -285,9 +291,7 @@ function shipDefinitionGet(shipType, fallbackType)
             if candidate ~= nil then return candidate end
         end
     end
-    return shipTypeRegistryData[requested]
-        or shipTypeRegistryData[fallback]
-        or {}
+    return {}
 end
 
 function shipDefinitionFindConfiguration(definition, configurationId)

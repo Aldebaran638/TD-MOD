@@ -1,13 +1,13 @@
 #version 2
 #include "script/include/common.lua"
 
+#include "data/catalog/catalog_authority_v1.lua"
 #include "data/components/component_catalog.lua"
 #include "data/targets/external_targets.lua"
 #include "data/ships/ship_catalog.lua"
 #include "data/configuration/loadout_contract_v1.lua"
 #include "data/catalog/generated/vehicle_catalog_v1.lua"
 #include "data/catalog/generated/weapon_catalog_v1.lua"
-#include "data/catalog/catalog_authority_v1.lua"
 #include "data/weapons/weapon_catalog.lua"
 #include "net/server_sync_limiter.lua"
 #include "net/network_debug.lua"

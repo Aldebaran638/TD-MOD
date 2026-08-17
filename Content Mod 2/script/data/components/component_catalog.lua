@@ -9,24 +9,34 @@
 
 componentSlotPools = {}
 
-for componentId, definition in pairs(shipComponentData) do
-    local slotType = tostring(definition.slotType or "")
-    if slotType ~= "" then
-        componentSlotPools[slotType] = componentSlotPools[slotType] or {}
-        componentSlotPools[slotType][#componentSlotPools[slotType] + 1] = componentId
+local function _rebuildComponentSlotPools()
+    componentSlotPools = {}
+    for componentId, definition in pairs(shipComponentData or {}) do
+        local slotType = tostring(definition.slotType or "")
+        if slotType ~= "" then
+            componentSlotPools[slotType] = componentSlotPools[slotType] or {}
+            componentSlotPools[slotType][#componentSlotPools[slotType] + 1] = componentId
+        end
+    end
+
+    for _, pool in pairs(componentSlotPools) do
+        table.sort(pool, function(leftId, rightId)
+            local left = shipComponentData[leftId] or {}
+            local right = shipComponentData[rightId] or {}
+            local leftName = tostring(left.englishName or leftId)
+            local rightName = tostring(right.englishName or rightId)
+            if leftName ~= rightName then return leftName < rightName end
+            return tostring(leftId) < tostring(rightId)
+        end)
     end
 end
 
-for _, pool in pairs(componentSlotPools) do
-    table.sort(pool, function(leftId, rightId)
-        local left = shipComponentData[leftId] or {}
-        local right = shipComponentData[rightId] or {}
-        local leftName = tostring(left.englishName or leftId)
-        local rightName = tostring(right.englishName or rightId)
-        if leftName ~= rightName then return leftName < rightName end
-        return tostring(leftId) < tostring(rightId)
-    end)
+function shipComponentUseRuntimeDefinitions(definitions)
+    shipComponentData = definitions or {}
+    _rebuildComponentSlotPools()
 end
+
+_rebuildComponentSlotPools()
 
 function shipComponentGetSlotPool(slotType)
     return componentSlotPools[tostring(slotType or "")] or {}

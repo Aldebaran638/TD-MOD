@@ -47,6 +47,11 @@ local active = _param("cm2_ai_candidate") == projection.candidateId
 
 local function _defineProjection()
     if weaponData[projection.weaponType] ~= nil then return true end
+    if cm2CatalogAuthorityV1 ~= nil
+        and cm2CatalogAuthorityV1.isFrozen ~= nil
+        and cm2CatalogAuthorityV1.isFrozen() then
+        return false
+    end
     weaponDefineRay({
         weaponType = projection.weaponType,
         displayName = "AI Pulse Candidate (Disposable)",
@@ -83,10 +88,6 @@ local function _defineProjection()
         aiFinalBuildHash = projection.finalBuildHash,
         aiProjectionScope = projection.disposableScope,
     })
-    if weaponCatalogRegisterRuntimeDefinition ~= nil then
-        local registered, registerError = weaponCatalogRegisterRuntimeDefinition(projection.weaponType)
-        if not registered then error("AI candidate catalog registration failed: " .. tostring(registerError or "unknown")) end
-    end
     return true
 end
 
@@ -97,8 +98,7 @@ cm2AiWeaponRuntimeProjection = {
     activateForScenario = function(scenarioId)
         if tostring(scenarioId or "") ~= "ai_weapon_candidate_preview" then return false end
         if not active then
-            active = true
-            _defineProjection()
+            active = _defineProjection()
         end
         return active
     end,
@@ -128,7 +128,7 @@ cm2AiWeaponRuntimeProjection = {
             existing_muzzle_profile = projection.muzzleProfile,
             existing_impact_profile = projection.impactProfile,
             existing_sound_profile = projection.soundProfile,
-            runtime_catalog_write = active,
+            runtime_catalog_write = false,
             generated_write = false,
             core_write = false,
             lua_write = false,
