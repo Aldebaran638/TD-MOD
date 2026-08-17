@@ -4017,7 +4017,7 @@
       "id": "Step 5.6",
       "stage": "Gate 5",
       "title": "将 Guided Collision 从五 Query 常态改为受预算连续扫掠",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 为 guided projectile 维护上次位置/速度/flight state；[ ] 使用受预算的连续 sweep 或分段采样；[ ] 只有接近目标/发生状态变化时增加 Query；[ ] 固定 seed/阈值/最大步长；[ ] 记录 Query、命中漏检和降级。 Reason: 每枚 guided 每帧固定多次查询会在 96 导弹时超预算，必须把查询转成可控预算。",
       "expected_outcome": "Guided 平均 ≤3000、硬上限 ≤6000 Query/s 的目标可测量，命中语义可回放。",
       "prerequisites": [
@@ -4033,15 +4033,22 @@
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
         "code_or_document": "Content Mod 2/script/weapon/server/behavior/guided_projectile/collision_budget_v1.lua; collider.lua budgeted/legacy switch; runtime_state.lua planner cleanup; weapon/server/bootstrap.lua include; shipMain.lua init; docs/guided-collision-budget-v1.md; docs/candidates/guided-collision-budget-v1.fixture.json; docs/candidates/guided-collision-budget-v1.result.json.",
-        "automated_tests": "run-guided-collision-budget-v1.ps1 PASS: 96 projectiles x 60 frames; queryGranted=3000 within 2800..3000 average target; maxWindowQueries=3000; degraded=72; queryRejected=0; sweepQueries=2908; closestQueries=100; critical scenarios=sharp-turn/near-collision/overspeed; phaseSpreadSamples=100; negative average=2/hard=3 produced degraded=3/rejected=3; legacy query cost=5. test-guided-collision-budget-v1.ps1 PASS including budget-overrun negative and continuity/no-retry checks.",
-        "harness": "harness/check-all.ps1 PASS (exit 0): entry closure 4 entries/252 Lua files; Lua 208 files, 0 issues; Teardown API 208 files, 0 issues; XML, weapon/component/ship checks and all self-tests passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; live S2 straight/sharp-turn/near-collision/overspeed hit goldens, QueryRaycast p95/p99, real CPU/GC and 96-projectile pressure cannot be measured. Offline planner evidence is contract/scheduling evidence only.",
+        "automated_tests": "run-guided-collision-budget-v1.ps1 PASS: the 96-projectile x 60-frame pressure segment granted exactly 3000 queries within the 2800..3000 average target and maxWindowQueries=3000; the runner's appended four critical scenarios raised the combined report total to 3008; degraded=72; queryRejected=0; sweepQueries=2908; closestQueries=100; phaseSpreadSamples=100; negative average=2/hard=3 produced degraded=3/rejected=3; legacy query cost=5. test-guided-collision-budget-v1.ps1 PASS including budget-overrun negative and continuity/no-retry checks.",
+        "harness": "harness/check-all.ps1 PASS (exit 0): entry closure 4 entry points/264 Lua files/0 issues; Lua 237 files/2 engine includes/0 API issues; Teardown API 0 issues; XML, weapon/component/ship checks and all self-tests passed.",
+        "runtime_or_performance": "BLOCKED: Teardown.exe is installed and responding as `teardown:57656:53613200`, but the current Windows input desktop is `Screen-saver` and `GetForegroundWindow()` is 0. The exact-target observe/control path cannot safely start, so no fresh CM2_TEST_V1 baseline, S2 scene reload, straight/sharp-turn/near-collision/overspeed hit replay, QueryRaycast p95/p99, real CPU/GC, 96-projectile pressure or screenshot replay was started. Offline planner evidence is contract/scheduling evidence only. Evidence: docs/evidence/step-5.6-guided-collision-budget-v1.json.",
         "rollback_record": "Keep cm2GuidedCollisionBudgetV1 mode=legacy (production default), which preserves the existing five-query head/mid closest-point plus three sweep path. If live hit parity or p95/p99 regresses, call setMode(\"legacy\"), preserve the fixture/report and diagnostics, and do not allow budgeted and legacy paths to apply the same hit."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-5.6",
-      "status_reason": "Budgeted continuous-sweep planner, fixed phase/thresholds, critical-state closest-point escalation, deterministic no-retry degradation, diagnostics and legacy rollback are implemented and offline-verified. Live Teardown collision parity and performance evidence remain unavailable because Teardown.exe is not present.",
+      "status_reason": "Budgeted continuous-sweep planner, fixed phase/thresholds, critical-state closest-point escalation, deterministic no-retry degradation, diagnostics and legacy rollback are implemented and offline-verified. Implementation is finish. Verification remains pending because the installed Teardown target is outside the interactive input desktop, blocking live S2 collision parity and performance evidence. Evidence: docs/evidence/step-5.6-guided-collision-budget-v1.json.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "STATIC and FIXTURE implementation evidence is complete and the runner regression passes. The required SCENE/TELEMETRY/VISUAL/LOG evidence was attempted with a fresh read-only environment probe, but the focus guard blocked the fresh frame before seeded replay; rerun the declared live profiles after the Windows input desktop returns to the interactive desktop.",
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The required live verification cannot start because Win32 reports the active input desktop as Screen-saver and foreground handle 0. The control bridge must refuse input or capture until the interactive desktop is restored.",
+        "evidence": "docs/evidence/step-5.6-guided-collision-budget-v1.json; Win32 probe 2026-08-18T04:26:50+08:00; target teardown:57656:53613200",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T04:26:50+08:00"
+      },
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "bcc03322b609f295fe81bd5e6e52af0c149d21690125aeb81c5a0d085e0f75b2",

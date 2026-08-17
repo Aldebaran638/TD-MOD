@@ -1,0 +1,86 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 5.6",
+  "title": "Guided Collision Budget v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "bcc03322b609f295fe81bd5e6e52af0c149d21690125aeb81c5a0d085e0f75b2",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "F4_TO_F5_OR_REOPEN_LEVEL_XML",
+    "automation_level": "PARTIAL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The budgeted continuous-sweep planner, fixed phase/thresholds, critical-state closest-point escalation, deterministic degradation without same-frame retry, diagnostics and legacy rollback are implemented and fixture-verified. Live S2 evidence is blocked by the non-interactive Windows input desktop.",
+    "verification_status_reason": "The exact Teardown target is responding, but Screen-saver is the active input desktop and foreground handle is 0. No unsafe input, reload, telemetry bridge, visual capture or scene replay was started.",
+    "implementation_scope": [
+      "Per-projectile position/velocity/flight scheduling state with deterministic seed phase.",
+      "Budgeted continuous sweep and first-contact/critical closest-point escalation.",
+      "Average and hard query budgets with explicit degraded/rejected outcomes and no infinite retry.",
+      "Hit, potential-miss, diagnostics and legacy five-query rollback boundary."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "planner_runner": "PASS: pressure segment was 96 projectiles x 60 frames; bulk queryGranted=3000 within the 2800..3000 average target; maxWindowQueries=3000; degraded=72; queryRejected=0; sweepQueries=2908; closestQueries=100; phaseSpreadSamples=96 in the bulk segment. The runner then appended four critical scenarios, making the combined report queryGranted=3008 and phaseSpreadSamples=100; those scenarios were separately checked for straight, sharp-turn, near-collision and overspeed critical escalation.",
+    "planner_negative": "PASS: average/hard budget negative fixture produced degraded=3 and rejected=3; continuity/no-retry invariant passed; legacy mode accounted for query cost=5.",
+    "planner_self_test": "PASS: accepts the deterministic 96-projectile fixture; rejects an exceeded average budget; preserves continuity behavior and no-retry policy.",
+    "runtime_model_boundary": "The runner is a deterministic scheduling model and does not claim Teardown QueryRaycast, collision/hit parity, frame p95/p99, CPU, GC, visual or live pressure behavior."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "foreground_handle": 0,
+      "focused": false,
+      "input_desktop": "Screen-saver",
+      "probe_at": "2026-08-18T04:26:50+08:00"
+    },
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow probe reported Screen-saver and foreground handle 0.",
+      "No real input, telemetry probe, scene reload, seeded S2 guided-collision replay or screenshot was started after the focus guard condition failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the contract live profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The focus guard rejected a fresh client-area frame before the live scene could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No scene reload or runtime guided-collision replay was started, so no Step 5.6 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully: entry closure, source-of-truth, executable Todo, Lua, Teardown API, XML, weapon, component, ship checks and all self-tests passed."
+  },
+  "evidence_roots": [],
+  "rollback": "Keep cm2GuidedCollisionBudgetV1 in legacy mode as the production default. If live hit parity or p95/p99 regresses, call setMode(\"legacy\"), preserve the fixture/report and diagnostics, and do not allow budgeted and legacy paths to apply the same hit."
+}
