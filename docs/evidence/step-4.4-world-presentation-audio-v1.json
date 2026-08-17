@@ -1,0 +1,94 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 4.4",
+  "title": "Scene Presentation and Audio Host",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "a93ce08423d9885aa18eb2cf219d18c6d99746eef9973629b68dd3edd81f8a73",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "MULTIPLAYER"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "RESTART_MOD_SESSION",
+    "automation_level": "PARTIAL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The scene Presentation/Audio Host, bounded queues, publication boundary, coalescing, fixed owner counts, and local double-playback guard are implemented and statically verified. Live S1/S3/S5 behavior remains pending because the installed Teardown target is outside the interactive Windows input desktop.",
+    "verification_status_reason": "The focus-safe live probe enumerated the exact Teardown target but refused capture and input while the input desktop was Screen-saver. This evidence does not claim live scene-wide ownership, pressure, p95, LOD, or cleanup acceptance.",
+    "implementation_scope": [
+      "Content Mod 2/main.lua owns one client scene Presentation/Audio Host.",
+      "The Host exposes one EffectPlayer owner, one Audio voice owner, and one resource cache owner.",
+      "Critical and ambient queues use fixed capacities 64 and 128 with event announcement slots 32.",
+      "Ship Instance Adapter publishes bounded presentation/anchor DTOs and returns legacy-local-owner outside content-host mode.",
+      "Duplicate/stale rejection, ambient coalescing, scene reload reset, and latency diagnostics are explicit."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "presentation_audio_runner": "PASS: one EffectPlayer/Audio/resource owner, critical=64, ambient=128, event slots=32, criticalDropped=0, ambientCoalesced=1, duplicateRejected=1, staleRejected=1, doublePlayback=0.",
+    "presentation_audio_self_test": "PASS: valid fixture accepted; duplicate Audio owner and hidden ambient coalescing negative fixtures rejected.",
+    "mutual_exclusion": "PASS: presentation_publisher legacy/event-v1 boundary remains explicit and local fallback returns legacy-local-owner."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": "20260817T184036Z-59b60b7f",
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "foreground_handle": 0,
+      "focused": false,
+      "input_desktop": "Screen-saver",
+      "client": {"left": 800, "top": 450, "width": 1280, "height": 720}
+    },
+    "attempts": [
+      "teardown_instances enumerated the exact target.",
+      "teardown_status confirmed the target was responding and not minimized, with no held inputs.",
+      "teardown_observe(True, exact target_id) returned 'could not restore and focus Teardown'.",
+      "Win32 OpenInputDesktop returned Screen-saver and GetForegroundWindow returned 0.",
+      "No real input, telemetry probe, scene reload, or multiplayer child was started after the focus guard failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the contract's live profiles."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshot": null,
+    "reason": "No fresh focused frame could be captured from the Screen-saver input desktop."
+  },
+  "performance": {
+    "latency_p95": "NOT MEASURED",
+    "critical_pressure": "NOT RUN",
+    "reason": "Live Host/Client session could not be started safely."
+  },
+  "log": {
+    "baseline_cursor": 8486708,
+    "final_cursor": 8486708,
+    "new_bytes": 0,
+    "in_scope_errors": 0,
+    "in_scope_warnings": 0,
+    "continuation": "PASS: incremental log read returned zero new bytes, errors, or warnings. This does not prove runtime presentation behavior."
+  },
+  "cleanup": {
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "summary": "All Harness checks passed: 4 entry points/264 Lua files in closure, 237 Lua files/2 engine includes/0 API issues, XML, weapon, component, ship, executable Todo and all self-tests passed."
+  },
+  "evidence_roots": [
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T184036Z-59b60b7f"
+  ],
+  "rollback": "Set the root Presentation/Audio Host to local/ready=false and retain adapter legacy-local-owner. Restore the prior presentation publisher/effect runtime entry wiring as one scoped revert; do not delete legacy renderer/audio catalogs until live S1/S3/S5 evidence passes."
+}
