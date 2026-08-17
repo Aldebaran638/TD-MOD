@@ -1,0 +1,98 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 5.7",
+  "title": "Bounded Interceptor Runtime v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "7e58bb936f1d0440626a89baf874b79c4645b811a0270e6a88205b1ff783fc87",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "F4_TO_F5_OR_REOPEN_LEVEL_XML",
+    "automation_level": "PARTIAL_AUTO",
+    "automation_gaps": [
+      "Authoritative frame-time, GC, query, and allocation telemetry must be completed and baselined before the performance claim is fully automatic."
+    ]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The bounded target/flight/intercept/impact/presentation runtime, lifecycle DTO boundary, fixed budgets, owner/generation cleanup and synthetic replay are implemented and offline-verified. Live S3 and performance evidence remain blocked by the non-interactive Windows input desktop.",
+    "verification_status_reason": "The exact Teardown target is responding, but Screen-saver is the active input desktop and foreground handle is 0. The focus guard refused input, reload, telemetry bridge access and visual capture."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts; Step 5.7 fingerprint matched 7e58bb936f1d0440626a89baf874b79c4645b811a0270e6a88205b1ff783fc87.",
+    "fixture": "docs/candidates/interceptor-runtime-v1.fixture.json",
+    "runner": "PASS: registered=4, registerRejected=2, staleRejected=1, targetSelected=1, targetLost=2, intercepts=1, impacts=1, presentations=1, finishes=4, idempotentFinishes=1, ownerTerminated=1, sceneReloadTerminated=2, active=0, generation=8, thinkTicks=1, thinkProcessed=4, thinkBudgetRejected=4, updateTicks=6, updateProcessed=48, replayEvents=3.",
+    "negative_cases": "PASS: stale registration and think-budget negative fixtures were rejected.",
+    "runtime_model_boundary": "The deterministic runner proves lifecycle decisions, cleanup, synthetic replay and fixed budgets only. It does not prove Teardown physics, Target Catalog queries, ProjectileLifecycle handoff, presentation rendering, frame time, Query, CPU, GC or allocation behavior."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-17T20:37:59.5810171Z",
+      "input_desktop": "Screen-saver",
+      "foreground_handle": 0,
+      "foreground_pid": 0,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "S3 target selection/intercept/recover/reuse/reload",
+      "Real Target Catalog and ProjectileLifecycle handoff",
+      "24-craft cap and owner-death cleanup in live physics",
+      "Visual LOD and presentation rendering",
+      "CPU, Query, GC, allocation and frame-time p95/p99"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow reported Screen-saver and foreground handle 0.",
+      "No real input, F4/F5 reload, telemetry probe, scene replay or screenshot was started after the focus guard condition failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the live contract profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely; no live ordered boundary or authoritative S3 count is claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The focus guard rejected a fresh client-area frame before the live scene and interceptor presentation could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live scenario reload or interceptor replay was started, so no Step 5.7 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions were issued; no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully with exit code 0: entry closure, source-of-truth, executable Todo, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/candidates/interceptor-runtime-v1.fixture.json",
+    "docs/candidates/interceptor-runtime-v1-result.json",
+    "tools/cm2-world-host/run-interceptor-runtime-v1.ps1",
+    "tools/cm2-world-host/test-interceptor-runtime-v1.ps1"
+  ],
+  "rollback": "Keep the legacy strike-craft controller authoritative and cm2InterceptorRuntimeV1 in mode=legacy. If live S3 parity, owner cleanup, target generation or presentation counts diverge, call setMode(legacy), preserve the synthetic diagnostics, and prevent runtime and legacy from finishing the same craft twice."
+}

@@ -4129,7 +4129,7 @@
       "id": "Step 5.7",
       "stage": "Gate 5",
       "title": "建立精简 Interceptor Runtime",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 把 AI Interceptor 拆为 target selection、flight、intercept、impact、presentation；[ ] 使用 Target Catalog/Projectile API；[ ] 固定 think/update 预算；[ ] 统一 owner、generation、finish 和失效目标策略；[ ] 通过 synthetic replay。 Reason: 拦截器不应复制一套带全局扫描和私有效果的 AI/弹体系统。",
       "expected_outcome": "Interceptor 是可观测、可限额、可回收的轻量 runtime。",
       "prerequisites": [
@@ -4147,11 +4147,11 @@
         "code_or_document": "Content Mod 2/script/ship/common/server/components/interceptor_runtime_v1.lua; ship/common/server/bootstrap.lua include; strikeCraftMain.lua init/serverTick hooks; docs/interceptor-runtime-v1.md; docs/candidates/interceptor-runtime-v1.fixture.json; docs/candidates/interceptor-runtime-v1.result.json.",
         "automated_tests": "run-interceptor-runtime-v1.ps1 PASS: registered=4, registerRejected=2 (capacity+stale), staleRejected=1, targetSelected=1, targetLost=2, intercepts=1, impacts=1, presentations=1, finishes=4, idempotentFinishes=1, ownerTerminated=1, sceneReloadTerminated=2, active=0, generation=8; fixed pressure thinkTicks=1/processed=4/budgetRejected=4, updateTicks=6/processed=48, replayEvents=3. test-interceptor-runtime-v1.ps1 PASS: stale registration and think-budget negative fixtures rejected.",
         "harness": "harness/check-all.ps1 PASS (exit 0): entry closure 4 entries/253 Lua files; Lua 209 files, 0 issues; Teardown API 209 files, 0 issues; XML, weapon/component/ship checks and all self-tests passed. Harness emitted only its known noncharged-laser fixture cleanup lock warnings after reporting all checks passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; live S3 launch/mission/recover/reuse/reload, real Target Catalog/ProjectileLifecycle handoff, 24-craft cap, owner-death behavior, light/voice LOD and CPU/Query/GC p95 cannot be measured. Offline synthetic replay and budget evidence are contract evidence only.",
+        "runtime_or_performance": "BLOCKED: the exact Teardown target is visible and responding, but Win32 reports the active input desktop as Screen-saver and foreground handle 0. Live S3 launch/mission/recover/reuse/reload, real Target Catalog/ProjectileLifecycle handoff, 24-craft cap, owner-death behavior, visual LOD, CPU/Query/GC p95 and allocation telemetry were not run. Offline synthetic replay and budget evidence are contract evidence only.",
         "rollback_record": "Keep legacy strike-craft controller authoritative and initialize cm2InterceptorRuntimeV1 with mode=legacy (current default). If S3 parity, owner cleanup, target generation or presentation counts diverge, call setMode(\"legacy\"), preserve synthetic replay/diagnostics, and do not let runtime and legacy finish the same craft twice."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-5.7",
-      "status_reason": "Bounded target/flight/intercept/impact/presentation runtime with fixed think/update budgets, owner/generation cleanup, lifecycle DTO boundary and synthetic replay is implemented and offline-verified. Live S3 physics, visual LOD and performance evidence remain unavailable because Teardown.exe is absent; legacy controller remains the safe default.",
+      "status_reason": "Bounded target/flight/intercept/impact/presentation runtime with fixed think/update budgets, owner/generation cleanup, lifecycle DTO boundary and synthetic replay is implemented and offline-verified. Live S3 physics, visual LOD and performance evidence are blocked by the non-interactive Screen-saver input desktop; legacy controller remains the safe default.",
       "verification_status": "pending",
       "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
       "verification": {
@@ -4228,6 +4228,13 @@
         "The owning deterministic fixture runner and negative cases are available before product changes.",
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The exact Teardown target is visible and responding, but the active Win32 input desktop is Screen-saver and the foreground handle is 0. The focus guard must refuse input, F4/F5 reload, telemetry bridge access and visual capture until an interactive desktop is restored. This blocks live S3, Target Catalog/ProjectileLifecycle handoff, visual LOD and CPU/Query/GC verification; it does not invalidate the completed implementation or offline fixture result.",
+        "evidence": "docs/evidence/step-5.7-interceptor-runtime-v1.json; target teardown:57656:53613200; Win32 read-only probe 2026-08-17T20:37:59.5810171Z",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T04:37:59+08:00"
+      },
       "plan_order": 39
     },
     {
