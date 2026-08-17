@@ -1,0 +1,151 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 3.6",
+  "title": "Freeze Catalog and remove Runtime Legacy Definition authority",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "3258015d3dd8d8e7dc43495ed31381573742ccbcd592c118c6e3af7e28aed225",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "LOG"],
+    "reload": "F4_TO_F5_OR_REOPEN_LEVEL_XML",
+    "automation_level": "FULL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "verified",
+    "status_reason": "The generated Catalog is the only Runtime authority. Legacy definitions import only during init, the projection freezes before Runtime ticks, live reload evidence shows zero Runtime register/override calls, and the full Harness passes.",
+    "implementation_scope": [
+      "Catalog Authority is included and initialized before Runtime in shipMain.lua and strikeCraftMain.lua.",
+      "Vehicle, weapon, and component definitions are captured only into private init bootstrap buckets.",
+      "Generated candidate-v1 projection is activated, component pools rebuild from it, bootstrap buckets clear, and lookup is immutable after freeze.",
+      "Post-freeze legacy registration and override calls fail closed and remain counted; explicit rollback is available only at new-context init."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "python .\\.codex\\skills\\teardown-autonomous-testing\\scripts\\validate_todo_plan.py .\\TEARDOWN_SHIP_PLATFORM_TODO.json: PASS, 80 executable Step contracts",
+    "entry_closure": "PASS: 4 entry points, 264 Lua files in closure, 0 issues",
+    "catalog_authority_checker": "harness/check-catalog-authority-v1.ps1: PASS",
+    "catalog_authority_self_test": "harness/test-catalog-authority-v1.ps1: PASS",
+    "generated_manifest_checker": "harness/check-generated-catalog-manifest-v1.ps1: PASS",
+    "shadow_gate": "PASS: init-only comparison, no unexplained differences, explicit legacy rollback only",
+    "compiler_and_negative_fixtures": "PASS: stale hash, broken reference, duplicate ID, future schema, missing resource, and last-valid-artifact preservation",
+    "catalog_counts": {
+      "vehicles": 5,
+      "weapons": 109,
+      "components": 26,
+      "vehicle_mounts": 32,
+      "interceptors": 3,
+      "unresolved_references": 0
+    },
+    "catalog_hashes": {
+      "vehicle": "c9ac30aefa68a83b1f24acc6537e52b7b4d82ffcb06802dceafe17c4f37d4d29",
+      "weapon": "8613041f605a9cdd9230795ed7bcb63dcd99034f138fd13e8fc4c5d3cdda3c31"
+    }
+  },
+  "runtime": {
+    "target_id": "teardown:57656:53613200",
+    "pid": 57656,
+    "scenario": "vehicle_component_catalog_v1",
+    "lua_revision": "scenario-controller-v2",
+    "xml_revision": "vehicle-component-catalog-xml-v1",
+    "telemetry_protocol": "CM2_TEST_V1",
+    "initial_live_session": "0-85ff0bfe",
+    "cleanup_reload_session": "0-98a6314c",
+    "session_changed_after_reload": true,
+    "reload_evidence": [
+      {
+        "run": "20260817T121211Z-c73aac74",
+        "operation": "File/Open _ai_scenario_vehicle_component_catalog.xml, then F5",
+        "session": "0-85ff0bfe",
+        "scenario_ready": true,
+        "telemetry_latest_seq": 5,
+        "telemetry_next_after_seq": 5,
+        "truncated": false
+      },
+      {
+        "run": "20260817T121448Z-5c887aef",
+        "operation": "F4 to editor, F5, read fresh telemetry, then F4",
+        "session": "0-98a6314c",
+        "scenario_ready": true,
+        "telemetry_latest_seq": 5,
+        "telemetry_next_after_seq": 5,
+        "truncated": false,
+        "first_event_seq": 1
+      }
+    ],
+    "catalog_authority": {
+      "event_count": 5,
+      "source": "candidate-v1",
+      "runtime_authority": "candidate-v1",
+      "runtime_policy": "candidate-active",
+      "candidate_available": true,
+      "initialized": true,
+      "frozen": true,
+      "bootstrap_cleared": true,
+      "legacy_definition_import_calls": 140,
+      "legacy_definition_register_calls": 0,
+      "legacy_definition_override_calls": 0,
+      "rejected_after_freeze": 0,
+      "parity_checks": 114,
+      "parity_passes": 114,
+      "parity_mismatches": 0,
+      "vehicle_count": 5,
+      "weapon_count": 109,
+      "component_count": 26
+    },
+    "event_chain": {
+      "baseline_session": "0-85ff0bfe",
+      "baseline_after_seq": 0,
+      "baseline_latest_seq": 5,
+      "baseline_next_after_seq": 5,
+      "delta_after_seq": 5,
+      "delta_latest_seq": 5,
+      "delta_next_after_seq": 5,
+      "delta_event_count": 0,
+      "continuity": "PASS: one fresh session, no gap, duplicate, or stale event",
+      "cleanup_session": "0-98a6314c",
+      "cleanup_first_seq": 1,
+      "cleanup_registered_body_ids": [7, 14, 39, 46, 50],
+      "cleanup_registered_body_count": 5
+    }
+  },
+  "visual": {
+    "screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T121302Z-46f3ef2b/frame_f000003-220185ca_pid-57656.png",
+    "facts": [
+      "CM2 VEHICLE CATALOG V1 HUD is visible.",
+      "GENERATED V1 ACTIVE and legacy INIT-ONLY are visible.",
+      "The client area is non-black and non-constant.",
+      "The disposable five-entrypoint catalog scene and ship HUD are visible."
+    ],
+    "loading_black_frames": "Observed and rejected during the first F5 wait; a stable scene frame was captured after loading completed."
+  },
+  "log": {
+    "baseline_cursor": 8467366,
+    "next_cursor": 8477773,
+    "in_scope_errors": 0,
+    "in_scope_warnings": 0,
+    "attributed_external_errors": 0,
+    "attributed_external_warnings": 0,
+    "continuation": "PASS: the incremental CM2 slice contained no new error or warning"
+  },
+  "cleanup": {
+    "returned_to_editor": true,
+    "final_editor_screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T121448Z-5c887aef/frame_f000005-3c3a1280_pid-57656.png",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "fresh_session_no_stale_events": true,
+    "fresh_session_no_stale_entities": true,
+    "temporary_runtime_changes": "No repository or external Mod files were changed by runtime setup."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "pre_commit": "PASS in implementation commit 82f0509",
+    "summary": "All entry closures, source-of-truth, schema/compiler/catalog, presentation/effect, Lua/API/XML, weapon/component/ship checks and all Harness self-tests passed."
+  },
+  "evidence_roots": [
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T121211Z-c73aac74",
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T121302Z-46f3ef2b",
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T121448Z-5c887aef"
+  ],
+  "rollback": "Request legacy or rollback only at a new Catalog Authority context. Restore the previous generated vehicle/weapon manifest and recorded hashes; do not restore Runtime registration or override paths."
+}
