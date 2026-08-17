@@ -1,0 +1,97 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 5.8",
+  "title": "Hotpath Budget v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "3bbd128dc37d02377fc72564d5a8a179a50177e4a3864c7ce8ff3f23d5ab0197",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "F4_TO_F5_OR_REOPEN_LEVEL_XML",
+    "automation_level": "PARTIAL_AUTO",
+    "automation_gaps": [
+      "Authoritative frame-time, GC, query, and allocation telemetry must be completed and baselined before the performance claim is fully automatic."
+    ]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The bounded hotpath policy, projectile record pool, candidate buffer reuse, bounded counters and batched orphan cleanup are implemented and before/after replay verified. Live S0-S5 performance evidence remains blocked by the non-interactive Windows input desktop.",
+    "verification_status_reason": "The exact Teardown target is responding, but Screen-saver is the active input desktop and foreground handle is 0. The focus guard refused reload, telemetry bridge access and runtime observation."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts; Step 5.8 fingerprint matched 3bbd128dc37d02377fc72564d5a8a179a50177e4a3864c7ce8ff3f23d5ab0197.",
+    "fixture": "docs/candidates/hotpath-budget-v1.fixture.json",
+    "runner": "PASS: beforeProjectileRecordAllocations=11520, afterProjectileRecordCreates=96, afterProjectileRecordReuses=11424, projectileFreeRecords=96, beforeCandidateBuffers=12, afterCandidateBufferCreates=1, afterCandidateBufferReuses=11, candidateActive=64, beforeOrphanCleanupPasses=40, afterOrphanCleanupBatches=1, afterOrphanCleanupOperations=40, counterAccepted=128, counterRejected=1, behaviorTraceUnchanged=true.",
+    "negative_cases": "PASS: pooled projectile allocation regression and unbounded counter expectation were rejected.",
+    "runtime_model_boundary": "The deterministic runner proves bounded allocation policy, batch accounting, counter rejection and unchanged behavior traces only. It does not prove live Teardown CPU, frame-time, Query, GC, memory slope, active-count or S0-S5 pressure behavior."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-17T20:50:49.7081541Z",
+      "input_desktop": "Screen-saver",
+      "foreground_handle": 0,
+      "foreground_pid": 0,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Live S0-S5 CPU and frame-time p95/p99",
+      "Live Query and allocation counters",
+      "GC allocation and memory slope",
+      "Active-count pressure and no-regression replay"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow reported Screen-saver and foreground handle 0.",
+      "No reload, telemetry probe, runtime pressure replay or log cursor was started after the focus guard condition failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the live contract profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely; no live CPU/Query/GC/memory baseline or delta is claimed."
+  },
+  "visual": {
+    "status": "NOT REQUIRED",
+    "screenshots": [],
+    "reason": "The Step 5.8 contract declares no visual_assertions or VISUAL profile."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live scenario reload or pressure replay was started, so no Step 5.8 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions were issued; no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully with exit code 0: entry closure, source-of-truth, executable Todo, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/candidates/hotpath-budget-v1.fixture.json",
+    "docs/candidates/hotpath-budget-v1.result.json",
+    "tools/cm2-world-host/run-hotpath-budget-v1.ps1",
+    "tools/cm2-world-host/test-hotpath-budget-v1.ps1"
+  ],
+  "rollback": "Revert projectile record pooling, point-defense candidate buffer reuse and batched orphan cleanup independently if live replay differs; retain cm2HotpathBudgetV1 diagnostics and restore the prior temporary-table path. Do not disable collision/damage or reduce gameplay budgets to hide a regression."
+}
