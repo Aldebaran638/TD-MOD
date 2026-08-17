@@ -75,3 +75,14 @@ Spike 不改变生产入口。若任何高频跨 context 测试不可靠，回�
 local mode，并保留 fixture 失败记录；禁止把失败修成字符串 Registry。只有该报告和
 实际 Teardown smoke 通过后，才进入 Step 4.2 的 World Protocol/Owner Lease 定义，
 再进入 Step 4.3 的 skeleton/adapter 接入。
+## Live Step 4.1 follow-up (2026-08-18)
+
+The first live two-player run exposed a startup race: ship scripts could initialize before the Content Host and then remain in an incorrect local fallback. The production fix is committed as `961c998`.
+
+- `ship_instance_adapter_v1.lua` waits in `pending`, observes the advertised Host generation, and only publishes an active `content-host` announcement after readiness.
+- `vehicle_instance_v1.lua` now sets its initialized flag after `serverInit`, allowing the adapter heartbeat path to run.
+- Local fallback remains bounded and explicit; it is not used during the verified startup.
+
+The clean live run used Host PID 40804 and Client1 PID 49532. One fresh `CM2_TEST_V1` session (`0-ef8ddf1b`) reported three active contexts, generation 1, `register_count=3`, `fallback_count=0`, and `rejected_count=0`. Host and Client real W edges were recorded with player IDs 1 and 2; Client1 had no vehicle owner and did not mutate the Host registry. Host and Client screenshots, input traces, incremental log result, cleanup, and Harness are recorded in `docs/evidence/step-4.1-world-host-multiplayer-v1.json`.
+
+This live record verifies the World Host/context boundary. It does not claim independent fire/death authority acceptance. The Client1 screenshot is near-black after the player fell below the tested scene camera and is retained for human visual review. The next scope is the owner-bound World Protocol/Lease work in Step 4.2, with fire/damage authority kept outside this spike.

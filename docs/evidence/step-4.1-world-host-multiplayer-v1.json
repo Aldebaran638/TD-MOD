@@ -1,0 +1,116 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 4.1",
+  "title": "Two ship contexts and one Content Host live follow-up",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "e6878bdd2183e7c2f233e76e022e466c4449cc527304dd7f030f4602a4b8d0a0",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "MULTIPLAYER"],
+    "reload": "RESTART_MOD_SESSION",
+    "automation_level": "PARTIAL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "human_visual_review",
+    "status_reason": "The production adapter now waits for the Content Host instead of creating an implicit local Host, and vehicle initialization now permits the adapter heartbeat path. A clean official two-player local session verified three active content-host contexts, owner and generation identity, real Host/Client input edges, and no new runtime errors.",
+    "verification_status_reason": "Host/Client authority and context assertions pass. Human visual review remains required for the Client1 viewport because the tested player fell into a near-black camera view; this record does not claim independent fire/death acceptance for the later weapon/damage authority work.",
+    "implementation_scope": [
+      "ship_instance_adapter_v1.lua waits in pending state while the Content Host is unavailable.",
+      "The adapter activates content-host mode after the advertised Host generation is ready and publishes only active content-host announcements.",
+      "The adapter records a world_context_mode transition and delays local fallback until its bounded wait expires.",
+      "vehicle_instance_v1.lua marks the vehicle initialized after server initialization so serverTick reaches the adapter heartbeat path."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "targeted_checks": [
+      "check-lua.ps1 -Path .\\Content Mod 2\\script: PASS",
+      "check-teardown-api.ps1 -Path .\\Content Mod 2\\script: PASS"
+    ],
+    "offline_spike": "Existing world-host-spike-v1 fixture and negative replay remain PASS: one Host, two isolated contexts, ordered lifecycle, duplicate/out-of-order/stale-generation/owner-mismatch rejection, forbidden engine-handle DTO boundary, and final cleanup.",
+    "implementation_commit": "961c998"
+  },
+  "runtime": {
+    "run": "20260817T163646Z-71f7da67",
+    "original_manager": {"target_id": "teardown:57656:53613200", "pid": 57656, "hwnd": 53613200},
+    "host": {"target_id": "teardown:40804:44832826", "pid": 40804, "hwnd": 44832826, "role": "TD - Host"},
+    "client": {"target_id": "teardown:49532:554436460", "pid": 49532, "hwnd": 554436460, "role": "TD - Client1"},
+    "telemetry_protocol": "CM2_TEST_V1",
+    "session": "0-ef8ddf1b",
+    "baseline": {
+      "after_seq": 0,
+      "latest_seq": 4,
+      "next_after_seq": 4,
+      "truncated": false,
+      "events": [
+        {"seq": 2, "type": "world_context_mode", "identity": "ship:enigmaticCruiser:20", "owner_id": "ship-owner:20", "mode": "content-host", "generation": 1, "reason": "content-host-ready"},
+        {"seq": 4, "type": "world_context_mode", "identity": "ship:titan:48", "owner_id": "ship-owner:48", "mode": "content-host", "generation": 1, "reason": "content-host-ready"}
+      ]
+    },
+    "world_host": {
+      "mode": "content-host",
+      "ready": true,
+      "host_id": "scene-host-1",
+      "generation": 1,
+      "active_instances": 3,
+      "register_count": 3,
+      "unregister_count": 0,
+      "rejected_count": 0,
+      "fallback_count": 0,
+      "contexts": [
+        {"identity": "ship:titan:48", "owner_id": "ship-owner:48", "generation": 1, "mode": "content-host", "active": true},
+        {"identity": "ship:enigmaticCruiser:20", "owner_id": "ship-owner:20", "generation": 1, "mode": "content-host", "active": true},
+        {"identity": "escort:55", "owner_id": "ship-owner:55", "generation": 1, "mode": "content-host", "active": true}
+      ]
+    },
+    "real_input": {
+      "host": {
+        "action": "W down, 450 ms hold, W up",
+        "player_id": 1,
+        "events": [{"source": "client", "type": "input_edge", "player_id": 1, "w": true}, {"source": "client", "type": "input_edge", "player_id": 1, "w": false}],
+        "run": "20260817T164450Z-25a4a904"
+      },
+      "client": {
+        "action": "W down, 450 ms hold, W up",
+        "player_id": 2,
+        "vehicle_id": 0,
+        "events": [{"source": "client", "type": "input_edge", "player_id": 2, "w": true}, {"source": "client", "type": "input_edge", "player_id": 2, "w": false}],
+        "run": "20260817T164409Z-afd7da8e",
+        "world_host_after": {"active_instances": 3, "register_count": 3, "rejected_count": 0, "fallback_count": 0}
+      }
+    },
+    "client_non_owner_boundary": "Client1 had no vehicle owner (vehicle_id=0); its real W edges were recorded with player_id=2 and did not mutate the Host ship registry. A client-side damage bridge request timed out because no client ship authority consumed it; it is retained as a transport limitation, not a weapon or damage success claim."
+  },
+  "visual": {
+    "host_screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T163646Z-71f7da67/frame_f000001-5d88d477_pid-40804.png",
+    "client_screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T163646Z-71f7da67/frame_f000002-6fbe6b1c_pid-49532.png",
+    "facts": ["Host client-area capture is non-black and shows the live ship scene and Host HUD.", "Client1 capture is non-constant but near-black after the player fell below the tested scene camera; human review is required for this visual assertion."]
+  },
+  "log": {
+    "baseline_cursor": 8486708,
+    "final_cursor": 8486708,
+    "in_scope_errors": 0,
+    "in_scope_warnings": 0,
+    "continuation": "PASS: no new log bytes, errors, or warnings after the baseline cursor."
+  },
+  "cleanup": {
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_remaining": 0,
+    "remaining_instances": ["teardown:57656:53613200"],
+    "fresh_session_no_stale_world_host_children": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "pre_commit": "PASS in implementation commit 961c998",
+    "summary": "All entry closures, source-of-truth, executable Todo contracts, schema/compiler/catalog, presentation/effect, Lua/API/XML, weapon/component/ship checks and all Harness self-tests passed."
+  },
+  "evidence_roots": [
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T163646Z-71f7da67",
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T164409Z-afd7da8e",
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T164450Z-25a4a904",
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T164629Z-dd1e956a"
+  ],
+  "rollback": "Revert commit 961c998 to restore the previous adapter behavior. Keep the last valid generated catalog and do not add an implicit local Host during Content Host startup."
+}

@@ -2766,7 +2766,7 @@
       "id": "Step 4.1",
       "stage": "Gate 4",
       "title": "先做“两船、两 Context、一个 Host”技术 Spike",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 建立两个 ship instance、server/client 或两个模拟 context；[ ] 一个 host 负责 tick/registry/事件分发；[ ] 验证跨 context 只传 DTO，不共享函数/engine handle；[ ] 记录时序、错误、owner 和性能。 Reason: 在全面改造前验证 context 模型，避免把愿景误写成已经具备的多 Context 能力。",
       "expected_outcome": "得到可运行的最小 Host 拓扑、边界和失败模式。",
       "prerequisites": [
@@ -2781,16 +2781,16 @@
       ],
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
-        "code_or_document": "Added `docs/world-host-spike-v1.md` with the A/B/C capability matrix, chosen Route A (Content Host + per-ship adapter + DTO transport), lifecycle order, channel budgets, failure branch, and rollback/next-step rules. Added deterministic fixture `docs/candidates/world-host-spike-v1.fixture.json` for one `scene-host-1`, two isolated owners (`ship-A`/`ship-B`), host reload generation 1→2, late join, scene unload, and forbidden cross-context fields. Added offline runner `tools/cm2-world-host/run-world-host-spike-v1.ps1` and result `docs/candidates/world-host-spike-v1-result.json`.",
+        "code_or_document": "docs/world-host-spike-v1.md; docs/evidence/step-4.1-world-host-multiplayer-v1.json; docs/candidates/world-host-spike-v1.fixture.json; tools/cm2-world-host/run-world-host-spike-v1.ps1; Content Mod 2/script/world/adapter/ship_instance_adapter_v1.lua; Content Mod 2/script/world/adapter/vehicle_instance_v1.lua.",
         "automated_tests": "`run-world-host-spike-v1.ps1` passed: 15 ordered lifecycle events, 1 Host, 2 contexts, 12 accepted lifecycle events, 3 rejected transport events, duplicate=1, out-of-order=1, stale-generation=1, owner mismatch=1, final registered contexts=0, authoritative damage/fire events=0. `test-world-host-spike-v1.ps1` passed the valid replay plus negative route-selection and engine-handle DTO-boundary fixtures.",
         "harness": "Full `.\\harness\\check-all.ps1` passed with exit code 0; all existing product checks and self-tests passed. Entry closure: 4 entry points/240 Lua files/0 issues; Lua checker: 195 Lua files, 2 engine includes, 0 API issues; Teardown API checker: 0 issues; XML and weapon/component/ship checks all passed. The Spike is offline and intentionally does not alter production Host ownership.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so the real `main.lua` Content Host plus two live `shipMain.lua` contexts, server/client Registry visibility, transport serialization/latency, remote duplicate behavior, independent fire/death, S0/S6/S7, and high-frequency pressure cannot be executed. The report is a deterministic protocol fixture, not proof of multi-context runtime support.",
-        "rollback_record": "No production entry or runtime authority was changed. To roll back the experiment, remove/ignore the `docs/world-host-spike-v1.md`, candidate fixture/result, and `tools/cm2-world-host` runner, then keep current per-ship local behavior. If a future Host integration fails, select explicit local fallback and preserve the failed fixture/report; do not add a second implicit Host or string Registry polling."
+        "runtime_or_performance": "PASS for the live World Host/context boundary: official local two-player Host/Client launched; three contexts converged to content-host generation 1 with register=3, fallback=0, reject=0; Host and Client real input edges were captured; incremental log was clean. Independent fire/death authority, latency/pressure budgets, and the Client near-black visual state remain outside this evidence claim and require the recorded human review/follow-up.",
+        "rollback_record": "Revert implementation commit 961c998 to restore the previous adapter behavior. Keep the last valid generated catalog. If Host startup fails, retain an explicit bounded local fallback and preserve the failed evidence; do not add a second implicit Host or string Registry polling."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-4.1",
-      "status_reason": "The two-context/one-host spike is implemented as a deterministic offline replay with capability, lifecycle, ownership, generation, payload-boundary, channel-budget, and negative-path evidence. It remains unable for the plan’s live Teardown server/client, fire/death, latency, and pressure acceptance because Teardown.exe is not available; production entry points remain unchanged and rollback is explicit.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "The production adapter now waits for the Content Host instead of creating an implicit local Host, and vehicle initialization now permits the adapter heartbeat path. A clean official two-player local session verified three active content-host contexts, owner and generation identity, real Host/Client input edges, and no new runtime errors.",
+      "verification_status": "human_visual_review",
+      "verification_status_reason": "Host/Client authority and context assertions pass. Human visual review remains required for the Client1 viewport because the tested player fell into a near-black camera view; this record does not claim independent fire/death acceptance for later weapon/damage authority work.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "e6878bdd2183e7c2f233e76e022e466c4449cc527304dd7f030f4602a4b8d0a0",
