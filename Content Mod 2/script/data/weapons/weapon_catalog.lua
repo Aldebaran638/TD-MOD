@@ -83,3 +83,22 @@ end
 function weaponCatalogGetSlotPool(slotType)
     return weaponSlotPools[string.upper(tostring(slotType or ""))] or {}
 end
+
+function weaponCatalogUseRuntimeDefinitions(definitions)
+    weaponData = definitions or {}
+    weaponSlotPools = {}
+    for weaponType, definition in pairs(weaponData) do
+        if definition.runtimeReady ~= false then
+            for _, slot in ipairs(definition.slotTypes or {}) do
+                local slotType = string.upper(tostring(slot or ""))
+                if slotType ~= "" then
+                    weaponSlotPools[slotType] = weaponSlotPools[slotType] or {}
+                    weaponSlotPools[slotType][#weaponSlotPools[slotType] + 1] = weaponType
+                end
+            end
+        end
+    end
+    for _, pool in pairs(weaponSlotPools) do
+        table.sort(pool)
+    end
+end

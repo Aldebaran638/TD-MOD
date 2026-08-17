@@ -246,6 +246,12 @@ function shipDefinitionRegister(definition)
     if type(definition) ~= "table" then error("ship definition must be a table") end
     local shipType = tostring(definition.shipType or "")
     if shipType == "" then error("ship definition is missing shipType") end
+    if cm2CatalogAuthorityV1 ~= nil
+        and cm2CatalogAuthorityV1.isFrozen ~= nil
+        and cm2CatalogAuthorityV1.isFrozen() then
+        local accepted, registerError = cm2CatalogAuthorityV1.registerLegacyDefinition(shipType)
+        if not accepted then error(registerError) end
+    end
     if tostring(definition.displayName or "") == ""
         or tostring(definition.englishName or "") == "" then
         error("ship " .. shipType .. " is missing localized names")
@@ -268,6 +274,17 @@ end
 function shipDefinitionGet(shipType, fallbackType)
     local requested = tostring(shipType or "")
     local fallback = tostring(fallbackType or "")
+    if cm2CatalogAuthorityV1 ~= nil
+        and cm2CatalogAuthorityV1.lookupDefinition ~= nil
+        and cm2CatalogAuthorityV1.source ~= nil
+        and cm2CatalogAuthorityV1.source() == "candidate-v1" then
+        local candidate = cm2CatalogAuthorityV1.lookupDefinition("vehicle", requested)
+        if candidate ~= nil then return candidate end
+        if fallback ~= "" then
+            candidate = cm2CatalogAuthorityV1.lookupDefinition("vehicle", fallback)
+            if candidate ~= nil then return candidate end
+        end
+    end
     return shipTypeRegistryData[requested]
         or shipTypeRegistryData[fallback]
         or {}

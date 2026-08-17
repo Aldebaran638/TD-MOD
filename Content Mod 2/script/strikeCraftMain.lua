@@ -5,6 +5,8 @@
 #include "data/targets/external_targets.lua"
 #include "data/ships/ship_catalog.lua"
 #include "data/configuration/loadout_contract_v1.lua"
+#include "data/catalog/generated/vehicle_catalog_v1.lua"
+#include "data/catalog/generated/weapon_catalog_v1.lua"
 #include "data/catalog/catalog_authority_v1.lua"
 #include "data/weapons/weapon_catalog.lua"
 #include "net/server_sync_limiter.lua"
@@ -29,11 +31,13 @@
 #include "ship/common/client/bootstrap.lua"
 
 local configuredShipType = GetStringParam("shiptype", "advancedStrikeCraft")
+local configuredCatalogSource = GetStringParam("cm2_catalog_source", "candidate-v1")
+local catalogAuthorityTelemetryRecorded = false
 
 function server.init()
     server.cm2TelemetryInit(false)
     cm2EffectRuntimeAuthority.init()
-    cm2CatalogAuthorityV1.init()
+    cm2CatalogAuthorityV1.init(configuredCatalogSource)
     cm2HotpathBudgetV1.serverInit(cm2WorldHostV1.generation())
     server.presentationPublisherInit()
     -- Set this before shared initialization so a failed optional weapon module
@@ -91,6 +95,11 @@ end
 
 function server.tick(dt)
     server.cm2TelemetryServerTick(dt)
+    if not catalogAuthorityTelemetryRecorded
+        and server.cm2TelemetryRecord ~= nil then
+        server.cm2TelemetryRecord("catalog_authority", cm2CatalogAuthorityV1.getReport())
+        catalogAuthorityTelemetryRecorded = true
+    end
     local destroyed = server.shipServerIsDestroyed()
     cm2VehicleInstanceV1.serverTick(dt, destroyed)
     if destroyed then
@@ -114,7 +123,7 @@ end
 
 function client.init()
     cm2EffectRuntimeAuthority.init()
-    cm2CatalogAuthorityV1.init()
+    cm2CatalogAuthorityV1.init(configuredCatalogSource)
     cm2ShipInstanceAdapterV1.clientInit("strike-craft:" .. configuredShipType)
     client.shipClientInit(configuredShipType)
 end

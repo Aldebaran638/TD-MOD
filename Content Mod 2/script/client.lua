@@ -13,6 +13,7 @@ client.presentationRuntimeDisposed = false
 
 function client.init()
     cm2EffectRuntimeAuthority.init()
+    cm2CatalogAuthorityV1.init(GetStringParam("cm2_catalog_source", "candidate-v1"))
     if client.cm2TelemetryInit ~= nil then client.cm2TelemetryInit() end
     cm2ShipInstanceAdapterV1.clientInit("ship:" .. tostring(configuredShipType or "ship"))
     local shipType = GetStringParam("shiptype", "")

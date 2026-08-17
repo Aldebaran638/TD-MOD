@@ -128,6 +128,12 @@ end
 local function _finish(definition)
     local id = tostring((definition or {}).weaponType or "")
     if id == "" then error("weapon definition is missing weaponType") end
+    if cm2CatalogAuthorityV1 ~= nil
+        and cm2CatalogAuthorityV1.isFrozen ~= nil
+        and cm2CatalogAuthorityV1.isFrozen() then
+        local accepted, registerError = cm2CatalogAuthorityV1.registerLegacyDefinition(id)
+        if not accepted then error(registerError) end
+    end
     if weaponData[id] ~= nil then error("duplicate weapon definition " .. id) end
     _fillMissing(definition, {
         catalogTier = "highest",

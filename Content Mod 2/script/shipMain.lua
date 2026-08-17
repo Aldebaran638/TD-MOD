@@ -5,6 +5,8 @@
 #include "data/targets/external_targets.lua"
 #include "data/ships/ship_catalog.lua"
 #include "data/configuration/loadout_contract_v1.lua"
+#include "data/catalog/generated/vehicle_catalog_v1.lua"
+#include "data/catalog/generated/weapon_catalog_v1.lua"
 #include "data/catalog/catalog_authority_v1.lua"
 #include "data/weapons/weapon_catalog.lua"
 
@@ -32,6 +34,8 @@
 
 local configuredShipType = GetStringParam("shiptype", "")
 local configuredBodyTag = GetStringParam("bodytag", "")
+local configuredCatalogSource = GetStringParam("cm2_catalog_source", "candidate-v1")
+local catalogAuthorityTelemetryRecorded = false
 local configuredPresentationLoadout = GetStringParam("presentationLoadout", "")
 local catalogObserverScenario = GetStringParam("cm2_catalog_observer", "")
     == "vehicle_component_catalog_v1"
@@ -117,6 +121,13 @@ local function recordAiCandidateProjectionTelemetry()
     aiCandidateProjectionTelemetryRecorded = true
 end
 
+local function recordCatalogAuthorityTelemetry()
+    if catalogAuthorityTelemetryRecorded then return end
+    if server.cm2TelemetryRecord == nil then return end
+    server.cm2TelemetryRecord("catalog_authority", cm2CatalogAuthorityV1.getReport())
+    catalogAuthorityTelemetryRecorded = true
+end
+
 local function applyPresentationScenarioLoadout()
     if configuredBodyTag ~= "shipPresentationEnigmaPlayer"
         or configuredPresentationLoadout == ""
@@ -177,7 +188,7 @@ function server.init()
     server.cm2AiCandidateProjectionIsActive = aiCandidateProjectionIsActive
     server.cm2AiCandidateProjectionActive = aiCandidateProjectionIsActive()
     cm2EffectRuntimeAuthority.init()
-    cm2CatalogAuthorityV1.init()
+    cm2CatalogAuthorityV1.init(configuredCatalogSource)
     cm2HotpathBudgetV1.serverInit(cm2WorldHostV1.generation())
     server.presentationPublisherInit()
     destroyedControlsDisabled = false
@@ -281,6 +292,7 @@ function server.serverTick(dt)
         aiCandidateProjectionSyncTicks = aiCandidateProjectionSyncTicks + 1
     end
     server.cm2TelemetryServerTick(dt)
+    recordCatalogAuthorityTelemetry()
     local destroyed = server.shipServerIsDestroyed()
     cm2VehicleInstanceV1.serverTick(dt, destroyed)
     if destroyed then
