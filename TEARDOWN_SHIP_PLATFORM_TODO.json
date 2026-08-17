@@ -3789,7 +3789,7 @@
       "id": "Step 5.4",
       "stage": "Gate 5",
       "title": "建立统一 Projectile API 与 Logical Dense Store",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 定义 spawn/update/collide/finish/destroy/owner/lifetime DTO；[ ] 物理 projectile 和 logical projectile 共用生命周期合同；[ ] 进入 dense store/free-list；[ ] 统一 seed、速度、flight、target、damage、impact event；[ ] 允许 synthetic/replay。 Reason: 普通弹、制导弹和拦截器若各自管理状态，清理、统计和性能无法统一。",
       "expected_outcome": "Projectile 行为可由统一 API、snapshot 和 EffectEvent 驱动。",
       "prerequisites": [
@@ -3806,14 +3806,21 @@
       "evidence": {
         "code_or_document": "Content Mod 2/script/weapon/server/behavior/projectile/lifecycle_api_v1.lua; weapon/server/bootstrap.lua and shipMain initialization; docs/projectile-lifecycle-v1.md; docs/candidates/projectile-lifecycle-v1.fixture.json; docs/candidates/projectile-lifecycle-v1-result.json.",
         "automated_tests": "tools/cm2-world-host/run-projectile-lifecycle-v1.ps1 passed capacity=3 with logicalSwept/physicalBody/kinematicBody/hitscan: spawned=5, update=1, correction=1, collision=1, finishes=5, idempotentFinishes=1, destroys=5, ttl=1, impact=1, ownerTerminated=1, sceneReloadTerminated=2, staleRejected=1, ownerRejected=1, malformed/backend/capacity rejects=1 each, maxActive=3, replayEvents=3, memory high-water=768 B, final active=0/free=3. tools/cm2-world-host/test-projectile-lifecycle-v1.ps1 passed capacity, owner-validation and non-idempotent-finish negatives.",
-        "harness": "Full .\\harness\\check-all.ps1 exited 0: entry closure 250 Lua files/0 issues, Lua 206 files/0 issues, Teardown API 0 issues, XML/weapon/component/ship checks and all self-tests passed. Direct entry/Lua/API checks passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; S2/S4 real projectile physics, QueryRaycast/impact/damage/FX, 500-projectile pressure, owner/scene teardown and memory/GC plateau cannot be exercised. Synthetic/replay evidence is contract-only.",
+        "harness": "Full .\\harness\\check-all.ps1 exited 0: entry closure 4 entry points/264 Lua files/0 issues, Lua 237 files/2 engine includes/0 API issues, Teardown API 0 issues, XML/weapon/component/ship checks and all self-tests passed. Direct entry/Lua/API checks also passed.",
+        "runtime_or_performance": "BLOCKED: Teardown.exe is installed and responding as `teardown:57656:53613200`, but the current Windows input desktop is `Screen-saver` and `GetForegroundWindow()` is 0. The exact-target observe/control path cannot safely start, so no fresh CM2_TEST_V1 baseline, S2/S4 scene reload, real projectile physics, QueryRaycast/impact/damage/FX, 500-projectile pressure, owner/scene teardown, memory/GC plateau or screenshot replay was started. Synthetic/replay evidence is contract-only. Evidence: docs/evidence/step-5.4-projectile-lifecycle-v1.json.",
         "rollback_record": "Keep projectile/manager.lua as the legacy backend and route each projectile kind/backend back to it if lifecycle shadow diverges. Disable lifecycle adapter before changing damage authority; preserve fixture/result/replay logs and never let old/new managers own the same projectile instance."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-5.4",
-      "status_reason": "Versioned spawn/update/correct/collide/finish/destroy DTO, four backend declarations, logical numeric dense/free-list, generation/owner validation, idempotent finish, TTL/owner/scene teardown, unified seed/target/damage/impact fields, synthetic replay and diagnostics are implemented and offline-verified. Live S2/S4 evidence is unavailable without Teardown.exe.",
+      "status_reason": "Versioned spawn/update/correct/collide/finish/destroy DTO, four backend declarations, logical numeric dense/free-list, generation/owner validation, idempotent finish, TTL/owner/scene teardown, unified seed/target/damage/impact fields, synthetic replay and diagnostics are implemented and offline-verified. Implementation is finish. Verification remains pending because the installed Teardown target is outside the interactive input desktop, blocking live S2/S4 evidence. Evidence: docs/evidence/step-5.4-projectile-lifecycle-v1.json.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "STATIC and FIXTURE implementation evidence is complete and the runner regression passes. The required SCENE/TELEMETRY/VISUAL/LOG evidence was attempted with a fresh read-only environment probe, but the focus guard blocked the fresh frame before seeded replay; rerun the declared live profiles after the Windows input desktop returns to the interactive desktop.",
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The required live verification cannot start because Win32 reports the active input desktop as Screen-saver and foreground handle 0. The control bridge must refuse input or capture until the interactive desktop is restored.",
+        "evidence": "docs/evidence/step-5.4-projectile-lifecycle-v1.json; Win32 probe 2026-08-18T04:09:23+08:00; target teardown:57656:53613200",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T04:09:23+08:00"
+      },
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "9e48345f8c3b435103a2ee7133c433e83419c28108b63bd750f9f6e35256140b",

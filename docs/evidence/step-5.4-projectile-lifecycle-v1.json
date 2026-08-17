@@ -1,0 +1,85 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 5.4",
+  "title": "Unified Projectile API and Logical Dense Store v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "9e48345f8c3b435103a2ee7133c433e83419c28108b63bd750f9f6e35256140b",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "F4_TO_F5_OR_REOPEN_LEVEL_XML",
+    "automation_level": "PARTIAL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The versioned projectile lifecycle DTO, logical dense/free store, four backend declarations, generation/owner validation, idempotent finish, TTL/owner/scene cleanup, unified seed/target/damage/impact fields, replay path and diagnostics are implemented and fixture-verified. Live S2/S4 evidence is blocked by the non-interactive Windows input desktop.",
+    "verification_status_reason": "The exact Teardown target is responding, but Screen-saver is the active input desktop and foreground handle is 0. No unsafe input, reload, telemetry bridge, visual capture or scene replay was started.",
+    "implementation_scope": [
+      "Shared spawn/update/correct/collide/finish/destroy/owner/lifetime DTO contract.",
+      "Logical, physical body, kinematic body and hitscan lifecycle backends.",
+      "Generation-bearing dense/free-list handles with stale owner rejection.",
+      "Idempotent finish, bounded memory high-water diagnostics and synthetic replay."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "lifecycle_runner": "PASS: capacity=3; logicalSwept/physicalBody/kinematicBody/hitscan; spawned=5; updates=1; corrections=1; collisions=1; finishes=5; idempotentFinishes=1; destroys=5; ttl=1; impact=1; ownerTerminated=1; sceneReloadTerminated=2; staleRejected=1; ownerRejected=1; malformed/backend/capacity rejects=1 each; maxActive=3; replayEvents=3; memory high-water=768 B; final active=0/free=3.",
+    "lifecycle_self_test": "PASS: baseline accepted; capacity accounting, owner validation and non-idempotent finish fixtures rejected.",
+    "runtime_model_boundary": "The runner is a deterministic lifecycle/replay model and does not claim Teardown physics, QueryRaycast, collision, damage, presentation, frame performance, memory or GC behavior."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "foreground_handle": 0,
+      "focused": false,
+      "input_desktop": "Screen-saver",
+      "probe_at": "2026-08-18T04:09:23+08:00"
+    },
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow probe reported Screen-saver and foreground handle 0.",
+      "No real input, telemetry probe, scene reload, seeded S2/S4 replay or screenshot was started after the focus guard condition failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the contract live profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The focus guard rejected a fresh client-area frame before the live scene could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No scene reload or runtime projectile replay was started, so no Step 5.4 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully: entry closure, source-of-truth, executable Todo, Lua, Teardown API, XML, weapon, component, ship checks and all self-tests passed."
+  },
+  "evidence_roots": [],
+  "rollback": "Keep projectile/manager.lua as the legacy backend and route each projectile kind/backend back to it if lifecycle shadow diverges. Disable the lifecycle adapter before changing damage authority; preserve fixture, result and replay logs and never let old and new managers own the same projectile instance."
+}
