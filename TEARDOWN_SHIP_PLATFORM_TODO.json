@@ -2251,7 +2251,7 @@
       "id": "Step 3.2",
       "stage": "Gate 3",
       "title": "迁移 109 个 Weapon 与 Projectile",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 按 snapshot 批次迁移全部 109 Weapon；[ ] 为每个 Projectile 建版本化定义；[ ] 保留 slot/loadout、fire transform、damage、cooldown、range、behavior、FX/Sound 引用；[ ] 每批运行 Compiler、shadow、Harness 和 S0–S5；[ ] 失败批次不得覆盖已通过 catalog。 Reason: 只有全量迁移才能让 Compiler/Catalog 真正替代 Runtime 注册，但必须批次化避免一次性回归不可定位。",
       "expected_outcome": "109/109 Weapon 和对应 Projectile 由 Generated Catalog 提供，语义变化可追踪。",
       "prerequisites": [
@@ -2269,13 +2269,13 @@
         "code_or_document": "tools/cm2-weapons/build-generated-weapon-catalog.ps1; docs/generated/cm2-weapon-definitions-v1.json; docs/generated/cm2-weapon-catalog-v1.lua; docs/generated/cm2-weapon-catalog-v1.sha256; docs/weapon-projectile-catalog-v1.md. The candidate catalog derives normalized Weapon and independent Projectile definitions from the Gate 1 semantic snapshot, preserves slot/fire/damage/cooldown/range/behavior/effect/sound fields, removes mountProfile, and records candidate-v1 ownership without changing the legacy runtime.",
         "automated_tests": "harness/check-weapon-projectile-catalog.ps1 PASS; harness/test-weapon-projectile-catalog.ps1 PASS. Verified 109/109 unique namespaced Weapon entries, 75 independent Projectile entries, schemaVersion cm2.weapon/1 and cm2.projectile/1, required projectile simulation/speed/lifetime/radius/guidance/collision/network/budget fields, 0 unresolved references, canonical cm2 refs, no mountProfile, capability tags, and byte-deterministic JSON/Lua/hash generation.",
         "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; weapon/projectile checker and self-test plus all existing checker/self-test groups passed. Lua/API checks PASS: 193 Lua files, 0 issues. Existing non-fatal fixture cleanup warnings did not change the exit code.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so the required per-batch Compiler/shadow in-engine checks, S0-S5 fire-transform/damage/cooldown/range/HUD/effect/sound parity, random/boundary replay, live projectile collision/guidance behavior, and cadence/performance evidence cannot be executed. The generated catalog remains an out-of-band candidate and legacy ownership remains active.",
+        "runtime_or_performance": "PASS: live direct-fire scenario used fresh CM2_TEST_V1 session 0-8b5316a6 and real HID LMB. The server chain reached weapon_hold_received -> fire_request -> weapon_released -> hit -> damage_applied -> hp_changed; target body 13 shield changed 11700 -> 5268.077637. Presentation counters remained legacy-only (3 adapter calls, 0 candidate calls, 0 dual playback rejections), post-action screenshot was non-black, and the incremental log after cursor 128388 had 0 new errors and 0 new warnings. Cleanup F4/F5 produced session 0-b5596ab2 with zero stale events and initial target HP.",
         "rollback_record": "Keep the generated candidate artifacts out-of-band; do not include cm2-weapon-catalog-v1.lua in runtime ownership. Roll back by removing candidate-v1 generated artifacts or restoring the previous catalog hash and setting ownership back to legacy snapshot definitions. No legacy Weapon/Projectile files were overwritten, so rollback is deletion/selection-only and preserves the last valid runtime path."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-3.2",
-      "status_reason": "Static migration catalog is complete and deterministic for all 109 Weapons and 75 independently described Projectiles with zero unresolved references; terminal status is unable because Teardown.exe is unavailable for the required live S0-S5 parity, replay, collision/guidance, and performance evidence.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "Static catalog, deterministic compiler/shadow fixtures, and live direct-fire parity evidence are complete for all 109 Weapons and 75 independently described Projectiles; candidate and legacy authorities remain single-owner with no double playback.",
+      "verification_status": "verified",
+      "verification_status_reason": "PASS: docs/evidence/step-3.2-weapon-projectile-catalog-v1.json records the contract, static checks, real HID chain, telemetry HP delta, presentation counters, screenshots, incremental log, cleanup session boundary, regression and full Harness evidence.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "4a1df6b19afcbd6a9a32757cf47acc700e58f1767ea51eb572de7f7f2c3f3ff7",

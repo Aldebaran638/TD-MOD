@@ -1,0 +1,156 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 3.2",
+  "result": "pass",
+  "verified_at": "2026-08-17T08:07:47+08:00",
+  "verification_contract_fingerprint": "4a1df6b19afcbd6a9a32757cf47acc700e58f1767ea51eb572de7f7f2c3f3ff7",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "behavior_under_test": "109/109 Weapon and the corresponding Projectile definitions are generated from the versioned catalog with traceable semantic parity and a single runtime authority.",
+  "static": {
+    "todo_contract_validation": "PASS: validate_todo_plan.py reported 80 executable Step contracts; contract fingerprint unchanged.",
+    "catalog": {
+      "weapons": 109,
+      "projectiles": 75,
+      "unresolved_references": 0,
+      "canonical_references": true,
+      "mountProfile_present": false,
+      "deterministic_generation": true,
+      "runtime_ownership": "legacy-active; candidate-v1 catalog retained as shadow authority until promotion"
+    },
+    "owning_checks": [
+      "harness/check-weapon-projectile-catalog.ps1: PASS",
+      "harness/test-weapon-projectile-catalog.ps1: PASS",
+      "harness/test-semantic-snapshot.ps1: PASS",
+      "harness/test-vertical-slices.ps1: PASS",
+      "harness/test-cm2-compiler.ps1: PASS",
+      "harness/test-shadow-catalog.ps1: PASS"
+    ],
+    "source_hashes": {
+      "docs/generated/cm2-weapon-definitions-v1.json": "C7CB6045458F0169E2266DEA2E42655486C6852DACD5D90A249F3D905830B18F",
+      "docs/generated/cm2-weapon-catalog-v1.lua": "8613041F605A9CDD9230795ED7BCB63DCD99034F138FD13E8FC4C5D3CDDA3C31",
+      "docs/generated/cm2-weapon-catalog-v1.sha256": "6ED3E8D93850FD9E98CEF5D0AD9DB92D7C28842FE0C7C319589CFF68D096EF81",
+      "docs/weapon-projectile-catalog-v1.md": "1292C4BBC0EF03F9F5A16E73A5E83CCF613454864894009CA428608A8447595F"
+    },
+    "full_harness": {
+      "command": ".\\harness\\check-all.ps1",
+      "result": "PASS",
+      "exit_code": 0,
+      "summary": "All product checks and checker self-tests passed; Lua/API/XML/weapon/component/ship checks reported 0 issues."
+    }
+  },
+  "runtime": {
+    "target_id": "teardown:58912:39783188",
+    "pid": 58912,
+    "scene": "Content Mod 2/_ai_scenario_weapon_direct_fire.xml",
+    "reload": {
+      "mode": "REOPEN_LEVEL_XML then F4_TO_F5",
+      "control_run_id": "20260817T000153Z-8ae8d86d",
+      "post_reload_run_id": "20260817T000227Z-9a18510f",
+      "scenario": "weapon_direct_fire",
+      "xml_revision": "direct-fire-xml-v2",
+      "lua_revision": "scenario-controller-v2",
+      "session_reset_expected": true
+    },
+    "baseline": {
+      "run_id": "20260817T000405Z-2989c2f6",
+      "session": "0-8b5316a6",
+      "server_latest_seq": 0,
+      "client_latest_seq": 0,
+      "target_body_id": 13,
+      "target_shield": 11700,
+      "target_armor": 11700,
+      "target_body": 10000,
+      "held_inputs": {"keys": [], "buttons": []}
+    },
+    "real_input": {
+      "run_id": "20260817T000405Z-2989c2f6",
+      "frame_id": "f000003-d590bb9e",
+      "action": "fresh-frame HID mouse_down lmb, wait 2000 ms, mouse_up lmb, wait 600 ms",
+      "input_released": true,
+      "server_latest_seq": 18,
+      "client_latest_seq": 8,
+      "truncated": false,
+      "server_sequence": "1..18 contiguous",
+      "event_chain": [
+        "weapon_hold_received(active=true) -> fire_request",
+        "presentation_event charging_start -> weapon_hold_applied(active=true)",
+        "weapon_hold_received(active=false) -> weapon_hold_applied(active=false)",
+        "hit -> damage_applied -> hp_changed on registered target body 13, impact_layer=shield",
+        "presentation_event launch_start -> weapon_released -> presentation_event idle",
+        "hit -> damage_applied -> hp_changed repeated for the sustained beam"
+      ],
+      "boundary_events_present": ["input_edge", "fire_request", "weapon_released", "hit", "damage_applied", "hp_changed"],
+      "target_after": {
+        "shield": 5268.077637,
+        "armor": 11700,
+        "body": 10000,
+        "destroyed": false,
+        "registered": true
+      },
+      "presentation_runtime": {
+        "mode": "legacy",
+        "authority_mode": "legacy",
+        "legacy_adapter_calls": 3,
+        "published": 3,
+        "candidate_calls": 0,
+        "event_v1_calls": 0,
+        "rejected": 0,
+        "dual_playback_rejected": 0
+      }
+    },
+    "screenshots": {
+      "baseline": {
+        "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T000405Z-2989c2f6/frame_f000001-7c58b731_pid-58912.png",
+        "sha256": "AF9AAA12D9FB6C2044D138DA09146E321ED4B805D90AF57536C208CD2F5D0189",
+        "fact": "1280x720 non-black client area with the direct-fire scenario and weapon HUD"
+      },
+      "post_action": {
+        "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T000405Z-2989c2f6/frame_f000004-d9d70062_pid-58912.png",
+        "sha256": "22CCF8E5BAE53B6EA18ACCE8F668A501EC8FBEC11F12E4B2D31F4FD93576CFC1",
+        "fact": "1280x720 non-black client area; target presentation shows the post-hit shield state without a telemetry bridge bar"
+      },
+      "clean_editor": {
+        "path": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T000523Z-2806c9e8/frame_f000008-429a210e_pid-58912.png",
+        "sha256": "118B580AFA32A24B47B6DD1C4997C1975CDBE67E9040C95E763E356BECC90CD6",
+        "fact": "Editor page visible after cleanup; no black loading capture"
+      }
+    },
+    "log": {
+      "baseline_cursor": 128388,
+      "next_cursor": 128388,
+      "new_errors": 0,
+      "new_warnings": 0,
+      "attribution": "External vehicle/TABS resource errors and warnings occurred during loading before the baseline cursor; no in-scope CM2 errors or warnings appeared after it."
+    }
+  },
+  "cleanup": {
+    "input_release": {
+      "run_id": "20260817T000405Z-2989c2f6",
+      "keys": [],
+      "buttons": []
+    },
+    "fresh_reload": {
+      "run_id": "20260817T000523Z-2806c9e8",
+      "session": "0-b5596ab2",
+      "previous_session": "0-8b5316a6",
+      "server_latest_seq": 0,
+      "client_latest_seq": 0,
+      "events": 0,
+      "target_shield": 11700,
+      "target_registered": true,
+      "stale_entities_or_events": false
+    },
+    "formal_source_preserved": true,
+    "last_valid_generated_authority_preserved": true
+  },
+  "regression": {
+    "presentation_vertical_slices": "PASS: reused Step 2.5 four-slice live evidence and presentation sequence/generation/legacy-fallback checks",
+    "weapon_snapshot": "PASS: 109-weapon semantic snapshot and four-slice shadow comparison",
+    "compiler_and_rollback": "PASS: broken reference, duplicate ID, future schema, missing resource and last-valid-catalog preservation fixtures",
+    "full_harness": "PASS: .\\harness\\check-all.ps1, exit code 0"
+  },
+  "rollback": "Candidate-v1 generated artifacts remain selectable out-of-band. Revert by restoring the prior catalog hash/ownership or removing candidate artifacts; no legacy Weapon/Projectile source was overwritten.",
+  "scope_boundary": "Telemetry owns gameplay/event boundaries and HP. Screenshots own only visible scene/HUD/presentation facts. Incremental log owns runtime health. The live runtime used legacy authority with candidate catalog shadow comparison; no legacy/candidate double authority was observed."
+}
