@@ -1,0 +1,93 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 4.3",
+  "title": "World Host Skeleton and Ship Instance Adapter",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "d38574413923eac3e63e15ec891876fc244325bdef590b1425fc86146debab53",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "MULTIPLAYER"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "RESTART_MOD_SESSION",
+    "automation_level": "PARTIAL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The Host skeleton, production adapters, VehicleInstance lifecycle forwarding, explicit local fallback, bounded dense lifecycle, and synthetic adapter are implemented and statically verified. Live multiplayer behavior remains pending because the installed Teardown target is outside the interactive Windows input desktop.",
+    "verification_status_reason": "The focus-safe live probe enumerated the exact Teardown target but refused capture and input while the input desktop was Screen-saver. This evidence does not claim live Host/Client convergence, lifecycle cleanup, or visual acceptance.",
+    "implementation_scope": [
+      "Content Mod 2/main.lua owns one scene-host-1 Host lifecycle.",
+      "shipMain.lua and strikeCraftMain.lua enter cm2VehicleInstanceV1; VehicleInstance forwards serverInit/serverTick to cm2ShipInstanceAdapterV1.",
+      "The legacy escort entry uses the direct Ship Instance Adapter lifecycle.",
+      "synthetic_world_adapter_v1.lua supplies the engine-free Preview/fixture API shape.",
+      "The Host owns dense[1..12], byId, generation, heartbeat, bounded announcements, rejection counters, and scene disposal."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "world_host_runner": "PASS: run-world-host-skeleton-v1.ps1 accepted direct adapter lifecycle and VehicleInstance-forwarded lifecycle wiring; Host capacity=12, heartbeat=0.5 seconds, three production entries, dense lifecycle, fallback, generation, deferred-authority, and synthetic adapter checks passed.",
+    "world_host_self_test": "PASS: test-world-host-skeleton-v1.ps1 accepted the valid fixture and rejected the zero-capacity negative fixture.",
+    "source_change": "The runner now reads vehicle_instance_v1.lua and requires its adapter serverInit/serverTick forwarding when an entry uses cm2VehicleInstanceV1."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "mcp_instances_run": "20260817T180658Z-00e9d402",
+    "mcp_focus_run": "20260817T180721Z-928db9b9",
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "foreground_handle": 0,
+      "focused": false,
+      "input_desktop": "Screen-saver",
+      "client": {"left": 800, "top": 450, "width": 1280, "height": 720}
+    },
+    "attempts": [
+      "teardown_instances enumerated the exact target.",
+      "teardown_status confirmed the target was responding and not minimized, with no held inputs.",
+      "teardown_observe(True, exact target_id) returned 'could not restore and focus Teardown'.",
+      "Win32 OpenInputDesktop returned Screen-saver and GetForegroundWindow returned 0.",
+      "No real input, telemetry probe, scene reload, or multiplayer child was started after the focus guard failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the contract's live profiles."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshot": null,
+    "reason": "No fresh focused frame could be captured from the Screen-saver input desktop."
+  },
+  "log": {
+    "baseline_cursor": 8486708,
+    "final_cursor": 8486708,
+    "run": "20260817T181056Z-fb887a21",
+    "new_bytes": 0,
+    "in_scope_errors": 0,
+    "in_scope_warnings": 0,
+    "continuation": "PASS: incremental log read returned zero new bytes, errors, or warnings. This does not prove gameplay behavior."
+  },
+  "cleanup": {
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "summary": "All Harness checks passed: 4 entry points/264 Lua files in closure, 237 Lua files/2 engine includes/0 API issues, XML, weapon, component, ship, executable Todo and all self-tests passed."
+  },
+  "evidence_roots": [
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T180658Z-00e9d402",
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T180721Z-928db9b9",
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T181056Z-fb887a21"
+  ],
+  "rollback": "Set Host ready=false/local mode and retain the legacy ship and weapon runtime. Revert the runner contract adjustment separately from the production Host/adapter implementation if the live contract reveals an authority mismatch."
+}
