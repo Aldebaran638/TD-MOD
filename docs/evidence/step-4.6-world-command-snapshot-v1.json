@@ -1,0 +1,88 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 4.6",
+  "title": "Versioned Multiplayer Command and Snapshot Boundary",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "ee90a1a65baccdbed83db5ebe14f3887d92514445fa988fe0fec4b4f6bc182bc",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "LOG", "MULTIPLAYER"],
+    "eyes": ["EYE_TELEMETRY", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "RESTART_MOD_SESSION",
+    "automation_level": "PARTIAL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The versioned command/snapshot DTO, owner/generation/revision authority, sequence and version negotiation, stable-only late join, reconnect reset, fixed queue diagnostics, duplicate damage rejection, and destroyed-entity resurrection guard are implemented and offline-verified. Live S7 behavior remains pending because the installed Teardown target is outside the interactive Windows input desktop.",
+    "verification_status_reason": "The focus-safe live probe enumerated the exact Teardown target but refused capture and input while the input desktop was Screen-saver. This record does not claim live Host/Client convergence or real command, lock, fire, death, reconnect, or late-join acceptance.",
+    "implementation_scope": [
+      "Client commands and server snapshots use cm2.world.multiplayer/1 serializable DTOs.",
+      "Owner, generation, revision, fit, target, cooldown, kind, size, and forbidden-reference checks reject invalid commands.",
+      "Stable snapshots are available to late join; transient replay is suppressed.",
+      "Reconnect requires owner/version compatibility and obtains a fresh stable snapshot.",
+      "Queue depths, high-watermarks, network byte counters, duplicate damage and destroyed resurrection are diagnosed."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "command_snapshot_runner": "PASS: exactVersionAccepted=1, declaredCompatibleAccepted=1, incompatibleRejected=1, acceptedCommands=4, rejectedCommands=11 with owner/stale-generation/stale-revision/duplicate/fit/target/cooldown/forbidden/size/kind/version reasons; rateAccepted=30/rateRejected=1; stablePublished=3/transientPublished=3; lateJoin stable=3/transient=0; command/snapshot depth=0/high-watermark=1; networkBytesIn=608/networkBytesOut=384; transientReplaySuppressed=3; destroyedResurrectionRejected=1; duplicateDamageRejected=1.",
+    "command_snapshot_self_test": "PASS: baseline, unknown-version, transient-replay, and weakened-authority negative fixtures passed."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": "20260817T190517Z-d46c23fc",
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "foreground_handle": 0,
+      "focused": false,
+      "input_desktop": "Screen-saver",
+      "client": {"left": 800, "top": 450, "width": 1280, "height": 720}
+    },
+    "attempts": [
+      "teardown_instances enumerated the exact target.",
+      "teardown_status confirmed the target was responding and not minimized, with no held inputs.",
+      "teardown_observe(True, exact target_id) returned 'could not restore and focus Teardown'.",
+      "Win32 OpenInputDesktop returned Screen-saver and GetForegroundWindow returned 0.",
+      "No real input, telemetry probe, scene reload, or multiplayer child was started after the focus guard failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the contract's live profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely."
+  },
+  "log": {
+    "baseline_cursor": 8486708,
+    "final_cursor": 8486708,
+    "new_bytes": 0,
+    "in_scope_errors": 0,
+    "in_scope_warnings": 0,
+    "continuation": "PASS: incremental log read returned zero new bytes, errors, or warnings. This does not prove live multiplayer behavior."
+  },
+  "cleanup": {
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "summary": "All Harness checks passed: 4 entry points/264 Lua files in closure, 237 Lua files/2 engine includes/0 API issues, XML, weapon, component, ship, executable Todo and all self-tests passed."
+  },
+  "evidence_roots": [
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T190517Z-d46c23fc"
+  ],
+  "rollback": "Keep local/legacy network adapter ownership if live integration fails, stop production calls to cm2WorldMultiplayerV1, and restore the prior world_protocol_v1 boundary. Preserve this fixture/result and reject unknown generation/revision during rollback."
+}
