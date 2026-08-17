@@ -19,11 +19,11 @@ if ($issues.Count -eq 0) {
     if ($source -match '#include|GetBody|GetVehicle|Spawn|PlaySound') { [void]$issues.Add("authority module must remain engine-independent") }
     foreach ($entry in @($shipMain, $strikeMain)) {
         if ((Get-Content -Raw -LiteralPath $entry) -notmatch '#include "data/catalog/catalog_authority_v1\.lua"') { [void]$issues.Add("entry does not include Catalog Authority: $entry") }
-        if ((Get-Content -Raw -LiteralPath $entry) -notmatch 'cm2CatalogAuthorityV1\.init\(\)') { [void]$issues.Add("entry does not initialize Catalog Authority: $entry") }
+        if ((Get-Content -Raw -LiteralPath $entry) -notmatch 'cm2CatalogAuthorityV1\.init\(') { [void]$issues.Add("entry does not initialize Catalog Authority: $entry") }
     }
     try { $gate = Get-Content -Raw -LiteralPath $manifest | ConvertFrom-Json }
     catch { [void]$issues.Add("generated manifest JSON invalid: $($_.Exception.Message)") }
-    if ($null -ne $gate -and ([string]$gate.ownership.runtimePolicy -ne "legacy-active" -or [string]$gate.ownership.mode -ne "shadow" -or $gate.ownership.promotionAllowed -ne $false)) { [void]$issues.Add("manifest is not legacy-safe shadow ownership") }
+    if ($null -ne $gate -and ([string]$gate.ownership.runtimePolicy -ne "candidate-active" -or [string]$gate.ownership.mode -ne "promoted" -or $gate.ownership.promotionAllowed -ne $true)) { [void]$issues.Add("manifest is not promoted candidate ownership") }
     try { $removal = Get-Content -Raw -LiteralPath $ledger | ConvertFrom-Json }
     catch { [void]$issues.Add("legacy removal ledger JSON invalid: $($_.Exception.Message)") }
     if ($null -ne $removal) {
@@ -36,6 +36,10 @@ if ($issues.Count -eq 0) {
     }
     $candidateInclude = & rg -n --fixed-strings "cm2-generated-catalog-v1.lua" (Join-Path $root "Content Mod 2\script") 2>$null
     if ($LASTEXITCODE -eq 0 -and $candidateInclude) { [void]$issues.Add("generated catalog is included before authority promotion") }
+    foreach ($runtimeInclude in @("catalog/generated/vehicle_catalog_v1.lua", "catalog/generated/weapon_catalog_v1.lua")) {
+        $include = & rg -n --fixed-strings $runtimeInclude (Join-Path $root "Content Mod 2\script") 2>$null
+        if ($LASTEXITCODE -ne 0 -or -not $include) { [void]$issues.Add("runtime generated projection is not in an entry closure: $runtimeInclude") }
+    }
 }
 if ($issues.Count -gt 0) { Write-Error ("Catalog Authority v1 check failed:`n - " + ($issues -join "`n - ")); exit 1 }
 Write-Host "Catalog Authority v1 passed: init freeze, post-freeze rejection, immutable lookup, shadow-safe manifest and removal ledger gates are present." -ForegroundColor Green

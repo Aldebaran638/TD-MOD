@@ -7,9 +7,9 @@ $ledger = Get-Content -Raw (Join-Path $PSScriptRoot "..\docs\catalog-legacy-remo
 if ($module -notmatch 'state\.frozen\s*=\s*true' -or $module -notmatch 'legacy definition registration is frozen' -or $module -notmatch 'definition override is frozen') { throw "post-freeze mutation rejection is incomplete" }
 if (@($ledger.entries | Where-Object {$_.referenceScan.command -eq "" -or $_.rollback -eq ""}).Count -ne 0) { throw "legacy removal ledger lacks scan/rollback metadata" }
 $manifest = Get-Content -Raw (Join-Path $PSScriptRoot "..\docs\generated\cm2-generated-catalog-manifest-v1.json") | ConvertFrom-Json
-if ([string]$manifest.ownership.mode -ne "shadow" -or $manifest.ownership.promotionAllowed -ne $false) { throw "shadow-safe promotion gate is missing" }
+if ([string]$manifest.ownership.mode -ne "promoted" -or $manifest.ownership.promotionAllowed -ne $true) { throw "promoted candidate gate is missing" }
 Write-Host "[PASS] Catalog Authority freezes source at init and rejects register/override after freeze"
 Write-Host "[PASS] immutable lookup, init rollback and legacy-removal reference/rollback ledger are present"
-Write-Host "[PASS] generated catalog remains legacy-active shadow until promotion evidence"
+Write-Host "[PASS] generated catalog is the promoted Runtime projection with legacy rollback available"
 Write-Host "Self-test passed."
 exit 0

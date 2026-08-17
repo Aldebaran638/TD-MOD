@@ -29,6 +29,22 @@
                          "sourceSnapshot":  "docs/golden/cm2-definition-snapshot.json"
                      }
                  ],
+    "runtimeCatalogs":  [
+                            {
+                                "kind":  "vehicle",
+                                "luaPath":  "Content Mod 2/script/data/catalog/generated/vehicle_catalog_v1.lua",
+                                "hashPath":  "Content Mod 2/script/data/catalog/generated/vehicle_catalog_v1.sha256",
+                                "sourcePath":  "docs/generated/cm2-vehicle-catalog-v1.lua",
+                                "luaSha256":  "d52e57bdfe8d133f402d0d3afaedcec9a92be9cc40c8c26f50f90e3b1904e7ed"
+                            },
+                            {
+                                "kind":  "weapon",
+                                "luaPath":  "Content Mod 2/script/data/catalog/generated/weapon_catalog_v1.lua",
+                                "hashPath":  "Content Mod 2/script/data/catalog/generated/weapon_catalog_v1.sha256",
+                                "sourcePath":  "docs/generated/cm2-weapon-catalog-v1.lua",
+                                "luaSha256":  "76943e4ae1a7b078d9c22580dc0561c2adc991e2ee1e389a6d959ff302a2ff70"
+                            }
+                        ],
     "effectProfiles":  {
                            "path":  "docs/effect-profiles-v1.json",
                            "schemaVersion":  "cm2.effect-profile-source/1",
@@ -55,16 +71,16 @@
                        "namespacePolicy":  "cm2:\u003ckind\u003e/\u003cid\u003e"
                    },
     "ownership":  {
-                      "runtimePolicy":  "legacy-active",
-                      "mode":  "shadow",
-                      "defaultSource":  "legacy",
+                      "runtimePolicy":  "candidate-active",
+                      "mode":  "promoted",
+                      "defaultSource":  "generated-v1",
                       "candidateSource":  "generated-v1",
-                      "promotionAllowed":  false,
-                      "reason":  "live Teardown shadow/S0-S8 evidence is required before default switch",
+                      "promotionAllowed":  true,
+                      "reason":  "live Teardown parity and generated projection evidence accepted",
                       "rollback":  "restore previous generated manifest and legacy catalog ownership"
                   },
     "buildOutput":  {
-                        "outputHash":  "c2e05f54fc01e6ace236694e24a40000cca457f3877e76338974f6630ce60e72",
+                        "outputHash":  "2c05da50e5412033ef904e48aa743d3dfe35a5cfdd4ddcddd35c2c7f6827e3a8",
                         "manualEdit":  "forbidden",
                         "stalePolicy":  "hash-or-header-mismatch-fails-before-promotion"
                     }

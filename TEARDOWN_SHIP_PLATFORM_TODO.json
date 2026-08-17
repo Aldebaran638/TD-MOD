@@ -2570,7 +2570,7 @@
       "id": "Step 3.5",
       "stage": "Gate 3",
       "title": "迁移 Harness 合同并切换 Generated Catalog",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 让 Harness 从 schema/source/generated catalog 验证，而不是依赖旧 registry 细节；[ ] 增加 generated header/hash、manifest、所有入口闭包和引用完整性检查；[ ] 先在 shadow/双读模式比较，再切换默认；[ ] 记录 build output hash。 Reason: 如果验证器仍认旧合同，迁移后的通过并不代表产品真实可用，生成产物也可能未被入口载入。",
       "expected_outcome": "Harness、Compiler、Runtime 消费同一份 Generated Catalog，构建结果可追溯。",
       "prerequisites": [
@@ -2585,16 +2585,16 @@
       ],
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
-        "code_or_document": "tools/cm2-compiler/build-generated-catalog-manifest-v1.ps1; docs/generated/cm2-generated-catalog-manifest-v1.json; docs/generated/cm2-generated-catalog-v1.lua; docs/generated/cm2-generated-catalog-v1.sha256; docs/generated-catalog-gate-v1.md; harness/check-generated-catalog-manifest-v1.ps1. The aggregate manifest records the semantic snapshot hash, Weapon/Vehicle generated hashes/counts/ownership, 108 Effect Profiles, Loadout v1 hash, required entry closures, namespace/reference totals, stale policy and legacy-safe shadow decision. The aggregate Lua index has the generated header and is deliberately not included by runtime entries.",
+        "code_or_document": "tools/cm2-compiler/build-generated-catalog-manifest-v1.ps1; tools/cm2-compiler/build-runtime-catalog-v1.ps1; Content Mod 2/script/data/catalog/generated/*; docs/generated/cm2-generated-catalog-manifest-v1.json; docs/generated/cm2-generated-catalog-v1.lua; docs/generated/cm2-generated-catalog-v1.sha256; docs/evidence/step-3.5-generated-catalog-v1.json; harness/check-generated-catalog-manifest-v1.ps1. The aggregate manifest records the semantic snapshot hash, Weapon/Vehicle generated hashes/counts/ownership, 108 Effect Profiles, Loadout v1 hash, required entry closures, namespace/reference totals, runtime projection hashes, stale policy and promoted candidate ownership. The aggregate Lua index remains an audit artifact and the runtime entries consume the generated vehicle/weapon projections.",
         "automated_tests": "harness/check-generated-catalog-manifest-v1.ps1 PASS; harness/test-check-generated-catalog-manifest-v1.ps1 PASS. Verified 2 catalogs, 109 Weapon definitions, 5 Vehicle definitions, unresolvedCount=0, effect profile source 108/108 with zero unresolved, Loadout cm2.loadout/1, entry list, matching sidecars/outputHash and deterministic rebuild. Negative self-test corrupts outputHash and confirms early failure; existing cm2-compiler negative fixtures cover broken references, duplicate IDs, future schema and missing resources.",
-        "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; generated-manifest checker/self-test, compiler tests, entry closure, all catalog checkers and all existing self-test groups passed. Lua/API checks PASS: 194 Lua files, 0 issues. Existing non-fatal fixture cleanup warnings did not change the exit code.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so the required shadow/double-read runtime comparison, generated catalog load-time/memory delta, S0-S8 smoke and default promotion cannot be executed. Manifest remains `legacy-active`, `mode=shadow`, `promotionAllowed=false`; no runtime generated include was added.",
+        "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; generated-manifest checker/self-test, compiler tests, entry closure, all catalog checkers and all existing self-test groups passed. Lua/API checks PASS: 237 Lua files, 0 issues. Existing non-fatal fixture cleanup warnings did not change the exit code.",
+        "runtime_or_performance": "PASS: live Teardown parity and promotion evidence is recorded in docs/evidence/step-3.5-generated-catalog-v1.json. The fresh CM2_TEST_V1 session reported five candidate-active authority events with parityChecks=114, parityPasses=114, parityMismatches=0; the generated Runtime projection remained active after reload.",
         "rollback_record": "Do not include `docs/generated/cm2-generated-catalog-v1.lua`; restore the prior manifest/hash and keep legacy Weapon/Vehicle/Component registries authoritative. The builder writes candidate outputs only, and a failed/stale build is rejected before promotion."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-3.5",
-      "status_reason": "Harness/Compiler now validate generated headers, hashes, manifest paths, reference closure, entry closure and deterministic output, with explicit shadow ownership and a stale-output negative gate; terminal status is unable because Teardown.exe is unavailable for live double-read, load-time/performance and default-promotion evidence.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "Harness/Compiler validate generated headers, hashes, manifest paths, reference closure, entry closure and deterministic output. Live Teardown evidence now proves candidate-v1 promotion, semantic parity, telemetry continuity, runtime health and cleanup.",
+      "verification_status": "verified",
+      "verification_status_reason": "Verified by static/fixture gates plus fresh F4-to-F5 Teardown evidence: one CM2_TEST_V1 session, five candidate-active authority events, 114/114 parity, zero delta events after the baseline cursor, no in-scope log errors/warnings, non-black catalog HUD screenshot, cleanup, and full Harness.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "f73f316f9d47c1823af3bb18d886366445886ed849f686f536e84c7e2f5a77ce",
