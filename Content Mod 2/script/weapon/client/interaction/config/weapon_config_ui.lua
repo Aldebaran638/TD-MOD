@@ -437,13 +437,21 @@ function client.weaponConfiguratorSaveTemplate(
         state.message = _localized("能源必须为正", "POSITIVE POWER BALANCE REQUIRED")
         return false
     end
-    client.weaponLocalConfigWrite(
+    local saved, saveError = client.weaponLocalConfigWrite(
         tostring(shipType or ""),
         tostring(configurationId or ""),
         canonicalLoadout,
         componentLoadout
     )
     local state = client.weaponConfigUiState
+    if not saved then
+        state.pending = false
+        state.message = _localized(
+            "璁捐鏍￠獙澶辫触",
+            "DESIGN VALIDATION FAILED"
+        )
+        return false, saveError
+    end
     state.pending = false
     state.message = _localized("设计已保存，仅影响下一艘生成的飞船", "SAVED FOR NEXT SPAWN")
     state.dirty = false

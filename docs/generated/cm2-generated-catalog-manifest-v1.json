@@ -40,7 +40,7 @@
     "loadoutContract":  {
                             "path":  "Content Mod 2/script/data/configuration/loadout_contract_v1.lua",
                             "schemaVersion":  "cm2.loadout/1",
-                            "sha256":  "b56b16d4969e7ca08fd323b072baccd4dbacef0675cd6bd190351dc2c276cb2c"
+                            "sha256":  "dedc9aee7e9687d502565eb7d835ecc539b98081f885fa48ae35b80d5aa9319e"
                         },
     "entryClosure":  {
                          "checker":  "harness/check-entry-closures.ps1",

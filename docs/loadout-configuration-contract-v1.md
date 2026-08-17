@@ -26,3 +26,32 @@ included once by `data/ships/ship_catalog.lua`; no per-frame configuration
 registration or engine API is introduced. Legacy `slot_loadout` remains the
 rollback adapter until the v0 usage ledger is empty and live S7 evidence is
 available.
+
+## Step 3.4 Runtime Verification
+
+The live verification used the embedded contract fingerprint
+`1af2d2ed626d423751e74d9ea3892f113f7acbcfd0f73a28879337900c0f1d65` and the
+isolated `_ai_scenario_vehicle_component_catalog.xml` scene after F5 reload.
+The fresh `CM2_TEST_V1` session was `0-b3446688`; the scenario reported
+`vehicle_component_catalog_v1`, `scenario-controller-v2`, and
+`vehicle-component-catalog-xml-v1`.
+
+The runtime snapshot exposed both affected ships through the same v1 DTO:
+
+- Titan: `titan_core`, revision `1`, hash `473e5410`;
+- Enigmatic: `battleline_2x2l4m`, revision `1`, hash `68c64c40`.
+
+The real-input trace produced `weapon_input_evaluated`, `fire_request`, and
+`presentation_event` boundaries, then returned to `lmb=false`. The T key opened
+the configuration UI; a real selection changed Enigmatic to `TORPEDO FRAME`,
+Save displayed `SAVED FOR NEXT SPAWN`, and close/reopen displayed
+`TORPEDO FRAME` with `LOCAL DESIGN LOADED`. This proves the visible persisted
+selection; telemetry remains authoritative for the runtime snapshots.
+
+Evidence runs and screenshots are recorded in
+`docs/evidence/step-3.4-loadout-configuration-v1.json`. The incremental log
+contained no in-scope CM2 Lua/API error. Two missing TABS Workshop sound banks
+and six TABS ballistics deprecation warnings were attributed to the external
+`[TABS] Vehicle Framework`; they are retained as environment noise, not CM2
+success evidence. Cleanup returned the tracked input set to empty and F4
+returned to the editor.

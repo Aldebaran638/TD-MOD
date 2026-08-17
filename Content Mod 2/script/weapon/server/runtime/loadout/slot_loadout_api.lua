@@ -30,9 +30,15 @@ end
 function server.shipSlotLoadoutValidateSnapshot(
     shipType,
     configurationId,
-    requestedLoadout
+    requestedLoadout,
+    requestedComponentLoadout
 )
-    return _api.validateSnapshot(shipType, configurationId, requestedLoadout)
+    return _api.validateSnapshot(
+        shipType,
+        configurationId,
+        requestedLoadout,
+        requestedComponentLoadout
+    )
 end
 
 function server.shipSlotLoadoutApplySnapshot(snapshot)
@@ -279,7 +285,29 @@ function server.shipWeaponBindLocalConfiguration(
         return false
     end
 
-    if not server.shipSlotLoadoutApplySnapshot(weaponSnapshot) then
+    local baseSnapshot = weaponSnapshot.contractSnapshot or {}
+    local contractSnapshot, contractErrors = cm2LoadoutContractV1.newSnapshot(
+        baseSnapshot.vehicleId,
+        baseSnapshot.configurationId,
+        baseSnapshot.groups,
+        baseSnapshot.loadout,
+        requestedComponents,
+        baseSnapshot.revision,
+        baseSnapshot.mountRevision
+    )
+    if contractSnapshot == nil then
+        local firstContractError = (contractErrors or {})[1] or {}
+        _shipWeaponBindingResult(
+            pid,
+            body,
+            0,
+            "loadout contract rejected: " .. tostring(firstContractError.fieldPath or "snapshot")
+        )
+        return false
+    end
+
+    contractSnapshot.shipType = resolvedType
+    if not server.shipSlotLoadoutApplySnapshot(contractSnapshot) then
         _shipWeaponBindingResult(pid, body, 0, "weapon snapshot apply failed")
         return false
     end
@@ -294,6 +322,18 @@ function server.shipWeaponBindLocalConfiguration(
     end
     _rebuildWeaponRuntime(resolvedType)
     server.shipWeaponSyncConfiguration(resolvedType)
+
+    if type(server.cm2TelemetryRecord) == "function" then
+        server.cm2TelemetryRecord("loadout_configuration_v1", {
+            source = "local_bind",
+            schemaVersion = contractSnapshot.schemaVersion,
+            revision = contractSnapshot.revision,
+            vehicleId = contractSnapshot.vehicleId,
+            configurationId = contractSnapshot.configurationId,
+            snapshotHash = cm2LoadoutContractV1.snapshotHash(contractSnapshot),
+            componentLoadout = contractSnapshot.componentLoadout,
+        })
+    end
 
     server.weaponLocalConfigurationBound = true
     server.weaponLocalConfigurationPlayerId = pid

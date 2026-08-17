@@ -46,6 +46,93 @@ local function _findConfiguration(definition, configurationId)
     return nil
 end
 
+local function _contractAliases(definition)
+    local aliases = {}
+    for _, configuration in ipairs((definition or {}).slotConfigurations or {}) do
+        local canonical = tostring(configuration.configurationId or "")
+        for _, alias in ipairs(configuration.legacyConfigurationIds or {}) do
+            if canonical ~= "" and tostring(alias or "") ~= "" then
+                aliases[tostring(alias)] = canonical
+            end
+        end
+    end
+    return aliases
+end
+
+local function _contractGroups(configuration)
+    local groups = {}
+    for _, group in ipairs((configuration or {}).slotGroups or {}) do
+        groups[#groups + 1] = tostring(group.groupId or group.slotType or "")
+    end
+    return groups
+end
+
+local function _contractErrorText(errors)
+    local first = (errors or {})[1]
+    if type(first) ~= "table" then return tostring(first or "loadout contract rejected") end
+    return tostring(first.code or "invalid") .. " at "
+        .. tostring(first.fieldPath or "snapshot") .. ": "
+        .. tostring(first.suggestion or first.actual or "invalid value")
+end
+
+local function _contractSnapshotFor(
+    definition,
+    configurationId,
+    requestedLoadout,
+    requestedComponentLoadout
+)
+    local requested = requestedLoadout or {}
+    local configuration = _findConfiguration(definition, configurationId)
+    if configuration == nil then
+        configuration = _findConfiguration(
+            definition,
+            tostring((definition or {}).defaultSlotConfigurationId or "")
+        )
+    end
+    local snapshot, errors, warnings = cm2LoadoutContractV1.migrateV0(
+        {
+            configuration = configurationId,
+            loadout = requested,
+            groups = _contractGroups(configuration),
+            componentLoadout = requestedComponentLoadout or {},
+        },
+        "cm2:vehicle/" .. tostring((definition or {}).shipType or ""),
+        tostring((definition or {}).defaultSlotConfigurationId or ""),
+        _contractAliases(definition)
+    )
+    if snapshot == nil then return nil, _contractErrorText(errors), warnings end
+    return snapshot, nil, warnings
+end
+
+local function _recordContractSnapshot(snapshot, source)
+    if snapshot == nil then return end
+    local hash = cm2LoadoutContractV1.snapshotHash(snapshot)
+    local vehicleId = tostring(snapshot.vehicleId or "")
+    local shipType = string.match(vehicleId, "^cm2:vehicle/(.+)$") or ""
+    local encoded = cm2LoadoutContractV1.encode(snapshot)
+    if shipType ~= "" and SetString ~= nil then
+        local root = "StellarisShips/loadoutContract/v1/" .. shipType
+        SetString(root .. "/schemaVersion", tostring(snapshot.schemaVersion or ""), true)
+        SetInt(root .. "/revision", tonumber(snapshot.revision) or 0, true)
+        SetString(root .. "/vehicleId", vehicleId, true)
+        SetString(root .. "/configurationId", tostring(snapshot.configurationId or ""), true)
+        SetString(root .. "/snapshotHash", tostring(hash or ""), true)
+        SetString(root .. "/encoded", tostring(encoded or ""), true)
+        SetString(root .. "/source", tostring(source or "runtime"), true)
+    end
+    if type(server.cm2TelemetryRecord) == "function" then
+        server.cm2TelemetryRecord("loadout_configuration_v1", {
+            source = tostring(source or "runtime"),
+            schemaVersion = tostring(snapshot.schemaVersion or ""),
+            revision = tonumber(snapshot.revision) or 0,
+            vehicleId = vehicleId,
+            configurationId = tostring(snapshot.configurationId or ""),
+            snapshotHash = tostring(hash or ""),
+            migration = snapshot.migration,
+        })
+    end
+end
+
 local function _weaponAllowed(definition, configuration, group, weaponType)
     return shipDefinitionWeaponFitsGroup(
         definition,
@@ -202,7 +289,17 @@ local function _initInternal(shipType)
     end
     
     local requestedLoadout = configuration.defaultLoadout or {}
-    local loadout, loadoutError = _buildResolvedLoadout(definition, configuration, requestedLoadout)
+    local contractSnapshot, contractError = _contractSnapshotFor(
+        definition,
+        configuration.configurationId,
+        requestedLoadout
+    )
+    if contractSnapshot == nil then return false, contractError end
+    local loadout, loadoutError = _buildResolvedLoadout(
+        definition,
+        configuration,
+        cm2LoadoutContractV1.toRuntimeLoadout(contractSnapshot.loadout)
+    )
     if loadout == nil then
         return false, loadoutError
     end
@@ -213,11 +310,14 @@ local function _initInternal(shipType)
     
     _stateByType[shipType] = {
         shipType = shipType,
-        configurationId = defaultConfigId,
+        configurationId = contractSnapshot.configurationId,
         loadout = loadout,
+        contractSnapshot = contractSnapshot,
+        snapshotHash = cm2LoadoutContractV1.snapshotHash(contractSnapshot),
     }
-    
+
     _rebuildResolvedDefinition(shipType)
+    _recordContractSnapshot(contractSnapshot, "init")
     return true, nil
 end
 
@@ -248,6 +348,11 @@ function _loadoutAPI.getState(shipType)
         shipType = state.shipType,
         configurationId = state.configurationId,
         loadout = _cloneTable(state.loadout),
+        schemaVersion = cm2LoadoutContractV1.schemaVersion,
+        revision = cm2LoadoutContractV1.currentRevision,
+        vehicleId = "cm2:vehicle/" .. tostring(state.shipType or ""),
+        contractSnapshot = _cloneTable(state.contractSnapshot),
+        snapshotHash = tostring(state.snapshotHash or ""),
     }
 end
 
@@ -265,8 +370,18 @@ function _loadoutAPI.setConfiguration(shipType, configurationId)
     
     local previous = _stateByType[resolvedType] or {}
     local requestedLoadout = _cloneTable(previous.loadout or {})
+    local contractSnapshot, contractError = _contractSnapshotFor(
+        definition,
+        configuration.configurationId,
+        requestedLoadout
+    )
+    if contractSnapshot == nil then return false, contractError end
     
-    local loadout, loadoutError = _buildResolvedLoadout(definition, configuration, requestedLoadout)
+    local loadout, loadoutError = _buildResolvedLoadout(
+        definition,
+        configuration,
+        cm2LoadoutContractV1.toRuntimeLoadout(contractSnapshot.loadout)
+    )
     if loadout == nil then
         return false, loadoutError
     end
@@ -277,11 +392,14 @@ function _loadoutAPI.setConfiguration(shipType, configurationId)
     
     _stateByType[resolvedType] = {
         shipType = resolvedType,
-        configurationId = tostring(configuration.configurationId or configurationId),
+        configurationId = tostring(contractSnapshot.configurationId),
         loadout = loadout,
+        contractSnapshot = contractSnapshot,
+        snapshotHash = cm2LoadoutContractV1.snapshotHash(contractSnapshot),
     }
-    
+
     _rebuildResolvedDefinition(resolvedType)
+    _recordContractSnapshot(contractSnapshot, "set_configuration")
     return true, nil
 end
 
@@ -322,28 +440,60 @@ function _loadoutAPI.setLoadout(shipType, requestedLoadout)
         end
     end
     
-    local loadout, loadoutError = _buildResolvedLoadout(definition, configuration, merged)
+    local contractSnapshot, contractError = _contractSnapshotFor(
+        definition,
+        configuration.configurationId,
+        merged
+    )
+    if contractSnapshot == nil then return false, contractError end
+    local loadout, loadoutError = _buildResolvedLoadout(
+        definition,
+        configuration,
+        cm2LoadoutContractV1.toRuntimeLoadout(contractSnapshot.loadout)
+    )
     if loadout == nil then
         return false, loadoutError
     end
     
     state.loadout = loadout
+    state.configurationId = tostring(contractSnapshot.configurationId)
+    state.contractSnapshot = contractSnapshot
+    state.snapshotHash = cm2LoadoutContractV1.snapshotHash(contractSnapshot)
     _stateByType[resolvedType] = state
-    
+
     _rebuildResolvedDefinition(resolvedType)
+    _recordContractSnapshot(contractSnapshot, "set_loadout")
     return true, nil
 end
 
-function _loadoutAPI.validateSnapshot(shipType, configurationId, requestedLoadout)
+function _loadoutAPI.validateSnapshot(
+    shipType,
+    configurationId,
+    requestedLoadout,
+    requestedComponentLoadout
+)
     local resolvedType = shipType or server.shipContextGetType()
     local definition = _resolveShipDefinition(resolvedType)
     if definition.shipType == nil then
         return nil, "ship type not found: " .. tostring(resolvedType)
     end
-    local configuration = _findConfiguration(definition, configurationId)
+    local contractSnapshot, contractError = _contractSnapshotFor(
+        definition,
+        configurationId,
+        requestedLoadout or {},
+        requestedComponentLoadout or {}
+    )
+    if contractSnapshot == nil then return nil, contractError end
+    local configuration = _findConfiguration(
+        definition,
+        contractSnapshot.configurationId
+    )
     if configuration == nil then return nil, "configuration not found" end
-    local loadout, loadoutError =
-        _buildResolvedLoadout(definition, configuration, requestedLoadout or {})
+    local loadout, loadoutError = _buildResolvedLoadout(
+        definition,
+        configuration,
+        cm2LoadoutContractV1.toRuntimeLoadout(contractSnapshot.loadout)
+    )
     if loadout == nil then return nil, loadoutError end
     local shapeOk, shapeError =
         _validateConfigurationShape(definition, configuration, loadout)
@@ -351,8 +501,10 @@ function _loadoutAPI.validateSnapshot(shipType, configurationId, requestedLoadou
     return {
         shipType = resolvedType,
         configurationId =
-            tostring(configuration.configurationId or configurationId or ""),
+            tostring(contractSnapshot.configurationId),
         loadout = loadout,
+        contractSnapshot = contractSnapshot,
+        snapshotHash = cm2LoadoutContractV1.snapshotHash(contractSnapshot),
     }, nil
 end
 
@@ -362,7 +514,8 @@ function _loadoutAPI.applySnapshot(snapshot)
     local validated, validationError = _loadoutAPI.validateSnapshot(
         shipType,
         resolved.configurationId,
-        resolved.loadout or {}
+        resolved.loadout or {},
+        resolved.componentLoadout or {}
     )
     if validated == nil then
         DebugPrint("[slotLoadout] snapshot rejected: " .. tostring(validationError))
@@ -372,8 +525,14 @@ function _loadoutAPI.applySnapshot(snapshot)
         shipType = shipType,
         configurationId = validated.configurationId,
         loadout = _cloneTable(validated.loadout or {}),
+        contractSnapshot = _cloneTable(validated.contractSnapshot),
+        snapshotHash = tostring(validated.snapshotHash or ""),
     }
-    return _rebuildResolvedDefinition(shipType) ~= nil
+    local rebuilt = _rebuildResolvedDefinition(shipType) ~= nil
+    if rebuilt then
+        _recordContractSnapshot(validated.contractSnapshot, "apply_snapshot")
+    end
+    return rebuilt
 end
 
 function _loadoutAPI.resolveShipDefinition(shipType)

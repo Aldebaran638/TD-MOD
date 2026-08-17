@@ -2464,7 +2464,7 @@
       "id": "Step 3.4",
       "stage": "Gate 3",
       "title": "建立版本化 Loadout/Configuration 合同",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 定义 Loadout/Configuration schema、revision、slot、mount group、alias、默认值和缺失策略；[ ] 让 UI、Runtime、Compiler、存档使用同一 DTO；[ ] 为旧 configuration alias 提供一次性迁移；[ ] 禁止运行时随意注册/覆盖。 Reason: 当前配置、slot 和默认 loadout 的派生分散在 UI/Runtime，无法保证编译定义与玩家存档一致。",
       "expected_outcome": "配置可版本化、可迁移、可验证，UI 与 Runtime 不再各自解释字段。",
       "prerequisites": [
@@ -2481,14 +2481,14 @@
       "evidence": {
         "code_or_document": "Content Mod 2/script/data/configuration/loadout_contract_v1.lua; docs/loadout-configuration-contract-v1.md; harness/data/configuration/loadout-contract-v1-fixtures.json. The pure LoadoutSnapshot v1 DTO defines schemaVersion/revision/vehicleId/configurationId/groups/loadout/componentLoadout/mountRevision, structured field-path diagnostics, explicit reject/degrade/fallback/downgrade policies, fit-matrix validation, deterministic encode/hash, one-time v0 alias migration and an init-only freeze gate. Both ship entry points include the DTO without changing ship_catalog include order.",
         "automated_tests": "harness/check-loadout-contract-v1.ps1 PASS; harness/test-loadout-contract-v1.ps1 PASS. Fixtures cover valid v1, legacy configuration alias `siege_2x4g2m`, unknown weapon, and revision downgrade. Static checks confirm no engine APIs/includes, idempotent migrateV0 path, structured code/fieldPath/expected/actual/suggestion diagnostics, deterministic key sorting/hash and registry-frozen gate.",
-        "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; entry closure, Lua/API, ship definition, all catalog checkers and all self-test groups passed. Final Lua count: 194 files, 0 API issues. Existing non-fatal fixture cleanup warnings did not change the exit code.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so live UI-to-server DTO submission, S7 forged/incompatible snapshot rejection, save/load golden replay, remote snapshot timing and v0 usage telemetry cannot be executed. The DTO is pure and included only at init/static closure; legacy slot_loadout remains the rollback adapter.",
+        "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; entry closure reported 4 entry points/262 closure Lua files/0 issues, Lua/API reported 235 files/2 engine includes/0 API issues, generated manifest and Catalog Authority passed, and all catalog, XML, weapon/component/ship checkers and self-test groups passed.",
+        "runtime_or_performance": "PASS: Fresh Teardown target teardown:57656:53613200 loaded _ai_scenario_vehicle_component_catalog.xml after F5. CM2_TEST_V1 session 0-b3446688 exposed Titan and Enigmatic canonical cm2.loadout/1 snapshots (hashes 473e5410 and 68c64c40). Real T opened the configuration UI; a real selection changed Enigmatic to TORPEDO FRAME, Save displayed SAVED FOR NEXT SPAWN, and close/reopen displayed TORPEDO FRAME with LOCAL DESIGN LOADED. The real-input chain produced weapon_input_evaluated, fire_request and presentation_event events and ended with lmb=false. Incremental log evidence contained 0 in-scope CM2 errors/warnings; 2 errors and 6 warnings were attributed to external [TABS] Vehicle Framework. Evidence: docs/evidence/step-3.4-loadout-configuration-v1.json.",
         "rollback_record": "Remove the two entry-point includes and stop invoking `cm2LoadoutContractV1`; retain the existing local config and server slot_loadout v0 path. Alias registration is init-only and `freeze()` blocks runtime overwrite, so reverting the candidate does not alter legacy definitions or saved payloads."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-3.4",
-      "status_reason": "LoadoutSnapshot v1, deterministic storage/hash, v0 alias migration, explicit missing/downgrade policies and freeze gate are statically implemented and fully Harness-verified; terminal status is unable because Teardown.exe is unavailable for live UI/server/save S7 evidence and v0 usage telemetry.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "LoadoutSnapshot v1, deterministic storage/hash, v0 alias migration, explicit missing/downgrade policies and freeze gate are implemented; shared DTO application now reaches UI, local binding and server Runtime paths, and the live catalog scenario proved canonical snapshots plus persisted UI selection.",
+      "verification_status": "verified",
+      "verification_status_reason": "Static and fixture checks, fresh CM2_TEST_V1 runtime telemetry, real-input UI Save/reopen screenshots, attributed incremental log evidence, cleanup and full Harness satisfy the embedded contract. Evidence: docs/evidence/step-3.4-loadout-configuration-v1.json.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "1af2d2ed626d423751e74d9ea3892f113f7acbcfd0f73a28879337900c0f1d65",

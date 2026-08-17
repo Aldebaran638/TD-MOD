@@ -28,6 +28,27 @@ local function _weaponConfigShipRoot(shipType)
     return _weaponConfigRegistryRoot .. "." .. _weaponConfigSafeId(shipType)
 end
 
+local function _weaponConfigAliases(definition)
+    local aliases = {}
+    for _, configuration in ipairs((definition or {}).slotConfigurations or {}) do
+        local canonical = tostring(configuration.configurationId or "")
+        for _, alias in ipairs(configuration.legacyConfigurationIds or {}) do
+            if canonical ~= "" and tostring(alias or "") ~= "" then
+                aliases[tostring(alias)] = canonical
+            end
+        end
+    end
+    return aliases
+end
+
+local function _weaponConfigGroups(configuration)
+    local groups = {}
+    for _, group in ipairs((configuration or {}).slotGroups or {}) do
+        groups[#groups + 1] = tostring(group.groupId or group.slotType or "")
+    end
+    return groups
+end
+
 local function _weaponConfigFindConfiguration(definition, configurationId)
     for _, configuration in ipairs((definition or {}).slotConfigurations or {}) do
         if tostring(configuration.configurationId or "") == tostring(configurationId or "") then
@@ -42,6 +63,62 @@ local function _weaponConfigFindConfiguration(definition, configurationId)
     return nil
 end
 
+local function _weaponConfigWithContract(
+    shipType,
+    configurationId,
+    loadout,
+    componentLoadout
+)
+    local resolvedType = tostring(shipType or "")
+    local definition = (shipTypeRegistryData or {})[resolvedType] or {}
+    local requestedConfiguration = tostring(configurationId or "")
+    local configuration = _weaponConfigFindConfiguration(
+        definition,
+        requestedConfiguration
+    )
+    local defaultConfiguration = tostring(
+        definition.defaultSlotConfigurationId or ""
+    )
+    local snapshot, errors, warnings = cm2LoadoutContractV1.migrateV0(
+        {
+            configuration = requestedConfiguration,
+            loadout = loadout or {},
+            componentLoadout = componentLoadout or {},
+        },
+        "cm2:vehicle/" .. resolvedType,
+        defaultConfiguration,
+        _weaponConfigAliases(definition)
+    )
+    if snapshot == nil then return nil, errors, warnings end
+
+    local runtime = {
+        schemaVersion = snapshot.schemaVersion,
+        revision = snapshot.revision,
+        mountRevision = snapshot.mountRevision,
+        vehicleId = snapshot.vehicleId,
+        configurationId = snapshot.configurationId,
+        loadout = cm2LoadoutContractV1.toRuntimeLoadout(snapshot.loadout),
+        componentLoadout = cm2LoadoutContractV1.toRuntimeComponentLoadout(
+            snapshot.componentLoadout
+        ),
+        contractSnapshot = snapshot,
+        migration = snapshot.migration,
+    }
+    runtime.snapshotHash = cm2LoadoutContractV1.snapshotHash(snapshot)
+    if configuration == nil then
+        return nil, {
+            {
+                code = "configuration-not-found",
+                fieldPath = "configurationId",
+                expected = "compiled configuration ID",
+                actual = requestedConfiguration,
+                suggestion = "select the compiled default configuration",
+            },
+        }, warnings
+    end
+    return runtime, errors, warnings
+end
+
 local function _weaponConfigDefault(shipType)
     local definition = (shipTypeRegistryData or {})[tostring(shipType or "")] or {}
     local configurationId = tostring(definition.defaultSlotConfigurationId or "")
@@ -54,7 +131,13 @@ local function _weaponConfigDefault(shipType)
         loadout[key] = tostring(defaults[tostring(group.groupId or "")]
             or defaults[key] or defaults[slotType] or "")
     end
-    return {
+    local result = _weaponConfigWithContract(
+        shipType,
+        tostring((configuration or {}).configurationId or configurationId),
+        loadout,
+        shipComponentDefaultLoadout(definition, configurationId)
+    )
+    return result or {
         configurationId = tostring((configuration or {}).configurationId or configurationId),
         loadout = loadout,
         componentLoadout = shipComponentDefaultLoadout(definition, configurationId),
@@ -95,26 +178,43 @@ function client.weaponLocalConfigRead(shipType)
             end
         end
     end
-    return {
-        configurationId = GetString(root .. ".configuration"),
-        loadout = loadout,
-        componentLoadout = componentLoadout,
-    }
+    local result = _weaponConfigWithContract(
+        resolvedType,
+        GetString(root .. ".configuration"),
+        loadout,
+        componentLoadout
+    )
+    return result or _weaponConfigDefault(resolvedType)
 end
 
 function client.weaponLocalConfigWrite(shipType, configurationId, loadout, componentLoadout)
     local root = _weaponConfigShipRoot(shipType)
-    local selected = loadout or {}
-    SetString(root .. ".configuration", tostring(configurationId or ""))
     local definition = (shipTypeRegistryData or {})[tostring(shipType or "")] or {}
-    local configuration = _weaponConfigFindConfiguration(definition, configurationId)
+    local snapshot, errors = _weaponConfigWithContract(
+        shipType,
+        configurationId,
+        loadout,
+        componentLoadout
+    )
+    if snapshot == nil then
+        return false, errors
+    end
+    local selected = snapshot.loadout or {}
+    SetString(root .. ".schemaVersion", tostring(snapshot.schemaVersion or ""))
+    SetString(root .. ".revision", tostring(snapshot.revision or 1))
+    SetString(root .. ".vehicleId", tostring(snapshot.vehicleId or ""))
+    SetString(root .. ".configuration", tostring(snapshot.configurationId or ""))
+    local configuration = _weaponConfigFindConfiguration(
+        definition,
+        snapshot.configurationId
+    )
     for _, loadoutKey in ipairs(_weaponConfigLoadoutKeys(configuration)) do
         SetString(
             root .. "." .. string.lower(loadoutKey),
             tostring(selected[loadoutKey] or "")
         )
     end
-    local selectedComponents = componentLoadout or {}
+    local selectedComponents = snapshot.componentLoadout or {}
     for _, group in ipairs(shipComponentSlotGroups(configuration)) do
         local slotType = group.slotType
         for index = 1, group.count do
@@ -124,6 +224,7 @@ function client.weaponLocalConfigWrite(shipType, configurationId, loadout, compo
             )
         end
     end
+    return true, snapshot
 end
 
 function client.weaponLocalConfigUiOpenKey()

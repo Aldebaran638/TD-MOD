@@ -696,6 +696,24 @@ local function _transformSnapshot(body)
     }
 end
 
+local function _loadoutContractSnapshot(body)
+    if GetString == nil then return nil end
+    local shipType = tostring(GetString(_shipRoot(body) .. "/shipType") or "")
+    if shipType == "" then return nil end
+    local root = "StellarisShips/loadoutContract/v1/" .. shipType
+    local schemaVersion = tostring(GetString(root .. "/schemaVersion") or "")
+    if schemaVersion == "" then return nil end
+    return {
+        schemaVersion = schemaVersion,
+        revision = _integer(GetInt(root .. "/revision"), 0),
+        vehicleId = tostring(GetString(root .. "/vehicleId") or ""),
+        configurationId = tostring(GetString(root .. "/configurationId") or ""),
+        snapshotHash = tostring(GetString(root .. "/snapshotHash") or ""),
+        encoded = tostring(GetString(root .. "/encoded") or ""),
+        source = tostring(GetString(root .. "/source") or ""),
+    }
+end
+
 local function _shipSnapshot(body)
     local prefix = _shipRoot(body)
     local transform = _transformSnapshot(body)
@@ -722,6 +740,7 @@ local function _shipSnapshot(body)
         destroyed = _boolean(GetBool(prefix .. "/destroyed")) or
             _number(GetFloat(prefix .. "/bodyHP"), 0.0) <= 0.0,
         registered = _boolean(GetBool(prefix .. "/exists")),
+        loadout_contract = _loadoutContractSnapshot(body),
     }
 end
 

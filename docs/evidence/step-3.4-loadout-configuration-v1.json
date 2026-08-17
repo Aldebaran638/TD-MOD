@@ -1,0 +1,144 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 3.4",
+  "title": "Versioned Loadout/Configuration contract",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "1af2d2ed626d423751e74d9ea3892f113f7acbcfd0f73a28879337900c0f1d65",
+    "profiles": [
+      "STATIC",
+      "FIXTURE",
+      "SCENE",
+      "REAL_INPUT",
+      "TELEMETRY",
+      "VISUAL",
+      "LOG"
+    ],
+    "reload": "F4_TO_F5_OR_REOPEN_LEVEL_XML",
+    "automation_level": "FULL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "verified",
+    "status_reason": "Shared LoadoutSnapshot v1 is statically and fixture verified, and the live catalog scene proved canonical runtime snapshots plus UI save/reopen through real input.",
+    "implementation_scope": [
+      "Shared cm2.loadout/1 DTO for UI, Runtime and storage boundaries",
+      "Canonical revision, groups, weapon/component loadout, mount revision, aliases and missing-value policies",
+      "Idempotent v0 alias migration, fit validation, deterministic encode/hash and init-only freeze gate",
+      "Runtime telemetry exposure of canonical loadout snapshots"
+    ]
+  },
+  "static_and_fixture": {
+    "contract_checker": "harness/check-loadout-contract-v1.ps1: PASS",
+    "contract_self_test": "harness/test-loadout-contract-v1.ps1: PASS",
+    "fixtures": [
+      "valid v1 snapshot",
+      "legacy configuration alias siege_2x4g2m",
+      "unknown weapon rejection",
+      "revision downgrade rejection"
+    ],
+    "targeted_regression": "PASS before and after component DTO wiring",
+    "contract_hash": "1af2d2ed626d423751e74d9ea3892f113f7acbcfd0f73a28879337900c0f1d65"
+  },
+  "runtime": {
+    "target_id": "teardown:57656:53613200",
+    "pid": 57656,
+    "scenario": "vehicle_component_catalog_v1",
+    "lua_revision": "scenario-controller-v2",
+    "xml_revision": "vehicle-component-catalog-xml-v1",
+    "telemetry_protocol": "CM2_TEST_V1",
+    "session": "0-b3446688",
+    "baseline_log_cursor": 8655,
+    "telemetry_probe_run": "20260817T034718Z-eb6e1b3e",
+    "telemetry_read_run": "20260817T035533Z-ecdbc289",
+    "snapshots": [
+      {
+        "ship_type": "titan",
+        "body_id": 7,
+        "schemaVersion": "cm2.loadout/1",
+        "revision": 1,
+        "vehicleId": "cm2:vehicle/titan",
+        "configurationId": "titan_core",
+        "snapshotHash": "473e5410",
+        "source": "init"
+      },
+      {
+        "ship_type": "enigmaticCruiser",
+        "body_id": 14,
+        "schemaVersion": "cm2.loadout/1",
+        "revision": 1,
+        "vehicleId": "cm2:vehicle/enigmaticCruiser",
+        "configurationId": "battleline_2x2l4m",
+        "snapshotHash": "68c64c40",
+        "source": "init"
+      }
+    ],
+    "event_chain": {
+      "client_latest_seq": 16,
+      "server_latest_seq": 14,
+      "real_input_events": [
+        "input_edge",
+        "weapon_input_evaluated",
+        "weapon_hold_sent",
+        "weapon_hold_received",
+        "fire_request",
+        "presentation_event",
+        "weapon_hold_applied"
+      ],
+      "final_input": {
+        "lmb": false,
+        "w": false
+      }
+    }
+  },
+  "ui_save_reopen": {
+    "open_run": "20260817T034804Z-8d10cb7f",
+    "select_run": "20260817T034854Z-2d27093b",
+    "save_run": "20260817T034919Z-e8d367d5",
+    "reopen_run": "20260817T035429Z-2427f6b5",
+    "selected_configuration": "TORPEDO FRAME",
+    "save_message": "SAVED FOR NEXT SPAWN",
+    "reopen_message": "LOCAL DESIGN LOADED",
+    "screenshots": [
+      "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T034804Z-8d10cb7f/frame_f000002-e2da689b_pid-57656.png",
+      "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T034919Z-e8d367d5/frame_f000002-74b5544d_pid-57656.png",
+      "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T035429Z-2427f6b5/frame_f000002-e89275fc_pid-57656.png"
+    ]
+  },
+  "log": {
+    "run": "20260817T035551Z-b609c6a4",
+    "cursor": 8655,
+    "next_cursor": 18668,
+    "in_scope_errors": 0,
+    "in_scope_warnings": 0,
+    "attributed_external_errors": 2,
+    "attributed_external_warnings": 6,
+    "external_owner": "[TABS] Vehicle Framework (steam-3148138736)",
+    "external_details": [
+      "Missing TABS UI_Hover sound bank",
+      "Missing TABS firework_explo_0 sound bank",
+      "TABS ballistics.lua deprecated GetGravity/GetWorldBody/GetBodyBounds calls"
+    ]
+  },
+  "cleanup": {
+    "cleanup_run": "20260817T035717Z-bcf43375",
+    "returned_to_editor": true,
+    "emergency_release": true,
+    "held_inputs": {
+      "keys": [],
+      "buttons": []
+    },
+    "temporary_mod_changes": "Previously disabled ARM weapon mods and Stellaris ship mod were restored before this run; no repository files were changed by runtime setup."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "summary": "All Harness checks passed; entry closure, generated manifest, Catalog Authority, Lua/API, XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "evidence_roots": [
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T034652Z-0bd787fe",
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T035533Z-ecdbc289",
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T035551Z-b609c6a4",
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T035717Z-bcf43375"
+  ]
+}

@@ -61,6 +61,70 @@ local function _appendUnique(list, value)
     list[#list + 1] = value
 end
 
+local function _flattenComponents(value)
+    local result = {}
+    for slotType, slots in pairs(value or {}) do
+        if type(slots) == "table" then
+            for index, componentId in pairs(slots) do
+                result[tostring(slotType) .. "." .. tostring(index)] = componentId
+            end
+        else
+            result[tostring(slotType)] = slots
+        end
+    end
+    return result
+end
+
+local function _runtimeId(value, prefix)
+    local text = tostring(value or "")
+    if string.sub(text, 1, #prefix) == prefix then
+        return string.sub(text, #prefix + 1)
+    end
+    return text
+end
+
+function _contract.flattenComponentLoadout(value)
+    return _flattenComponents(value)
+end
+
+function _contract.expandComponentLoadout(value)
+    local result = {}
+    for key, componentId in pairs(_flattenComponents(value)) do
+        local slotType, index = tostring(key):match("^(.-)%.(%d+)$")
+        if slotType ~= nil then
+            result[slotType] = result[slotType] or {}
+            result[slotType][tonumber(index)] = tostring(componentId or "")
+        else
+            result[tostring(key)] = tostring(componentId or "")
+        end
+    end
+    return result
+end
+
+function _contract.toRuntimeLoadout(value)
+    local result = {}
+    for key, weaponId in pairs(value or {}) do
+        result[key] = _runtimeId(weaponId, "cm2:weapon/")
+    end
+    return result
+end
+
+function _contract.toRuntimeComponentLoadout(value)
+    local expanded = _contract.expandComponentLoadout(value)
+    local result = {}
+    for slotType, slots in pairs(expanded) do
+        if type(slots) == "table" then
+            result[slotType] = {}
+            for index, componentId in pairs(slots) do
+                result[slotType][index] = _runtimeId(componentId, "cm2:component/")
+            end
+        else
+            result[slotType] = _runtimeId(slots, "cm2:component/")
+        end
+    end
+    return result
+end
+
 local function _configurationId(vehicleId, requested, defaults, aliases)
     local value = tostring(requested or "")
     local aliasTable = aliases or _contract._configurationAliases[vehicleId] or {}
@@ -146,7 +210,7 @@ function _contract.validate(snapshot)
         errors[#errors + 1] = _error("missing-field", "configurationId", "compiled configuration ID", snapshot.configurationId, "select the default configuration")
     end
     local loadout = _normalizeMap(snapshot.loadout, "cm2:weapon/", "loadout", errors, warnings, _contract.missingPolicy.weapon)
-    local componentLoadout = _normalizeMap(snapshot.componentLoadout, "cm2:component/", "componentLoadout", errors, warnings, _contract.missingPolicy.component)
+    local componentLoadout = _normalizeMap(_flattenComponents(snapshot.componentLoadout), "cm2:component/", "componentLoadout", errors, warnings, _contract.missingPolicy.component)
     if snapshot.groups ~= nil and type(snapshot.groups) ~= "table" then
         errors[#errors + 1] = _error("wrong-type", "groups", "array", type(snapshot.groups), "send group IDs as an array")
     end
@@ -213,6 +277,28 @@ function _contract.migrateV0(snapshot, vehicleId, defaultConfigurationId, aliase
         _appendUnique(normalized.migration.warnings, warning)
     end
     return normalized, errors, normalized.migration.warnings
+end
+
+function _contract.newSnapshot(
+    vehicleId,
+    configurationId,
+    groups,
+    loadout,
+    componentLoadout,
+    revision,
+    mountRevision
+)
+    local snapshot = {
+        schemaVersion = _contract.schemaVersion,
+        revision = tonumber(revision) or _contract.currentRevision,
+        vehicleId = vehicleId,
+        configurationId = configurationId,
+        groups = groups or {},
+        loadout = loadout or {},
+        componentLoadout = _flattenComponents(componentLoadout),
+        mountRevision = tonumber(mountRevision) or 1,
+    }
+    return _contract.validate(snapshot)
 end
 
 function _contract.validateAgainstFit(snapshot, fitMatrix)
