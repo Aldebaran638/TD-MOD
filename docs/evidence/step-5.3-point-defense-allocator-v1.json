@@ -1,0 +1,85 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 5.3",
+  "title": "Point Defense Candidate Allocator v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "f01942ebc21af2faebd9f789a9272cf25dc26162fc3f54d2b2039e0c76eab0fb",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "F4_TO_F5_OR_REOPEN_LEVEL_XML",
+    "automation_level": "PARTIAL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The per-ship candidate pass, deterministic mount allocation, priority/filter rules, fire and cooldown budgets, duplicate tick guard, target assignment limits, disposal cleanup and legacy/catalog backend switch are implemented and fixture-verified. Live S3 evidence is blocked by the non-interactive Windows input desktop.",
+    "verification_status_reason": "The exact Teardown target is responding, but Screen-saver is the active input desktop and foreground handle is 0. No unsafe input, reload, telemetry bridge, visual capture or scene replay was started.",
+    "implementation_scope": [
+      "One shared candidate pass per ship/tick with bounded capacity.",
+      "Deterministic per-mount target assignment and fire budget.",
+      "Cooldown, range, faction, owner, line-of-sight, target-class and duplicate-target rejection diagnostics.",
+      "Mount disposal and legacy backend rollback boundary."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "allocator_runner": "PASS: candidateQueries=4, candidatePasses=4, candidateCount=8, candidate capacity rejects=4, mountAllocations=7, duplicateTickRejects=1, cooldownRejects=3, fireBudgetRejects=1, friend/occluded/destroyed/range rejects=7 each, disposedMounts=1; tick-1/tick-3/tick-4 assignments match legacy golden.",
+    "allocator_self_test": "PASS: baseline accepted; golden divergence, changed candidate capacity and missing duplicate-tick guard fixtures rejected.",
+    "runtime_model_boundary": "The runner is a deterministic allocator model and does not claim Teardown line-of-sight, weapon fire, damage, presentation, query cost, CPU p95 or overload visuals."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "foreground_handle": 0,
+      "focused": false,
+      "input_desktop": "Screen-saver",
+      "probe_at": "2026-08-18T04:01:21+08:00"
+    },
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow probe reported Screen-saver and foreground handle 0.",
+      "No real input, telemetry probe, scene reload, seeded S3 pressure replay or screenshot was started after the focus guard condition failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the contract live profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshot": null,
+    "reason": "The focus guard rejected a fresh client-area frame before the live scene could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No scene reload or runtime pressure replay was started, so no Step 5.3 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully: entry closure, source-of-truth, executable Todo, Lua, Teardown API, XML, weapon, component, ship checks and all self-tests passed."
+  },
+  "evidence_roots": [],
+  "rollback": "Keep existing point_defense/control.lua and _pdFindTarget as the default legacy backend. If candidate shadow, line-of-sight, damage or allocation behavior regresses, switch the affected ship to legacy and clear allocator state; preserve fixture, golden and failure logs and never let both backends fire the same mount."
+}
