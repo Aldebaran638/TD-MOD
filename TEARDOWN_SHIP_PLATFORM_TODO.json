@@ -3570,7 +3570,7 @@
       "id": "Step 5.2",
       "stage": "Gate 5",
       "title": "建立 Scene Target Catalog 与简单 Uniform Grid",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 每个 scene 维护可攻击目标 snapshot；[ ] 按固定 cell size 建 uniform grid；[ ] 更新只在 spawn/move/disable 时进行；[ ] target filter 在目录层预筛选 faction/type/capability；[ ] 查询返回 stable entity/generation。 Reason: 目标选择不应每个 mount 每次遍历全 registry；简单网格足以先解决当前尺度，避免过早引入复杂空间结构。",
       "expected_outcome": "S1/S3 的候选查询成本与目标数量局部相关。",
       "prerequisites": [
@@ -3587,14 +3587,21 @@
       "evidence": {
         "code_or_document": "Content Mod 2/script/world/host/scene_target_catalog_v1.lua; Content Mod 2/main.lua server/client wiring; docs/scene-target-catalog-v1.md; docs/candidates/scene-target-catalog-v1.fixture.json; docs/candidates/scene-target-catalog-v1-result.json.",
         "automated_tests": "tools/cm2-world-host/run-scene-target-catalog-v1.ps1 passed: 6 targets registered, cellSize=100/refreshHz=5, 5 snapshot revisions (4 dirty refreshes), 2 cell moves including -0.1→0.1 boundary, disable=1/remove=1, stale generation rejects=2, 5 grid-local queries, 1 query-cost sample, legacy golden candidate IDs exact. tools/cm2-world-host/test-scene-target-catalog-v1.ps1 passed baseline plus invalid cell-size, golden divergence and stale-generation negatives.",
-        "harness": "Full .\\harness\\check-all.ps1 exited 0: entry closure 248 Lua files/0 issues, Lua 204 files/0 issues, Teardown API 0 issues, XML/weapon/component/ship checks and all self-tests passed. Direct entry/Lua/API checks also passed after bracket-field semantic fixes.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; S1/S3 real target visibility, physics-phase center/velocity cache, engine query count/latency, HUD/server convergence and candidate CPU cannot be measured. Offline grid model is contract evidence only.",
+        "harness": "Full .\\harness\\check-all.ps1 exited 0: entry closure 4 entry points/264 Lua files/0 issues, Lua 237 files/2 engine includes/0 API issues, Teardown API 0 issues, XML/weapon/component/ship checks and all self-tests passed. Direct entry/Lua/API checks also passed.",
+        "runtime_or_performance": "BLOCKED: Teardown.exe is installed and responding as `teardown:57656:53613200`, but the current Windows input desktop is `Screen-saver` and `GetForegroundWindow()` is 0. The exact-target observe/control path cannot safely start, so no fresh CM2_TEST_V1 baseline, S1/S3 scene reload, target visibility, physics-phase cache, engine query count/latency, HUD/server convergence, or candidate CPU replay was started. Offline grid model is contract evidence only. Evidence: docs/evidence/step-5.2-scene-target-catalog-v1.json.",
         "rollback_record": "Keep legacy target candidate/target API selectable per scene and preserve candidate trace. If catalog shadow differs or runtime regresses, disable the catalog adapter and route guided/charged/PD/HUD back to the previous candidate provider; do not maintain two eligibility definitions or delete golden evidence."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-5.2",
-      "status_reason": "Scene-level versioned target snapshot, 5–10 Hz dirty/scheduled refresh, 100–250 m uniform grid, shared faction/type/capability filtering, stable entity/generation query results, client bounded snapshot API and diagnostics are implemented and offline-verified. Live S1/S3 runtime evidence remains unavailable without Teardown.exe.",
+      "status_reason": "Scene-level versioned target snapshot, 5–10 Hz dirty/scheduled refresh, 100–250 m uniform grid, shared faction/type/capability filtering, stable entity/generation query results, client bounded snapshot API and diagnostics are implemented and offline-verified. Implementation is finish. Verification remains pending because the installed Teardown target is outside the interactive input desktop, blocking live S1/S3 evidence. Evidence: docs/evidence/step-5.2-scene-target-catalog-v1.json.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "STATIC and FIXTURE implementation evidence is complete and the runner regression passes. The required SCENE/TELEMETRY/LOG evidence was attempted with a fresh read-only environment probe, but the focus guard blocked the fresh frame before seeded replay; rerun the declared live profiles after the Windows input desktop returns to the interactive desktop.",
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The required live verification cannot start because Win32 reports the active input desktop as Screen-saver and foreground handle 0. The control bridge must refuse input or capture until the interactive desktop is restored.",
+        "evidence": "docs/evidence/step-5.2-scene-target-catalog-v1.json; Win32 probe 2026-08-18T03:49:48+08:00; target teardown:57656:53613200",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T03:49:48+08:00"
+      },
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "526a23436fcb20d8aa61de84c5f8e96f108d2b73c99af6dbcec5065f8be77391",

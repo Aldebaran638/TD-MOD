@@ -1,0 +1,80 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 5.2",
+  "title": "Scene Target Catalog and Uniform Grid v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "526a23436fcb20d8aa61de84c5f8e96f108d2b73c99af6dbcec5065f8be77391",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "F4_TO_F5_OR_REOPEN_LEVEL_XML",
+    "automation_level": "PARTIAL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The versioned scene target snapshot, bounded uniform grid, dirty/scheduled refresh, shared filters, stable generations, client snapshot boundary and diagnostics are implemented and fixture-verified. Live S1/S3 evidence is blocked by the non-interactive Windows input desktop.",
+    "verification_status_reason": "The exact Teardown target is responding, but Screen-saver is the active input desktop and foreground handle is 0. No unsafe input, reload, telemetry bridge, or scene replay was started.",
+    "implementation_scope": [
+      "Scene-owned target snapshot with entityId and generation.",
+      "100-250 m uniform grid with 5-10 Hz dirty/scheduled refresh.",
+      "Faction, target type, capability and stable query filtering.",
+      "Bounded client snapshot API and query diagnostics."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "catalog_runner": "PASS: 6 targets registered; cellSize=100; refreshHz=5; 5 snapshot revisions with 4 dirty refreshes; 2 cell moves including the -0.1 to 0.1 boundary; disable=1; remove=1; stale generation rejects=2; 5 grid-local queries; 1 query-cost sample; legacy golden candidate IDs exact.",
+    "catalog_self_test": "PASS: baseline accepted; invalid cell size, legacy-golden divergence and stale-generation update fixtures rejected.",
+    "runtime_model_boundary": "The runner is a deterministic grid model and does not claim Teardown physics, engine Find/query cost, HUD convergence or frame performance."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "foreground_handle": 0,
+      "focused": false,
+      "input_desktop": "Screen-saver",
+      "probe_at": "2026-08-18T03:49:48+08:00"
+    },
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow probe reported Screen-saver and foreground handle 0.",
+      "No real input, telemetry probe, scene reload, seeded S1/S3 replay or screenshot was started after the focus guard condition failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the contract live profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No scene reload or runtime replay was started, so no Step 5.2 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully: entry closure, source-of-truth, executable Todo, Lua, Teardown API, XML, weapon, component, ship checks and all self-tests passed."
+  },
+  "evidence_roots": [],
+  "rollback": "Keep the legacy target candidate provider selectable per scene. If the catalog shadow differs or runtime regresses, disable the catalog adapter and route guided/charged/PD/HUD back to the previous provider; preserve fixture, result and last valid generated artifacts."
+}
