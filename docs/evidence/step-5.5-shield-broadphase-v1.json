@@ -1,0 +1,85 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 5.5",
+  "title": "Projectile Shield Broadphase v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "111903c73e697fa18ad38488071f2df18e665ea8df32478d2c9e1a9ebbb6c592",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "F4_TO_F5_OR_REOPEN_LEVEL_XML",
+    "automation_level": "PARTIAL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The generation-tagged shield snapshot, uniform-grid segment candidate query, sphere-entry boundary handling, owner/HP filters, diagnostics and explicit legacy/grid manager switch are implemented and fixture-verified. Live S4 evidence is blocked by the non-interactive Windows input desktop.",
+    "verification_status_reason": "The exact Teardown target is responding, but Screen-saver is the active input desktop and foreground handle is 0. No unsafe input, reload, telemetry bridge, visual capture or scene replay was started.",
+    "implementation_scope": [
+      "Shield snapshot registration/update/removal with generation validation.",
+      "Grid broadphase candidate query for ordinary projectile shield checks.",
+      "Narrowphase segment/sphere handling for tangent, inside-start, high-speed and large-radius cases.",
+      "Explicit legacy fallback and legacy scan comparison diagnostics."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "broadphase_runner": "PASS: mode=grid, cellSize=100, registers=4, updates=1, removes=2, refreshes=4, queries=6, hits=5, staleRejected=1, broadphaseCandidates=14, narrowphaseTests=10, candidateChecks=14, fullRegistryScans=12 legacy baseline, snapshotEntries=1. Tangent, inside-start, high-speed cross-cell, large-radius, owner exclusion, HP=0, movement and removal goldens matched.",
+    "broadphase_self_test": "PASS: baseline accepted; golden divergence, stale-generation removal and hidden legacy-scan comparison fixtures rejected.",
+    "runtime_model_boundary": "The runner is a deterministic geometry/grid model and does not claim Teardown QueryRaycast, damage-layer parity, frame performance, memory, GC, visual impact or live pressure behavior."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "foreground_handle": 0,
+      "focused": false,
+      "input_desktop": "Screen-saver",
+      "probe_at": "2026-08-18T04:17:26+08:00"
+    },
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow probe reported Screen-saver and foreground handle 0.",
+      "No real input, telemetry probe, scene reload, seeded S4 pressure replay or screenshot was started after the focus guard condition failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the contract live profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The focus guard rejected a fresh client-area frame before the live scene could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No scene reload or runtime shield replay was started, so no Step 5.5 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully: entry closure, source-of-truth, executable Todo, Lua, Teardown API, XML, weapon, component, ship checks and all self-tests passed."
+  },
+  "evidence_roots": [],
+  "rollback": "Keep projectileShieldBroadphaseMode=legacy and the manager full Registry scan as the default. If shadow hit/entity/layer behavior differs, disable the grid per backend, preserve snapshot/golden/trace and return to legacy; never let grid and legacy both apply the same shield damage."
+}

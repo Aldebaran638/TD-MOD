@@ -3903,7 +3903,7 @@
       "id": "Step 5.5",
       "stage": "Gate 5",
       "title": "消除普通弹丸的 `P×S` 护盾扫描",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 找出 projectile × shield 的全量扫描；[ ] 利用目标目录、空间候选和 shield snapshot 预筛；[ ] 对普通弹丸建立一次命中/护盾候选流程；[ ] 保留特殊穿透/多段伤害的明确例外；[ ] 对比命中、伤害和 Query。 Reason: `P×S` 是当前弹量和护盾数量同时增长时的明显乘法热点。",
       "expected_outcome": "S4/压力场景 Query 和 server p95 显著下降，伤害语义保持一致。",
       "prerequisites": [
@@ -3920,14 +3920,21 @@
       "evidence": {
         "code_or_document": "Content Mod 2/script/weapon/server/behavior/projectile/shield_broadphase_v1.lua; projectile/manager.lua legacy/grid switch; weapon/server/bootstrap.lua and shipMain initialization; docs/shield-broadphase-v1.md; docs/candidates/shield-broadphase-v1.fixture.json; docs/candidates/shield-broadphase-v1-result.json.",
         "automated_tests": "tools/cm2-world-host/run-shield-broadphase-v1.ps1 passed grid mode cellSize=100 with registers=4, updates=1, removes=2, refreshes=4, queries=6, hits=5, staleRejected=1, broadphaseCandidates=14, narrowphaseTests=10, candidateChecks=14, fullRegistryScans=12 legacy baseline and snapshotEntries=1. Tangent, inside-start, high-speed cross-cell, large-radius, owner exclusion, HP=0, movement and removal goldens matched. tools/cm2-world-host/test-shield-broadphase-v1.ps1 passed golden, stale-generation and legacy-scan negatives.",
-        "harness": "Full .\\harness\\check-all.ps1 exited 0: entry closure 251 Lua files/0 issues, Lua 207 files/0 issues, Teardown API 0 issues, XML/weapon/component/ship checks and all self-tests passed. Direct entry/Lua/API checks passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; S4 500-projectile×12-ship shield pressure, real QueryRaycast/damage layer parity, CPU/query p95 and memory/GC reduction cannot be measured. Grid runner is geometry contract evidence only.",
+        "harness": "Full .\\harness\\check-all.ps1 exited 0: entry closure 4 entry points/264 Lua files/0 issues, Lua 237 files/2 engine includes/0 API issues, Teardown API 0 issues, XML/weapon/component/ship checks and all self-tests passed. Direct entry/Lua/API checks also passed.",
+        "runtime_or_performance": "BLOCKED: Teardown.exe is installed and responding as `teardown:57656:53613200`, but the current Windows input desktop is `Screen-saver` and `GetForegroundWindow()` is 0. The exact-target observe/control path cannot safely start, so no fresh CM2_TEST_V1 baseline, S4 scene reload, real 500-projectile x 12-ship shield pressure, QueryRaycast/damage-layer parity, CPU/query p95, memory/GC reduction or screenshot replay was started. Grid runner is geometry contract evidence only. Evidence: docs/evidence/step-5.5-shield-broadphase-v1.json.",
         "rollback_record": "Keep projectileShieldBroadphaseMode=legacy and the manager full Registry scan as default. If shadow hit/entity/layer differs, disable grid per backend, preserve snapshot/golden/trace and return to legacy; never let grid and legacy both apply the same shield damage."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-5.5",
-      "status_reason": "Generation-tagged shield sphere snapshot, uniform-grid segment candidate query, tangent/inside/high-speed/large-radius sphere entry, owner/HP filters, diagnostics and explicit legacy/grid manager switch are implemented and offline-verified. Live S4 hit parity and performance evidence is unavailable without Teardown.exe.",
+      "status_reason": "Generation-tagged shield sphere snapshot, uniform-grid segment candidate query, tangent/inside/high-speed/large-radius sphere entry, owner/HP filters, diagnostics and explicit legacy/grid manager switch are implemented and offline-verified. Implementation is finish. Verification remains pending because the installed Teardown target is outside the interactive input desktop, blocking live S4 evidence. Evidence: docs/evidence/step-5.5-shield-broadphase-v1.json.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "STATIC and FIXTURE implementation evidence is complete and the runner regression passes. The required SCENE/TELEMETRY/VISUAL/LOG evidence was attempted with a fresh read-only environment probe, but the focus guard blocked the fresh frame before seeded replay; rerun the declared live profiles after the Windows input desktop returns to the interactive desktop.",
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The required live verification cannot start because Win32 reports the active input desktop as Screen-saver and foreground handle 0. The control bridge must refuse input or capture until the interactive desktop is restored.",
+        "evidence": "docs/evidence/step-5.5-shield-broadphase-v1.json; Win32 probe 2026-08-18T04:17:26+08:00; target teardown:57656:53613200",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T04:17:26+08:00"
+      },
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "111903c73e697fa18ad38488071f2df18e665ea8df32478d2c9e1a9ebbb6c592",
