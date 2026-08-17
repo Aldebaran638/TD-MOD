@@ -133,7 +133,7 @@
   },
   "hook_contract": {
     "stop_event": "Stop",
-    "rule": "Fail closed on malformed/missing contracts. A finish task requires verified or human_visual_review. An unable task blocks stopping unless it has a complete task-level unable_exception marker approved by unable_exception_policy; historical developer_confirmed_unable entries are audit-only and never allow stopping. Any needs_regression task is the next continuation target.",
+    "rule": "Fail closed on malformed/missing contracts. A finish task requires verified or human_visual_review unless verification is pending with a complete task-level unable_exception marker approved by unable_exception_policy. An unable task also blocks stopping unless it has that complete exception. Historical developer_confirmed_unable entries are audit-only and never allow stopping. Any needs_regression task is the next continuation target.",
     "checker": ".codex/hooks/check-todo-stop.ps1"
   },
   "unable_exception_policy": {
@@ -2904,6 +2904,13 @@
       "status_reason": "World Protocol v1, Owner Lease, capabilities, generation/sequence guards, fixed queue, diagnostics, and negative fixtures are implemented and Harness-clean. Implementation is finish. Verification remains pending because the current Teardown target is enumerable but the active input desktop is Screen-saver and foreground handle is 0; live join/leave/reconnect, timeout, latency, queue-pressure, and no-ship cost evidence must be rerun after unlock. Runtime Host integration remains deferred to Step 4.3. Evidence: docs/evidence/step-4.2-world-protocol-v1.json.",
       "verification_status": "pending",
       "verification_status_reason": "STATIC and FIXTURE implementation evidence is complete. The embedded live contract was attempted with the installed Teardown, but the focus guard blocked the required fresh frame before multiplayer setup; rerun the declared SCENE/REAL_INPUT/TELEMETRY/LOG/MULTIPLAYER profiles after the external focus condition is resolved.",
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The required live verification cannot start because Win32 reports the active input desktop as Screen-saver and foreground handle 0. The control bridge correctly refuses to inject input or capture a fresh frame until the interactive desktop is restored.",
+        "evidence": "docs/evidence/step-4.2-world-protocol-v1.json; TeardownAI run 20260817T174114Z-2f90eeb5",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T01:50:26+08:00"
+      },
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "13ca0d03f85d2696032fa7c543990a62d3e3cac1030c4ad68c38a7d1638e7885",

@@ -63,13 +63,14 @@ try {
         $unableExceptionValid = Test-UnableException $_ $unableExceptionPolicy
         $implementationIncomplete = $implementation -notin $completionStatuses
         $unableWithoutException = $implementation -eq 'unable' -and -not $unableExceptionValid
-        $verificationIncomplete = $implementation -eq 'finish' -and $verification -notin $verificationCompletion
+        $verificationDeferredWithException = $implementation -eq 'finish' -and $verification -eq 'pending' -and $unableExceptionValid
+        $verificationIncomplete = $implementation -eq 'finish' -and $verification -notin $verificationCompletion -and -not $verificationDeferredWithException
         $implementationIncomplete -or $unableWithoutException -or $verificationIncomplete
     })
     if ($unfinished.Count -eq 0) { exit 0 }
 
     $next = $unfinished[0]
-    $reason = "CM2 executable Todo gate: $($unfinished.Count) task(s) still require implementation or verification. An implementation_status=unable task must be changed to finish unless it has a complete task-level unable_exception special marker with policy-approved marker, reason, evidence, reviewer and review time. Historical developer_confirmed_unable entries do not allow stopping. Continue with $($next.id) $($next.title) (implementation=$($next.implementation_status), verification=$($next.verification_status), automation=$($next.verification.automation_level)). Validate its embedded contract, execute the declared profiles/eyes/hands, persist evidence and regression, then update the independent statuses."
+    $reason = "CM2 executable Todo gate: $($unfinished.Count) task(s) still require implementation or verification. An implementation_status=unable task must be changed to finish unless it has a complete task-level unable_exception special marker with policy-approved marker, reason, evidence, reviewer and review time; a finish task with pending verification may defer only with that same complete, reviewed exception. Historical developer_confirmed_unable entries do not allow stopping. Continue with $($next.id) $($next.title) (implementation=$($next.implementation_status), verification=$($next.verification_status), automation=$($next.verification.automation_level)). Validate its embedded contract, execute the declared profiles/eyes/hands, persist evidence and regression, then update the independent statuses."
     Write-Continuation($reason)
     exit 0
 }

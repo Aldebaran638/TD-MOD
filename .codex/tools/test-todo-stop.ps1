@@ -38,6 +38,7 @@ try {
 
     $pending = New-CompletedDocument
     $pending.tasks[0].verification_status = 'pending'
+    $pending.tasks[0].PSObject.Properties.Remove('unable_exception')
     Invoke-HookCase 'pending-verification' $pending $true 'Step 0.1'
 
     $regression = New-CompletedDocument
@@ -47,6 +48,17 @@ try {
     $human = New-CompletedDocument
     $human.tasks[0].verification_status = 'human_visual_review'
     Invoke-HookCase 'human-review-terminal' $human $false ''
+
+    $deferredVerification = New-CompletedDocument
+    $deferredVerification.tasks[0].verification_status = 'pending'
+    $deferredVerification.tasks[0] | Add-Member -NotePropertyName unable_exception -NotePropertyValue ([ordered]@{
+        marker = 'ENVIRONMENT_BLOCKED'
+        reason = 'The live run is blocked by the documented input desktop.'
+        evidence = 'docs/evidence/hook-test-verification-environment.json'
+        reviewed_by = 'human'
+        reviewed_at = '2026-08-15T00:00:00+08:00'
+    }) -Force
+    Invoke-HookCase 'valid-pending-verification-exception' $deferredVerification $false ''
 
     $unable = New-CompletedDocument
     $unable.tasks[0].implementation_status = 'unable'
@@ -93,7 +105,7 @@ try {
     $badOutput = (& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $hookPath -TaskPath $badPath 2>&1 | Out-String).Trim() | ConvertFrom-Json
     Assert-Equal 'malformed decision' $badOutput.decision 'block'
 
-    Write-Output 'todo-stop-hook-tests: PASS (10 cases)'
+    Write-Output 'todo-stop-hook-tests: PASS (11 cases)'
 }
 finally {
     if (Test-Path -LiteralPath $tempRoot) { Remove-Item -LiteralPath $tempRoot -Recurse -Force }
