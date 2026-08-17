@@ -1,0 +1,141 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 3.3",
+  "result": "PASS",
+  "recorded_at": "2026-08-17T13:45:00+08:00",
+  "verification_contract_fingerprint": "5215d458b1cd922fc9690c5af04c5a15b933ce837e5c2ca34d7b2386c38aac9a",
+  "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_TEST_SETUP"],
+  "behavior_under_test": "Vehicle, Mount, Component and AI Interceptor definitions share one versioned source/compiler/catalog lifecycle while legacy runtime authority remains protected.",
+  "static": {
+    "result": "PASS",
+    "todo_contract_validation": "PASS: validate_todo_plan.py reported 80 executable Step contracts; contract fingerprint unchanged.",
+    "catalog": {
+      "vehicles": 5,
+      "root_parts": 5,
+      "mounts": 32,
+      "components": 26,
+      "interceptors": 3,
+      "target_filters": 2,
+      "candidate_sha256": "c9ac30aefa68a83b1f24acc6537e52b7b4d82ffcb06802dceafe17c4f37d4d29",
+      "ownership": "legacy-active / candidate-v1 shadow",
+      "promotion_allowed": false
+    },
+    "checks": [
+      "harness/check-vehicle-component-catalog.ps1: PASS",
+      "harness/test-check-vehicle-component-catalog.ps1: PASS",
+      "harness/test-semantic-snapshot.ps1: PASS",
+      "harness/test-vertical-slices.ps1: PASS",
+      "harness/test-catalog-authority-v1.ps1: PASS"
+    ],
+    "source_hashes": {
+      "docs/generated/cm2-vehicle-definitions-v1.json": "F5673F61DE9CA3B842A6FD4CD76C6BAE4C9C6F3726B9B0BCC85940823B6A9069",
+      "docs/generated/cm2-vehicle-catalog-v1.lua": "C9AC30AEFA68A83B1F24ACC6537E52B7B4D82FFCB06802DCEAFE17C4F37D4D29",
+      "docs/generated/cm2-vehicle-catalog-v1.sha256": "861960008AE62760936CDF4AB7379E324C88602DEF876493E99AB9A8D3B0FFC0"
+    }
+  },
+  "fixture": {
+    "result": "PASS",
+    "runner": "tools/cm2-world-host/test-interceptor-runtime-v1.ps1",
+    "assertions": [
+      "accepts target/impact/owner/reload synthetic fixture",
+      "rejects stale registration that changes lifecycle evidence",
+      "rejects fixture that violates fixed think budget"
+    ],
+    "runtime_boundary": "Offline fixture validates lifecycle and budgets; it does not claim live physics, engine handles or frame-time evidence."
+  },
+  "runtime": {
+    "result": "PASS",
+    "target_id": "teardown:58912:39783188",
+    "pid": 58912,
+    "status": "running/responding",
+    "reload": {
+      "mode": "REOPEN_LEVEL_XML + F4_TO_F5",
+      "xml_revision": "vehicle-component-catalog-xml-v1",
+      "session_changed": true,
+      "initial_session": "0-d347a68f",
+      "fresh_session": "0-e071c0e3"
+    },
+    "telemetry": {
+      "run_id": "20260817T014329Z-c1d4095e",
+      "session": "0-b95c72b8",
+      "latest_seq": 0,
+      "next_after_seq": 0,
+      "truncated": false,
+      "event_count": 0,
+      "scenario": {
+        "id": "vehicle_component_catalog_v1",
+        "xml_revision": "vehicle-component-catalog-xml-v1",
+        "lua_revision": "scenario-controller-v2",
+        "ready": true
+      },
+      "registered_count": 5,
+      "registered_types": [
+        "titan",
+        "enigmaticCruiser",
+        "advancedStrikeCraft",
+        "advancedSwarmerMissile",
+        "devastatorTorpedo"
+      ],
+      "ships": [
+        {"body_id": 7, "ship_type": "titan", "interceptor_class": "", "registered": true, "destroyed": false, "hp": {"shield": 22522.5, "armor": 38025, "body": 40000, "max_shield": 22522.5, "max_armor": 38025, "max_body": 40000}, "position": [0, 59.460148, 0], "linear_velocity": [0, -0.141739, 0]},
+        {"body_id": 14, "ship_type": "enigmaticCruiser", "interceptor_class": "", "registered": true, "destroyed": false, "hp": {"shield": 11700, "armor": 11700, "body": 10000, "max_shield": 11700, "max_armor": 11700, "max_body": 10000}, "position": [-0.099998, 60.150135, -24.799999], "linear_velocity": [0, -0.143842, 0]},
+        {"body_id": 39, "ship_type": "advancedStrikeCraft", "interceptor_class": "strike_craft", "registered": true, "destroyed": false, "hp": {"shield": 25, "armor": 0, "body": 12, "max_shield": 25, "max_armor": 0, "max_body": 12}, "position": [-14, 60, -20], "linear_velocity": [0, 0, 0]},
+        {"body_id": 46, "ship_type": "advancedSwarmerMissile", "interceptor_class": "missile", "registered": true, "destroyed": false, "hp": {"shield": 0, "armor": 15, "body": 30, "max_shield": 0, "max_armor": 15, "max_body": 30}, "position": [-5, 60, -20], "linear_velocity": [0, 0, 0]},
+        {"body_id": 50, "ship_type": "devastatorTorpedo", "interceptor_class": "torpedo", "registered": true, "destroyed": false, "hp": {"shield": 0, "armor": 10, "body": 10, "max_shield": 0, "max_armor": 10, "max_body": 10}, "position": [5, 60, -20], "linear_velocity": [0, 0, 0]}
+      ],
+      "coordinate_frame": "parent-local; +X right, +Y up, -Z forward; meter",
+      "component_application": "production ship bootstrap applied default component profile before snapshot",
+      "interceptor_budget": {"max_per_owner": 4, "max_global": 24, "think_hz": 5, "update_hz": 30, "max_think_per_tick": 4, "max_update_per_tick": 24}
+    },
+    "fresh_session_cleanup_regression": {
+      "run_id": "20260817T014039Z-042684f6",
+      "initial_session": "0-d347a68f",
+      "fresh_session": "0-e071c0e3",
+      "session_changed": true,
+      "fresh_registered_count": 5,
+      "fresh_event_count": 0,
+      "held_inputs": {"keys": [], "buttons": []}
+    },
+    "screenshot": {
+      "run_id": "20260817T014329Z-c1d4095e",
+      "frame_id": "f000001-425c2838",
+      "path": "C:\\Users\\XKWL\\AppData\\Local\\TeardownAI\\runs\\20260817T014329Z-c1d4095e\\frame_f000001-425c2838_pid-58912.png",
+      "mean_luma": 23.8462,
+      "variance": 951.2657,
+      "assertion": "non-black running scene with CM2 vehicle catalog HUD"
+    }
+  },
+  "log": {
+    "result": "PASS_WITH_EXTERNAL_NOISE_ATTRIBUTED",
+    "incremental_read": {
+      "run_id": "20260817T014450Z-6b38c984",
+      "cursor": 11715975,
+      "next_cursor": 11724746,
+      "new_errors": 2,
+      "new_warnings": 6,
+      "in_scope_errors": 0,
+      "in_scope_warnings": 0,
+      "external_source": "D:/SteamLibrary/steamapps/workshop/content/1167630/3148138736/TABS/",
+      "external_errors": 2,
+      "external_warnings": 6
+    },
+    "scope": "All new log noise was attributed to the external TABS Workshop Mod. CM2 scenario reloads and controller produced no new CM2 Lua, engine, protocol or resource errors/warnings."
+  },
+  "cleanup": {
+    "result": "PASS",
+    "run_id": "20260817T014329Z-c1d4095e",
+    "held_inputs": {"keys": [], "buttons": []},
+    "emergency_release": "executed; no tracked inputs were held",
+    "fresh_session_no_stale_entities": "PASS: fresh session 0-e071c0e3 had 5 current registrations, 0 retained events, and no held inputs"
+  },
+  "regression": {
+    "interceptor_runtime_v1_fixture": "PASS",
+    "semantic_snapshot_109_weapons_5_vehicles": "PASS",
+    "vertical_slices": "PASS",
+    "catalog_authority_shadow_gate": "PASS",
+    "full_harness": "PASS: .\\harness\\check-all.ps1 exited 0 after live evidence/status update"
+  },
+  "scope_boundary": "Static and fixture results remain authoritative for their declared profiles. Live registration, transforms, HP/component application, interceptor classes/budgets, screenshot and CM2 log health are verified by CM2_TEST_V1, screenshot and attributed incremental log evidence."
+}

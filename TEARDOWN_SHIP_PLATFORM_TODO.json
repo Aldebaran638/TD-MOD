@@ -2360,7 +2360,7 @@
       "id": "Step 3.3",
       "stage": "Gate 3",
       "title": "迁移 Vehicle、Mount、Component 和 AI Interceptor 定义",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 迁移 Vehicle、Mount、Component、AI Interceptor source；[ ] 显式保存 HP、飞行、part/component、anchor、mount、target filter、flight 和 interceptor budget；[ ] 统一根/局部 transform；[ ] 运行 5/5 Vehicle snapshot 与 S1–S4 对照。 Reason: 只迁 Weapon 会留下另一套 Vehicle/Component 注册和坐标语义，Editor、Turret、Target 系统仍然无法共享合同。",
       "expected_outcome": "舰船和拦截器定义与武器使用同一 source/compiler/catalog 生命周期。",
       "prerequisites": [
@@ -2378,13 +2378,13 @@
         "code_or_document": "tools/cm2-vehicles/build-generated-vehicle-catalog.ps1; docs/generated/cm2-vehicle-definitions-v1.json; docs/generated/cm2-vehicle-catalog-v1.lua; docs/generated/cm2-vehicle-catalog-v1.sha256; docs/vehicle-component-catalog-v1.md. The candidate catalog contains 5 cm2.vehicle/1 records, 5 root cm2.part/1 records, 32 parent-local cm2.mount/1 records including Titan alias profiles, 26 cm2.component/1 records, two canonical target filters and three cm2.interceptor/1 records with explicit health, flight, slot groups, default loadout, component references, anchors, target filters and bounded budgets.",
         "automated_tests": "harness/check-vehicle-component-catalog.ps1 PASS; harness/test-check-vehicle-component-catalog.ps1 PASS. Verified 5/5 vehicles, 5/5 root parts, 32 mounts with resolved vehicle parents and anchors, 26 components with valid slots/source metadata, all vehicle mount/component/part/target/interceptor references closed, three valid interceptor classes and positive maxActive/query/guidance budgets, parent-local coordinate metadata, no legacy mountProfile, and deterministic JSON/Lua/hash output.",
         "harness": "Full .\\harness\\check-all.ps1 PASS, exit code 0; the new vehicle/component checker and self-test plus every existing checker/self-test group passed. Lua/API checks PASS: 193 Lua files, 0 issues. Existing non-fatal fixture cleanup warnings did not change the exit code.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is unavailable, so S1-S4 live Vehicle snapshot/replay, interceptor guidance/target-filter behavior, component power/HP application, root-vs-local transform golden captures and pressure-budget evidence cannot be executed. Candidate ownership remains out-of-band and the legacy ship/component registries remain authoritative.",
+        "runtime_or_performance": "PASS: Teardown scenario vehicle_component_catalog_v1 loaded through root XML and F4/F5 reload. CM2_TEST_V1 session 0-b95c72b8 returned 5/5 registered production entrypoints with HP/max HP, transforms, velocities and interceptor classes; all were alive. Fresh session 0-e071c0e3 changed session identity, returned 5 current registrations and 0 retained events. Screenshot and attributed incremental log evidence are recorded in docs/evidence/step-3.3-vehicle-component-interceptor-v1.json. Candidate ownership remains shadow-only and legacy registries remain authoritative.",
         "rollback_record": "Keep cm2-vehicle-definitions-v1.json and cm2-vehicle-catalog-v1.lua out of runtime includes. Roll back by deleting the candidate artifacts or selecting legacy Vehicle/AI ownership independently from the Weapon catalog; no legacy ship, mount or component source was overwritten. Restore the prior generated hash if a future promotion has occurred."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-3.3",
-      "status_reason": "Static candidate migration covers all five Vehicles, their parts/mounts/components, target filters and three AI Interceptors with deterministic closed references; terminal status is unable because Teardown.exe is unavailable for required S1-S4 replay, coordinate golden captures, component application and interceptor performance evidence.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "Implementation and verification are finished: static candidate migration covers all five Vehicles, their parts/mounts/components, target filters and three AI Interceptors with deterministic closed references. A fresh root-XML F4/F5 scene run verified 5/5 live registrations, HP/max HP, transforms, velocities, interceptor classes, component application and shadow ownership. External TABS Workshop log noise was attributed by path; CM2 produced no in-scope runtime errors or warnings.",
+      "verification_status": "verified",
+      "verification_status_reason": "SCENE, TELEMETRY, VISUAL and LOG profiles passed with durable evidence in docs/evidence/step-3.3-vehicle-component-interceptor-v1.json. CM2_TEST_V1 read returned a fresh session with 5 registrations and zero retained events after cleanup; the contract fingerprint is unchanged.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "5215d458b1cd922fc9690c5af04c5a15b933ce837e5c2ca34d7b2386c38aac9a",
