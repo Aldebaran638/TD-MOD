@@ -1,0 +1,97 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 5.1",
+  "title": "Dense Entity Store v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "33d0f0b5c884835274f808c4e9322b5861f262fd8b4b42e23f9cc81db017fb25",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "F4_TO_F5_OR_REOPEN_LEVEL_XML",
+    "automation_level": "PARTIAL_AUTO"
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "Fixed-capacity projectile/craft/effect/joint stores with O(1) free-list/swap-remove, body/entity indexes, generation-bearing stale-handle rejection, and diagnostics are implemented and fixture-verified. Live pressure, p95/p99, memory/GC, and leak evidence remains pending because the installed Teardown target is outside the interactive Windows input desktop.",
+    "verification_status_reason": "The focus-safe live probe enumerated the exact Teardown target but refused capture and input while the input desktop was Screen-saver. This record does not claim runtime density or performance behavior.",
+    "implementation_scope": [
+      "Dense stores cover projectile capacity 4, craft capacity 3, effect capacity 3, and joint capacity 2 in the owning fixture.",
+      "Allocation uses free-list slots; removal uses active dense storage and swap-remove semantics.",
+      "bodyId/entity indexes and generation-bearing handles reject stale access and support slot reuse.",
+      "Diagnostics report active/free/capacity, registers/removes/reuses, stale/capacity rejects and dense iterations."
+    ]
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "dense_runner": "PASS: projectile=4/craft=3/effect=3/joint=2 capacities; active+free=capacity after every operation; staleHandleRejected=3; capacityRejected=1; reuses=3; denseIterations=4; bodyId reuse and swap-remove passed.",
+    "dense_self_test": "PASS: baseline accepted; capacity-accounting, unchanged-generation, and fabricated-p99 negative fixtures rejected.",
+    "offline_comparison": {
+      "before_p95_ms": 4.8,
+      "after_p95_ms": 1.4,
+      "before_p99_ms": 7.2,
+      "after_p99_ms": 2.1,
+      "before_memory_bytes": 49152,
+      "after_memory_bytes": 24576,
+      "requires_live_replay": true,
+      "authority": "offline fixture model only"
+    }
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": "20260817T191711Z-db0cab93",
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "foreground_handle": 0,
+      "focused": false,
+      "input_desktop": "Screen-saver",
+      "client": {"left": 800, "top": 450, "width": 1280, "height": 720}
+    },
+    "attempts": [
+      "teardown_instances enumerated the exact target.",
+      "teardown_status confirmed the target was responding and not minimized, with no held inputs.",
+      "teardown_observe(True, exact target_id) returned 'could not restore and focus Teardown'.",
+      "Win32 OpenInputDesktop returned Screen-saver and GetForegroundWindow returned 0.",
+      "No real input, telemetry probe, scene reload, or seeded pressure replay was started after the focus guard failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the contract's live profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely."
+  },
+  "log": {
+    "baseline_cursor": 8486708,
+    "final_cursor": 8486708,
+    "new_bytes": 0,
+    "in_scope_errors": 0,
+    "in_scope_warnings": 0,
+    "continuation": "PASS: incremental log read returned zero new bytes, errors, or warnings. This does not prove runtime dense-store behavior."
+  },
+  "cleanup": {
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully before evidence persistence: entry closure, Lua, Teardown API, XML, weapon, component, ship checks and all self-tests passed."
+  },
+  "evidence_roots": [
+    "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260817T191711Z-db0cab93"
+  ],
+  "rollback": "Keep the legacy Registry index as observation/compatibility backend. If the dense adapter regresses, disable the affected entity-kind store and route registration/removal to the prior Registry API; never allocate both owners."
+}
