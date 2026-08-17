@@ -7,6 +7,7 @@ local adapter = cm2ShipInstanceAdapterV1
 
 adapter.rootKey = "cm2/world-host/v1"
 adapter.heartbeatInterval = 0.5
+adapter.hostWaitTicks = 120
 adapter.state = adapter.state or {
     initialized = false,
     disposed = false,
@@ -22,6 +23,8 @@ adapter.state = adapter.state or {
     presentationBypass = 0,
     registration = nil,
     capabilities = {},
+    hostWaitTicks = 0,
+    reportedMode = "",
 }
 
 local function _safeString(value, fallback)
@@ -98,7 +101,46 @@ local function _publishAnnouncement()
     _writeString(key .. "/mode", state.mode)
     _writeInt(key .. "/generation", state.generation)
     _writeInt(key .. "/heartbeat", state.heartbeat)
-    _writeBool(key .. "/active", state.initialized and not state.disposed)
+    _writeBool(key .. "/active", state.initialized and not state.disposed and state.mode == "content-host")
+end
+
+local function _recordModeTransition(reason)
+    local state = adapter.state
+    if state.reportedMode == state.mode then return end
+    state.reportedMode = state.mode
+    if server ~= nil and server.cm2TelemetryRecord ~= nil then
+        server.cm2TelemetryRecord("world_context_mode", {
+            identity = state.identity,
+            owner_id = state.ownerId,
+            mode = state.mode,
+            generation = state.generation,
+            reason = _safeString(reason, "state-transition"),
+        })
+    end
+end
+
+local function _activateContentHost(hostGeneration)
+    local state = adapter.state
+    state.mode = "content-host"
+    state.generation = math.max(1, math.floor(_safeNumber(hostGeneration, 1)))
+    state.fallbackReason = ""
+    state.registration = nil
+    _publishAnnouncement()
+    _recordModeTransition("content-host-ready")
+end
+
+local function _activateLocalFallback(reason)
+    local state = adapter.state
+    state.mode = "local"
+    state.fallbackReason = _safeString(reason, "content-host-unavailable")
+    if cm2WorldHostV1 ~= nil then
+        cm2WorldHostV1.serverInit("local", "local-host:" .. state.identity)
+        state.generation = cm2WorldHostV1.generation()
+        state.registration = cm2WorldHostV1.registerInstance(state.identity, state.ownerId, state.capabilities)
+        if state.registration == nil then state.fallbackReason = "local-registration-rejected" end
+    end
+    _publishAnnouncement()
+    _recordModeTransition("local-fallback")
 end
 
 function adapter.serverInit(identity, capabilities, ownerId)
@@ -118,25 +160,23 @@ function adapter.serverInit(identity, capabilities, ownerId)
     state.presentationSequence = 0
     state.presentationBypass = 0
     state.registration = nil
+    state.hostWaitTicks = 0
+    state.reportedMode = ""
     local hostReady = _readBool(adapter.rootKey .. "/ready", false)
     local hostMode = _readString(adapter.rootKey .. "/mode", "local")
     local hostGeneration = _readInt(adapter.rootKey .. "/generation", 0)
     if hostReady and hostMode == "content-host" and hostGeneration > 0 then
-        state.mode = "content-host"
-        state.generation = hostGeneration
-        _publishAnnouncement()
+        _activateContentHost(hostGeneration)
     else
-        state.mode = "local"
-        state.generation = math.max(1, hostGeneration)
-        state.fallbackReason = "content-host-unavailable"
-        if cm2WorldHostV1 ~= nil then
-            cm2WorldHostV1.serverInit("local", "local-host:" .. state.identity)
-            state.registration = cm2WorldHostV1.registerInstance(state.identity, state.ownerId, state.capabilities)
-            if state.registration == nil then state.fallbackReason = "local-registration-rejected" end
-        end
+        -- Ship scripts can initialize before the level Content Host. Waiting
+        -- avoids creating a second implicit Host during that startup window.
+        state.mode = "pending"
+        state.generation = math.max(0, hostGeneration)
+        state.fallbackReason = "content-host-pending"
     end
     state.initialized = true
     _publishAnnouncement()
+    _recordModeTransition("server-init")
     return adapter.getReport()
 end
 
@@ -182,25 +222,34 @@ function adapter.serverTick(dt, destroyed)
     if destroyed then adapter.dispose("ship-destroyed"); return false end
     local delta = math.max(0.0, _safeNumber(dt, 0.0))
     state.elapsed = state.elapsed + delta
+    if state.mode == "pending" then
+        local hostReady = _readBool(adapter.rootKey .. "/ready", false)
+        local hostMode = _readString(adapter.rootKey .. "/mode", "local")
+        local hostGeneration = _readInt(adapter.rootKey .. "/generation", 0)
+        if hostReady and hostMode == "content-host" and hostGeneration > 0 then
+            _activateContentHost(hostGeneration)
+        else
+            state.hostWaitTicks = state.hostWaitTicks + 1
+            if state.hostWaitTicks >= adapter.hostWaitTicks then
+                _activateLocalFallback("content-host-timeout")
+            end
+        end
+        return true
+    end
     if state.elapsed < adapter.heartbeatInterval then return true end
     state.elapsed = state.elapsed - adapter.heartbeatInterval
     state.heartbeat = state.heartbeat + 1
     local currentGeneration = _readInt(adapter.rootKey .. "/generation", state.generation)
     local hostReady = _readBool(adapter.rootKey .. "/ready", false)
     if state.mode == "content-host" and (not hostReady or currentGeneration ~= state.generation) then
-        state.mode = "local-fallback"
-        state.fallbackReason = (not hostReady) and "host-missing" or "host-generation-changed"
-        if cm2WorldHostV1 ~= nil then
-            cm2WorldHostV1.serverInit("local", "local-host:" .. state.identity)
-            state.generation = cm2WorldHostV1.generation()
-            state.registration = cm2WorldHostV1.registerInstance(state.identity, state.ownerId, state.capabilities)
-        end
+        _activateLocalFallback((not hostReady) and "host-missing" or "host-generation-changed")
     elseif state.mode == "content-host" then
         _publishAnnouncement()
     elseif cm2WorldHostV1 ~= nil and state.registration ~= nil then
         cm2WorldHostV1.heartbeatInstance(state.identity, state.ownerId, state.generation)
     end
     _publishAnnouncement()
+    _recordModeTransition("server-tick")
     return true
 end
 

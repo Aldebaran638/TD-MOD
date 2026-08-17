@@ -121,6 +121,7 @@ function vehicle.serverInit(identity, definitionId, bodyId, ownerId, capabilitie
     state.adapterReport = adapterReport
     state.mode = _safeString((adapterReport or {}).mode, _safeString(resolvedOptions.mode, "local"))
     state.generation = math.max(1, math.floor(_safeNumber((adapterReport or {}).generation, _safeNumber(resolvedOptions.generation, 1))))
+    state.initialized = true
     _setLifecycle("active")
     return vehicle.snapshot()
 end
