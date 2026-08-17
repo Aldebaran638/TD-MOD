@@ -2668,7 +2668,7 @@
       "id": "Step 3.6",
       "stage": "Gate 3",
       "title": "冻结 Catalog 并移除 Runtime Legacy Definition 权威",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 初始化时加载并冻结 Generated Catalog；[ ] 删除运行中 definition register/override；[ ] 删除已无引用的 profile registry、旧 aliases 和双源副本；[ ] 保留仅有期限的只读迁移工具；[ ] 更新 ADR、目录边界和发布说明。 Reason: 不移除 Legacy 权威，所有后续性能、Editor、SDK 都要面对双源和不可预测覆盖。",
       "expected_outcome": "Definition/Catalog 单一事实来源，旧路径只在明确迁移工具中存在。",
       "prerequisites": [
@@ -2683,16 +2683,16 @@
       ],
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
-        "code_or_document": "Implemented `Content Mod 2/script/data/catalog/catalog_authority_v1.lua` with init-time source selection, immutable lookup, freeze state, post-freeze register/override rejection, counters, and init rollback. Both `shipMain.lua` and `strikeCraftMain.lua` include and initialize it before runtime ticks. Added `docs/catalog-authority-v1.md` and `docs/catalog-legacy-removal-ledger-v1.json`; the ledger records six legacy/profile/import references, current status, rg reference scans, removal gates, and rollback artifacts. The aggregate generated manifest remains explicitly legacy-active/shadow with promotionAllowed=false, so no legacy source was deleted prematurely.",
-        "automated_tests": "`harness/check-catalog-authority-v1.ps1` and `harness/test-catalog-authority-v1.ps1` passed. The self-test covers init freeze, immutable lookup, rejection of registerLegacyDefinition/overrideDefinition after freeze, rollback-at-init, shadow-safe manifest ownership, and required removal-ledger fields. The checker also confirms both runtime entry closures initialize the authority and that the ledger reference scans/rollback fields are complete.",
-        "harness": "Full `.\\harness\\check-all.ps1` passed with exit code 0 after rerun: all product checks and self-tests passed, including Catalog Authority v1. Lua checker: 195 Lua files, 2 engine includes, 0 API issues; Teardown API checker: 0 API issues. A prior run hit an existing charged-weapon fixture cleanup race; the isolated test and subsequent complete run passed without changing Harness code.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed/discoverable, so live proof of zero runtime legacy registration/override calls, immutable generated lookups, S0–S8 behavior, promotion, and performance/soak evidence cannot be collected. Static gates intentionally keep legacy as the default authority and candidate catalog in shadow mode until runtime evidence and two-release removal criteria exist.",
-        "rollback_record": "At context init, call the authority with legacy source or a prior manifest/hash; `rollbackAtInit` preserves the previous generated hash and selects legacy before freeze. Restore the last known-good `cm2-*-definitions-v1.json`/hash sidecars and keep the legacy catalogs plus the read-only compiler/importer. No runtime legacy files were removed, so rollback requires no destructive restoration."
+        "code_or_document": "Implemented `Content Mod 2/script/data/catalog/catalog_authority_v1.lua` with init-only legacy import, candidate projection activation, immutable lookup, freeze state, post-freeze register/override rejection, counters, bootstrap cleanup, and explicit init rollback. Both `shipMain.lua` and `strikeCraftMain.lua` include and initialize it before Runtime ticks. Updated `docs/catalog-authority-v1.md` and `docs/catalog-legacy-removal-ledger-v1.json`; the ledger records bounded init-import, migration, presentation-adapter, and offline-compiler retention with reference scans and rollback artifacts.",
+        "automated_tests": "`harness/check-catalog-authority-v1.ps1` and `harness/test-catalog-authority-v1.ps1` passed. The self-test covers init freeze, immutable projection lookup, rejection of registerLegacyDefinition/overrideDefinition after freeze, rollback-at-init, promoted manifest ownership, and required removal-ledger fields. The checker also confirms both runtime entry closures initialize the authority and that the ledger reference scans/rollback fields are complete.",
+        "harness": "Full `.\\harness\\check-all.ps1` passed with exit code 0, including all product checks and self-tests. Current Lua checker: 237 Lua files, 2 engine includes, 0 API issues; Teardown API checker: 0 API issues. Pre-commit repeated the same complete Harness successfully without changing Harness code.",
+        "runtime_or_performance": "PASS: Teardown target `teardown:57656:53613200` accepted File/Open of `_ai_scenario_vehicle_component_catalog.xml`, F5 produced fresh sessions `0-85ff0bfe` and `0-98a6314c`, telemetry showed candidate-v1 frozen authority, 114/114 parity, 0 Runtime register/override calls, five registered production entries, and stable visual/log evidence.",
+        "rollback_record": "At a new context, request `legacy` or `rollback` explicitly, or call `rollbackAtInit` before initialization. Restore the last known-good generated vehicle/weapon manifest and recorded hash sidecars; do not restore Runtime registration or override paths."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-3.6",
-      "status_reason": "Catalog Authority v1 and the legacy-removal gate are implemented and statically verified, but the acceptance requirement to remove runtime legacy authority and prove live S0–S8/promotion/performance behavior cannot be met without Teardown.exe. Marked unable under the hook contract; legacy remains an explicit, reversible default.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "Catalog Authority v1 is implemented, generated-v1 is the sole Runtime authority, and the live catalog parity scene proves freeze, immutable projection use, zero Runtime register/override calls, session continuity, cleanup, and Runtime health.",
+      "verification_status": "verified",
+      "verification_status_reason": "PASS: Step 3.6 contract evidence is persisted at docs/evidence/step-3.6-catalog-legacy-removal-v1.json after complete static, fixture, live telemetry, screenshot, log, cleanup, regression, and Harness checks.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "3258015d3dd8d8e7dc43495ed31381573742ccbcd592c118c6e3af7e28aed225",

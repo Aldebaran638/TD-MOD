@@ -1,23 +1,30 @@
-# Catalog Authority v1 and Legacy Removal Gate
+# Catalog Authority v1
 
 `Content Mod 2/script/data/catalog/catalog_authority_v1.lua` is the init-time
-authority boundary for the Gate 3 catalog cutover. It freezes the selected
-source, exposes immutable lookup, counts/rejects legacy definition registration
-and override attempts after freeze, and provides a new-context rollback path.
-The two ship entry points initialize it before Runtime ticks.
+authority boundary for the Gate 3 catalog cutover. Both production entry
+points include and initialize it before Runtime ticks.
 
-The current generated manifest is `candidate-active`, `promoted`, and
-`promotionAllowed=true`. Live Teardown evidence proves the generated Runtime
-projection and its semantic parity, while the legacy schemas and registries
-remain available as an explicit init-time rollback source. Every proposed
-removal is recorded in `docs/catalog-legacy-removal-ledger-v1.json` with an
-actual reference-scan command, current status, removal gate and rollback
-version/path. The offline compiler remains retained because it is required to
-reproduce the previous valid catalog.
+The boundary has four states:
 
-The promotion evidence is recorded in
-`docs/evidence/step-3.5-generated-catalog-v1.json`: generated manifest/hash
-pass, live parity, Runtime projection load, telemetry continuity and cleanup.
-Deletion of `weaponDefine*`, `shipDefinitionRegister`, `shipComponentDefine`
-or profile registries remains a separate Gate 3.6 decision and is blocked until
-its removal evidence and rollback criteria are satisfied.
+- Legacy definition files may import into private bootstrap buckets only while
+  the entry closure is being assembled.
+- The authority validates the generated candidate manifest, builds one frozen
+  projection, and publishes the vehicle, weapon, and component maps used by
+  Runtime.
+- Bootstrap buckets are cleared before the authority freezes. Runtime lookup
+  never reads the legacy registries.
+- `registerLegacyDefinition` and `overrideDefinition` are rejected after the
+  freeze and counted. A new context may request `legacy` or `rollback` only as
+  an explicit rollback source; there is no implicit legacy fallback.
+
+The generated manifest is `candidate-active`, `promoted`, and
+`promotionAllowed=true`. The live Step 3.6 evidence records two fresh editor
+reloads, candidate authority telemetry, 114/114 parity, five registered
+production entries, zero Runtime register/override calls, zero in-scope log
+errors or warnings, and cleanup back to the editor.
+
+Legacy source files are not silently deleted. The removal ledger records each
+remaining init-import adapter, migration alias, presentation adapter, and
+offline compiler with its reference scan, owner boundary, removal gate, and
+rollback artifact. This keeps rollback reproducible without restoring a second
+Runtime authority.
