@@ -1,0 +1,115 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 11.1",
+  "title": "End-to-end Golden Packages",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "a76f043e244304e1b25dd8deeb431d3889188e2e8065ac504a8b55bbcbefd614",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "CONSUMER_MOD"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "RESTART_TEARDOWN_AND_MOD_SESSION",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": []
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The eight-package Golden collection, six negative contracts, stage declarations, source-integrity check and deterministic report are implemented and headlessly verified.",
+    "verification_status_reason": "STATIC and FIXTURE evidence passed. Live package loading, migration, Preview, Runtime, S1/S5, screenshot, telemetry and log evidence is blocked because the responding Teardown target is not the foreground window."
+  },
+  "static_and_fixture": {
+    "policy": "docs/golden-packages-v1.json",
+    "fixture": "docs/candidates/golden-packages-v1.fixture.json",
+    "result": "docs/candidates/golden-packages-v1.result.json",
+    "checker": "PASS: tools/cm2-golden/check-golden-packages-v1.ps1",
+    "self_test": "PASS: tools/cm2-golden/test-golden-packages-v1.ps1",
+    "golden_version": "2026.08.11",
+    "package_kinds": ["builtin-content", "hello-ship", "previous-schema", "dependency-dag", "expert-behavior", "ai-approved-weapon", "ai-approved-effect", "ai-approved-ship"],
+    "negative_cases": ["missing-dependency", "dependency-cycle", "duplicate-id", "path-traversal", "asset-hash-mismatch", "budget-overflow"],
+    "stages": ["build", "migrate", "preview", "package", "runtime"],
+    "headless_pass": true,
+    "package_suite_results": "8/8 pass",
+    "negative_regression_results": "6/6 stable and covered",
+    "runtime_stage": "not-run",
+    "repository_integrity": {"core_diff": 0, "source_of_truth_preserved": true},
+    "determinism": "PASS: repeated report determinismHash is identical.",
+    "result": "unable"
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T11:27:10.6956598Z",
+      "input_desktop": "Default",
+      "foreground_handle": "0x2CA0D8C",
+      "foreground_pid": 53556,
+      "foreground_process": "Code",
+      "foreground_target_match": false,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Live installation and load of all Golden package kinds",
+      "Migration/Preview/package Runtime smoke",
+      "S1/S5 performance and presentation evidence",
+      "Fresh CM2_TEST_V1 telemetry session",
+      "Timestamped screenshots, replays and incremental Runtime log"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop reported Default, but GetForegroundWindow reported Code PID 53556 / handle 0x2CA0D8C, not Teardown PID 57656 / handle 0x3321290.",
+      "The target-specific focus guard was honored; no Golden package reload, input, telemetry probe, screenshot or live replay was started."
+    ],
+    "safety_decision": "Headless Golden output cannot substitute for live package/runtime evidence; retain the previous Golden manifest and keep release promotion no-go."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh target-bound frame was available to open CM2_TEST_V1 safely."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The target-specific focus guard rejected live observation before the Golden package scene could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live Golden package session was started, so no post-baseline incremental log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "temporary_fixture_outputs_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true,
+    "note": "The Golden runner composes disposable suites, preserves Content/Global source-of-truth and retains rollback instructions; no live entities or child processes were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "PASS: .\\harness\\check-all.ps1 exited 0 after the Golden runner, fixture and Step 11.1 evidence update."
+  },
+  "evidence_roots": [
+    "docs/golden-packages-v1.json",
+    "docs/golden-packages-v1.md",
+    "docs/candidates/golden-packages-v1.fixture.json",
+    "docs/candidates/golden-packages-v1.result.json",
+    "tools/cm2-golden/check-golden-packages-v1.ps1",
+    "tools/cm2-golden/run-golden-packages-v1.ps1",
+    "tools/cm2-golden/test-golden-packages-v1.ps1",
+    "tools/cm2-expert/test-expert-behavior-policy-v1.ps1"
+  ],
+  "rollback": "Restore the previous Golden manifest/package set, disable promotion, retain failing fixtures, and never delete the last valid artifact."
+}
