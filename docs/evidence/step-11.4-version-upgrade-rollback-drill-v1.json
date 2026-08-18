@@ -1,0 +1,115 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 11.4",
+  "title": "Version Upgrade and Rollback Drill",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "090fa16e36abd0e06a521ab0e6aaa7f528320554caa069d4589122f89d97f9dc",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG", "CONSUMER_MOD"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "RESTART_TEARDOWN_AND_MOD_SESSION",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": []
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The isolated v1-to-v2 migration and exact rollback drill is implemented, idempotent and source-preserving.",
+    "verification_status_reason": "Headless migration evidence passes, but live v1 boot, v2 boot, Runtime rollback and runtime compatibility traces were not available in the current Teardown session.",
+    "gate_decision": "unable"
+  },
+  "static_and_fixture": {
+    "policy": "docs/version-upgrade-rollback-drill-v1.json",
+    "fixture": "docs/candidates/version-upgrade-rollback-drill-v1.fixture.json",
+    "result": "docs/candidates/version-upgrade-rollback-drill-v1.result.json",
+    "checker": "PASS: tools/cm2-upgrade/check-version-upgrade-rollback-drill-v1.ps1",
+    "self_test": "PASS: tools/cm2-upgrade/test-version-upgrade-rollback-drill-v1.ps1",
+    "phases": {"publish_v1": "pass", "migrate_v2": "pass", "semantic_golden": "pass", "rollback": "pass", "compatibility": "pass"},
+    "packages_migrated": 3,
+    "saves_migrated": 2,
+    "semantic_golden": "PASS: all three before/after semantic hashes are identical.",
+    "idempotent_second_pass": true,
+    "exact_rollback": true,
+    "future_required_policy": "PASS: old Core rejects cm2.package/2 with future-required.",
+    "failure_policies": "PASS: future-required, missing-required, source-hash-mismatch and partial-publish are declared and verified.",
+    "source_preserved": true,
+    "determinism": "PASS: repeated determinismHash is identical.",
+    "result": "unable"
+  },
+  "runtime": {
+    "status": "BLOCKED_AFTER_PARTIAL_LIVE",
+    "target": "teardown:80804:215552288",
+    "observed": {
+      "formal_teardown_present": true,
+      "formal_teardown_responding": true,
+      "host_client_targets_observed": ["teardown:79492:80747186", "teardown:79784:423104396"],
+      "host_client_children_remaining_after_cleanup": false,
+      "mcp_runs": ["20260818T152606Z-bd61e4f6", "20260818T152911Z-1cdbf60f", "20260818T153153Z-1f759bb6", "20260818T153220Z-ef7b6345", "20260818T153603Z-5b54f787"]
+    },
+    "blocked_claims": [
+      "Live v1 boot and package/save loading",
+      "Live v2 schema/core boot and migration",
+      "Runtime/package/generated-artifact rollback",
+      "Runtime compatibility and error traces",
+      "Live upgrade screenshots and post-rollback telemetry"
+    ],
+    "attempts": [
+      "The isolated runner wrote v1, v2 and backup manifests only under a temporary directory and preserved repository source/generated artifacts.",
+      "A real Host/Client session was observed with target-bound frames and CM2_TEST_V1 session 0-cebe9d7d, but scenario.id/xml_revision/lua_revision were empty and ready=false; this was the formal Content Mod scene, not a revisioned v1/v2 upgrade scenario.",
+      "The formal Teardown target could not be restored/focused by the Win32 guard, so no safe level/package reload or live upgrade trigger was started.",
+      "Host and Client1 were exited through the real multiplayer pause UI; final enumeration showed no teardown_modtest.exe child remaining."
+    ],
+    "safety_decision": "Headless writes are isolated and rollback-safe; do not claim a real Runtime upgrade or rollback until a focusable revisioned v1/v2 package scenario is available."
+  },
+  "telemetry": {
+    "status": "PARTIAL_LIVE_BLOCKED",
+    "session": "0-cebe9d7d",
+    "scenario": {"id": "", "xml_revision": "", "lua_revision": "", "ready": false},
+    "cursor_continuation": "PASS for the attempted bootstrap read: contiguous seq 1..4, truncated=false, no duplicate.",
+    "upgrade_events": "NOT RUN: no live v1/v2 package load or migration event boundary exists in this session."
+  },
+  "visual": {
+    "status": "BLOCKED_EXPECTED_UPGRADE_SCENARIO_NOT_LOADED",
+    "screenshots": [
+      {"target": "teardown:79492:80747186", "run": "20260818T152911Z-1cdbf60f", "path": "%LOCALAPPDATA%/TeardownAI/runs/20260818T152911Z-1cdbf60f/frame_f000002-f5902243_pid-79492.png", "fact": "Non-black formal multiplayer scene capture; no v1/v2 upgrade state visible."},
+      {"target": "teardown:79784:423104396", "run": "20260818T152911Z-1cdbf60f", "path": "%LOCALAPPDATA%/TeardownAI/runs/20260818T152911Z-1cdbf60f/frame_f000001-a8c5bda6_pid-79784.png", "fact": "Target-bound Client1 capture; no v1/v2 upgrade state visible."}
+    ],
+    "reason": "Screenshots are retained as blocked-attempt evidence only."
+  },
+  "log": {
+    "status": "CLEAN_FOR_ATTEMPT_BUT_UPGRADE_NOT_RUN",
+    "baseline_cursor": 0,
+    "final_cursor": 0,
+    "new_error_count": 0,
+    "new_warning_count": 0,
+    "reason": "The attempted live session added no log bytes, errors or warnings; this does not prove Runtime compatibility."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "temporary_fixture_outputs_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true,
+    "test_children_remaining": 0,
+    "next_session_stale_entity_check": "NOT RUN: formal Teardown could not be focused for a post-rollback fresh session."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "PASS: complete Harness exited 0 after the Step 11.3 evidence update and Step 11.4 runner regression."
+  },
+  "evidence_roots": [
+    "docs/version-upgrade-rollback-drill-v1.json",
+    "docs/version-upgrade-rollback-drill-v1.md",
+    "docs/candidates/version-upgrade-rollback-drill-v1.fixture.json",
+    "docs/candidates/version-upgrade-rollback-drill-v1.result.json",
+    "tools/cm2-upgrade/check-version-upgrade-rollback-drill-v1.ps1",
+    "tools/cm2-upgrade/run-version-upgrade-rollback-drill-v1.ps1",
+    "tools/cm2-upgrade/test-version-upgrade-rollback-drill-v1.ps1",
+    "%LOCALAPPDATA%/TeardownAI/runs/20260818T152911Z-1cdbf60f",
+    "%LOCALAPPDATA%/TeardownAI/runs/20260818T153603Z-5b54f787"
+  ],
+  "rollback": "Restore the v1 Core/Schema/SDK, three extension packages, saves and generated artifacts from the immutable backup; never overwrite the backup."
+}

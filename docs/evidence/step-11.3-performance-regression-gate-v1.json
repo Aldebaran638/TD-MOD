@@ -1,0 +1,139 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 11.3",
+  "title": "Continuous Performance Regression Gate",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "02594b7113297fdaaf167eabbb262f85afeb79bab88cc2443e198c6fea071617",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG", "MULTIPLAYER", "CONSUMER_MOD"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "RESTART_TEARDOWN_AND_MOD_SESSION",
+    "automation_level": "PARTIAL_AUTO",
+    "automation_gaps": ["Authoritative frame-time, GC, query and allocation telemetry must be baselined before the performance claim is fully automatic.", "Client foreground input, screenshot and per-client telemetry are not reliable until Host/Client targets are available and focused."]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The versioned headless performance gate, seven metrics, S0-S8 suites, variance policy, ADR and replay contract are implemented and pass.",
+    "verification_status_reason": "Live targets were discovered and partially observed, but the required performance evidence remains blocked: the formal Host/Client session exposed empty scenario id/XML/Lua revisions with ready=false, no authoritative frame-time/GC/query/allocation counters, no pressure/Soak or before/after replay path, and the original Teardown focus guard rejected the reload path.",
+    "gate_decision": "unable"
+  },
+  "static_and_fixture": {
+    "policy": "docs/performance-regression-gate-v1.json",
+    "fixture": "docs/candidates/performance-regression-gate-v1.fixture.json",
+    "result": "docs/candidates/performance-regression-gate-v1.result.json",
+    "checker": "PASS: tools/cm2-perf/check-performance-regression-gate-v1.ps1",
+    "self_test": "PASS: tools/cm2-perf/test-performance-regression-gate-v1.ps1",
+    "metrics": "7/7 pass",
+    "slices": "9/9 S0-S8 pass",
+    "thresholds": {"p95_max_regression": 0.05, "p99_max_regression": 0.10, "max_relative_stddev": 0.20},
+    "all_samples_evaluated": true,
+    "best_trial_cherry_picking": false,
+    "nightly_pressure_and_soak": "declared-live-required",
+    "adr": "docs/adr/performance-budget-v1.md",
+    "before_replay": "docs/replays/performance-gate-v1-before.replay.json",
+    "after_replay": "docs/replays/performance-gate-v1-after.replay.json",
+    "determinism": "PASS: repeated determinismHash is identical.",
+    "result": "unable"
+  },
+  "runtime": {
+    "status": "BLOCKED_AFTER_PARTIAL_LIVE",
+    "target": {
+      "host": "teardown:79492:80747186",
+      "client": "teardown:79784:423104396",
+      "formal_single_process": "teardown:80804:215552288"
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T15:36:03.0000000Z",
+      "teardown_command_found": true,
+      "teardown_process_found": true,
+      "teardown_modtest_process_found": true,
+      "teardown_modtest_process_remaining_after_cleanup": false,
+      "mcp_runs": [
+        "20260818T152606Z-bd61e4f6",
+        "20260818T152911Z-1cdbf60f",
+        "20260818T153034Z-e9472857",
+        "20260818T153153Z-1f759bb6",
+        "20260818T153220Z-ef7b6345",
+        "20260818T153603Z-5b54f787"
+      ]
+    },
+    "blocked_claims": [
+      "Live S0-S8 timing and performance telemetry",
+      "Reference hardware identity and allocator/GC measurements",
+      "Nightly pressure and lifecycle Soak runs",
+      "Before/after replay comparison",
+      "Host/Client telemetry and Runtime log health",
+      "Timestamped screenshots for the required scenario",
+      "Formal scenario reload and revision identity",
+      "Authoritative frame-time, GC, query and allocation telemetry"
+    ],
+    "attempts": [
+      "Exact Host and Client targets were discovered; Host fresh frame f000001-ae4a5dff and Client fresh frame f000001-a8c5bda6 were captured in target-bound MCP runs.",
+      "Host and Client CM2_TEST_V1 probes/read operations succeeded in session 0-cebe9d7d. The Host snapshot reported world-host ready=true, generation=1, register_count=3, fallback_count=0 and rejected_count=0; the Client response exposed client_latest_seq=0 and did not provide independent Client performance telemetry.",
+      "The live session exposed scenario.id='', xml_revision='', lua_revision='' and ready=false, so it was the formal Content Mod scene rather than a revisioned release/s0_s8_golden performance scenario. No timing, GC, query, allocation, pressure/Soak or replay claim was made.",
+      "A fresh Host frame opened the real multiplayer pause page; a target-bound click on the real 退出 control ended Host and Client1. Final enumeration showed no teardown_modtest.exe child remaining.",
+      "The remaining formal Teardown target teardown:80804:215552288 was visible and responding, but restore/focus was rejected by the MCP Win32 focus guard (run 20260818T153220Z-ef7b6345), so no scenario XML reload could be safely started."
+    ],
+    "safety_decision": "Fixture metrics are not real FPS, memory or network measurements; keep the performance gate no-go until live evidence is recorded."
+  },
+  "telemetry": {
+    "status": "PARTIAL_LIVE_BLOCKED",
+    "session": "0-cebe9d7d",
+    "target": "teardown:79492:80747186",
+    "latest_seq": 4,
+    "cursor_continuation": "PASS: read from after_seq=0 returned contiguous seq 1..4 with truncated=false and no duplicate; this is session/bootstrap evidence only.",
+    "scenario": {"id": "", "xml_revision": "", "lua_revision": "", "ready": false},
+    "host_client": {"host_player_id": 1, "client_player_id": 2, "client_latest_seq": 0, "generation": 1, "register_count": 3, "fallback_count": 0, "rejected_count": 0},
+    "performance_counters": "NOT EXPOSED by the live CM2_TEST_V1 snapshot; no frame-time/GC/query/allocation values are claimed."
+  },
+  "visual": {
+    "status": "BLOCKED_EXPECTED_SCENARIO_NOT_LOADED",
+    "screenshots": [
+      {"target": "teardown:79492:80747186", "run": "20260818T152911Z-1cdbf60f", "path": "%LOCALAPPDATA%/TeardownAI/runs/20260818T152911Z-1cdbf60f/frame_f000002-f5902243_pid-79492.png", "fact": "Host client-area capture is non-black but shows the formal scene camera clipped into ship geometry."},
+      {"target": "teardown:79784:423104396", "run": "20260818T152911Z-1cdbf60f", "path": "%LOCALAPPDATA%/TeardownAI/runs/20260818T152911Z-1cdbf60f/frame_f000001-a8c5bda6_pid-79784.png", "fact": "Client1 client-area capture is target-bound and non-black but does not show the required revisioned performance scenario."}
+    ],
+    "reason": "Screenshots prove only the visible formal multiplayer scene and are retained as blocked-attempt evidence, not as performance proof."
+  },
+  "log": {
+    "status": "CLEAN_FOR_ATTEMPT_BUT_PERFORMANCE_NOT_RUN",
+    "baseline_cursor": 0,
+    "final_cursor": 0,
+    "new_error_count": 0,
+    "new_warning_count": 0,
+    "reason": "The attempted live session produced no incremental log bytes, errors or warnings; this cannot substitute for a performance-session log."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_observed": 2,
+    "test_children_remaining": 0,
+    "next_session_stale_entity_check": "NOT RUN: formal Teardown could not be focused for a post-cleanup fresh scenario session.",
+    "temporary_fixture_outputs_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "PASS: .\\harness\\check-all.ps1 exited 0 after the tracked performance runner, runtime disclosure, Todo and evidence update."
+  },
+  "evidence_roots": [
+    "docs/performance-regression-gate-v1.json",
+    "docs/performance-regression-gate-v1.md",
+    "docs/candidates/performance-regression-gate-v1.fixture.json",
+    "docs/candidates/performance-regression-gate-v1.result.json",
+    "docs/adr/performance-budget-v1.md",
+    "tools/cm2-perf/check-performance-regression-gate-v1.ps1",
+    "tools/cm2-perf/run-performance-regression-gate-v1.ps1",
+    "tools/cm2-perf/test-performance-regression-gate-v1.ps1",
+    "%LOCALAPPDATA%/TeardownAI/runs/20260818T152606Z-bd61e4f6",
+    "%LOCALAPPDATA%/TeardownAI/runs/20260818T152911Z-1cdbf60f",
+    "%LOCALAPPDATA%/TeardownAI/runs/20260818T153153Z-1f759bb6",
+    "%LOCALAPPDATA%/TeardownAI/runs/20260818T153603Z-5b54f787"
+  ],
+  "rollback": "Restore the previous performance baseline and budget, retain failing reports/replays, revert unapproved budget changes and rerun live S0-S8 pressure/Soak before promotion."
+}
