@@ -1,0 +1,99 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 6.5",
+  "title": "Minimal Multi-Body/Joint Fixture v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "7a817933faeb9147da93db87544d0c4ef2b638eeb26108a6927a552cce7ab2bf",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_F4_TO_F5",
+    "automation_level": "AUTO_WITH_VISUAL_REVIEW",
+    "automation_gaps": [
+      "AI owns objective visibility, count, clipping, alignment, and budget checks; subjective visual quality remains a human review."
+    ]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The standalone two-body/one-joint fixture, parent/child disposal, snapshots, generation guard and explicit formal-turret rejection are implemented and offline-verified. Live Joint evidence and human visual review remain blocked by target focus and tool availability.",
+    "verification_status_reason": "The responding Teardown target is not the foreground window, and this session has no target-scoped observe/telemetry/control bridge. No live frame, CM2_TEST_V1 session or human visual review was started."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts; Step 6.5 fingerprint matched 7a817933faeb9147da93db87544d0c4ef2b638eeb26108a6927a552cce7ab2bf.",
+    "fixture": "docs/candidates/multi-body-joint-fixture-v1.fixture.json",
+    "runner": "PASS: bodyCount=2, jointCount=1, ticks=1, spawns=1, disposes=2 (child then parent), idempotentDisposes=1, networkSnapshots=2, jointActiveAtEnd=false, formalTurretEnabled=false, staleRejects=1.",
+    "negative_cases": "PASS: missing-parent and inverted-joint-limit mutations were rejected.",
+    "runtime_model_boundary": "The offline fixture proves DTO graph/lifecycle policy, joint limit validation, snapshots, child/parent cleanup, idempotence and formal-turret rejection only. It does not prove Teardown Joint solver behavior, engine resource cleanup timing, S7 runtime serialization, screenshots, visual quality or runtime log health."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T05:08:59.1739770Z",
+      "input_desktop": "Default",
+      "foreground_handle": "0x2CA0D8C",
+      "foreground_pid": 53556,
+      "foreground_target_match": false,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Live Joint solver, parent-destruction timing and engine resource cleanup",
+      "S7 protocol runtime serialization and authoritative lifecycle events",
+      "Timestamped fixture screenshot and required human visual review",
+      "Incremental runtime log health"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop reported Default, but GetForegroundWindow reported PID 53556 / handle 0x2CA0D8C, not Teardown PID 57656 / handle 0x3321290.",
+      "No target-scoped observe/control/telemetry operation is available in this session; no reload, input, telemetry probe, live fixture spawn or screenshot was started."
+    ],
+    "safety_decision": "The target-specific focus guard was honored. Static and fixture evidence cannot substitute for the live contract profiles or human visual review."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh target-bound frame was available to open CM2_TEST_V1 safely; no live body/joint snapshot, lifecycle or S7 assertion is claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "human_review": "NOT RUN",
+    "reason": "The target-specific focus guard rejected a fresh client-area frame; subjective visual review cannot be performed without a valid screenshot."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live fixture reload or Joint replay was started, so no Step 6.5 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions were issued; no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully with exit code 0: entry closure, source-of-truth, executable Todo, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/candidates/multi-body-joint-fixture-v1.fixture.json",
+    "docs/candidates/multi-body-joint-fixture-v1.result.json",
+    "tools/cm2-world-host/run-multi-body-joint-fixture-v1.ps1",
+    "tools/cm2-world-host/test-multi-body-joint-fixture-v1.ps1"
+  ],
+  "rollback": "Remove or bypass the standalone multi-body/joint fixture; keep the existing single-Body ship path unchanged. If future live fixture tests fail, disable the fixture and preserve its negative/ledger reports; do not promote formal turret content from this experiment."
+}
