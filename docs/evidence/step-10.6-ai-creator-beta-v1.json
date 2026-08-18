@@ -1,0 +1,140 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 10.6",
+  "title": "AI Creator Beta quality thresholds",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "047be6c58f8bf5673fa23e6e8be943420d526cb05e139c4221acc14c8ec64f75",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "CONSUMER_MOD"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "NONE_OR_REOPEN_PREVIEW",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": []
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The headless AI Creator Beta quality/security gate, four composed suites, threshold evaluation and deterministic provenance report are complete.",
+    "verification_status_reason": "STATIC and FIXTURE evidence passed. Official Beta remains pending because the required independent author cohort is absent and live S1/S5 Runtime evidence is blocked by the responding Teardown target not being foreground."
+  },
+  "static_and_fixture": {
+    "policy": "docs/ai-creator-beta-v1.json",
+    "fixture": "docs/candidates/ai-creator-beta-v1.fixture.json",
+    "result": "docs/candidates/ai-creator-beta-v1.result.json",
+    "checker": "PASS: tools/cm2-ai/check-ai-creator-beta-v1.ps1",
+    "self_test": "PASS: tools/cm2-ai/test-ai-creator-beta-v1.ps1",
+    "suites": [
+      {"id": "ai-weapon-assistant", "status": "pass"},
+      {"id": "ai-effect-assistant", "status": "pass"},
+      {"id": "ai-vox-import", "status": "pass"},
+      {"id": "sdk-beta", "status": "pass"}
+    ],
+    "headless_quality_pass": true,
+    "first_schema_legal_rate": 1.0,
+    "final_schema_legal_rate": 1.0,
+    "average_manual_fields": 4,
+    "prompt_to_preview_p95_seconds": 15,
+    "budget_reject_or_degrade_rate": 0.3333,
+    "anchor_rework": 2,
+    "lua_views": 0,
+    "compiler_pass_rate": 1.0,
+    "preview_pass_rate": 1.0,
+    "package_conformance_rate": 1.0,
+    "security": {
+      "ai_lua_writes": 0,
+      "path_escapes": 0,
+      "budget_bypasses": 0,
+      "provider_network_calls": 0
+    },
+    "repository_integrity": {
+      "core_diff": 0,
+      "source_of_truth_preserved": true
+    },
+    "gate_decision": "unable",
+    "determinism": "PASS: repeated report determinismHash is identical."
+  },
+  "external_cohort": {
+    "status": "NOT RUN",
+    "required_weapon_effect_authors": 5,
+    "verified_weapon_effect_authors": 0,
+    "required_vox_authors": 3,
+    "verified_vox_authors": 0,
+    "reason": "Headless simulated cohort is explicitly excluded from external-author counts; no independent non-Core author cohort was available."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T10:53:25.8682786Z",
+      "input_desktop": "Default",
+      "foreground_handle": "0x2CA0D8C",
+      "foreground_pid": 53556,
+      "foreground_process": "Code",
+      "foreground_target_match": false,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Independent author usability and live install/start",
+      "S1/S5 Runtime budget and presentation evidence",
+      "Live Preview/package/runtime conformance",
+      "Fresh CM2_TEST_V1 telemetry session",
+      "Timestamped screenshot and incremental Runtime log"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop reported Default, but GetForegroundWindow reported Code PID 53556 / handle 0x2CA0D8C, not Teardown PID 57656 / handle 0x3321290.",
+      "The target-specific focus guard was honored; no Mod Manager reload, real input, telemetry probe, screenshot or live S1/S5 replay was started."
+    ],
+    "safety_decision": "Keep AI Creator Beta internal Framework-only until the external cohort and live Runtime evidence exist; do not count headless fixtures as official Beta proof."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh target-bound frame was available to open CM2_TEST_V1 safely."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The target-specific focus guard rejected live observation before the Beta consumer preview could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live Beta Runtime session was started, so no post-baseline incremental log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "temporary_fixture_outputs_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true,
+    "note": "The quality runner composes disposable headless suites, preserves Core/Global source-of-truth and does not promote AI output to Runtime."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full Harness completed successfully with exit code 0: executable Todo, entry closure, source-of-truth, schema/catalog, Lua/API/XML, weapon/component/ship checks and all Harness self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/ai-creator-beta-v1.json",
+    "docs/ai-creator-beta-v1.md",
+    "docs/candidates/ai-creator-beta-v1.fixture.json",
+    "docs/candidates/ai-creator-beta-v1.result.json",
+    "tools/cm2-ai/check-ai-creator-beta-v1.ps1",
+    "tools/cm2-ai/run-ai-creator-beta-v1.ps1",
+    "tools/cm2-ai/test-ai-creator-beta-v1.ps1"
+  ],
+  "rollback": "Keep the internal Assistant/SDK path and prior valid packages, disable Beta invitations, and never promote AI output directly to generated/Core/Lua or Runtime."
+}
