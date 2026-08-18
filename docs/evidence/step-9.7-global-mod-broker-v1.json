@@ -1,0 +1,126 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 9.7",
+  "title": "Independent Global Mod Broker verification",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "0a442c1f64b9055cf56ef76d26e0567ac13b511173eb3da237381f2c6fb6529b",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG", "MULTIPLAYER", "CONSUMER_MOD"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "REOPEN_MOD_MANAGER_OR_RESTART_MOD_SESSION",
+    "automation_level": "PARTIAL_AUTO",
+    "automation_gaps": ["Client foreground input, screenshot and per-client telemetry are not reliable in the current Harness session."]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The Broker hypothesis, deterministic seven-scenario state machine, conflict/fallback policy, disabled gate and non-adoption documentation are complete without introducing a loader or Runtime mutation.",
+    "verification_status_reason": "STATIC and FIXTURE evidence passed. Live load-order, unload, multiplayer, telemetry, screenshot and log evidence is blocked because the responding Teardown target is not the foreground window. The safe conclusion remains not-adopted, not live-verified."
+  },
+  "static_and_fixture": {
+    "policy": "docs/global-mod-broker-spike-v1.json",
+    "fixture": "docs/candidates/global-mod-broker-spike-v1.fixture.json",
+    "result": "docs/candidates/global-mod-broker-spike-v1.result.json",
+    "checker": "PASS: tools/cm2-broker/check-global-mod-broker-spike-v1.ps1",
+    "self_test": "PASS: tools/cm2-broker/test-global-mod-broker-spike-v1.ps1",
+    "scenario_count": 7,
+    "decisions": {
+      "load_order": ["defer-package", "defer-package"],
+      "core_missing": "builtin-only",
+      "core_version_mismatch": "builtin-only",
+      "package_unload": "blocked-runtime",
+      "multiplayer_host_remote": "blocked-runtime",
+      "multiple_package_conflict": "deterministic-reject"
+    },
+    "package_resolution": [
+      {"package_id": "cm2.broker.alpha", "decision": "reject-and-builtin-fallback"},
+      {"package_id": "cm2.broker.beta", "decision": "defer-until-broker-adopted"},
+      {"package_id": "cm2.broker.conflict", "decision": "reject-and-builtin-fallback"}
+    ],
+    "capability_conflicts": [
+      {"capability": "Ship", "packages": ["cm2.broker.alpha", "cm2.broker.conflict"]}
+    ],
+    "runtime_mutation": false,
+    "enabled": false,
+    "status": "not-adopted",
+    "negative_case": "An enabled Broker policy is rejected before adoption.",
+    "rollback": "Broker disabled; unknown packages use builtin-only fallback; no half-adopted protocol remains."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T10:23:07.7055330Z",
+      "input_desktop": "Default",
+      "foreground_handle": "0x2CA0D8C",
+      "foreground_pid": 53556,
+      "foreground_process": "Code",
+      "foreground_target_match": false,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Content-before-Global and Global-before-Content live load order",
+      "Core missing and Core version mismatch in the live Mod session",
+      "Package unload and generated/runtime cleanup",
+      "Host/remote multiplayer authority and replication order",
+      "Timestamped client-area screenshot",
+      "Fresh CM2_TEST_V1 telemetry session and incremental runtime log"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop reported Default, but GetForegroundWindow reported Code PID 53556 / handle 0x2CA0D8C, not Teardown PID 57656 / handle 0x3321290.",
+      "The target-specific focus guard was honored; no Mod Manager reload, input, telemetry probe, screenshot, live Broker registration or multiplayer child was started."
+    ],
+    "safety_decision": "Do not adopt or test a live Broker through an unfocused target. The headless state machine cannot substitute for load-order, unload or Host/Client evidence."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh target-bound frame was available to open CM2_TEST_V1 safely."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The target-specific focus guard rejected live observation before a Broker consumer scene could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live Broker session was started, so no Step 9.7 incremental log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "temporary_fixture_outputs_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true,
+    "note": "The headless runner made no Runtime or catalog mutation. No live actions or Host/Client children were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full Harness completed successfully with exit code 0: executable Todo, entry closure, source-of-truth, schema/catalog, Lua/API/XML, weapon/component/ship checks and all Harness self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/global-mod-broker-spike-v1.json",
+    "docs/global-mod-broker-spike-v1.md",
+    "docs/candidates/global-mod-broker-spike-v1.fixture.json",
+    "docs/candidates/global-mod-broker-spike-v1.result.json",
+    "tools/cm2-broker/check-global-mod-broker-spike-v1.ps1",
+    "tools/cm2-broker/run-global-mod-broker-spike-v1.ps1",
+    "tools/cm2-broker/test-global-mod-broker-spike-v1.ps1"
+  ],
+  "rollback": "Keep the Broker disabled, remove only the isolated Spike registration/result if withdrawn, and leave Content/Global source-of-truth plus the last valid generated artifacts unchanged."
+}

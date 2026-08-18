@@ -7072,7 +7072,7 @@
       "id": "Step 9.7",
       "stage": "Gate 9",
       "title": "独立验证 Global Mod Broker，允许结论为“不采用”",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] Spike Content/Global 加载顺序、Core 缺失、版本不符、卸载、多人和多个 package；[ ] 验证是否能声明依赖并稳定解析；[ ] 不把实验失败转化为永久协议；[ ] 将结论和限制写入 SDK/Editor 文档。 Reason: “扩展声明依赖 Core Global Mod”是愿景，不是已证明能力；必须以可失败实验处理。",
       "expected_outcome": "得到采用/不采用 Broker 的实证和清晰限制。",
       "prerequisites": [
@@ -7089,14 +7089,14 @@
       "evidence": {
         "code_or_document": "docs/global-mod-broker-spike-v1.json; docs/global-mod-broker-spike-v1.md; docs/candidates/global-mod-broker-spike-v1.fixture.json; docs/candidates/global-mod-broker-spike-v1.result.json; tools/cm2-broker/check-global-mod-broker-spike-v1.ps1; tools/cm2-broker/run-global-mod-broker-spike-v1.ps1; tools/cm2-broker/test-global-mod-broker-spike-v1.ps1. The Broker remains enabled=false/status=not-adopted and no Runtime loader/protocol was added.",
         "automated_tests": "Broker Spike self-test passed all seven scenarios: Content/Global order cases defer, missing/mismatched Core falls back builtin-only, unload/multiplayer remain blocked, multiple package Ship capability conflict deterministically rejects, runtimeMutation=false, and an enabled Broker policy is rejected before adoption. Machine result records the non-adoption conclusion.",
-        "harness": ".\\harness\\check-all.ps1 exited 0 after the Broker Spike artifacts. Lua scan: 226 files, 0 API issues; entry closure, XML, schema/compiler/catalog, weapon/component/ship checks and all Harness self-tests passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable, so real Content/Global load order, Core missing/version mismatch, unload/generated-leftovers, host/remote multiplayer and S0/S8 evidence could not be observed. The headless state machine is explicitly a hypothesis test, not runtime proof.",
+        "harness": ".\\harness\\check-all.ps1 exited 0 after the Broker Spike artifacts. Lua scan: 237 files, 0 API issues; entry closure, XML, schema/compiler/catalog, weapon/component/ship checks and all Harness self-tests passed.",
+        "runtime_or_performance": "BLOCKED: Teardown.exe is installed and responding as teardown:57656:53613200, but the exact target is not the foreground window: Win32 reports Default input desktop, foreground PID 53556 / handle 0x2CA0D8C (Code), while Teardown is PID 57656 / handle 0x3321290. The target-specific focus guard therefore refused live Content/Global load-order, Core missing/version mismatch, unload/generated-leftovers, Host/remote multiplayer, screenshot, CM2_TEST_V1 telemetry and incremental log capture. The headless state machine is explicitly a hypothesis test, not runtime proof.",
         "rollback_record": "Keep the Broker disabled and remove only the Spike result/experiment registration if withdrawn. Content remains the source and Global remains generated; unknown packages use builtin-only fallback and no half-adopted protocol is left behind."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-9.7",
-      "status_reason": "The independent Broker hypothesis, deterministic seven-scenario state machine, conflict/fallback policy and non-adoption documentation are complete. Live Teardown load/unload/multiplayer evidence is unavailable, so adoption is not claimed and the task is recorded as unable.",
+      "status_reason": "The independent Broker hypothesis, deterministic seven-scenario state machine, conflict/fallback policy and non-adoption documentation are complete. Implementation is finish. Verification remains pending because live Teardown load/unload/multiplayer evidence is blocked by the exact target not being foreground; adoption is not claimed.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "STATIC and FIXTURE evidence passed. The required SCENE/TELEMETRY/VISUAL/LOG/MULTIPLAYER evidence was not started because the target-specific focus guard rejected the responding Teardown window; rerun this contract after Teardown is the foreground target.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "0a442c1f64b9055cf56ef76d26e0567ac13b511173eb3da237381f2c6fb6529b",
@@ -7178,6 +7178,13 @@
         "Host/Client instance enumeration and per-role evidence are available; unresolved Client focus/telemetry gaps block only the affected assertion.",
         "An independent clean-room disposable consumer Mod/package is available and contains no private CM2 implementation include."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "Teardown PID 57656 / HWND 0x3321290 is visible and responding, but the foreground window is Code PID 53556 / HWND 0x2CA0D8C on the Default input desktop. The target-specific focus guard correctly refused live load-order, input, telemetry, screenshot and log operations.",
+        "evidence": "docs/evidence/step-9.7-global-mod-broker-v1.json",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T18:23:07+08:00"
+      },
       "plan_order": 67
     },
     {
