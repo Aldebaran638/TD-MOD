@@ -1,0 +1,94 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 11.2",
+  "title": "Multiplayer, Save/Load and Lifecycle Soak",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "df3bfa1b1abec4d683696ca6a18712601cac25e60247a5ed44ed639b0efc0be2",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "MULTIPLAYER", "CONSUMER_MOD"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "RESTART_TEARDOWN_AND_MOD_SESSION",
+    "automation_level": "PARTIAL_AUTO",
+    "automation_gaps": ["Client foreground input, screenshot and per-client telemetry are not reliable until the local Host/Client targets are available and focused."]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The deterministic 30-minute model, lifecycle churn, Save/Load decisions, source contracts and composed regressions are implemented and pass headlessly.",
+    "verification_status_reason": "Live Host/Client soak evidence is blocked because no Teardown or teardown_modtest target is currently discoverable.",
+    "result": "unable"
+  },
+  "static_and_fixture": {
+    "policy": "docs/multiplayer-lifecycle-soak-v1.json",
+    "fixture": "docs/candidates/multiplayer-lifecycle-soak-v1.fixture.json",
+    "result": "docs/candidates/multiplayer-lifecycle-soak-v1.result.json",
+    "checker": "PASS: tools/cm2-soak/check-multiplayer-lifecycle-soak-v1.ps1",
+    "self_test": "PASS: tools/cm2-soak/test-multiplayer-lifecycle-soak-v1.ps1",
+    "duration_seconds": 1800,
+    "tick_hz": 30,
+    "clients": ["host", "remote", "late-join"],
+    "scenario_results": "8/8 pass",
+    "save_load_results": "4/4 pass",
+    "composed_suite_results": "6/6 pass",
+    "entity_churn_cycles": 1800,
+    "queue_drained": true,
+    "lifecycle_leaks": 0,
+    "orphan_entities": 0,
+    "headless_memory_slope": 0,
+    "determinism": "PASS: repeated determinismHash is identical.",
+    "repository_integrity": {"source_only": true, "runtime_writes": 0},
+    "result": "unable"
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "target": null,
+    "observed": {
+      "captured_at_utc": "2026-08-18T11:58:51.6504330Z",
+      "teardown_command_found": false,
+      "teardown_process_found": false,
+      "teardown_modtest_process_found": false
+    },
+    "blocked_claims": [
+      "Live Host and remote startup/configuration",
+      "Lock, fire, turret, death, respawn, reconnect and late-join transport convergence",
+      "Repeated live Ship/Projectile/Craft/Effect/Joint cleanup",
+      "Versioned Save/Load, missing-package and downgrade runtime behavior",
+      "30-minute engine memory, queue and active-count measurements",
+      "Fresh CM2_TEST_V1 telemetry, screenshots, replay and incremental logs"
+    ],
+    "attempts": [
+      "Read-only process and command discovery found no Teardown.exe or teardown_modtest.exe target.",
+      "No live reload, input, telemetry probe, screenshot, replay or Runtime log operation was started without an exact target."
+    ],
+    "safety_decision": "Headless model output cannot substitute for Host/Client Runtime evidence; keep release promotion no-go and rerun after Teardown targets are available."
+  },
+  "telemetry": {"status": "NOT RUN", "session": null, "reason": "No target-bound Teardown frame was available."},
+  "visual": {"status": "NOT RUN", "screenshots": [], "reason": "No live Host/Client target was available."},
+  "log": {"status": "NOT RUN", "reason": "No live soak session was started."},
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "temporary_fixture_outputs_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "PASS: .\\harness\\check-all.ps1 exited 0 after the tracked Soak runner, runtime disclosure, Todo and evidence update."
+  },
+  "evidence_roots": [
+    "docs/multiplayer-lifecycle-soak-v1.json",
+    "docs/multiplayer-lifecycle-soak-v1.md",
+    "docs/candidates/multiplayer-lifecycle-soak-v1.fixture.json",
+    "docs/candidates/multiplayer-lifecycle-soak-v1.result.json",
+    "tools/cm2-soak/check-multiplayer-lifecycle-soak-v1.ps1",
+    "tools/cm2-soak/run-multiplayer-lifecycle-soak-v1.ps1",
+    "tools/cm2-soak/test-multiplayer-lifecycle-soak-v1.ps1"
+  ],
+  "rollback": "Retain all failing traces and fixtures, restore the last valid lifecycle and Save/Load manifests, and rerun the live 30-minute gate before promotion."
+}
