@@ -5467,7 +5467,7 @@
       "id": "Step 7.4",
       "stage": "Gate 7",
       "title": "完成 Turret Network 与多人权威",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 服务端权威输出 turret state/command revision；[ ] 客户端只预测/插值视觉；[ ] 处理 late join、包丢失、重连、stale generation 和 fire ack；[ ] 物理 joint handle 不跨网络传输。 Reason: Joint/visual 状态不能通过共享本地句柄同步，必须复用 World Protocol 的版本化边界。",
       "expected_outcome": "S7 中炮塔锁定、转动、开火、死亡和重连一致。",
       "prerequisites": [
@@ -5485,13 +5485,13 @@
         "code_or_document": "Content Mod 2/script/world/adapter/turret_network_authority_v1.lua (DTO-only, not wired to sockets/weapons); docs/turret-network-authority-v1.md; docs/candidates/turret-network-authority-v1.fixture.json; docs/candidates/turret-network-authority-v1.result.json.",
         "automated_tests": "run-turret-network-authority-v1.ps1 PASS: snapshots=2, commandsAccepted=1, commandsRejected=3, staleCommands=1, foreignCommands=1, rateRejected=1, fires=1, duplicateFires=1, clientSnapshots=1, clientStaleSnapshots=1, interpolations=1, staleRejects=1. test-turret-network-authority-v1.ps1 PASS: command snapshot sequence and foreign-owner mutations are rejected.",
         "harness": "harness/check-all.ps1 PASS (exit 0): entry closure 4 entries/260 Lua files; Lua/API closure checks 221 files, 0 issues; XML, weapon/component/ship checks and all self-tests passed. Harness emitted only its known fixture cleanup lock warnings after reporting all checks passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; live multiplayer latency/loss/reconnect, command flood behavior, client interpolation and fire ownership cannot be measured. Module remains offline DTO authority only.",
+        "runtime_or_performance": "BLOCKED: the exact Teardown target is visible and responding, but the active Windows input desktop is Screen-saver and GetForegroundWindow returns 0; live multiplayer latency/loss/reconnect, command flood behavior, client interpolation and fire ownership cannot be measured. Module remains offline DTO authority only.",
         "rollback_record": "Stop accepting turret-network DTO commands and retain the legacy server-authoritative route; preserve sequence/owner/rate/fire rejection evidence. Never let a client emit fire directly."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-7.4",
-      "status_reason": "Server-authoritative turret network DTO with owner/generation/sequence/rate validation, idempotent fire, monotonic client snapshots and interpolation is implemented; offline fixture, negatives and full Harness pass. Live multiplayer/runtime evidence is unavailable because Teardown.exe is absent.",
+      "status_reason": "Server-authoritative turret network DTO with owner/generation/sequence/rate validation, idempotent fire, monotonic client snapshots and interpolation is implemented; offline fixture, negatives and full Harness pass. Live multiplayer/runtime evidence remains blocked by the non-interactive Windows input desktop.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "BLOCKED: the exact Teardown target is visible and responding, but the active input desktop is Screen-saver and GetForegroundWindow returns 0. Evidence: docs/evidence/step-7.4-turret-network-authority-v1.json. Live SCENE/REAL_INPUT/TELEMETRY/VISUAL/LOG/MULTIPLAYER assertions remain pending.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "c4a50c17ee12290988cca44ef12d9e6694f86799c3643c0cf36da121193a59af",
@@ -5575,6 +5575,13 @@
         "Targeted fresh-frame keyboard/mouse control and emergency release are available; setup removes unrelated travel and aiming.",
         "Host/Client instance enumeration and per-role evidence are available; unresolved Client focus/telemetry gaps block only the affected assertion."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The exact Teardown target is outside the agent's interactive input desktop. The focus-safe probe found Screen-saver with foreground handle 0, so live reload, Host/Client setup, real input, telemetry bridge access, screenshot capture and multiplayer replay cannot be completed safely.",
+        "evidence": "docs/evidence/step-7.4-turret-network-authority-v1.json",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T14:16:20+08:00"
+      },
       "plan_order": 51
     },
     {

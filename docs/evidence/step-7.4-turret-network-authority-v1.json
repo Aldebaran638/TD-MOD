@@ -1,0 +1,105 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 7.4",
+  "title": "Turret Network Authority v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "c4a50c17ee12290988cca44ef12d9e6694f86799c3643c0cf36da121193a59af",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "MULTIPLAYER"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_RESTART_MOD_SESSION",
+    "automation_level": "PARTIAL_AUTO",
+    "automation_gaps": [
+      "The Harness cannot safely obtain Client foreground input, screenshot and per-client telemetry while the active input desktop is Screen-saver."
+    ]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "DTO-only server sequence/owner/rate validation, fire idempotence, client monotonic snapshot acceptance, interpolation and stale-generation rejection are implemented. Offline fixture, negative tests and full Harness pass.",
+    "verification_status_reason": "BLOCKED: the exact Teardown target is visible and responding, but the active input desktop is Screen-saver and GetForegroundWindow returns 0. The focus guard refused reload, Host/Client setup, real input, telemetry bridge access and live multiplayer replay."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts and the Step 7.4 fingerprint matched c4a50c17ee12290988cca44ef12d9e6694f86799c3643c0cf36da121193a59af.",
+    "fixture": "docs/candidates/turret-network-authority-v1.fixture.json",
+    "runner": "PASS: snapshots=2, commandsAccepted=1, commandsRejected=3, staleCommands=1, foreignCommands=1, rateRejected=1, fires=1, duplicateFires=1, clientSnapshots=1, clientStaleSnapshots=1, interpolations=1, staleRejects=1.",
+    "negative_cases": "PASS: command snapshot sequence and foreign-owner command mutations were rejected by test-turret-network-authority-v1.ps1.",
+    "runtime_model_boundary": "The fixture proves DTO authority and interpolation rules without sockets or engine side effects. It does not prove Host/Client replication, late join, packet loss, reconnect cleanup, real fire ownership, telemetry convergence, screenshots or runtime log health."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T06:16:20.1475816Z",
+      "input_desktop": "Screen-saver",
+      "foreground_handle": 0,
+      "foreground_pid": 0,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Host/Client source, owner, generation and sequence convergence",
+      "Real aim/fire input and server fire authority",
+      "Late join, packet loss, reconnect and disconnect cleanup",
+      "Timestamped screenshot, incremental runtime log health and multiplayer performance"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow reported Screen-saver and foreground handle 0.",
+      "No reload, Host/Client child, real input, telemetry probe, screenshot or live multiplayer fixture was started after the focus guard failed."
+    ],
+    "safety_decision": "The focus guard was honored. A single offline DTO trace is not promoted to multiplayer evidence."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely; no live Host/Client owner, generation, sequence or registration assertion is claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The focus guard rejected a fresh client-area frame; no screenshot or human visual review was performed."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live multiplayer reload or replay was started, so no Step 7.4 incremental runtime log cursor was opened."
+  },
+  "multiplayer": {
+    "status": "NOT RUN",
+    "hosts_started": 0,
+    "clients_started": 0,
+    "reason": "Client foreground and per-client telemetry are unavailable under the focus guard; no Host/Client claim is made."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions or multiplayer children were started and no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full Harness completed successfully with exit code 0: executable Todo, entry/source contracts, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "regression": {
+    "status": "PASS",
+    "scope": "STATIC_AND_FIXTURE",
+    "checks": [
+      "Turret Network Authority, TurretSolver, Visual Actuator, TransformAnchor, projectile lifecycle, scene joint budget and physical actuator fixture regressions pass.",
+      "The corresponding live SCENE/REAL_INPUT/TELEMETRY/VISUAL/LOG/MULTIPLAYER regressions remain BLOCKED by the focus guard and are not claimed here."
+    ]
+  },
+  "rollback": "Stop accepting turret-network DTO commands and retain the legacy server-authoritative route; preserve sequence/owner/rate/fire rejection evidence. Never let a client emit fire directly."
+}
