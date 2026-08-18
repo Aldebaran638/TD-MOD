@@ -4570,7 +4570,7 @@
       "id": "Step 6.3",
       "stage": "Gate 6",
       "title": "建立统一 Transform/Anchor API",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 提供 local/world/parent transform、forward/up/right、velocity、scale、mirror API；[ ] 明确单位和 frame；[ ] 禁止系统直接读取 root Body 或手写 offset；[ ] 为 anchor cache 定义失效时机；[ ] 与 Step 1.1 golden 对齐。 Reason: Turret、Projectile、Effect、Camera、Editor 和 AI 必须共享同一坐标语义，否则会出现朝向/镜像/比例分叉。",
       "expected_outcome": "所有新功能只依赖 Transform/Anchor API，坐标错误可在 resolver 层定位。",
       "prerequisites": [
@@ -4588,11 +4588,11 @@
         "code_or_document": "Content Mod 2/script/world/adapter/transform_anchor_v1.lua; shipMain.lua and strikeCraftMain.lua initialize cm2TransformAnchorV1 after EntityGraph; docs/transform-anchor-v1.md; docs/candidates/transform-anchor-v1.fixture.json; docs/candidates/transform-anchor-v1.result.json.",
         "automated_tests": "run-transform-anchor-v1.ps1 PASS: protocol=cm2.transform-anchor/1, units=meters, frame=right-handed-y-up, sourceRevision=2, partLookups=11, partCacheHits=7, anchorLookups=1, basisLookups=1, velocityLookups=1, scaleLookups=1, mirrorLookups=1, invalidHandleRejects=1, staleRejects=1, invalidations=1, roundTrip=true, engineCalls=0. test-transform-anchor-v1.ps1 PASS: valid parent/world/mirror/scale/basis fixture plus golden regression and missing-parent negatives are rejected.",
         "harness": "harness/check-all.ps1 PASS (exit 0): entry closure 4 entries/257 Lua files; Lua/API closure checks 213 files, 0 issues; XML, weapon/component/ship checks and all self-tests passed. Harness emitted only its known fixture cleanup lock warnings after reporting all checks passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; live S1 root/parent/mirror/scale/rotation golden, engine-backed anchor cache invalidation, and runtime performance cannot be measured. Offline DTO math and zero-engine-call fixture are contract evidence only.",
+        "runtime_or_performance": "BLOCKED: Teardown is visible and responding on the Default input desktop, but the foreground window is PID 53556 / handle 0x2CA0D8C rather than target Teardown PID 57656 / handle 0x3321290. Live S1 root/parent/mirror/scale/rotation golden, engine-backed anchor cache invalidation, runtime performance, screenshot and incremental log were not run. Offline DTO math and zero-engine-call fixture are contract evidence only.",
         "rollback_record": "Keep the previous per-system coordinate adapters behind a feature switch and bypass cm2TransformAnchorV1 if live golden coordinates, handedness, or cache invalidation differ. Preserve the Transform/Anchor fixture and diagnostics for comparison; do not alter physics layout."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-6.3",
-      "status_reason": "Unified local/parent/world transform, basis, velocity, scale, mirror, generation/owner/revision handles, cache invalidation, and root-Body-free adapter are implemented and wired; deterministic fixture, negative tests, and full Harness pass. Live S1 engine golden/performance evidence is unavailable because Teardown.exe is absent.",
+      "status_reason": "Unified local/parent/world transform, basis, velocity, scale, mirror, generation/owner/revision handles, cache invalidation, and root-Body-free adapter are implemented and wired; deterministic fixture, negative tests, and full Harness pass. Live S1 engine golden/performance evidence is blocked because the responding Teardown target is not foreground and this session has no target-scoped observe/telemetry/control bridge.",
       "verification_status": "pending",
       "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
       "verification": {
@@ -4667,6 +4667,13 @@
         "The owning deterministic fixture runner and negative cases are available before product changes.",
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The responding Teardown target exists, but the read-only Win32 probe found another foreground window (PID 53556 / handle 0x2CA0D8C) on the Default input desktop; the target is PID 57656 / handle 0x3321290. The available session has no target-scoped teardown_observe, telemetry bridge or control operation, so the focus guard must refuse live reload, input, telemetry and visual capture. This blocks S1 transform/anchor golden, engine cache invalidation and runtime-health verification; it does not invalidate the completed API implementation or deterministic fixture result.",
+        "evidence": "docs/evidence/step-6.3-transform-anchor-v1.json; target teardown:57656:53613200; Win32 read-only probe 2026-08-18T04:52:33.2549576Z",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T04:52:33+08:00"
+      },
       "plan_order": 43
     },
     {

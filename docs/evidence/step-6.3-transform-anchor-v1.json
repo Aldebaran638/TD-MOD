@@ -1,0 +1,96 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 6.3",
+  "title": "Transform and Anchor API v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "b14220df9098a6b15b2441c544798ff2b5b2a952749197f544cb2c0f82238776",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_F4_TO_F5",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": []
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The unified local/parent/world Transform/Anchor API, basis/velocity/scale/mirror contract, generation/owner/revision handles and cache invalidation are implemented and offline-verified with zero engine calls. Live S1 evidence remains blocked by target focus and tool availability.",
+    "verification_status_reason": "The responding Teardown target is not the foreground window, and this session has no target-scoped observe/telemetry/control bridge. No live frame or CM2_TEST_V1 session was started."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts; Step 6.3 fingerprint matched b14220df9098a6b15b2441c544798ff2b5b2a952749197f544cb2c0f82238776.",
+    "fixture": "docs/candidates/transform-anchor-v1.fixture.json",
+    "runner": "PASS: protocol=cm2.transform-anchor/1, units=meters, frame=right-handed-y-up, sourceRevision=2, partLookups=11, partCacheHits=7, anchorLookups=1, basisLookups=1, velocityLookups=1, scaleLookups=1, mirrorLookups=1, invalidHandleRejects=1, staleRejects=1, invalidations=1, roundTrip=true, engineCalls=0.",
+    "negative_cases": "PASS: transform golden regression and missing transform parent were rejected.",
+    "runtime_model_boundary": "The deterministic fixture proves coordinate math, frame/units, parent/world round-trip, basis/velocity/scale/mirror, cache invalidation and zero-engine-call invalid-handle behavior only. It does not prove live Shape/Joint transforms, S1 anchor golden, input/scene state, visual output or runtime log health."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T04:52:33.2549576Z",
+      "input_desktop": "Default",
+      "foreground_handle": "0x2CA0D8C",
+      "foreground_pid": 53556,
+      "foreground_target_match": false,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "S1 root/parent/mirror/scale/rotation golden in Teardown",
+      "Engine-backed anchor cache invalidation and runtime performance",
+      "Authoritative transform/velocity/owner state in CM2_TEST_V1",
+      "Timestamped client-area screenshot and incremental runtime log"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop reported Default, but GetForegroundWindow reported PID 53556 / handle 0x2CA0D8C, not Teardown PID 57656 / handle 0x3321290.",
+      "No target-scoped observe/control/telemetry operation is available in this session; no reload, input, telemetry probe, scene replay or screenshot was started."
+    ],
+    "safety_decision": "The target-specific focus guard was honored. Static and fixture evidence cannot substitute for the live contract profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh target-bound frame was available to open CM2_TEST_V1 safely; no live transform, velocity, owner or registry assertion is claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The target-specific focus guard rejected a fresh client-area frame before the transform/anchor scene could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live scene reload or anchor binding replay was started, so no Step 6.3 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions were issued; no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully with exit code 0: entry closure, source-of-truth, executable Todo, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/candidates/transform-anchor-v1.fixture.json",
+    "docs/candidates/transform-anchor-v1.result.json",
+    "tools/cm2-world-host/run-transform-anchor-v1.ps1",
+    "tools/cm2-world-host/test-transform-anchor-v1.ps1"
+  ],
+  "rollback": "Keep the previous per-system coordinate adapters behind a feature switch and bypass cm2TransformAnchorV1 if live golden coordinates, handedness or cache invalidation differ. Preserve the Transform/Anchor fixture and diagnostics for comparison; do not alter physics layout."
+}
