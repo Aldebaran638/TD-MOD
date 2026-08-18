@@ -1,0 +1,98 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 7.1",
+  "title": "TurretDefinition v1 Fixture",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "4bb7a6b2dd97efd7bc1be45bd2506f6909459f43ca57accf791eaf180558357f",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_RESTART_MOD_SESSION",
+    "automation_level": "AUTO_WITH_VISUAL_REVIEW",
+    "automation_gaps": [
+      "AI owns objective visibility, count, clipping, alignment, and budget checks; subjective visual quality remains a human review."
+    ]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The versioned fixture-only TurretDefinition compiler and lifecycle are implemented with strict references, limits, groups, target/fire-control fields and explicit player-facing rejection. Offline checks pass; live turret physics/network/muzzle evidence and visual review remain blocked by the non-interactive Windows input desktop.",
+    "verification_status_reason": "The exact Teardown target is responding, but Screen-saver is the active input desktop and foreground handle is 0. The focus guard refused reload, telemetry bridge access, visual capture and human visual review."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts; Step 7.1 fingerprint matched 4bb7a6b2dd97efd7bc1be45bd2506f6909459f43ca57accf791eaf180558357f.",
+    "fixture": "docs/candidates/turret-definition-v1.fixture.json",
+    "runner": "PASS: compiles=1, compileRejects=4, fixtureSpawns=1, fixtureDisposes=1, limitRejects=1, referenceRejects=1, duplicateRejects=1, staleRejects=1, fixtureOnly=true, clampedAngle=70.",
+    "negative_cases": "PASS: missing base anchor and formal player-facing turret mutations were rejected.",
+    "runtime_model_boundary": "The deterministic compiler proves normalized definition references, yaw/pitch limits, group/muzzle anchor validation, fixture-only lifecycle and player-facing rejection only. It does not prove live Joint solver behavior, target filtering, network snapshots, weapon/muzzle placement, screenshots, visual quality or runtime log health."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T05:34:39.5462725Z",
+      "input_desktop": "Screen-saver",
+      "foreground_handle": 0,
+      "foreground_pid": 0,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Live turret solver/target filter/network snapshot",
+      "Weapon/muzzle anchor placement and presentation",
+      "Timestamped screenshot and required human visual review",
+      "Incremental runtime log and performance"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow reported Screen-saver and foreground handle 0.",
+      "No reload, input, telemetry probe, live turret fixture or screenshot was started after the focus guard condition failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for live contract profiles or human visual review."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely; no live turret angle/owner/muzzle/hit assertion is claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "human_review": "NOT RUN",
+    "reason": "The focus guard rejected a fresh client-area frame; subjective visual review cannot be performed without a valid screenshot."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live turret reload or solver replay was started, so no Step 7.1 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions were issued; no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully with exit code 0: entry closure, source-of-truth, executable Todo, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/candidates/turret-definition-v1.fixture.json",
+    "docs/candidates/turret-definition-v1.result.json",
+    "tools/cm2-world-host/run-turret-definition-v1.ps1",
+    "tools/cm2-world-host/test-turret-definition-v1.ps1"
+  ],
+  "rollback": "Remove/bypass cm2TurretDefinitionV1 and keep the multi-body fixture out of production. Preserve compiler rejection reports; do not enable playerFacing or engine Joint creation until Gate 7 runtime evidence is complete."
+}

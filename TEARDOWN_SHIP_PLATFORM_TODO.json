@@ -5133,7 +5133,7 @@
       "id": "Step 7.1",
       "stage": "Gate 7",
       "title": "编译 `TurretDefinition v1` 与炮塔 Fixture",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 定义 turret id、base/axis anchors、yaw/pitch limits、slew、fire mount、target policy、visual/physical mode、budget 和 ownership；[ ] Compiler 输出 normalized definition；[ ] 建立单炮塔/双轴/镜像/缺 anchor fixture；[ ] 不把 engine joint handle 写入 source。 Reason: 炮塔必须是可版本化定义，而不是散落在船脚本里的坐标和引擎句柄。",
       "expected_outcome": "逻辑、视觉、物理实现共享同一 TurretDefinition v1。",
       "prerequisites": [
@@ -5151,11 +5151,18 @@
         "code_or_document": "Content Mod 2/script/world/adapter/turret_definition_v1.lua (fixture-only, not wired to production entries); docs/turret-definition-v1.md; docs/candidates/turret-definition-v1.fixture.json; docs/candidates/turret-definition-v1.result.json. Schema includes base part/anchor, yaw/pitch axes/limits, target filters, fire control and weapon groups.",
         "automated_tests": "run-turret-definition-v1.ps1 PASS: compiles=1, compileRejects=4, fixtureSpawns=1, fixtureDisposes=1, limitRejects=1, referenceRejects=1, duplicateRejects=1, staleRejects=1, fixtureOnly=true, clampedAngle=70. test-turret-definition-v1.ps1 PASS: missing base anchor and player-facing mutations are rejected.",
         "harness": "harness/check-all.ps1 PASS (exit 0): entry closure 4 entries/260 Lua files; Lua/API closure checks 218 files, 0 issues; XML, weapon/component/ship checks and all self-tests passed. Harness emitted only its known fixture cleanup lock warnings after reporting all checks passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; live Joint solver behavior, target filtering, network snapshot, weapon/muzzle placement, and performance cannot be measured. Definition remains fixture-only and has no player-facing content dependency.",
+        "runtime_or_performance": "BLOCKED: the exact Teardown target is visible and responding, but Win32 reports the active input desktop as Screen-saver and foreground handle 0. Live Joint solver behavior, target filtering, network snapshot, weapon/muzzle placement, screenshots, visual review, incremental log and performance were not run. Definition remains fixture-only and has no player-facing content dependency.",
         "rollback_record": "Remove/bypass cm2TurretDefinitionV1 and keep the multi-body fixture out of production. Preserve compiler rejection reports; do not enable playerFacing or engine Joint creation until Gate 7 runtime evidence is complete."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-7.1",
-      "status_reason": "Versioned TurretDefinition compiler and fixture-only lifecycle are implemented with strict references, limits, groups, target/fire-control fields and player-facing rejection; offline runner, negatives and full Harness pass. Live turret physics/network/performance evidence is unavailable because Teardown.exe is absent.",
+      "status_reason": "Versioned TurretDefinition compiler and fixture-only lifecycle are implemented with strict references, limits, groups, target/fire-control fields and player-facing rejection; offline runner, negatives and full Harness pass. Live turret physics/network/performance evidence and visual review are blocked by the non-interactive Screen-saver input desktop.",
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The exact Teardown target is visible and responding, but the active Win32 input desktop is Screen-saver and the foreground handle is 0. The focus guard must refuse reload, telemetry bridge access and visual capture until an interactive target-bound desktop is restored. This blocks live turret physics/network/muzzle verification and required human visual review; it does not invalidate the fixture-only compiler, rejection cases or formal player-facing rejection.",
+        "evidence": "docs/evidence/step-7.1-turret-definition-v1.json; target teardown:57656:53613200; Win32 read-only probe 2026-08-18T05:34:39.5462725Z",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T05:34:39+08:00"
+      },
       "verification_status": "pending",
       "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
       "verification": {
