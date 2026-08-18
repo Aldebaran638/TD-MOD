@@ -1,0 +1,124 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 9.8",
+  "title": "Creator SDK Beta conformance",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "fbc9c5fe1eb04fdc9c22c2ca4bec47c48c466670b75f9ccca1d516cc70d8ef4d",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "CONSUMER_MOD"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "REOPEN_MOD_MANAGER_OR_RESTART_MOD_SESSION",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": []
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The headless Beta matrix, three author workflow profiles, repeatable editor-free suites and four resolved blocker records are complete.",
+    "verification_status_reason": "STATIC and FIXTURE evidence passed. No independent external author cohort is available, and live Runtime/Preview/S0/S8 evidence is blocked because the responding Teardown target is not the foreground window."
+  },
+  "static_and_fixture": {
+    "policy": "docs/sdk-beta-v1.json",
+    "fixture": "docs/candidates/sdk-beta-v1.fixture.json",
+    "result": "docs/candidates/sdk-beta-v1.result.json",
+    "checker": "PASS: tools/cm2-sdk-beta/check-sdk-beta-v1.ps1",
+    "self_test": "PASS: tools/cm2-sdk-beta/test-sdk-beta-v1.ps1",
+    "tool_version": "cm2.sdk-cli/1.0.0-alpha.1",
+    "cohort": [
+      {"id": "creator-data", "editor_required": false, "workflow_count": 6},
+      {"id": "creator-weapon", "editor_required": false, "workflow_count": 6},
+      {"id": "ci-maintainer", "editor_required": false, "workflow_count": 5}
+    ],
+    "suites": ["alpha-cli", "clean-room", "compatibility"],
+    "resolved_blockers": ["B01", "B02", "B03", "B04"],
+    "repeatable_build": true,
+    "editor_free": true,
+    "teardown_available": true,
+    "runtime_status": "not-run",
+    "s0s8": "deferred-until-runtime",
+    "external_authors": 0,
+    "external_evidence_status": "deferred",
+    "result": "pass"
+  },
+  "external_cohort": {
+    "status": "NOT RUN",
+    "authors_invited": 0,
+    "reason": "No independent external author cohort was available in this environment; the three profiles are deterministic fixtures, not external-author evidence."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T10:37:14.7063485Z",
+      "input_desktop": "Default",
+      "foreground_handle": "0x2CA0D8C",
+      "foreground_pid": 53556,
+      "foreground_process": "Code",
+      "foreground_target_match": false,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Independent author install/start workflow",
+      "Live package install/uninstall and Preview",
+      "S0/S8 runtime replay",
+      "Fresh CM2_TEST_V1 telemetry session",
+      "Timestamped screenshot and incremental Runtime log"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop reported Default, but GetForegroundWindow reported Code PID 53556 / handle 0x2CA0D8C, not Teardown PID 57656 / handle 0x3321290.",
+      "The target-specific focus guard was honored; no Mod Manager reload, real input, live package install, telemetry probe, screenshot or runtime replay was started."
+    ],
+    "safety_decision": "Do not treat deterministic cohort fixtures as external-author evidence or use an unfocused target for live input/runtime claims."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh target-bound frame was available to open CM2_TEST_V1 safely."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The target-specific focus guard rejected live observation before a Beta consumer session could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live Beta session was started, so no post-baseline incremental log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "temporary_fixture_outputs_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true,
+    "note": "The Beta runner only invokes disposable conformance suites and writes the candidate result; it does not mutate Core Runtime, catalogs or Global generated authority."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full Harness completed successfully with exit code 0: executable Todo, entry closure, source-of-truth, schema/catalog, Lua/API/XML, weapon/component/ship checks and all Harness self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/sdk-beta-v1.json",
+    "docs/sdk-beta-v1.md",
+    "docs/candidates/sdk-beta-v1.fixture.json",
+    "docs/candidates/sdk-beta-v1.result.json",
+    "tools/cm2-sdk-beta/check-sdk-beta-v1.ps1",
+    "tools/cm2-sdk-beta/run-sdk-beta-v1.ps1",
+    "tools/cm2-sdk-beta/test-sdk-beta-v1.ps1"
+  ],
+  "rollback": "Keep the Alpha/internal SDK and previous package artifacts, remove only Beta invitation metadata/conformance outputs if withdrawn, and do not change Core Runtime or Global generated authority."
+}

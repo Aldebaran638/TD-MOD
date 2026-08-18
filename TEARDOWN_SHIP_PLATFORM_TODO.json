@@ -7191,7 +7191,7 @@
       "id": "Step 9.8",
       "stage": "Gate 9",
       "title": "Creator SDK Beta",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 邀请框架外作者使用 CLI/模板/文档完成武器、效果和单 Body ship；[ ] 收集安装、错误、兼容、Preview、package 和卸载阻断；[ ] 修复高频阻断；[ ] 运行 conformance、S0/S8 和重复构建。 Reason: 框架作者自己能构建不等于生态可用，必须验证独立作者体验。",
       "expected_outcome": "SDK、文档、诊断、多包构建可被 Core 团队之外的作者使用。",
       "prerequisites": [
@@ -7207,15 +7207,15 @@
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
         "code_or_document": "docs/sdk-beta-v1.json; docs/sdk-beta-v1.md; docs/candidates/sdk-beta-v1.fixture.json; docs/candidates/sdk-beta-v1.result.json; tools/cm2-sdk-beta/check-sdk-beta-v1.ps1; tools/cm2-sdk-beta/run-sdk-beta-v1.ps1; tools/cm2-sdk-beta/test-sdk-beta-v1.ps1. The Beta matrix covers data-only ship, weapon/effect author and CI maintainer workflows across new/validate/build/preview/test/package/migrate/doctor/explain/clean.",
-        "automated_tests": "SDK Beta self-test passed twice: Alpha CLI, clean-room hello-ship and compatibility suites all passed; three cohort profiles and three suites are recorded; editorFree=true, repeatableBuild=true, all four high-frequency blockers are resolved, and the serialized report is deterministic across repeated runs.",
-        "harness": ".\\harness\\check-all.ps1 exited 0 after Beta policy/runner changes. Lua scan: 226 files, 0 API issues; entry closure, XML, schema/compiler/catalog, weapon/component/ship checks and all Harness self-tests passed.",
-        "runtime_or_performance": "UNABLE: no external authors were available (`externalAuthors=0`) and Teardown.exe is not installed/discoverable, so independent author usability, live install/uninstall, Preview and S0/S8 runtime evidence remain deferred. The report explicitly says headless-beta/runtimeStatus=deferred.",
+        "automated_tests": "SDK Beta self-test passed twice: Alpha CLI, clean-room hello-ship and compatibility suites all passed; three cohort profiles and three suites are recorded; editorFree=true, repeatableBuild=true, all four high-frequency blockers are resolved, and the serialized report is deterministic across repeated runs. The process-aware runner records teardownAvailable=true/runtimeStatus=not-run when the installed Teardown process is present but not live-tested.",
+        "harness": ".\\harness\\check-all.ps1 exited 0 after Beta policy/runner changes. Lua scan: 237 files, 0 API issues; entry closure, XML, schema/compiler/catalog, weapon/component/ship checks and all Harness self-tests passed.",
+        "runtime_or_performance": "BLOCKED/EXTERNAL_DEPENDENCY: no independent external authors were available (externalAuthors=0), and Teardown.exe is installed/responding as teardown:57656:53613200 but the exact target is not the foreground window: Win32 reports Default input desktop, foreground PID 53556 / handle 0x2CA0D8C (Code), while Teardown is PID 57656 / handle 0x3321290. The focus guard refused live author install/uninstall, Preview, S0/S8, screenshot, CM2_TEST_V1 telemetry and incremental log capture. The report records headless-beta/runtimeStatus=not-run; no Beta acceptance is claimed.",
         "rollback_record": "Keep the Alpha/internal SDK and prior package artifacts; remove Beta invitation metadata or the conformance runner if withdrawn. No Runtime Lua, Core catalog or Global generated output is changed by the Beta harness."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-9.8",
-      "status_reason": "The headless Beta conformance matrix, repeatable suite runner and resolved-blocker record are implemented and verified. External author and live Teardown S0/S8 evidence are unavailable, so this step is honestly marked unable pending an external cohort/runtime.",
+      "status_reason": "The headless Beta conformance matrix, repeatable suite runner and resolved-blocker record are implemented and verified. Implementation is finish. Verification remains pending because no independent external author cohort exists and live Teardown S0/S8 evidence is blocked by the exact target not being foreground.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "STATIC and FIXTURE evidence passed. The required external-author, SCENE/REAL_INPUT/TELEMETRY/VISUAL/LOG evidence was not completed; rerun this contract after an independent cohort is available and Teardown is the foreground target.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "fbc9c5fe1eb04fdc9c22c2ca4bec47c48c466670b75f9ccca1d516cc70d8ef4d",
@@ -7294,6 +7294,13 @@
         "Targeted fresh-frame keyboard/mouse control and emergency release are available; setup removes unrelated travel and aiming.",
         "An independent clean-room disposable consumer Mod/package is available and contains no private CM2 implementation include."
       ],
+      "unable_exception": {
+        "marker": "EXTERNAL_DEPENDENCY",
+        "reason": "No independent external author cohort was available for the Beta acceptance gate (externalAuthors=0). In addition, Teardown PID 57656 / HWND 0x3321290 is visible and responding but the foreground window is Code PID 53556 / HWND 0x2CA0D8C, so the target-specific focus guard refused live install, Preview, S0/S8, telemetry, screenshot and log operations.",
+        "evidence": "docs/evidence/step-9.8-creator-sdk-beta-v1.json",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T18:37:14+08:00"
+      },
       "plan_order": 68
     },
     {
