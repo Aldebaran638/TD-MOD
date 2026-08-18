@@ -1,0 +1,95 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 6.7",
+  "title": "Vehicle Platform Cutover v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "e97b421379f030367e711bbb1e51374fcf97a6b20343987c817552e55d811d8f",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_F4_TO_F5",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": []
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "All five Vehicle definitions are registered to Factory/EntityGraph/Transform ownership with adapter-only root authority and guarded legacy/shadow/anchor modes. Offline cutover and negative fixtures pass; live S0-S7 evidence remains blocked by the non-interactive Windows input desktop.",
+    "verification_status_reason": "The exact Teardown target is responding, but Screen-saver is the active input desktop and foreground handle is 0. The focus guard refused REAL_INPUT, reload, telemetry bridge access and visual capture."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts; Step 6.7 fingerprint matched e97b421379f030367e711bbb1e51374fcf97a6b20343987c817552e55d811d8f.",
+    "fixture": "docs/candidates/vehicle-platform-cutover-v1.fixture.json",
+    "runner": "PASS: vehicleCount=5, registrations=5, comparisons=5, comparisonPasses=5, comparisonMismatches=0, modeChanges=6, rollbacks=1, cutoverRejects=1, staleRejects=1, anchorModeCount=0, rootBodyAuthority=adapter-only, legacyReaderFileCount=58 (current static scan), legacyReaderLedger=legacy-readers-allowed-only-through-ADR-until-live-S0-S7.",
+    "negative_cases": "PASS: promotion-before-comparison and incomplete-ledger mutations were rejected.",
+    "runtime_model_boundary": "The deterministic ledger proves five-Vehicle registration, shadow comparison, guarded anchor promotion, rollback and stale/invalid rejection only. The current static scan counts 58 legacy-reader files; they remain explicitly ADR-ledgered until live S0-S7 proof. It does not prove live coordinate/health/lifecycle parity, REAL_INPUT, screenshots, runtime logs or final reader removal."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T05:25:31.8082870Z",
+      "input_desktop": "Screen-saver",
+      "foreground_handle": 0,
+      "foreground_pid": 0,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "5/5 live S0-S7 cutover and fresh target-bound reload",
+      "Root-authority runtime scan and coordinate/health/lifecycle parity",
+      "REAL_INPUT action chains and authoritative telemetry",
+      "Timestamped screenshot, incremental runtime log and final legacy-reader removal"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow reported Screen-saver and foreground handle 0.",
+      "No reload, real input, telemetry probe, live cutover replay or screenshot was started after the focus guard condition failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the live contract profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely; no live Vehicle cutover, transform, health, lifecycle or cleanup assertion is claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The focus guard rejected a fresh client-area frame before the five-Vehicle cutover scene could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live cutover reload or REAL_INPUT replay was started, so no Step 6.7 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions were issued; no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully with exit code 0: entry closure, source-of-truth, executable Todo, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/candidates/vehicle-platform-cutover-v1.fixture.json",
+    "docs/candidates/vehicle-platform-cutover-v1.result.json",
+    "tools/cm2-world-host/run-vehicle-platform-cutover-v1.ps1",
+    "tools/cm2-world-host/test-vehicle-platform-cutover-v1.ps1"
+  ],
+  "rollback": "Rollback per Vehicle via cm2VehiclePlatformCutoverV1.rollback(handle, vehicleType, reason), restoring legacy mode and retaining comparison evidence. Keep VehicleInstance/ship adapter active until live gates pass; do not delete the 58 allowlisted legacy readers without S0-S7 proof."
+}
