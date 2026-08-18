@@ -8530,7 +8530,7 @@
       "id": "Step 11.6",
       "stage": "Gate 11",
       "title": "正式平台发布门槛",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 建立 go/no-go 清单；[ ] 检查第三方 clean-room 包、Golden、S0–S8、多人/存档 Soak、性能 p95/p99、升级回滚、入口闭包、资产 provenance、支持文档和安全边界；[ ] 任一关键项不满足时继续以 Framework/Beta 发布；[ ] 记录发布决策、已知限制和下一版计划。 Reason: “Platform”必须由第三方扩展、性能、兼容和长期运行证据定义，不能因为 Editor Demo 完成就提前宣传。",
       "expected_outcome": "得到明确、可审计的正式发布决定和已知限制清单。",
       "prerequisites": [
@@ -8546,15 +8546,15 @@
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
         "code_or_document": "docs/platform-release-gate-v1.json; docs/platform-release-gate-v1.md; docs/candidates/platform-release-gate-v1.fixture.json; docs/candidates/platform-release-gate-v1.result.json; tools/cm2-platform/check-platform-release-gate-v1.ps1; tools/cm2-platform/run-platform-release-gate-v1.ps1; tools/cm2-platform/test-platform-release-gate-v1.ps1. The final gate aggregates Golden, S0-S8, multiplayer/Save Soak, performance p95/p99, upgrade/rollback, entry closure, provenance, support, security/Core invariance and Runtime/external-cohort evidence into twelve explicit checks.",
-        "automated_tests": "tools/cm2-platform/test-platform-release-gate-v1.ps1 passed all assertions: twelve checks are evaluated; no-go is enforced when live/runtime/external evidence is absent; mode remains framework-beta; entry closure and security checks pass; known limitations, next plan and pending sign-off are recorded; Core/Global source is unchanged; repeated determinismHash is identical. The official decision is unable/no-go, not a fabricated Platform go.",
+        "automated_tests": "tools/cm2-platform/check-platform-release-gate-v1.ps1 and tools/cm2-platform/test-platform-release-gate-v1.ps1 passed all assertions: twelve checks are evaluated; six headless checks pass and six missing live/external checks remain hold; no-go is enforced; mode remains framework-beta; entry closure and security checks pass; known limitations, next plan and pending sign-off are recorded; Core/Global source is unchanged; repeated determinismHash is identical. The official decision is unable/no-go, not a fabricated Platform go.",
         "harness": ".\\harness\\check-all.ps1 exited 0. Entry closure, source-of-truth, schema/compiler/catalog, presentation/effect, Lua/API/XML, weapon/component/ship checks and all Harness self-tests passed.",
-        "runtime_or_performance": "UNABLE: the final report correctly holds Golden Runtime, live S0-S8 timing/replay, multiplayer/Save soak, live upgrade rollback, three verified external authors, three independent packages, immutable archive/download hashes and sign-off. Teardown.exe and release infrastructure are unavailable, so the project must remain Framework/Beta.",
+        "runtime_or_performance": "UNABLE: the final report correctly holds Golden Runtime, live S0-S8 timing/replay, multiplayer/Save soak, live upgrade rollback, three verified external authors, three independent packages, immutable archive/download hashes and sign-off. A Teardown process is present, but no clean-installed release candidate session, external author cohort, independent package cohort, immutable archive pipeline or reviewer sign-off is available; the project must remain Framework/Beta.",
         "rollback_record": "Keep the current Framework/Beta manifest and last valid Core artifact; do not widen Platform/SDK compatibility claims. Re-run the gate after each missing evidence item is supplied; if a check regresses, restore the previous artifact and retain the failing report."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-11.6",
-      "status_reason": "The auditable twelve-check go/no-go gate is implemented and passes its own regression tests and full Harness. It deliberately returns no-go/framework-beta because Teardown Runtime, external author/package cohort, immutable release archives and reviewer sign-off are unavailable; the formal Platform release cannot be completed in this environment.",
+      "status_reason": "The auditable twelve-check go/no-go gate is implemented and passes its own regression tests and full Harness. Implementation is finish. It deliberately returns no-go/framework-beta because clean-installed Teardown Runtime, external author/package cohort, immutable release archives and reviewer sign-off remain unavailable; the formal Platform release cannot be completed in this environment.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "STATIC and FIXTURE gate evidence passes and the no-go decision is correctly enforced. SCENE, REAL_INPUT, TELEMETRY, VISUAL, LOG, MULTIPLAYER and live CONSUMER_MOD claims remain pending because the open Teardown process is not a clean-installed immutable release candidate, externalAuthorsVerified=0, independentPackages=0, archive/download hashes are absent and both required sign-offs are unassigned.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "6545e189a6c63c2f7eba11129e9041475cdabbda4dbf147cdbd65177fb821b33",
@@ -8640,6 +8640,13 @@
         "Host/Client instance enumeration and per-role evidence are available; unresolved Client focus/telemetry gaps block only the affected assertion.",
         "An independent clean-room disposable consumer Mod/package is available and contains no private CM2 implementation include."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The twelve-check final gate, its no-go policy, Framework/Beta fallback, deterministic report and full regression are implemented and pass. Required live Runtime/replay, three verified external authors, three independent packages, immutable archives/download hashes and release-owner/independent-reviewer sign-off are not available; the current Teardown process cannot supply those release claims by itself.",
+        "evidence": "docs/evidence/step-11.6-platform-release-gate-v1.json",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T16:08:48.9102768Z"
+      },
       "plan_order": 80
     }
   ]

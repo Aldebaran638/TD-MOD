@@ -1,0 +1,82 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 11.6",
+  "title": "Formal Platform Release Gate",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "6545e189a6c63c2f7eba11129e9041475cdabbda4dbf147cdbd65177fb821b33",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "MULTIPLAYER", "CONSUMER_MOD"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "RESTART_TEARDOWN_AND_MOD_SESSION",
+    "automation_level": "PARTIAL_AUTO",
+    "automation_gaps": ["Client foreground input, screenshot and per-client telemetry are not reliable until Host/Client targets are available and focused."]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The twelve-check final release gate and Framework/Beta no-go fallback are implemented and regression-tested.",
+    "verification_status_reason": "The headless decision is authoritative as no-go, but live Runtime, external cohort, immutable archive and sign-off evidence remain pending.",
+    "gate_decision": "no-go",
+    "mode": "framework-beta",
+    "release_ready": false
+  },
+  "static_and_fixture": {
+    "policy": "docs/platform-release-gate-v1.json",
+    "fixture": "docs/candidates/platform-release-gate-v1.fixture.json",
+    "result": "docs/candidates/platform-release-gate-v1.result.json",
+    "checker": "PASS: tools/cm2-platform/check-platform-release-gate-v1.ps1",
+    "self_test": "PASS: tools/cm2-platform/test-platform-release-gate-v1.ps1, 11 assertions",
+    "checks": {"total": 12, "pass": 6, "hold": 6},
+    "held_checks": ["golden-packages", "s0-s8", "multiplayer-soak", "performance", "upgrade-rollback", "runtime-and-replay"],
+    "passing_checks": ["third-party-clean-room", "entry-closure", "asset-provenance", "support-docs", "security-boundary", "core-invariance"],
+    "external_authors_verified": 0,
+    "independent_packages": 0,
+    "signoff": {"release_owner": "unassigned", "independent_reviewer": "unassigned", "status": "pending"},
+    "known_limitations": ["No live Runtime evidence", "No verified external author cohort", "No immutable archive/download hashes", "Nightly pressure and replay evidence are deferred"],
+    "source_preserved": true,
+    "core_diff": 0,
+    "determinism": "PASS: repeated determinismHash is 10546c00f13285456612506f0a17385dae6c6a72a03fe4ba8cc811e2f145171a",
+    "decision_safety": "PASS: missing evidence forces no-go and Framework/Beta mode; no Platform claim is silently promoted."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "observed_at_utc": "2026-08-18T16:08:48.9102768Z",
+    "process_observation": {"teardown_process_found": true, "teardown_pid": 80804, "teardown_modtest_process_remaining": false},
+    "fixture_runtime_available": false,
+    "blocked_claims": [
+      "Live Core-only and Golden Runtime",
+      "Live S0-S8 timing, replay and multiplayer/Save soak",
+      "Live v1-to-v2 upgrade and exact rollback",
+      "Three verified external authors and three independent packages",
+      "Immutable archive/download hashes",
+      "Release-owner and independent-reviewer sign-off"
+    ],
+    "reason": "The open Teardown process is not a clean-installed immutable release candidate, and the final gate has no external cohort or release archive/sign-off inputs. Process presence cannot satisfy these claims.",
+    "safety_decision": "Keep the official decision no-go and mode Framework/Beta; do not widen Platform/SDK compatibility claims."
+  },
+  "telemetry": {"status": "NOT RUN", "reason": "No clean-installed release candidate scenario was started through the available operation interface."},
+  "visual": {"status": "NOT RUN", "screenshots": [], "reason": "No release-candidate screenshot is claimed."},
+  "log": {"status": "NOT RUN", "reason": "No release-candidate runtime log cursor was established."},
+  "cleanup": {
+    "status": "PASS_NO_SESSION_STARTED",
+    "emergency_release": false,
+    "held_inputs": {"keys": [], "buttons": []},
+    "temporary_fixture_outputs_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true,
+    "test_children_started": 0,
+    "test_children_remaining": 0
+  },
+  "harness": {"status": "PASS", "command": ".\\harness\\check-all.ps1", "result": "All entry closure, source-of-truth, executable Todo, schema/catalog, Presentation/Effect, Lua/API/XML, weapon/component/ship checks and Harness self-tests passed; exit code 0."},
+  "evidence_roots": [
+    "docs/platform-release-gate-v1.json",
+    "docs/platform-release-gate-v1.md",
+    "docs/candidates/platform-release-gate-v1.fixture.json",
+    "docs/candidates/platform-release-gate-v1.result.json",
+    "tools/cm2-platform/check-platform-release-gate-v1.ps1",
+    "tools/cm2-platform/run-platform-release-gate-v1.ps1",
+    "tools/cm2-platform/test-platform-release-gate-v1.ps1"
+  ],
+  "rollback": "Keep the current Framework/Beta manifest and last valid Core artifact; do not widen compatibility claims. Re-run this gate after every missing evidence item is supplied."
+}
