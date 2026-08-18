@@ -1,0 +1,100 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 7.6",
+  "title": "Scene-wide Joint Budget and Automatic Degradation v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "f7206100252537e0cc7c77d0a20d91f7a9478c3a32e5a7079c65fd37371f718b",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_RESTART_MOD_SESSION",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": [
+      "Live scene pressure, telemetry, screenshot and runtime log require a focused Teardown target."
+    ]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "FixtureOnly scene budget DTO implements hard/soft caps, deterministic priority allocation, logical/visual fallback, hysteresis recovery, replay events, owner disposal and physics/network/FX metrics. Offline fixture, negative tests and full Harness pass.",
+    "verification_status_reason": "BLOCKED: Teardown is visible and responding, but the active input desktop is Default and the foreground window belongs to PID 53556 / HWND 0x2CA0D8C rather than target Teardown PID 57656 / HWND 0x3321290. The focus guard refused reload, telemetry bridge access, screenshot capture and live scene pressure replay."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts and the Step 7.6 fingerprint matched f7206100252537e0cc7c77d0a20d91f7a9478c3a32e5a7079c65fd37371f718b.",
+    "fixture": "docs/candidates/scene-joint-budget-v1.fixture.json",
+    "runner": "PASS: hardCap=4, softCap=3, recoveryMargin=1, requestCount=4, evaluations=4, grantedTotal=7, downgradedTotal=3, rejected=1, duplicateRejects=1, activeJointCost=2, maxActiveJointCost=4, recoveries=2, hysteresisHolds=1, ownerDisposals=1, staleRejects=1, sceneMetricUpdates=1, replayEvents=20, replayContiguous=true, fixtureOnly=true.",
+    "negative_cases": "PASS: hard-cap mutation and grant/replay golden mutation were rejected by test-scene-joint-budget-v1.ps1.",
+    "engine_boundary": "PASS: source scan rejects CreateJoint/SetJoint/GetJoint/JointMotor calls; the budget policy remains fixtureOnly and does not own production Joint creation.",
+    "runtime_model_boundary": "The fixture proves cap enforcement, priority, degradation, hysteresis, replay and disposal DTO policy. It does not prove S1/S5 live pressure, actual Joint count, physics CPU, collision/jitter, network/FX profiler output, screenshots or runtime log health."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T06:49:51.1411270Z",
+      "input_desktop": "Default",
+      "foreground_handle": "0x2CA0D8C",
+      "foreground_pid": 53556,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Live S1/S5 scene pressure and hard-cap enforcement",
+      "Actual Joint/physics body/shape count and CPU budget",
+      "Collision/jitter, network/FX metric correlation and degradation presentation",
+      "Timestamped screenshot and incremental runtime log health"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop reported Default, but GetForegroundWindow reported PID 53556 / HWND 0x2CA0D8C, not the target Teardown window.",
+      "No reload, input, telemetry probe, screenshot or live scene pressure fixture was started after the target-specific focus guard failed."
+    ],
+    "safety_decision": "The target-specific focus guard was honored. Fixture evidence is not promoted to live scene budget evidence."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely; no live Joint, physics, owner, registry or cleanup assertion is claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The target-specific focus guard rejected a fresh client-area frame; no screenshot or human visual review was performed."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live reload or scene pressure replay was started, so no Step 7.6 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions or child processes were started and no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full Harness completed successfully with exit code 0: executable Todo, entry/source contracts, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "regression": {
+    "status": "PASS",
+    "scope": "STATIC_AND_FIXTURE",
+    "checks": [
+      "Scene Joint Budget, Physical Joint, Visual Actuator, TurretSolver, Turret Network Authority, TransformAnchor and projectile lifecycle fixture regressions pass.",
+      "The corresponding live SCENE/TELEMETRY/VISUAL/LOG regressions remain BLOCKED by the target-specific focus guard and are not claimed here."
+    ]
+  },
+  "rollback": "Keep physical Joint creation globally disabled and do not register this standalone budget adapter as production authority until live evidence exists. If later wiring regresses, remove its include/registration and return to Visual/Logical Actuator."
+}
