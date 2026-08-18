@@ -24,10 +24,12 @@ The current report is `docs/candidates/sdk-beta-v1.result.json`. It records all
 three profiles and all three conformance suites as passing, `editorFree=true`,
 `repeatableBuild=true`, and a resolved blocker list.
 
-This environment has no external author cohort and no Teardown.exe. The report
-therefore keeps `externalAuthors=0`, `runtimeStatus=deferred` and
-`s0s8=deferred-until-runtime`; those are release blockers, not silently passed
-Beta criteria. Once an external cohort and game executable exist, rerun the
-same fixture and append install/Preview/S0/S8 evidence. Rollback is to keep the
-Alpha/internal SDK and remove Beta invitation metadata while retaining prior
-package artifacts.
+This environment has no external author cohort. Teardown is installed, but the
+current clean run did not start live playback because the responding target was
+not the foreground window; the process-aware report therefore records
+`teardownAvailable=true`, `runtimeStatus=not-run` and
+`s0s8=deferred-until-runtime`. These are release blockers, not silently passed
+Beta criteria. Once an external cohort and a focused game target are available,
+rerun the same fixture and append install/Preview/S0/S8 evidence. Rollback is to
+keep the Alpha/internal SDK and remove Beta invitation metadata while retaining
+prior package artifacts.
