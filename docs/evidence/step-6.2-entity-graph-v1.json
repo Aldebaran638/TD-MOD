@@ -1,0 +1,96 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 6.2",
+  "title": "EntityGraph and Part/Anchor Resolver v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "0d5e30a98da185cad5bab9ac0dc35a0315fe8ba7a6cbbc493f4a76d0caedc535",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_F4_TO_F5",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": []
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The EntityGraph definition/runtime graph and stable Part/Anchor resolver are implemented and offline-verified with generation/owner tags, cache accounting and deterministic rejection cases. Live S1 evidence remains blocked by target focus and tool availability.",
+    "verification_status_reason": "The responding Teardown target is not the foreground window, and this session has no target-scoped observe/telemetry/control bridge. No live frame or CM2_TEST_V1 session was started."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts; Step 6.2 fingerprint matched 0d5e30a98da185cad5bab9ac0dc35a0315fe8ba7a6cbbc493f4a76d0caedc535.",
+    "fixture": "docs/candidates/entity-graph-v1.fixture.json",
+    "runner": "PASS: identity=ship:graph-test:42, ownerId=owner:42, generation=7, definitionLoads=1, runtimeBinds=1, definitionRejects=3, runtimeRejects=1, cyclesRejected=1, missingRejected=1, duplicateRejected=1, partLookups=3, partHits=2, partMisses=1, anchorLookups=1, anchorHits=1, anchorMisses=0, stableResolution=true.",
+    "negative_cases": "PASS: missing-parent, duplicate-anchor, cycle and stale-runtime-generation mutations were rejected with diagnostics.",
+    "runtime_model_boundary": "The deterministic fixture proves graph topology, stable part/anchor resolution, cache hits/misses and generation/owner rejection only. It does not prove live Shape/Joint enumeration, S1 mount count/coordinate golden, reload rebinding, telemetry lifecycle, visual state or runtime log health."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T04:44:16.4507035Z",
+      "input_desktop": "Default",
+      "foreground_handle": "0x2CA0D8C",
+      "foreground_pid": 53556,
+      "foreground_target_match": false,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "S1 mount count and coordinate golden",
+      "Scene reload and runtime graph rebinding",
+      "Live Shape/Joint/Transform handle resolution and cache behavior",
+      "Timestamped client-area screenshot and incremental runtime log"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop reported Default, but GetForegroundWindow reported PID 53556 / handle 0x2CA0D8C, not Teardown PID 57656 / handle 0x3321290.",
+      "No target-scoped observe/control/telemetry operation is available in this session; no reload, input, telemetry probe, scene replay or screenshot was started."
+    ],
+    "safety_decision": "The target-specific focus guard was honored. Static and fixture evidence cannot substitute for the live contract profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh target-bound frame was available to open CM2_TEST_V1 safely; no live graph registration, lifecycle, transform or anchor assertion is claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The target-specific focus guard rejected a fresh client-area frame before the graph and anchor scene could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live scene reload or graph binding replay was started, so no Step 6.2 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions were issued; no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully with exit code 0: entry closure, source-of-truth, executable Todo, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/candidates/entity-graph-v1.fixture.json",
+    "docs/candidates/entity-graph-v1.result.json",
+    "tools/cm2-world-host/run-entity-graph-v1.ps1",
+    "tools/cm2-world-host/test-entity-graph-v1.ps1"
+  ],
+  "rollback": "Bypass cm2EntityGraphV1 and retain the old mount resolver as a read-only fallback if live S1 identity, mount count or coordinates differ. Preserve EntityGraph definition/runtime fixtures and diagnostics for comparison; do not modify the existing physical layout."
+}

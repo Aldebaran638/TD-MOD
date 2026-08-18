@@ -4459,7 +4459,7 @@
       "id": "Step 6.2",
       "stage": "Gate 6",
       "title": "建立 EntityGraph 与稳定 Part/Anchor Resolver",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 定义 EntityGraph 节点/父子关系/part id/anchor id；[ ] Resolver 根据 definition + runtime graph 解析 Body/Shape/Joint/Transform；[ ] 缺失/重复/循环引用失败；[ ] generation 和 owner 进入返回值；[ ] 记录 lookup 命中与失败。 Reason: mount、camera、engine、weapon、effect 和 damage 不能继续各自用 magic offset/root Body 坐标。",
       "expected_outcome": "所有部件和挂点都有稳定、可验证、可缓存的地址。",
       "prerequisites": [
@@ -4477,11 +4477,11 @@
         "code_or_document": "Content Mod 2/script/world/adapter/entity_graph_v1.lua; shipMain.lua and strikeCraftMain.lua initialize cm2EntityGraphV1 after VehicleInstance setup; docs/entity-graph-v1.md; docs/candidates/entity-graph-v1.fixture.json; docs/candidates/entity-graph-v1.result.json.",
         "automated_tests": "run-entity-graph-v1.ps1 PASS: definitionLoads=1, runtimeBinds=1, definitionRejects=3, runtimeRejects=1, cyclesRejected=1, missingRejected=1, duplicateRejected=1, partLookups=3, partHits=2, partMisses=1, anchorLookups=1, anchorHits=1, anchorMisses=0, stableResolution=true. test-entity-graph-v1.ps1 PASS: valid graph, missing-parent mutation, duplicate-anchor mutation, cycle mutation, and stale runtime generation are rejected; diagnostics return real node/part/anchor/runtime counts.",
         "harness": "harness/check-all.ps1 PASS (exit 0): entry closure 4 entries/256 Lua files; Lua 212 files, 0 issues; Teardown API 212 files, 0 issues; XML, weapon/component/ship checks and all self-tests passed. Harness emitted only its known fixture cleanup lock warnings after reporting all checks passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; live S1 mount-count/coordinate golden, scene reload, runtime graph rebinding, and performance/cache behavior cannot be measured. Offline fixture proves deterministic resolver and rejection contracts only.",
+        "runtime_or_performance": "BLOCKED: Teardown is visible and responding on the Default input desktop, but the foreground window is PID 53556 / handle 0x2CA0D8C rather than the target Teardown window 57656 / handle 0x3321290. No live S1 mount-count/coordinate golden, scene reload, runtime graph rebinding, performance/cache sample, screenshot or incremental log was started because the target-specific focus guard could not establish a fresh frame. Offline fixture proves deterministic resolver and rejection contracts only.",
         "rollback_record": "Bypass cm2EntityGraphV1 and retain the old mount resolver as a read-only fallback if live S1 identity, mount count, or coordinates differ. Preserve EntityGraph definition/runtime fixtures and diagnostics for comparison; do not modify the existing physical layout."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-6.2",
-      "status_reason": "EntityGraph definition/runtime graph, stable Part/Anchor resolver, generation/owner-tagged references, cache invalidation, and duplicate/missing/cycle rejection are implemented and wired; offline fixtures and full Harness pass. Live S1 golden and runtime performance evidence is unavailable because Teardown.exe is absent.",
+      "status_reason": "EntityGraph definition/runtime graph, stable Part/Anchor resolver, generation/owner-tagged references, cache invalidation, and duplicate/missing/cycle rejection are implemented and wired; offline fixtures and full Harness pass. Live S1 golden and runtime performance evidence are blocked because the responding Teardown target is not the foreground window and this session has no target-scoped observe/telemetry/control bridge.",
       "verification_status": "pending",
       "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
       "verification": {
@@ -4557,6 +4557,13 @@
         "The owning deterministic fixture runner and negative cases are available before product changes.",
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The responding Teardown target exists, but the read-only Win32 probe found another foreground window (PID 53556 / handle 0x2CA0D8C) on the Default input desktop; the target is PID 57656 / handle 0x3321290. The available session has no target-scoped teardown_observe, telemetry bridge or control operation, so the focus guard must refuse live reload, input, telemetry and visual capture. This blocks S1 graph/anchor golden and runtime/cache verification; it does not invalidate the completed resolver implementation or deterministic fixture result.",
+        "evidence": "docs/evidence/step-6.2-entity-graph-v1.json; target teardown:57656:53613200; Win32 read-only probe 2026-08-18T04:44:16.4507035Z",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T04:44:16+08:00"
+      },
       "plan_order": 42
     },
     {
