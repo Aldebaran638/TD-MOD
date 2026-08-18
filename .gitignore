@@ -31,6 +31,8 @@
 !tools/cm2-expert/**
 !tools/cm2-soak/
 !tools/cm2-soak/**
+!tools/cm2-perf/
+!tools/cm2-perf/**
 !tools/cm2-package/
 !tools/cm2-package/**
 !tools/cm2-sdk/

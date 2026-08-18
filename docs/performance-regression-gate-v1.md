@@ -12,7 +12,7 @@ The gate evaluates every sample, reports variance, and stops when relative stand
     .\tools\cm2-perf\run-performance-regression-gate-v1.ps1
     .\tools\cm2-perf\test-performance-regression-gate-v1.ps1
 
-The result is written to `docs/candidates/performance-regression-gate-v1.result.json`. The current fixture is a deterministic headless candidate: all seven metrics and S0–S8 suites pass, but live Teardown timing, hardware identity, nightly pressure, and replay evidence are deferred because `Teardown.exe` is unavailable. This is reported as `unable`, not `pass`.
+The result is written to `docs/candidates/performance-regression-gate-v1.result.json`. The current fixture is a deterministic headless candidate: all seven metrics and S0–S8 suites pass, but live Teardown timing, hardware identity, nightly pressure, and replay evidence are not run by this headless runner. Runtime is reported as `deferred` or `not-run` based on target availability, while the gate remains `unable` until separate live evidence is recorded.
 
 ## Rollback
 
