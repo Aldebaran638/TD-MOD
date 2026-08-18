@@ -4680,7 +4680,7 @@
       "id": "Step 6.4",
       "stage": "Gate 6",
       "title": "按顺序把现有系统迁移到 AnchorResolver",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 迁移 mount/fire transform；[ ] camera/engine/thruster；[ ] weapon muzzle/projectile spawn；[ ] FX/audio/shake anchors；[ ] damage/part health；[ ] 每一批保留 legacy 对照和差异报告。 Reason: 一次迁移所有坐标风险不可定位，必须沿高价值路径逐步替换。",
       "expected_outcome": "现有功能不再依赖根 Body magic offset，AnchorResolver 成为单一坐标事实来源。",
       "prerequisites": [
@@ -4698,11 +4698,11 @@
         "code_or_document": "Content Mod 2/script/world/adapter/transform_anchor_migration_v1.lua; shipMain.lua and strikeCraftMain.lua initialize the legacy-safe migration facade; docs/transform-anchor-migration-v1.md; docs/candidates/transform-anchor-migration-v1.fixture.json; docs/candidates/transform-anchor-migration-v1.result.json. Five ordered batches cover mount/fire, camera/engine/thruster, weapon/projectile, FX/audio/shake, and damage/part-health.",
         "automated_tests": "run-transform-anchor-migration-v1.ps1 PASS: batchCount=5, comparisons=10, comparisonPasses=8, comparisonMismatches=2 (deliberate weapon muzzle mismatch plus its shadow replay), modeChanges=9, resolves=9, legacyResolves=9, shadowResolves=5, anchorResolves=4, rollbacks=1, rejects=2, staleRejects=1. test-transform-anchor-migration-v1.ps1 PASS: promotion-before-clean-comparison and unknown-batch mutations are rejected.",
         "harness": "harness/check-all.ps1 PASS (exit 0): entry closure 4 entries/258 Lua files; Lua/API closure checks 214 files, 0 issues; XML, weapon/component/ship checks and all self-tests passed. Harness emitted only its known fixture cleanup lock warnings after reporting all checks passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; S0/S1/S5 live mount, camera, projectile, FX, audio, shake, and damage golden captures plus runtime performance cannot be measured. Facade remains legacy-default; offline shadow ledger is contract evidence only.",
+        "runtime_or_performance": "BLOCKED: Teardown is visible and responding on the Default input desktop, but the foreground window is PID 53556 / handle 0x2CA0D8C rather than target Teardown PID 57656 / handle 0x3321290. S0/S1/S5 live mount, camera, projectile, FX, audio, shake and damage golden captures, REAL_INPUT traces, screenshots, incremental logs and runtime performance were not run. Facade remains legacy-default; offline shadow ledger is contract evidence only.",
         "rollback_record": "Keep each legacy resolver as the active source and use cm2TransformAnchorMigrationV1.rollback(handle, batchId, reason) for any failing batch. Preserve comparison DTOs/deltas and ledger history; promote a batch again only after a clean live golden."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-6.4",
-      "status_reason": "Five ordered migration batches, legacy/shadow/anchor feature modes, comparison deltas, promotion gates, and rollback ledger are implemented and wired with legacy default; deterministic runner, negative tests, and full Harness pass. Live S0/S1/S5 migration evidence is unavailable because Teardown.exe is absent.",
+      "status_reason": "Five ordered migration batches, legacy/shadow/anchor feature modes, comparison deltas, promotion gates, and rollback ledger are implemented and wired with legacy default; deterministic runner, negative tests, and full Harness pass. Live S0/S1/S5 migration evidence is blocked because the responding Teardown target is not foreground and this session has no target-scoped observe/telemetry/control bridge.",
       "verification_status": "pending",
       "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
       "verification": {
@@ -4781,6 +4781,13 @@
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work.",
         "Targeted fresh-frame keyboard/mouse control and emergency release are available; setup removes unrelated travel and aiming."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The responding Teardown target exists, but the read-only Win32 probe found another foreground window (PID 53556 / handle 0x2CA0D8C) on the Default input desktop; the target is PID 57656 / handle 0x3321290. The available session has no target-scoped teardown_observe, telemetry bridge or control operation, so the focus guard must refuse REAL_INPUT, live reload, telemetry and visual capture. This blocks S0/S1/S5 migration golden and runtime-health verification; it does not invalidate the completed five-batch migration ledger or deterministic rollback result.",
+        "evidence": "docs/evidence/step-6.4-transform-anchor-migration-v1.json; target teardown:57656:53613200; Win32 read-only probe 2026-08-18T05:00:23.4057354Z",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T05:00:23+08:00"
+      },
       "plan_order": 44
     },
     {

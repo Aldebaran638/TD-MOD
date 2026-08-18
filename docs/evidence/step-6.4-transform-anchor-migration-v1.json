@@ -1,0 +1,96 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 6.4",
+  "title": "Transform/Anchor Migration Ledger v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "45a13cb778ca367d55bb23de57d970e04e36affe3cd9279ea5d57eef6903b6b5",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_F4_TO_F5",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": []
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The five ordered migration batches, legacy/shadow/anchor modes, comparison ledger, promotion gates and rollback path are implemented with legacy as the authoritative default. Offline shadow replay passes; live S0/S1/S5 evidence remains blocked by target focus and tool availability.",
+    "verification_status_reason": "The responding Teardown target is not the foreground window, and this session has no target-scoped observe/telemetry/control bridge. REAL_INPUT and live CM2_TEST_V1 verification were not started."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts; Step 6.4 fingerprint matched 45a13cb778ca367d55bb23de57d970e04e36affe3cd9279ea5d57eef6903b6b5.",
+    "fixture": "docs/candidates/transform-anchor-migration-v1.fixture.json",
+    "runner": "PASS: batchCount=5, comparisons=10, comparisonPasses=8, comparisonMismatches=2 (deliberate weapon-projectile mismatch and shadow replay), modeChanges=9, resolves=9, legacyResolves=9, shadowResolves=5, anchorResolves=4, rollbacks=1, rejects=2, staleRejects=1.",
+    "negative_cases": "PASS: promotion before clean comparison and unknown migration batch were rejected.",
+    "runtime_model_boundary": "The deterministic ledger proves ordered batch governance, legacy/shadow/anchor source selection, mismatch retention, rollback and stale/unknown rejection only. It does not prove live S0/S1/S5 mount, camera, projectile, FX/audio/shake or damage positions, REAL_INPUT chains, screenshots, runtime logs or performance."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T05:00:23.4057354Z",
+      "input_desktop": "Default",
+      "foreground_handle": "0x2CA0D8C",
+      "foreground_pid": 53556,
+      "foreground_target_match": false,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "S0/S1/S5 live mount/fire, camera/engine/thruster, projectile, FX/audio/shake and damage golden",
+      "REAL_INPUT action traces and target-bound reload",
+      "CM2_TEST_V1 transform/owner/registry deltas",
+      "Timestamped screenshot, incremental runtime log and performance sample"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop reported Default, but GetForegroundWindow reported PID 53556 / handle 0x2CA0D8C, not Teardown PID 57656 / handle 0x3321290.",
+      "No target-scoped observe/control/telemetry operation is available in this session; no REAL_INPUT, reload, telemetry probe, scene replay or screenshot was started."
+    ],
+    "safety_decision": "The target-specific focus guard was honored. Static and fixture evidence cannot substitute for the live contract profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh target-bound frame was available to open CM2_TEST_V1 safely; no live migration, transform or lifecycle assertion is claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The target-specific focus guard rejected a fresh client-area frame before the migrated presentation could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live reload or migration replay was started, so no Step 6.4 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions were issued; no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully with exit code 0: entry closure, source-of-truth, executable Todo, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/candidates/transform-anchor-migration-v1.fixture.json",
+    "docs/candidates/transform-anchor-migration-v1.result.json",
+    "tools/cm2-world-host/run-transform-anchor-migration-v1.ps1",
+    "tools/cm2-world-host/test-transform-anchor-migration-v1.ps1"
+  ],
+  "rollback": "Keep each legacy resolver as the active source and use cm2TransformAnchorMigrationV1.rollback(handle, batchId, reason) for any failing batch. Preserve comparison DTOs/deltas and ledger history; promote a batch again only after a clean live golden."
+}
