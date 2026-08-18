@@ -1,0 +1,99 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 7.2",
+  "title": "Pure TurretSolver v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "74fe0ffe65d3a21854c9d231fdb78fbee9f091325dbaab3341bec78a6bb3b0b6",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_RESTART_MOD_SESSION",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": [
+      "Live SCENE/TELEMETRY/VISUAL/LOG verification is blocked by the active Windows input desktop."
+    ]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "Pure DTO-only target selection, deterministic ordering, velocity lead, basis yaw/pitch solve, limits, invalid-basis rejection and generation/owner rejection are implemented. Offline fixture, negative tests and full Harness pass.",
+    "verification_status_reason": "BLOCKED: the exact Teardown target is visible and responding, but the active input desktop is Screen-saver and GetForegroundWindow returns 0. The focus guard refused reload, telemetry bridge access, screenshot capture and live solver replay."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts and the Step 7.2 fingerprint matched 74fe0ffe65d3a21854c9d231fdb78fbee9f091325dbaab3341bec78a6bb3b0b6.",
+    "fixture": "docs/candidates/turret-solver-v1.fixture.json",
+    "runner": "PASS: selections=1, selected=1, solves=2, solveRejects=1, clampedYaw=1, clampedPitch=0, leadApplications=1, filterRejects=2, staleRejects=1.",
+    "negative_cases": "PASS: nondeterministic target-selection and aim-limit golden mutations were rejected by test-turret-solver-v1.ps1.",
+    "runtime_model_boundary": "The fixture proves pure target filtering/order, lead point, yaw/pitch clamp, invalid basis rejection and stale generation handling. It does not prove live Joint response, target DTO transport, actuator convergence, muzzle/hit alignment, multiplayer ownership, screenshots or runtime log health."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T05:49:21.4112811Z",
+      "input_desktop": "Screen-saver",
+      "foreground_handle": 0,
+      "foreground_pid": 0,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Live solver scene, target filtering, Joint/actuator convergence and target DTO transport",
+      "Authoritative telemetry angles, transforms, owners and registered-state assertions",
+      "Timestamped screenshot and visual acceptance",
+      "Incremental runtime log health and performance"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow reported Screen-saver and foreground handle 0.",
+      "No reload, input, telemetry probe, screenshot or live solver fixture was started after the focus guard failed."
+    ],
+    "safety_decision": "The focus guard was honored. Offline evidence is not promoted to live runtime evidence."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely; no live solver angles, owner or registration assertions are claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The focus guard rejected a fresh client-area frame; no screenshot or human visual review was performed."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live reload or solver replay was started, so no Step 7.2 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions were issued and no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full Harness completed successfully with exit code 0: executable Todo, entry/source contracts, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "regression": {
+    "status": "PASS",
+    "scope": "STATIC_AND_FIXTURE",
+    "checks": [
+      "TurretDefinition, TurretSolver, TransformAnchor, TransformAnchor migration, projectile lifecycle, scene joint budget, physical actuator, network authority and visual actuator self-tests passed.",
+      "The corresponding live SCENE/TELEMETRY/VISUAL/LOG regressions remain BLOCKED by the focus guard and are not claimed here."
+    ]
+  },
+  "rollback": "Stop consuming cm2TurretSolverV1 output and keep legacy target/aim logic; preserve solver golden and rejection reports. Do not connect pure commands to a production Joint until Gate 7 live review."
+}

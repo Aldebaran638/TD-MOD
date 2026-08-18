@@ -5248,7 +5248,7 @@
       "id": "Step 7.2",
       "stage": "Gate 7",
       "title": "实现纯逻辑 TurretSolver",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 实现 target selection、lead/aim、yaw/pitch clamp、slew、cooldown、fire permission；[ ] solver 只读 snapshot/Transform/target，不调用底层物理；[ ] 固定 timestep/seed；[ ] 输出 command/state DTO。 Reason: 先把可预测的战斗语义与物理表现分离，物理失败不能改变瞄准/开火合同。",
       "expected_outcome": "逻辑炮塔可在 synthetic、Preview、服务器和回放中运行。",
       "prerequisites": [
@@ -5266,13 +5266,13 @@
         "code_or_document": "Content Mod 2/script/world/adapter/turret_solver_v1.lua (pure DTO logic, not wired to engine); docs/turret-solver-v1.md; docs/candidates/turret-solver-v1.fixture.json; docs/candidates/turret-solver-v1.result.json.",
         "automated_tests": "run-turret-solver-v1.ps1 PASS: selections=1, selected=1, solves=2, solveRejects=1, clampedYaw=1, clampedPitch=0, leadApplications=1, filterRejects=2, staleRejects=1. test-turret-solver-v1.ps1 PASS: deterministic selection and aim-limit golden mutations are rejected. Yaw sign golden was corrected so forward=-Z/right=+X yields +45 degrees before clamp.",
         "harness": "harness/check-all.ps1 PASS (exit 0): entry closure 4 entries/260 Lua files; Lua/API closure checks 219 files, 0 issues; XML, weapon/component/ship checks and all self-tests passed. Harness emitted only its known fixture cleanup lock warnings after reporting all checks passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; live target visibility, Joint drive response, lead tuning, network target DTO and solver performance cannot be measured. Solver has no engine reads/writes and remains fixture-only.",
+        "runtime_or_performance": "BLOCKED: the exact Teardown target is visible and responding, but the active Windows input desktop is Screen-saver and GetForegroundWindow returns 0; live Joint drive response, lead tuning, network target DTO and solver performance cannot be measured. Solver has no engine reads/writes and remains fixture-only.",
         "rollback_record": "Stop consuming cm2TurretSolverV1 output and keep legacy target/aim logic; preserve solver golden and rejection reports. Do not connect pure commands to a production Joint until Gate 7 live review."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-7.2",
-      "status_reason": "Pure deterministic target filter/ordering, velocity lead, basis yaw/pitch solve, limits, invalid-basis and generation/owner rejection are implemented; offline fixture, negative tests and full Harness pass. Live target/Joint/network/performance evidence is unavailable because Teardown.exe is absent.",
+      "status_reason": "Pure deterministic target filter/ordering, velocity lead, basis yaw/pitch solve, limits, invalid-basis and generation/owner rejection are implemented; offline fixture, negative tests and full Harness pass. Live target/Joint/network/performance evidence remains blocked by the non-interactive Windows input desktop.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "BLOCKED: the exact Teardown target is visible and responding, but the active input desktop is Screen-saver and GetForegroundWindow returns 0. Evidence: docs/evidence/step-7.2-turret-solver-v1.json. Live SCENE/TELEMETRY/VISUAL/LOG assertions remain pending.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "74fe0ffe65d3a21854c9d231fdb78fbee9f091325dbaab3341bec78a6bb3b0b6",
@@ -5345,6 +5345,13 @@
         "The owning deterministic fixture runner and negative cases are available before product changes.",
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The exact Teardown target is outside the agent's interactive input desktop. The focus-safe probe found Screen-saver with foreground handle 0, so live reload, telemetry bridge access, screenshot capture and solver replay cannot be completed safely.",
+        "evidence": "docs/evidence/step-7.2-turret-solver-v1.json",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T13:49:21+08:00"
+      },
       "plan_order": 49
     },
     {
