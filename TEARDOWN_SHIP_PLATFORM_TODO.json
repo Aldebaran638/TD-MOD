@@ -8418,7 +8418,7 @@
       "id": "Step 11.5",
       "stage": "Gate 11",
       "title": "发布物与支持边界分离",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 拆分 Core Runtime、Creator CLI/Compiler、External Editor、Preview Mod、Schema/API 文档、Templates/Examples、Conformance Test Kit、可选 AI provider；[ ] 每个发布物有版本/兼容范围/安装/支持文档；[ ] 文档覆盖五分钟武器、单 Body VOX、ID/坐标/Anchor/Turret、Effect/Projectile/Joint 预算、兼容矩阵、错误码、发布/升级/回滚/卸载、Data-only/Expert 边界、AI provenance/license；[ ] 不安装 AI/Editor 仍可构建相应包。 Reason: 玩家、创作者、Core 开发者、AI 工作流的依赖不同，全部塞进一个 Mod 会增加包体和支持面。",
       "expected_outcome": "玩家 Runtime 极简，创作者按需安装工具，各发布物有清晰支持边界。",
       "prerequisites": [
@@ -8434,15 +8434,15 @@
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
         "code_or_document": "docs/release-artifacts-v1.json; docs/release-boundaries-v1.md; docs/candidates/release-artifacts-v1.fixture.json; docs/candidates/release-artifacts-v1.result.json; tools/cm2-release/check-release-artifacts-v1.ps1; tools/cm2-release/run-release-artifacts-v1.ps1; tools/cm2-release/test-release-artifacts-v1.ps1. The manifest separates Core Runtime, Creator CLI/Compiler, External Editor, Preview Mod, Schema/API, Templates/Examples, Conformance Kit and optional AI provider with versions, source roots, dependencies, install/support boundaries and required topic coverage.",
-        "automated_tests": "tools/cm2-release/test-release-artifacts-v1.ps1 passed all assertions: eight artifacts form an acyclic graph; Core-only, CLI-without-Editor/AI, Editor-without-AI and Conformance profiles are disjoint; nine support topics are covered; package/clean-room/SDK/Editor/Compiler suites pass; AI is optional/removable and runtime Lua generation remains false; source snapshot is preserved; repeated determinismHash is identical. Runner result is intentionally unable pending live packaging evidence.",
+        "automated_tests": "tools/cm2-release/check-release-artifacts-v1.ps1 passed; the single release runner completed with exit code 0; and package-manifest, clean-room, SDK/CLI, Editor and Compiler suites each independently returned exit code 0. Eight artifacts form an acyclic graph; four clean-room profiles are disjoint; nine support topics are covered; AI is optional/removable and Runtime Lua generation remains false; source snapshot is preserved; repeated determinismHash is identical. The two-pass wrapper exceeded its timeout during the second nested runner call and is not counted as passing evidence.",
         "harness": ".\\harness\\check-all.ps1 exited 0. Entry closure, source-of-truth, schema/compiler/catalog, presentation/effect, Lua/API/XML, weapon/component/ship checks and all Harness self-tests passed.",
-        "runtime_or_performance": "UNABLE: package boundaries and clean-room contracts pass headlessly, but Teardown.exe and immutable archive/download infrastructure are unavailable. Core-only live play, independently installed package execution and download hash verification cannot be evidenced; the manifest remains a headless candidate.",
+        "runtime_or_performance": "UNABLE: package boundaries and clean-room contracts pass headlessly. A Teardown process is present, but the release runner does not find Teardown.exe on PATH and no clean Core-only package installation, independent package execution, immutable archive or download hash verification was performed. The manifest remains a headless candidate; source snapshot hashes are not archive hashes.",
         "rollback_record": "Keep the previous single-package Framework manifest and last valid Core artifact; preserve all source/download hashes. If a split package fails, restore the previous Core package, remove only optional Editor/AI artifacts, and do not remove Core/CLI/Schema capability."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-11.5",
-      "status_reason": "The independent eight-artifact manifest, acyclic dependency graph, clean-room profiles, support documentation and headless suites are implemented and pass. Official completion is unable because the plan requires live Core-only execution and verifiable release archives/downloads; Teardown and packaging infrastructure are unavailable.",
+      "status_reason": "The independent eight-artifact manifest, acyclic dependency graph, clean-room profiles, support documentation and headless suites are implemented and pass. Implementation is finish. Verification remains pending because the plan requires clean-install Core-only execution and verifiable release archives/downloads; only source snapshots are available in the current environment.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "STATIC, FIXTURE and CONSUMER_MOD package-boundary evidence passes. SCENE, TELEMETRY, VISUAL and LOG release claims remain pending: no clean-installed immutable release candidate was run in Teardown, and no archive/download hash exists. The open Teardown process is environment evidence only and does not satisfy the clean-install release contract.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "23aadef2b448931158383ae840bcc14bd05aad16673d59dd2408f601331dd474",
@@ -8517,6 +8517,13 @@
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work.",
         "An independent clean-room disposable consumer Mod/package is available and contains no private CM2 implementation include."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "Headless release boundaries, clean-room profiles, support documentation and all five independent suites pass, but the required clean-installed Core-only Teardown run and immutable archive/download verification are not available. The current Teardown process is not a packaged release candidate and source snapshot hashes cannot be promoted to download hashes.",
+        "evidence": "docs/evidence/step-11.5-release-artifacts-v1.json",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T16:08:48.9102768Z"
+      },
       "plan_order": 79
     },
     {

@@ -1,0 +1,86 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 11.5",
+  "title": "Release Artifacts and Support Boundaries",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "23aadef2b448931158383ae840bcc14bd05aad16673d59dd2408f601331dd474",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG", "CONSUMER_MOD"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "RESTART_TEARDOWN_AND_MOD_SESSION",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": []
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The eight-artifact release manifest, support boundaries, clean-room fixture and headless release runner are implemented.",
+    "verification_status_reason": "Headless package-boundary evidence passes. Clean-installed Core-only Teardown execution and immutable archive/download verification remain blocked.",
+    "gate_decision": "unable"
+  },
+  "static_and_fixture": {
+    "policy": "docs/release-artifacts-v1.json",
+    "boundaries": "docs/release-boundaries-v1.md",
+    "fixture": "docs/candidates/release-artifacts-v1.fixture.json",
+    "result": "docs/candidates/release-artifacts-v1.result.json",
+    "checker": "PASS: tools/cm2-release/check-release-artifacts-v1.ps1",
+    "runner": "PASS: tools/cm2-release/run-release-artifacts-v1.ps1 returned exit code 0",
+    "artifacts": "8/8 pass",
+    "dependency_graph": {"acyclic": true, "node_count": 8, "hash": "4501ef4e85972880f593d92a1c30fc1876caa774e5e36d30717194739c49181e"},
+    "clean_room_profiles": "4/4 pass",
+    "support_topics": "9/9 pass",
+    "suites": [
+      {"id": "package-manifest", "suite": "tools/cm2-package/test-package-manifest-v1.ps1", "status": "pass", "exit_code": 0},
+      {"id": "clean-room", "suite": "tools/cm2-clean-room/test-clean-room-hello-ship-v1.ps1", "status": "pass", "exit_code": 0},
+      {"id": "sdk-cli", "suite": "tools/cm2-sdk/test-cm2-sdk-v1.ps1", "status": "pass", "exit_code": 0},
+      {"id": "editor-contract", "suite": "tools/cm2-editor/test-schema-editor-v1.ps1", "status": "pass", "exit_code": 0},
+      {"id": "conformance", "suite": "harness/test-cm2-compiler.ps1", "status": "pass", "exit_code": 0}
+    ],
+    "independence": {"core_only": true, "cli_without_editor_ai": true, "editor_without_ai": true, "ai_removable": true, "runtime_lua_generated_by_ai": false},
+    "source_preserved": true,
+    "core_diff": 0,
+    "hashes": "3/3 declarations retained as source-snapshot-only; no archive/download hash fabricated",
+    "determinism": "PASS: report determinismHash is 7b553232823e2c8f82598f4111015dd0b2a199327cb739ee643fe64a10a4ac08",
+    "wrapper_timeout": "The two-pass regression wrapper exceeded 180 seconds during its second nested runner call; the completed report and each suite exit code were checked independently, so the wrapper timeout is not counted as a pass."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "observed_at_utc": "2026-08-18T16:08:48.9102768Z",
+    "process_observation": {"teardown_process_found": true, "teardown_pid": 80804, "teardown_modtest_process_remaining": false},
+    "runner_runtime": {"status": "deferred", "teardown_command_on_path": false},
+    "blocked_claims": [
+      "Clean-installed Core-only Teardown execution",
+      "Independent installed package execution without Editor/AI",
+      "Immutable release archive provenance",
+      "Download hash verification",
+      "Live release telemetry, screenshot and incremental log"
+    ],
+    "reason": "The open Teardown process is not an immutable clean-installed release candidate. The current environment has no release archive/download pipeline, so source snapshots remain headless evidence only.",
+    "safety_decision": "Keep the release at headless-candidate/Framework boundary; do not promote source hashes to downloadable artifact hashes."
+  },
+  "telemetry": {"status": "NOT RUN", "reason": "No clean-installed release candidate was started through the available operation interface."},
+  "visual": {"status": "NOT RUN", "screenshots": [], "reason": "No release-candidate scene was started; no screenshot is claimed."},
+  "log": {"status": "NOT RUN", "reason": "No release-candidate runtime session was started; process existence is not runtime-health evidence."},
+  "cleanup": {
+    "status": "PASS_NO_SESSION_STARTED",
+    "emergency_release": false,
+    "held_inputs": {"keys": [], "buttons": []},
+    "temporary_fixture_outputs_disposed": true,
+    "formal_source_preserved": true,
+    "last_valid_artifact_preserved": true,
+    "test_children_started": 0,
+    "test_children_remaining": 0
+  },
+  "harness": {"status": "PASS", "command": ".\\harness\\check-all.ps1", "result": "All entry closure, source-of-truth, executable Todo, schema/catalog, Presentation/Effect, Lua/API/XML, weapon/component/ship checks and Harness self-tests passed; exit code 0."},
+  "evidence_roots": [
+    "docs/release-artifacts-v1.json",
+    "docs/release-boundaries-v1.md",
+    "docs/candidates/release-artifacts-v1.fixture.json",
+    "docs/candidates/release-artifacts-v1.result.json",
+    "tools/cm2-release/check-release-artifacts-v1.ps1",
+    "tools/cm2-release/run-release-artifacts-v1.ps1",
+    "tools/cm2-release/test-release-artifacts-v1.ps1"
+  ],
+  "rollback": "Publish the previous single-package Framework manifest as an internal fallback; preserve source hashes and restore the last valid Core package if split packaging later fails."
+}
