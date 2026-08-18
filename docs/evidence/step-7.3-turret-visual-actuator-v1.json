@@ -1,0 +1,99 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 7.3",
+  "title": "Turret Visual Actuator and LOD v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "81836d8fdccbb6c4385926592d6e8f2321d2cb4e2614d210291175e5ee1b1382",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_RESTART_MOD_SESSION",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": [
+      "Live SCENE/TELEMETRY/VISUAL/LOG verification is blocked by the active Windows input desktop."
+    ]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "Pure DTO-only visual yaw/pitch smoothing, bounded dt, near/far/cull LOD, static-anchor fallback, lifecycle disposal and stale-handle rejection are implemented. Offline fixture, negative tests and full Harness pass.",
+    "verification_status_reason": "BLOCKED: the exact Teardown target is visible and responding, but the active input desktop is Screen-saver and GetForegroundWindow returns 0. The focus guard refused reload, telemetry bridge access, screenshot capture and live actuator replay."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts and the Step 7.3 fingerprint matched 81836d8fdccbb6c4385926592d6e8f2321d2cb4e2614d210291175e5ee1b1382.",
+    "fixture": "docs/candidates/turret-visual-actuator-v1.fixture.json",
+    "runner": "PASS: lifecycle=disposed, final yaw=27, pitch=18, lod=cull, fallbackMode=static-anchor, applies=3, dtClamps=1, yawSteps=3, pitchSteps=3, lodQueries=3, nearFrames=1, farFrames=1, culledFrames=1, staleRejects=1.",
+    "negative_cases": "PASS: smoothing golden and LOD boundary mutations were rejected by test-turret-visual-actuator-v1.ps1.",
+    "runtime_model_boundary": "The fixture proves bounded DTO smoothing, LOD selection, fallback and lifecycle guards. It does not prove renderer/Joint synchronization, GPU/CPU cost, network interpolation, visual presentation, screenshots or runtime log health."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T06:05:26.2078752Z",
+      "input_desktop": "Screen-saver",
+      "foreground_handle": 0,
+      "foreground_pid": 0,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Live visual actuator and Joint synchronization",
+      "Near/far/cull renderer, Effect/Audio budget and S1/S5 performance",
+      "Authoritative telemetry and server-command immutability during visual degradation",
+      "Timestamped screenshot and incremental runtime log health"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow reported Screen-saver and foreground handle 0.",
+      "No reload, input, telemetry probe, screenshot or live actuator fixture was started after the focus guard failed."
+    ],
+    "safety_decision": "The focus guard was honored. Offline evidence is not promoted to live runtime evidence."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely; no live actuator angles, budget or command-immutability assertions are claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The focus guard rejected a fresh client-area frame; no screenshot or human visual review was performed."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live reload or actuator replay was started, so no Step 7.3 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions were issued and no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full Harness completed successfully with exit code 0: executable Todo, entry/source contracts, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "regression": {
+    "status": "PASS",
+    "scope": "STATIC_AND_FIXTURE",
+    "checks": [
+      "Turret Visual Actuator, TurretSolver, TransformAnchor, projectile lifecycle, scene joint budget, physical actuator and network authority fixture regressions pass.",
+      "The corresponding live SCENE/TELEMETRY/VISUAL/LOG regressions remain BLOCKED by the focus guard and are not claimed here."
+    ]
+  },
+  "rollback": "Bypass cm2TurretVisualActuatorV1 and use legacy/static marker presentation. Preserve smoothing/LOD reports; do not assign production renderer or Joint ownership until live budget evidence is available."
+}
