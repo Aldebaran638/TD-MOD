@@ -1,0 +1,22 @@
+{
+    "schema":  "cm2.turret-physical-joint-report/1",
+    "protocolVersion":  "cm2.turret-physical-joint/1",
+    "identity":  "turret-joint-fixture:hero",
+    "ownerId":  "ship-owner:turret-joint-fixture",
+    "generation":  101,
+    "lifecycle":  "disposed",
+    "parentLifecycle":  "disposed",
+    "yaw":  12,
+    "pitch":  -12,
+    "torque":  20,
+    "fixtureOnly":  true,
+    "applies":  2,
+    "clamped":  1,
+    "torqueRejected":  1,
+    "parentRejects":  1,
+    "lifecycleChanges":  2,
+    "snapshots":  5,
+    "staleRejects":  1,
+    "runtimeEvidence":  "requires-live-Teardown",
+    "result":  "pass"
+}

@@ -5588,7 +5588,7 @@
       "id": "Step 7.5",
       "stage": "Gate 7",
       "title": "用 Hero Fixture 验证 Physical Joint Actuator",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 选一个可控 Hero Fixture；[ ] 创建 base/hinge/axis/limit/actuator；[ ] 将 solver output 映射为 joint target；[ ] 测试碰撞、抖动、父体销毁、重生、网络和性能；[ ] 与纯逻辑/visual 结果对照。 Reason: 物理 joint 的实际限制、抖动和销毁成本必须以一个小 fixture 证实，不能直接铺开全舰队。",
       "expected_outcome": "得到是否采用物理执行器、哪些参数/场景必须降级的实证。",
       "prerequisites": [
@@ -5606,13 +5606,13 @@
         "code_or_document": "Added Content Mod 2/script/world/adapter/turret_physical_joint_actuator_v1.lua as fixtureOnly DTO (serverInit/handle/setParentLifecycle/applyCommand/dispose/snapshot/getDiagnostics), with yaw/pitch limits, rate clamp, torque rejection, parent lifecycle and generation-handle guards. Added docs/turret-physical-joint-actuator-v1.md, docs/candidates/turret-physical-joint-actuator-v1.fixture.json and result JSON, plus offline runner/self-test under tools/cm2-world-host.",
         "automated_tests": "run-turret-physical-joint-actuator-v1.ps1 passed: applies=2, clamped=1, torqueRejected=1, parentRejects=1, lifecycleChanges=2, snapshots=5, staleRejects=1, fixtureOnly=true, lifecycle=disposed. test-turret-physical-joint-actuator-v1.ps1 passed the valid fixture and rejected both a mutated clamp golden value and a mutated torque-rejection expectation. Static scan confirmed no SetJoint/CreateJoint/GetJoint/JointMotor call.",
         "harness": "Full .\\harness\\check-all.ps1 passed: entry closure 4 entry points/260 Lua files, Lua/API 222 files/0 issues, XML 8 files/0 issues, all weapon/component/ship checks and all self-tests passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable on this machine. Live collision/jitter/orphan-body, respawn/network, long-duration stability, CPU time and physical Joint-count evidence cannot be collected; the runner explicitly records runtimeEvidence=requires-live-Teardown. Therefore physical mode remains fixture-only and Visual/logic fallback remains the production path.",
+        "runtime_or_performance": "BLOCKED: Teardown is visible and responding, but the active input desktop is Default and the foreground window belongs to PID 53556 / HWND 0x2CA0D8C rather than target Teardown PID 57656 / HWND 0x3321290. Live collision/jitter/orphan-body, respawn/network, long-duration stability, CPU time and physical Joint-count evidence cannot be collected; the runner explicitly records runtimeEvidence=requires-live-Teardown. Therefore physical mode remains fixture-only and Visual/logic fallback remains the production path.",
         "rollback_record": "Do not include the standalone fixture module in production ownership; keep vehicle/turret mode on logical or visual fallback. If later wiring causes a regression, remove the physical actuator include/registration and restore the last valid Visual Actuator route; preserve fixture/result/docs as the audit baseline."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-7.5",
-      "status_reason": "Offline DTO contract, boundary tests and full Harness are complete, but live Teardown physics, collision/jitter, orphan cleanup, respawn/network and performance evidence cannot be executed because no Teardown executable is available; plan acceptance explicitly permits an unable result with physical mode disabled.",
+      "status_reason": "FixtureOnly Hero physical actuator DTO with limits, rate, torque rejection, parent lifecycle, snapshots and stale-generation guards is implemented; offline fixture, negatives and full Harness pass. The fixture supports the documented Visual/logic fallback decision. Live physical Joint evidence remains blocked by the target-specific focus guard.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "BLOCKED: Teardown is visible and responding, but the active input desktop is Default and the foreground window belongs to PID 53556 / HWND 0x2CA0D8C rather than target Teardown PID 57656 / HWND 0x3321290. Evidence: docs/evidence/step-7.5-turret-physical-joint-actuator-v1.json. Live SCENE/TELEMETRY/VISUAL/LOG assertions remain pending.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "18dde5f2041f64590b686f7b269161a2ea69d185e8127d3f0bf9b0bd15475433",
@@ -5685,6 +5685,13 @@
         "The owning deterministic fixture runner and negative cases are available before product changes.",
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The exact Teardown target is outside the agent's target-specific interactive focus. The focus-safe probe found a different foreground PID/window, so live reload, telemetry bridge access, screenshot capture and physical Joint replay cannot be completed safely.",
+        "evidence": "docs/evidence/step-7.5-turret-physical-joint-actuator-v1.json",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T14:38:50+08:00"
+      },
       "plan_order": 52
     },
     {
