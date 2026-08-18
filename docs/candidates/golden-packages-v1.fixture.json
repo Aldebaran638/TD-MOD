@@ -18,5 +18,5 @@
     { "id": "asset-hash-mismatch", "expectedCode": "asset-hash-mismatch", "source": "asset manifest negative contract" },
     { "id": "budget-overflow", "expectedCode": "budget-overflow", "source": "AI Weapon/Effect budget fixture" }
   ],
-  "runtime": { "teardownAvailable": false, "status": "deferred", "reason": "No Teardown.exe is installed or discoverable." }
+  "runtime": { "teardownAvailable": true, "status": "not-run", "reason": "Teardown is installed or running, but live Golden package Runtime regression remains an explicit focused-target operation." }
 }

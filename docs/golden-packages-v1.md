@@ -16,7 +16,7 @@ The runner executes every non-runtime suite headlessly, verifies that `Content M
 
 ## Current result
 
-The v1 candidate contains eight package kinds and six negative cases. All headless suites pass and the deterministic hash is stable. Runtime is `deferred` because no `Teardown.exe` is discoverable in this environment; therefore the official result is `unable`, not a fabricated pass. A release promotion requires the live Runtime stage to be rerun with Teardown and the prior Golden set retained until that run passes.
+The v1 candidate contains eight package kinds and six negative cases. All headless suites pass and the deterministic hash is stable. Teardown is installed, but live Runtime was not run because the responding target was not the foreground window; the report records Runtime as `not-run` and the official result remains `unable`, not a fabricated pass. A release promotion requires the live Runtime stage to be rerun with a focused Teardown target and the prior Golden set retained until that run passes.
 
 ## Rollback
 
