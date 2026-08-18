@@ -1,0 +1,96 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 6.1",
+  "title": "VehicleInstance v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "b67c5f517379d2713ba9bc30a0afc9509f555f8deed2a23c3ba0a7099a8eb0c1",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_F4_TO_F5",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": []
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The VehicleInstance identity/owner/definition/body/generation/lifecycle adapter is implemented and wired without changing the single-root physical layout. Offline identity, stale-generation, owner-dispose and revision fixtures pass; live S0/S6 evidence remains blocked by the non-interactive Windows input desktop.",
+    "verification_status_reason": "The exact Teardown target is responding, but Screen-saver is the active input desktop and foreground handle is 0. The focus guard refused reload, real input, telemetry bridge access and visual capture."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts; Step 6.1 fingerprint matched b67c5f517379d2713ba9bc30a0afc9509f555f8deed2a23c3ba0a7099a8eb0c1.",
+    "fixture": "docs/candidates/vehicle-instance-v1.fixture.json",
+    "runner": "PASS: identity=ship:advancedStrikeCraft:42, definition=advancedStrikeCraft, owner=ship-owner:42, bodyId=42, generation=7, lifecycle=disposed, disposed=true, staleRejects=2, ownerRejects=1, mountResolves=1, healthWrites=1, inputRevision=4, mountRevision=9, physicsLayoutChanged=false.",
+    "negative_cases": "PASS: root-body identity regression and stale-generation fixture mutation were rejected.",
+    "runtime_model_boundary": "The deterministic fixture proves adapter identity, owner/generation guards, lifecycle disposal, health/input/mount revisions and unchanged physical-layout metadata only. It does not prove live S0/S6 loading, body destruction, telemetry event ordering, visual scene state or runtime log health."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-17T20:59:34.0491673Z",
+      "input_desktop": "Screen-saver",
+      "foreground_handle": 0,
+      "foreground_pid": 0,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "S0/S6 live reload and fresh CM2_TEST_V1 session",
+      "Authoritative ship_registered/ship_destroyed/ship_unregistered/ship_cleanup ordering",
+      "Body, owner, health, input and mount snapshot parity",
+      "No-physics-layout-change scene smoke",
+      "Timestamped screenshot and incremental runtime log"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow reported Screen-saver and foreground handle 0.",
+      "No reload, real input, telemetry probe, scene replay or screenshot was started after the focus guard condition failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the live contract profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely; no live identity, owner, disposal or transform assertion is claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The focus guard rejected a fresh client-area frame before the deterministic scene and VehicleInstance presentation could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live scenario reload or lifecycle replay was started, so no Step 6.1 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions were issued; no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully with exit code 0: entry closure, source-of-truth, executable Todo, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/candidates/vehicle-instance-v1.fixture.json",
+    "docs/candidates/vehicle-instance-v1.result.json",
+    "tools/cm2-world-host/run-vehicle-instance-v1.ps1",
+    "tools/cm2-world-host/test-vehicle-instance-v1.ps1"
+  ],
+  "rollback": "Bypass cm2VehicleInstanceV1 and restore direct cm2ShipInstanceAdapterV1.serverInit/serverTick calls if live identity, owner, heartbeat or health differs. Keep VehicleInstance snapshots and stale-generation negatives for comparison; do not alter the single-root physical layout."
+}

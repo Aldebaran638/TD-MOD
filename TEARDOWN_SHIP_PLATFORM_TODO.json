@@ -4348,7 +4348,7 @@
       "id": "Step 6.1",
       "stage": "Gate 6",
       "title": "用 VehicleInstance 包装现有单根 Body",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 定义 VehicleInstance identity/generation/owner/definition/body handle/lifecycle；[ ] 用 adapter 包装现有单根 Body；[ ] 迁移 ship lifecycle、health、input、mount lookup 的入口；[ ] 暂不改变物理布局。 Reason: 先稳定实体身份和生命周期，后续 EntityGraph/Joint 才不会同时改变所有船的物理行为。",
       "expected_outcome": "现有单 Body 舰船以显式实例存在，root Body 不再等于全部语义。",
       "prerequisites": [
@@ -4366,11 +4366,11 @@
         "code_or_document": "Content Mod 2/script/world/adapter/vehicle_instance_v1.lua; shipMain.lua and strikeCraftMain.lua server init/tick now enter cm2VehicleInstanceV1; old ship_instance_adapter_v1.lua remains the registration/heartbeat implementation; docs/vehicle-instance-v1.md; docs/candidates/vehicle-instance-v1.fixture.json; docs/candidates/vehicle-instance-v1.result.json.",
         "automated_tests": "run-vehicle-instance-v1.ps1 PASS: stable identity=ship:advancedStrikeCraft:42, definition=advancedStrikeCraft, owner=ship-owner:42, bodyId=42, generation=7, lifecycle=disposed, disposed=true, staleRejects=2, ownerRejects=1, mountResolves=1, healthWrites=1, inputRevision=4, mountRevision=9, physicsLayoutChanged=false. test-vehicle-instance-v1.ps1 PASS: root-body and stale-generation mutations rejected.",
         "harness": "harness/check-all.ps1 PASS (exit 0): entry closure 4 entries/255 Lua files; Lua 211 files, 0 issues; Teardown API 211 files, 0 issues; XML, weapon/component/ship checks and all self-tests passed. Harness emitted only its known fixture cleanup lock warnings after reporting all checks passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; live S0/S6 reload, destroyed-body disposal, health/input/mount snapshot parity, and no-physics-layout-change smoke cannot be measured. Offline identity/generation/owner fixture is contract evidence only.",
+        "runtime_or_performance": "BLOCKED: the exact Teardown target is visible and responding, but Win32 reports the active input desktop as Screen-saver and foreground handle 0. Live S0/S6 reload, destroyed-body disposal, health/input/mount snapshot parity, and no-physics-layout-change smoke were not run. Offline identity/generation/owner fixture is contract evidence only.",
         "rollback_record": "Bypass cm2VehicleInstanceV1 and restore direct cm2ShipInstanceAdapterV1.serverInit/serverTick in shipMain and strikeCraftMain if live identity, owner, heartbeat or health differs. Keep VehicleInstance snapshots and stale-generation negatives for comparison; do not alter single-root physical layout."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-6.1",
-      "status_reason": "VehicleInstance identity/definition/owner/generation/body/lifecycle/health/input/mount adapter is implemented and wired without changing physical layout; offline stale/owner/dispose fixture and full Harness pass. Live S0/S6 runtime parity is unavailable because Teardown.exe is absent.",
+      "status_reason": "VehicleInstance identity/definition/owner/generation/body/lifecycle/health/input/mount adapter is implemented and wired without changing physical layout; offline stale/owner/dispose fixture and full Harness pass. Live S0/S6 runtime parity is blocked by the non-interactive Screen-saver input desktop.",
       "verification_status": "pending",
       "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
       "verification": {
@@ -4446,6 +4446,13 @@
         "The owning deterministic fixture runner and negative cases are available before product changes.",
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The exact Teardown target is visible and responding, but the active Win32 input desktop is Screen-saver and the foreground handle is 0. The focus guard must refuse reload, telemetry bridge access, real input and visual capture until an interactive desktop is restored. This blocks live S0/S6 identity, owner, dispose, snapshot parity, no-physics-layout-change and runtime-health verification; it does not invalidate the completed VehicleInstance adapter or offline fixture result.",
+        "evidence": "docs/evidence/step-6.1-vehicle-instance-v1.json; target teardown:57656:53613200; Win32 read-only probe 2026-08-17T20:59:34.0491673Z",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T04:59:34+08:00"
+      },
       "plan_order": 41
     },
     {
