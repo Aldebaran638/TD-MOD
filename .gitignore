@@ -17,6 +17,8 @@
 !tools/cm2-asset-build/**
 !tools/cm2-asset-import/
 !tools/cm2-asset-import/**
+!tools/cm2-clean-room/
+!tools/cm2-clean-room/**
 !tools/cm2-package/
 !tools/cm2-package/**
 !tools/cm2-sdk/

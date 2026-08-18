@@ -48,7 +48,7 @@ runner. The current result is passing with:
 - `bodyCount=1`, `contentDefinitionCount=4`, `assetCount=4`,
   `generatedCount=1`;
 - package fingerprint
-  `22bcb8921ee34712b876d3cfc70ac3cdaceada4974f761cde80c80156710b2c3`;
+  `7b729f02d07f9ca8b7d68563c29c493e15933e58913584def5f5b0a5d30f9763`;
 - compiler input hash
   `06712f87d42bfe38760aa1bddd4aeb9e7bcda2a712f04ca2f216cf917a36eb0f`;
 - compiler catalog hash
@@ -56,12 +56,12 @@ runner. The current result is passing with:
 - `coreDiff=0`, `runtimeLua=false`, and zero generated leftovers after
   uninstall.
 
-No Teardown executable is installed or discoverable here. Consequently the
-report records live Runtime installation, multiplayer, S0 and S8 evidence as
-`runtime.status=deferred`; the headless package and shared Preview contracts
-are the evidence actually executed. Once Teardown.exe is available, rerun the
-same fixture and append the live install/preview/replay record rather than
-changing the package contract.
+Teardown is available in the current machine but no live install, multiplayer,
+S0 or S8 replay was started by this clean-room run. The report therefore uses
+`runtime.status=not-run`; the headless package and shared Preview contracts are
+the evidence actually executed. Run the same fixture with a focused target to
+append the live install/preview/replay record rather than changing the package
+contract.
 
 Rollback is to delete the isolated package output and disable third-party
 registration, leaving builtin packages and the previous valid SDK artifact
