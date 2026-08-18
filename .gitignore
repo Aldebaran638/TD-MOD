@@ -13,6 +13,10 @@
 !tools/
 !tools/cm2-compiler/
 !tools/cm2-compiler/compile-definitions.ps1
+!tools/cm2-asset-build/
+!tools/cm2-asset-build/**
+!tools/cm2-asset-import/
+!tools/cm2-asset-import/**
 !tools/cm2-package/
 !tools/cm2-package/**
 !tools/cm2-sdk/
@@ -53,3 +57,8 @@ testing/fixtures/creator_sdk/**/.cm2-sdk/*.previous/
 harness/.*-test-*/
 harness/**/.*-test-*/
 .codex/**/__pycache__/
+docs/candidates/generated/asset-build-v1/.cache/
+docs/candidates/generated/asset-build-v1/.cache/**
+docs/candidates/generated/asset-build-v1/build-report.json
+docs/candidates/generated/asset-build-v1/build-report.md
+docs/candidates/generated/asset-build-v1/published/*.previous
