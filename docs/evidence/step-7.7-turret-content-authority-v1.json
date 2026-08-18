@@ -1,0 +1,101 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 7.7",
+  "title": "Formal Turret Content Authority v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "866a582b9d44de82cb4e32f512ab4132e24f389ce06dcc6aacdb390af1257d70",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_RESTART_MOD_SESSION",
+    "automation_level": "AUTO_WITH_VISUAL_REVIEW",
+    "automation_gaps": [
+      "Live fire path and subjective visual review require a focused Teardown target; legacy reader removal remains live S0-S7 gated."
+    ]
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "FixtureOnly formal turret content authority is implemented: mounts resolve fireAnchorId through AnchorResolver/TurretDefinition, mirrored anchors and explicit fallback modes are declared, catalog/editor/preview references agree, legacy root-Body fields are rejected, and joint remains disabled until physical evidence.",
+    "verification_status_reason": "BLOCKED: Teardown is visible and responding, but the active input desktop is Default and the foreground window belongs to PID 53556 / HWND 0x2CA0D8C rather than target Teardown PID 57656 / HWND 0x3321290. The focus guard refused reload, real input, telemetry bridge access, screenshot capture and live firing."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts and the Step 7.7 fingerprint matched 866a582b9d44de82cb4e32f512ab4132e24f389ce06dcc6aacdb390af1257d70.",
+    "fixture": "docs/candidates/turret-content-authority-v1.fixture.json",
+    "runner": "PASS: definitions=1, formalMounts=2, resolves=4, anchorResolves=3, fallbackResolves=1, missingAnchorRejects=1, legacyFieldRejects=1, modeChanges=1, jointRejects=1, previewReads=1, staleRejects=1, legacyReaderFileCount=13, fixtureOnly=true, rootBodyMuzzleAuthority=candidate-formal-authority-only.",
+    "negative_cases": "PASS: unbound fireAnchorId and catalog/editor reference mutations were rejected by test-turret-content-authority-v1.ps1; legacy root-Body offset input was rejected by the runner.",
+    "authority_boundary": "PASS: formal mounts use mountId -> fireAnchorId -> AnchorResolver; formal candidate has no firePosOffset/fireDirRelative; root-Body muzzle readers remain only in the ADR migration ledger until live S0-S7 comparison.",
+    "runtime_model_boundary": "The fixture proves formal content references, mirrored anchors, fallback and legacy-field rejection. It does not prove live S1/S5/S7 firing, projectile/hit/presentation chains, network, performance, screenshots, subjective visual quality or removal of the 13 legacy readers."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T08:29:37.7292627Z",
+      "input_desktop": "Default",
+      "foreground_handle": "0x2CA0D8C",
+      "foreground_pid": 53556,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Live S1/S5/S7 fire and hit path from AnchorResolver mount",
+      "Root-Body reader migration/removal comparison",
+      "Network/physics/performance and cleanup behavior",
+      "Timestamped screenshot, muzzle/presentation uniqueness and human visual review"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop reported Default, but GetForegroundWindow reported PID 53556 / HWND 0x2CA0D8C, not the target Teardown window.",
+      "No reload, real input, telemetry probe, screenshot or live firing fixture was started after the target-specific focus guard failed."
+    ],
+    "safety_decision": "The target-specific focus guard was honored. Candidate formal authority is not promoted to production runtime authority."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely; no live fire_request/hit/damage/presentation or root-Body migration assertion is claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "human_review": "NOT RUN",
+    "reason": "The target-specific focus guard rejected a fresh client-area frame; no muzzle/beam/projectile screenshot or subjective visual review was performed."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live reload or firing replay was started, so no Step 7.7 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions or child processes were started and no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "PASS: full .\\harness\\check-all.ps1 completed with all entry-closure, source-of-truth, executable-plan, contract, Lua/API, XML, weapon/component/ship checker and self-test groups passing."
+  },
+  "regression": {
+    "status": "PASS",
+    "scope": "STATIC_AND_FIXTURE",
+    "checks": [
+      "Turret Content Authority, AnchorResolver, TurretDefinition, TurretSolver, Visual Actuator, Joint Budget, projectile lifecycle and Network Authority fixture regressions pass.",
+      "The corresponding live SCENE/REAL_INPUT/TELEMETRY/VISUAL/LOG regressions remain BLOCKED by the target-specific focus guard and are not claimed here."
+    ]
+  },
+  "rollback": "Do not register the formal candidate as production authority yet. If later wiring regresses, remove turret_content_authority_v1 registration/catalog candidate and restore the legacy mount reader, keeping mode logical/visual. Preserve fixture/result/catalog/ledger; never delete the old generated artifact."
+}
