@@ -23,6 +23,8 @@
 !tools/cm2-broker/**
 !tools/cm2-sdk-beta/
 !tools/cm2-sdk-beta/**
+!tools/cm2-ai/
+!tools/cm2-ai/**
 !tools/cm2-package/
 !tools/cm2-package/**
 !tools/cm2-sdk/

@@ -21,7 +21,7 @@ Beta gate 组合 Weapon Assistant、Effect Assistant、Existing-VOX Import Assis
 
 pass 表示 headless、外部作者和 Runtime 证据全部满足；fail 表示 headless 质量/安全本身失败；unable 表示 headless 质量通过，但外部作者或 Teardown 证据缺失，可以继续作为内部 Framework，不得扩大 Beta 兼容承诺。
 
-当前 fixture 中四套 suite 全部 headless 通过，安全计数器为零，质量指标达标；外部作者验证数为 0，Teardown.exe 不可用，因此 gate 有意报告 unable。
+当前 fixture 中四套 suite 全部 headless 通过，安全计数器为零，质量指标达标；外部作者验证数为 0。Teardown 已安装，但本轮未启动 live playback，因为响应中的目标窗口不是前台窗口；报告记录 runtime `not-run`，因此 gate 有意报告 unable。
 
 ## 回归与回退
 
@@ -32,4 +32,3 @@ pass 表示 headless、外部作者和 Runtime 证据全部满足；fail 表示 
     .\tools\cm2-ai\test-ai-creator-beta-v1.ps1
 
 报告写入 docs/candidates/ai-creator-beta-v1.result.json。重复运行 determinismHash 必须一致。回退时关闭 Beta 邀请，保留内部 Assistant/SDK 和已有有效包；provider、Editor 或 AI 移除后，手工 Editor/CLI/Compiler 流程仍可维护项目。
-
