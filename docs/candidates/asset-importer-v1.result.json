@@ -1,7 +1,7 @@
 {
     "schema":  "cm2.asset-importer-report/1",
     "importerVersion":  "cm2.asset-importer/1.0.0",
-    "manifestHash":  "009135e9ba3cf5a9c1b57222ec712de910584973933ca1edee1f0afa01448e18",
+    "manifestHash":  "09ad5a4e956c75b62367db22d67f56302a0149feada32b45287ff75a28e3f2e4",
     "manifest":  {
                      "schema":  "cm2.asset-manifest/1",
                      "importerVersion":  "cm2.asset-importer/1.0.0",
@@ -11,7 +11,7 @@
                      "voxToTeardown":  "vox(x,y,z) -\u003e logical(x,z,maxZ-1-y)",
                      "catalogBinding":  {
                                             "path":  "docs/generated/cm2-generated-catalog-manifest-v1.json",
-                                            "catalogHash":  "dc01a2b7b91d5e7645bba7ea44d921efb451ec76e06fd8856c9681d80eed7fa9",
+                                            "catalogHash":  "4db2bdf51fdee33e224119dc35a104c59c2d819a3cb53d49f6d58b6bbf57977c",
                                             "ownership":  "generated-candidate-only",
                                             "runtimeMode":  "shadow"
                                         },

@@ -6012,7 +6012,7 @@
       "id": "Step 8.2",
       "stage": "Gate 8",
       "title": "把 Asset Build 变成确定性、可缓存的 Pipeline",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 将 import、validate、voxelize/convert、optimize、compile、package 分阶段；[ ] 每步输入 hash/工具版本/参数进入 cache key；[ ] 成功产物原子写入，失败不覆盖最后有效版本；[ ] 输出 machine/human report；[ ] 支持 clean rebuild 和增量 rebuild。 Reason: 不确定构建会让问题无法复现，重复处理资产会拖慢创作和 CI。",
       "expected_outcome": "本机/CI/外部作者得到相同产物和可解释缓存命中。",
       "prerequisites": [
@@ -6028,15 +6028,15 @@
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
         "code_or_document": "tools/cm2-asset-build/run-asset-build-pipeline-v1.ps1; tools/cm2-asset-build/test-asset-build-pipeline-v1.ps1; docs/asset-build-v1.md; docs/candidates/asset-build-v1.result.json; docs/candidates/generated/asset-build-v1/.",
-        "automated_tests": "Pipeline self-test passed: six stages (import, validate, voxelize-convert, optimize, compile, package); clean build misses=6; incremental rebuild hits=6/misses=0 and published=unchanged; clean workspace was byte-identical; tool-version/no-cache invalidation was verified; sidecar drift and invalid-source failures were rejected while preserving the last valid package; package hash b7b64a2aefb8a1d7bae6ae66256fb86caf9bd3a82c800adb77e47fc04ea57bd0; budget body=1/2, shape=1/8, joint=0/4, packageBytesEstimate=926.",
-        "harness": "UNABLE: the complete harness reached the non-charged-laser self-test but exited 1 because its existing fixture cleanup emitted Remove-Item failure for harness/.noncharged-laser-check-test-764bf755651c4f4dadb06c7bfaefca43; the isolated test itself reports all three PASS cases and exit 0. Product checks preceding the cleanup issue completed.",
-        "runtime_or_performance": "Deterministic build and package budget evidence are complete. No Teardown.exe is installed/discoverable, so in-game asset load/render/performance smoke is deferred to the runtime gate.",
+        "automated_tests": "Pipeline and importer self-tests passed. The six stages (import, validate, voxelize-convert, optimize, compile, package) produced clean misses=6 and incremental hits=6/misses=0 with byte-identical package hash ad140519df49e7489c2384e46c20207e3c343d8126d3cc0a0584e4a80532575b. Human and machine reports are emitted; a real tool-version change invalidated all six cache entries and produced a new package hash; sidecar drift and invalid-source failures were rejected while preserving the last valid package; budget body=1/2, shape=1/8, joint=0/4, packageBytesEstimate=926.",
+        "harness": "Full .\\harness\\check-all.ps1 passed: entry closures, source-of-truth, executable Todo, compiler/catalog, Lua/API/XML, weapon/component/ship checks and all self-tests passed.",
+        "runtime_or_performance": "The embedded contract is STATIC+FIXTURE and does not require live Teardown. The pipeline remains engine-free and does not promote runtime catalog ownership; in-game asset load/render/performance smoke belongs to the later Preview/Runtime gates.",
         "rollback_record": "Each run builds under a GUID staging directory and publishes only after hash/sidecar verification; drifted package, invalid source, or failed stage leaves published/asset-package.json and its .sha256 unchanged. Restore the previous sidecar/package or the generated .previous backup if a later deployment must be rolled back."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-8.2",
-      "status_reason": "The requested deterministic six-stage pipeline, cache keys, reports, clean/incremental rebuilds, atomic publish, and failure-preserving rollback are implemented and pass the dedicated self-test. The project-wide Harness cannot be recorded as passing because an existing non-charged-laser fixture cleanup error makes check-all exit 1; no product failure was observed and the isolated checker self-test exits 0.",
-      "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "status_reason": "The deterministic six-stage pipeline, importer dependency, source/tool/parameter cache keys, machine and human reports, clean/incremental rebuilds, atomic publication, drift guard and failure-preserving rollback are implemented. Dedicated importer/build self-tests and the full Harness pass.",
+      "verification_status": "verified",
+      "verification_status_reason": "PASS: the embedded STATIC+FIXTURE contract is satisfied by docs/candidates/asset-importer-v1.result.json, docs/candidates/asset-build-v1.result.json, docs/candidates/asset-build-v1.second.json, the dedicated self-tests, and a full .\\harness\\check-all.ps1 run. No live Teardown claim is made because the contract is tool-only.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "ba1b9a5ea494ef49c2f49f80da3c9f5fd3877e0618c2fbcc36c1e33de59476c1",
