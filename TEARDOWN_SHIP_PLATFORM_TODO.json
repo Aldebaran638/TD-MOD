@@ -6695,7 +6695,7 @@
       "id": "Step 9.3",
       "stage": "Gate 9",
       "title": "完成真正独立的 `hello-ship` Clean-room 包",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 在仓库外或隔离目录创建包；[ ] 只通过公开 schema/SDK 生成一艘单 Body 舰船、一把武器和一个效果；[ ] 不引用 Core 私有文件、相对越界路径或内部 helper；[ ] 安装/构建/Preview/Runtime/卸载全流程记录。 Reason: 框架内部示例即使成功，也可能偷偷依赖私有路径；clean-room 才能验证 SDK 边界。",
       "expected_outcome": "得到第三方最小可运行包和真实错误清单。",
       "prerequisites": [
@@ -6711,15 +6711,15 @@
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
         "code_or_document": "tools/cm2-clean-room/run-clean-room-hello-ship-v1.ps1; tools/cm2-clean-room/test-clean-room-hello-ship-v1.ps1; docs/candidates/clean-room-hello-ship-v1.fixture.json; docs/candidates/clean-room-hello-ship-v1.result.json; docs/clean-room-hello-ship-v1.md. The runner creates the package in an isolated temporary directory, hydrates hashes from its own source files, and uses only the public schema, shared Compiler, SDK CLI and Preview contract.",
-        "automated_tests": "Clean-room self-test passed: one-body ship, one mount, one weapon/projectile/effect, four owned resources and one generated DTO; five source envelopes compiled with the shared Compiler; two SDK build roots produced identical fingerprint/build-report hashes; validate/build/preview/test/package/migrate and install/uninstall simulation passed; missing dependency, future schema and private-reference probes were rejected. Result package fingerprint 22bcb8921ee34712b876d3cfc70ac3cdaceada4974f761cde80c80156710b2c3, compiler catalog hash 28dfa64200cbd5ee7afddc00b7d1c374b5caf80d493df389fa07275f00ea2e67, coreDiff=0, generatedLeftovers=0.",
+        "automated_tests": "Clean-room self-test passed: one-body ship, one mount, one weapon/projectile/effect, four owned resources and one generated DTO; five source envelopes compiled with the shared Compiler; two SDK build roots produced identical fingerprint/build-report hashes; validate/build/preview/test/package/migrate and install/uninstall simulation passed; missing dependency, future schema and private-reference probes were rejected. Result package fingerprint 7b729f02d07f9ca8b7d68563c29c493e15933e58913584def5f5b0a5d30f9763, compiler catalog hash 28dfa64200cbd5ee7afddc00b7d1c374b5caf80d493df389fa07275f00ea2e67, coreDiff=0, generatedLeftovers=0.",
         "harness": ".\\harness\\check-all.ps1 exited 0 after the clean-room implementation; 226 Lua files/0 API issues, XML, schema/compiler/catalog, weapon/component/ship checks and all self-tests passed. The existing Harness fixture cleanup printed non-fatal Remove-Item warnings but did not change the exit code.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable, so live package install into the game, Runtime unload, multiplayer behavior, S0/S8 in-game replay and performance measurements could not be executed. The report records runtime.status=deferred; headless Preview and package lifecycle simulation are the available evidence.",
+        "runtime_or_performance": "BLOCKED: Teardown.exe is installed and responding as teardown:57656:53613200, but the exact target is not the foreground window: Win32 reports Default input desktop, foreground PID 53556 / handle 0x2CA0D8C (Code), while Teardown is PID 57656 / handle 0x3321290. The target-specific focus guard therefore refused live package install, Runtime unload, multiplayer behavior, S0/S8 replay, screenshot, CM2_TEST_V1 telemetry and incremental log capture. Headless Preview and package lifecycle simulation are the available evidence.",
         "rollback_record": "Delete the isolated temporary package and its conformance result only if the fixture is withdrawn; disable third-party registration and retain builtin packages/previous SDK artifacts. The runner writes no Content Mod 2, Global Mod, Runtime Lua or generated catalog files, and SDK publication preserves the prior valid output as .previous."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-9.3",
-      "status_reason": "The independent clean-room package, shared Compiler/SDK build, deterministic hashes, private-reference scan, failure cases and install/uninstall simulation are complete. The required live Teardown Runtime/S0/S8 evidence cannot be collected because Teardown.exe is unavailable, so this task is honestly recorded as unable rather than claiming full runtime completion.",
+      "status_reason": "The independent clean-room package, shared Compiler/SDK build, deterministic hashes, private-reference scan, failure cases and install/uninstall simulation are complete. Implementation is finish. Verification remains pending because the required live Teardown Runtime/S0/S8 evidence is blocked by the exact target not being foreground; no live claim is made.",
       "verification_status": "pending",
-      "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
+      "verification_status_reason": "STATIC, FIXTURE and CONSUMER_MOD evidence passed. The required SCENE/REAL_INPUT/TELEMETRY/VISUAL/LOG live evidence was not started because the target-specific focus guard rejected the responding Teardown window; rerun this contract after Teardown is the foreground target.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "ee58abd06e06006b5f98e556334a3aae16f9d711f87cf7174ff5e298314b23f0",
@@ -6798,6 +6798,13 @@
         "Targeted fresh-frame keyboard/mouse control and emergency release are available; setup removes unrelated travel and aiming.",
         "An independent clean-room disposable consumer Mod/package is available and contains no private CM2 implementation include."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "Teardown PID 57656 / HWND 0x3321290 is visible and responding, but the foreground window is Code PID 53556 / HWND 0x2CA0D8C on the Default input desktop. The target-specific focus guard correctly refused live reload, input, telemetry, screenshot and log operations.",
+        "evidence": "docs/evidence/step-9.3-clean-room-hello-ship-v1.json",
+        "reviewed_by": "Codex autonomous verification run",
+      "reviewed_at": "2026-08-18T18:06:08+08:00"
+      },
       "plan_order": 63
     },
     {
