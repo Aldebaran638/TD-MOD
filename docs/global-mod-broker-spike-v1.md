@@ -33,7 +33,10 @@ capability conflicts but never registers a broker, writes Runtime Lua, edits a
 catalog or assumes a load-order hook. The current machine result is recorded
 in `docs/candidates/global-mod-broker-spike-v1.result.json`.
 
-No Teardown executable is available, so live load order, unload and multiplayer
-claims remain deferred. Rollback is simply to remove the experiment result and
-keep the Broker disabled; Content remains the source and Global remains the
-generated target.
+Teardown is available on the current machine, but this verification run did not
+start live load-order, unload or multiplayer playback because the exact
+responding target was not the foreground window. The target-specific focus guard
+therefore blocked input, telemetry, screenshot and log capture. The result is
+recorded as environment-blocked rather than as live Broker evidence. Rollback is
+simply to remove the experiment result and keep the Broker disabled; Content
+remains the source and Global remains the generated target.
