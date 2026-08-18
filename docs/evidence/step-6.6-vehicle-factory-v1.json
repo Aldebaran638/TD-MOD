@@ -1,0 +1,95 @@
+{
+  "schema": "cm2.step-evidence/1",
+  "step": "Step 6.6",
+  "title": "Vehicle Factory v1",
+  "contract": {
+    "schema": "cm2.verification-contract/2",
+    "plan_fingerprint": "5e83f380161f43d3a2c44e2ad6108585b2ea8e326c184dd4fcd810d18c2632a8",
+    "profiles": ["STATIC", "FIXTURE", "SCENE", "TELEMETRY", "VISUAL", "LOG"],
+    "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+    "hands": ["HAND_TEST_SETUP"],
+    "reload": "REOPEN_LEVEL_XML_OR_F4_TO_F5",
+    "automation_level": "FULL_AUTO",
+    "automation_gaps": []
+  },
+  "result": {
+    "implementation_status": "finish",
+    "verification_status": "pending",
+    "status_reason": "The six-stage VehicleFactory transaction, staged failure rollback, dynamic disposal/idempotence, lifecycle events, synthetic mode, owner/generation guards and zero-orphan result are implemented and offline-verified. Live engine lifecycle evidence remains blocked by the non-interactive Windows input desktop.",
+    "verification_status_reason": "The exact Teardown target is responding, but Screen-saver is the active input desktop and foreground handle is 0. The focus guard refused reload, input, telemetry bridge access and visual capture."
+  },
+  "static_and_fixture": {
+    "todo_plan_validation": "PASS: validate_todo_plan.py accepted all 80 executable Step contracts; Step 6.6 fingerprint matched 5e83f380161f43d3a2c44e2ad6108585b2ea8e326c184dd4fcd810d18c2632a8.",
+    "fixture": "docs/candidates/vehicle-factory-v1.fixture.json",
+    "runner": "PASS: stageOrder=graph/body/shape/joint/mount/runtime, spawnAttempts=3, spawns=2, spawnRejects=1, stageFailures=1, rollbacks=1, ticks=1, disposes=2, idempotentDisposes=1, activePeak=1, eventsEmitted=5, activeInstances=0, totalInstances=2, staleRejects=1, ownerRejects=1, orphanResources=0.",
+    "negative_cases": "PASS: spawn snapshot regression and unknown failure-stage mutations were rejected.",
+    "runtime_model_boundary": "The deterministic transaction proves stage ordering, synthetic failure rollback, lifecycle event accounting, disposal idempotence and zero-orphan DTO cleanup only. It does not prove live Body/Shape/Joint engine creation, resource counters, owner teardown, S1 repeated spawn/dispose, screenshots or runtime log health."
+  },
+  "runtime": {
+    "status": "BLOCKED",
+    "run": null,
+    "target": {
+      "target_id": "teardown:57656:53613200",
+      "pid": 57656,
+      "hwnd": 53613200,
+      "process": "teardown.exe",
+      "responding": true,
+      "visible": true,
+      "minimized": false
+    },
+    "observed": {
+      "captured_at_utc": "2026-08-18T05:17:20.5043828Z",
+      "input_desktop": "Screen-saver",
+      "foreground_handle": 0,
+      "foreground_pid": 0,
+      "desktop_probe_error": 0
+    },
+    "blocked_claims": [
+      "Live staged Body/Shape/Joint creation and resource counters",
+      "Partial-failure cleanup and owner teardown in Teardown",
+      "S1 repeated spawn/dispose and authoritative lifecycle events",
+      "Timestamped screenshot and incremental runtime log"
+    ],
+    "attempts": [
+      "Read-only process/window enumeration found the exact responding Teardown target.",
+      "Win32 OpenInputDesktop/GetForegroundWindow reported Screen-saver and foreground handle 0.",
+      "No reload, input, telemetry probe, live factory spawn or screenshot was started after the focus guard condition failed."
+    ],
+    "safety_decision": "The focus guard was honored. Static and fixture evidence cannot substitute for the live contract profiles."
+  },
+  "telemetry": {
+    "status": "NOT RUN",
+    "session": null,
+    "reason": "No fresh focused frame was available to open CM2_TEST_V1 safely; no live factory lifecycle, registry or cleanup assertion is claimed."
+  },
+  "visual": {
+    "status": "NOT RUN",
+    "screenshots": [],
+    "reason": "The focus guard rejected a fresh client-area frame before the factory scene could be identified."
+  },
+  "log": {
+    "status": "NOT RUN",
+    "reason": "No live factory reload or spawn/dispose replay was started, so no Step 6.6 incremental runtime log cursor was opened."
+  },
+  "cleanup": {
+    "status": "PASS",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_started": 0,
+    "test_children_remaining": 0,
+    "original_manager_preserved": true,
+    "note": "No live actions were issued; no stale test entities were created."
+  },
+  "harness": {
+    "status": "PASS",
+    "command": ".\\harness\\check-all.ps1",
+    "result": "Full harness completed successfully with exit code 0: entry closure, source-of-truth, executable Todo, schema/catalog/presentation checks, Lua/API/XML, weapon/component/ship checks and all self-tests passed."
+  },
+  "evidence_roots": [
+    "docs/candidates/vehicle-factory-v1.fixture.json",
+    "docs/candidates/vehicle-factory-v1.result.json",
+    "tools/cm2-world-host/run-vehicle-factory-v1.ps1",
+    "tools/cm2-world-host/test-vehicle-factory-v1.ps1"
+  ],
+  "rollback": "Bypass cm2VehicleFactoryV1 and retain VehicleInstance/ship adapter as the active single-Body path. On any live stage or resource discrepancy, call disposeAll/rollback at the factory boundary, preserve failed-stage events, and do not promote engine creation stages until S1 evidence is clean."
+}

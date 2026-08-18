@@ -4909,7 +4909,7 @@
       "id": "Step 6.6",
       "stage": "Gate 6",
       "title": "建立 Vehicle Factory 与动态 Spawn/Dispose API",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] Factory 从 VehicleDefinition/manifest 创建实例；[ ] 分阶段创建 graph、body、shape、joint、mount、runtime；[ ] 任何阶段失败都执行幂等回滚；[ ] Spawn/Dispose 产生 lifecycle event；[ ] 支持 synthetic/preview/test。 Reason: 静态 bootstrap 无法支撑多船、重生、Editor Preview、AI 生成和存档加载，必须有可失败、可回收工厂。",
       "expected_outcome": "舰船生命周期从手工脚本变成可组合、可测试 API。",
       "prerequisites": [
@@ -4927,11 +4927,11 @@
         "code_or_document": "Content Mod 2/script/world/adapter/vehicle_factory_v1.lua; shipMain.lua and strikeCraftMain.lua register cm2VehicleFactoryV1 in legacy-safe mode; docs/vehicle-factory-v1.md; docs/candidates/vehicle-factory-v1.fixture.json; docs/candidates/vehicle-factory-v1.result.json.",
         "automated_tests": "run-vehicle-factory-v1.ps1 PASS: stageOrder=graph/body/shape/joint/mount/runtime, spawnAttempts=3, spawns=2, spawnRejects=1, stageFailures=1, rollbacks=1, ticks=1, disposes=2, idempotentDisposes=1, activePeak=1, eventsEmitted=5, activeInstances=0, totalInstances=2, staleRejects=1, ownerRejects=1, orphanResources=0. test-vehicle-factory-v1.ps1 PASS: spawn snapshot regression and unknown failure-stage mutations are rejected.",
         "harness": "harness/check-all.ps1 PASS (exit 0): entry closure 4 entries/259 Lua files; Lua/API closure checks 216 files, 0 issues; XML, weapon/component/ship checks and all self-tests passed. Harness emitted only its known fixture cleanup lock warnings after reporting all checks passed.",
-        "runtime_or_performance": "UNABLE: Teardown.exe is not installed or discoverable; live staged Body/Shape/Joint creation, partial-failure cleanup, resource counters, owner teardown and S1 repeated spawn/dispose cannot be measured. Factory remains legacy-safe registration only; offline transaction is contract evidence.",
+        "runtime_or_performance": "BLOCKED: the exact Teardown target is visible and responding, but Win32 reports the active input desktop as Screen-saver and foreground handle 0. Live staged Body/Shape/Joint creation, partial-failure cleanup, resource counters, owner teardown and S1 repeated spawn/dispose were not run. Factory remains legacy-safe registration only; offline transaction is contract evidence.",
         "rollback_record": "Bypass cm2VehicleFactoryV1 and retain VehicleInstance/ship adapter as the active single-Body path. On any live stage or resource discrepancy, call disposeAll/rollback at the factory boundary, preserve failed-stage events, and do not promote engine creation stages until S1 evidence is clean."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-6.6",
-      "status_reason": "DTO VehicleFactory with six-stage transactional spawn, failure rollback, dynamic dispose/idempotence, lifecycle events, synthetic mode, owner/generation handles and zero-orphan fixture is implemented and legacy-safely registered; offline runner, negatives and full Harness pass. Live engine lifecycle/resource evidence is unavailable because Teardown.exe is absent.",
+      "status_reason": "DTO VehicleFactory with six-stage transactional spawn, failure rollback, dynamic dispose/idempotence, lifecycle events, synthetic mode, owner/generation handles and zero-orphan fixture is implemented and legacy-safely registered; offline runner, negatives and full Harness pass. Live engine lifecycle/resource evidence is blocked by the non-interactive Screen-saver input desktop.",
       "verification_status": "pending",
       "verification_status_reason": "Implementation status is preserved. Run this embedded contract before changing implementation status; historical missing-Teardown assumptions must be reassessed with the current Harness.",
       "verification": {
@@ -5006,6 +5006,13 @@
         "The owning deterministic fixture runner and negative cases are available before product changes.",
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work."
       ],
+      "unable_exception": {
+        "marker": "ENVIRONMENT_BLOCKED",
+        "reason": "The exact Teardown target is visible and responding, but the active Win32 input desktop is Screen-saver and the foreground handle is 0. The focus guard must refuse reload, input, telemetry bridge access and visual capture until an interactive target-bound desktop is restored. This blocks live staged engine creation, rollback/resource cleanup, owner teardown and S1 spawn/dispose verification; it does not invalidate the completed DTO factory transaction or offline zero-orphan result.",
+        "evidence": "docs/evidence/step-6.6-vehicle-factory-v1.json; target teardown:57656:53613200; Win32 read-only probe 2026-08-18T05:17:20.5043828Z",
+        "reviewed_by": "Codex autonomous verification run",
+        "reviewed_at": "2026-08-18T05:17:20+08:00"
+      },
       "plan_order": 46
     },
     {
