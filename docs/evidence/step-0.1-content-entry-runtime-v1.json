@@ -1,0 +1,118 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 0.1",
+  "result": "pass",
+  "verified_at": "2026-08-20T00:57:10+08:00",
+  "verification_contract_fingerprint": "defc7c0088cb1c2d58376b38a69a885151b90a908e968fd17c98082f2379ed1d",
+  "profiles": ["STATIC", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "behavior_under_test": "Content Mod 2 entry loads, weapon configuration UI opens and closes, movement and fire input remain live.",
+  "implementation": {
+    "main_entry_include": "Content Mod 2/main.lua includes script/data/configuration/loadout_contract_v1.lua",
+    "entry_closure": "main.xml -> main.lua -> weapon configuration UI closure passed",
+    "vehicle_sound_fix": [
+      "Content Mod 2/prefabs/ships/titan.xml: sound=\"electric1 0\"",
+      "Content Mod 2/prefabs/ships/enigma_battlecruiser.xml: sound=\"electric1 0\"",
+      "Content Mod 2/prefabs/ships/ai_candidate_titan.xml: sound=\"electric1 0\""
+    ],
+    "old_config_ui_paths_present": false
+  },
+  "reload": {
+    "mode": "REOPEN_LEVEL_XML + F4_TO_F5",
+    "target_id": "teardown:188928:853349070",
+    "pid": 188928,
+    "scenario": "weapon_direct_fire",
+    "xml_revision": "direct-fire-xml-v2",
+    "lua_revision": "scenario-controller-v2",
+    "ready": true,
+    "runs": [
+      "20260819T155209Z-d914cf6c",
+      "20260819T155509Z-fea9a446",
+      "20260819T155948Z-5e4984fc"
+    ]
+  },
+  "runtime": {
+    "baseline": {
+      "run_id": "20260819T155209Z-d914cf6c",
+      "session": "0-832e065c",
+      "registered_living_ships": ["titan:6", "enigmaticCruiser:13"],
+      "world_host_ready": true,
+      "snapshot_source": "CM2_TEST_V1 telemetry probe"
+    },
+    "ui_smoke": {
+      "run_id": "20260819T155209Z-d914cf6c",
+      "open_action": "real T key tap",
+      "open_screenshot": "%LOCALAPPDATA%/TeardownAI/runs/20260819T155209Z-d914cf6c/frame_f000004-2bbd4785_pid-188928.png",
+      "close_action": "real client-coordinate click on configuration close button",
+      "closed_screenshot": "%LOCALAPPDATA%/TeardownAI/runs/20260819T155209Z-d914cf6c/frame_f000005-cf5872ae_pid-188928.png",
+      "assertion": "configuration UI was visible, then gameplay scene and HUD were visible again"
+    },
+    "movement_input": {
+      "run_id": "20260819T155509Z-fea9a446",
+      "session": "0-e840d081",
+      "baseline_frame": "%LOCALAPPDATA%/TeardownAI/runs/20260819T155509Z-fea9a446/frame_f000002-43d441e7_pid-188928.png",
+      "after_input_frame": "%LOCALAPPDATA%/TeardownAI/runs/20260819T155509Z-fea9a446/frame_f000003-2972b59b_pid-188928.png",
+      "telemetry_read": "CM2_TEST_V1 response, truncated=false, client_latest_seq=4",
+      "input_events": [
+        "client seq 1/2: W down",
+        "client seq 3/4: W up"
+      ],
+      "after_snapshot": {
+        "player_position": [-0.033352, 60.89423, -48.638996],
+        "player_velocity": [-0.046206, -0.122509, -26.381811],
+        "held_input_state": {"lmb": false, "w": false}
+      }
+    },
+    "fire_input": {
+      "run_id": "20260819T155948Z-5e4984fc",
+      "session": "0-ecc5d98b",
+      "after_frame": "%LOCALAPPDATA%/TeardownAI/runs/20260819T155948Z-5e4984fc/frame_f000003-a973db2c_pid-188928.png",
+      "telemetry_read": "CM2_TEST_V1 response, truncated=false, client_latest_seq=8",
+      "events": [
+        "input_edge lmb down/up",
+        "weapon_input_evaluated stage=ready",
+        "weapon_hold_sent active=true/false",
+        "weapon_hold_received active=true/false",
+        "weapon_hold_applied active=true/false",
+        "fire_request weapon=perditionBeam",
+        "presentation_event charging_start",
+        "presentation_event charge_cancel"
+      ],
+      "scope_boundary": "This proves the real fire input and production hold/presentation chain is not locked. It does not claim a target hit or damage result."
+    }
+  },
+  "log": {
+    "run_id": "20260819T155948Z-5e4984fc",
+    "baseline_cursor": 68679,
+    "end_cursor": 78006,
+    "new_cm2_error_count": 0,
+    "new_cm2_warning_count": 0,
+    "attributed_external_noise": {
+      "owner": "Steam Workshop mod 3148138736 / TABS",
+      "errors": 2,
+      "warnings": 6,
+      "details": "The two errors name missing TABS sound banks and all six warnings name TABS ballistics.lua. No new line names CM2 or its resources."
+    },
+    "previous_cm2_blank_vehicle_sound_errors": "not reproduced after the three CM2 prefab sound fields were changed to electric1 0"
+  },
+  "harness": {
+    "command": ".\\harness\\check-all.ps1",
+    "result": "pass",
+    "exit_code": 0,
+    "duration_seconds": 140.1,
+    "todo_contract_validation": "pass: 80 contracts"
+  },
+  "cleanup": {
+    "f4_returned_to_editor": true,
+    "emergency_release_runs": [
+      "20260819T155209Z-d914cf6c",
+      "20260819T155509Z-fea9a446",
+      "20260819T155948Z-5e4984fc"
+    ],
+    "held_keys": [],
+    "held_buttons": [],
+    "temporary_fixture_disposed": true
+  },
+  "scope_boundary": "Step 0.1 is verified for entry closure, UI lifecycle, real movement input and real fire-chain input. Direct weapon hit/damage acceptance remains owned by the direct-fire and damage Steps."
+}

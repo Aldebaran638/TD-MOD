@@ -38,9 +38,10 @@ class TodoPlanTests(unittest.TestCase):
 
     def test_rejects_unconfirmed_unable(self) -> None:
         value = copy.deepcopy(self.todo)
-        value["developer_confirmed_unable"]["task_ids"].remove("Step 0.1")
-        value["tasks"][0].pop("unable_exception", None)
-        self.assertTrue(any("Step 0.1" in item and "developer confirmation" in item for item in validate(value)))
+        task = next(item for item in value["tasks"] if item["implementation_status"] == "unable")
+        value["developer_confirmed_unable"]["task_ids"].remove(task["id"])
+        task.pop("unable_exception", None)
+        self.assertTrue(any(task["id"] in item and "valid unable_exception" in item for item in validate(value)))
 
     def test_upgrade_is_idempotent_and_preserves_history(self) -> None:
         once = upgrade(self.todo)

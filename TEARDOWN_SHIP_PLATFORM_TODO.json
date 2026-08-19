@@ -160,7 +160,7 @@
       "id": "Step 0.1",
       "stage": "Gate 0",
       "title": "修复当前 Content 主入口",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 将 `Content Mod 2/main.lua:8-9` 的 `script/weapon/client/config_ui/...` 修正为 `script/weapon/client/interaction/config/...`；[ ] 验证 `main.xml → main.lua → weapon config UI` 闭包；[ ] 验证 `shipMain.lua` 与 `ship/common/client/bootstrap.lua` 使用同一权威路径。 Reason: 静态目录检查通过但内容地图无法预处理时，任何后续架构工作都不可信；这是零语义路径问题。",
       "expected_outcome": "内容地图可载入，武器配置 UI 可初始化/打开/关闭，输入、镜头和开火不被锁死。",
       "prerequisites": [
@@ -178,13 +178,13 @@
         "code_or_document": "Content Mod 2/main.lua:8-9; new interaction/config files exist; old config_ui paths absent.",
         "automated_tests": "Static entry closure checks passed: main.xml -> main.lua, new include files exist, old paths absent.",
         "harness": "harness/check-all.ps1 passed: all checks and self-tests passed.",
-        "runtime_or_performance": "UNABLE: no Teardown.exe found via command lookup or standard Steam install paths; UI open/close/input smoke not executed.",
+        "runtime_or_performance": "PASS: live Content Mod scenario loaded after XML reopen; configuration UI opened and closed; real W and LMB input reached CM2 telemetry; no new CM2 runtime errors; external TABS noise was attributed.",
         "rollback_record": "Revert the two include path lines in Content Mod 2/main.lua."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-0.1",
-      "status_reason": "Static entry closure and full Harness are complete, but the live Teardown target is protected by a higher process integrity boundary. Fresh T input attempts produced no UI delta and exact-target restart/close operations returned Access is denied; retain unable under the approved environment exception until a same-integrity Teardown session is available.",
-      "verification_status": "pending",
-      "verification_status_reason": "BLOCKED: live REAL_INPUT/TELEMETRY verification cannot establish a clean session because the exact Teardown target cannot be restarted or closed from the current Medium Mandatory Level agent process. Evidence: docs/evidence/step-0.1-environment-blocked.json.",
+      "status_reason": "Entry closure, loadout include ordering, live UI lifecycle, real movement/fire input smoke, XML reload, cleanup and full Harness are complete. The three CM2 blank vehicle sound paths were replaced with the existing zero-volume electric1 configuration and did not recur in reload logs.",
+      "verification_status": "verified",
+      "verification_status_reason": "PASS: docs/evidence/step-0.1-content-entry-runtime-v1.json records the contract fingerprint, fresh CM2_TEST_V1 sessions, screenshots, real input events, attributed incremental log, cleanup and Harness exit code 0.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "defc7c0088cb1c2d58376b38a69a885151b90a908e968fd17c98082f2379ed1d",
@@ -258,13 +258,6 @@
         "A disposable deterministic Scenario with revision identity and CM2_TEST_V1 telemetry is available before runtime work.",
         "Targeted fresh-frame keyboard/mouse control and emergency release are available; setup removes unrelated travel and aiming."
       ],
-      "unable_exception": {
-        "marker": "ENVIRONMENT_BLOCKED",
-        "reason": "The exact Teardown target is outside the agent process integrity boundary; real input and clean-session recovery cannot be completed from the current Medium Mandatory Level session.",
-        "evidence": "docs/evidence/step-0.1-environment-blocked.json",
-        "reviewed_by": "Codex autonomous verification run",
-        "reviewed_at": "2026-08-15T20:15:00+08:00"
-      },
       "plan_order": 1
     },
     {
