@@ -21,7 +21,7 @@
 | ML-005 | `Content Mod 2/script_riddle_escort/`、`Global Mod/script_riddle_escort/`、`Global Mod/script_titan/` 的独立运行时副本 | Content source 生成的 extension/ship package | legacy-active | Packaging owner：____ | escort/titan 入口 | 包 hash、入口 closure、S6 | 生成器可重建且回滚包可安装；禁止手工覆盖 |
 | ML-006 | 根 Body mount API/隐式 mount 偏移（`Content Mod 2/script/data/ships/*/*_mounts.lua`） | parentId + localTransform + canonical anchor compiler（Gate 1/6） | legacy-active | Asset owner：____ | ship definitions、weapon loadout | root/shape/parent/mirror golden cases | importer/compiler 双读一致；保留旧坐标 alias |
 | ML-007 | `Content Mod 2/script/server/registry/shipRegistryRequest.lua` 中遗留 request/snapshot keys | owner-scoped request endpoint/runtime state | migrated/shadow | Ship owner：____ | movement、weapon command、driver sync | forged request、dead ship、host/remote | 两版均可回放且旧 key 无读取后移除 |
-| ML-008 | `Content Mod 2/script/weapon/client/config_ui/`（已由入口迁移） | `Content Mod 2/script/weapon/client/interaction/config/` | migrated | Interaction owner：____ | `main.lua`、ship client bootstrap | entry closure + UI smoke S0 | 实机新路径通过后删除旧目录引用；回滚为两条 include |
+| ML-008 | `Content Mod 2/script/weapon/client/config_ui/`（已由入口迁移，superseded） | `Content Mod 2/script/weapon/client/interaction/config/` | migrated | Interaction owner：____ | `main.lua`、ship client bootstrap | entry closure + Step 0.1 UI smoke S0 | 实机新路径已由 Step 0.1 证据确认；回滚为两条 include |
 
 ## Source of truth 与发布纪律
 
@@ -48,4 +48,3 @@
 |---|---|---|---|---|
 | Gate 0 | 2026-08-10 | 进行中；0.1–0.4 已登记，0.5 文档/检查器待本次验证 | Teardown 实机和性能证据待可执行文件恢复 | ____ |
 | Gate 1 | ____ | 未开始 | 依赖 Gate 0 通过 | ____ |
-

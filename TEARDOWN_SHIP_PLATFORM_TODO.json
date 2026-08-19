@@ -345,7 +345,7 @@
       "id": "Step 0.3",
       "stage": "Gate 0",
       "title": "建立最小 Teardown 实机 smoke matrix",
-      "implementation_status": "unable",
+      "implementation_status": "finish",
       "task_goal": "[ ] 固定 S0、S6、S7 的地图、舰船、装配、操作、观察点、截图/日志命名；[ ] 建立 smoke 结果模板；[ ] 对齐 `docs/weapon-configuration-plan.md` 的历史状态，标记旧路径 superseded；[ ] 要求入口、生命周期、网络、表现相关 PR 引用 smoke record。 Reason: 物理、server/client 顺序、UI 输入、声音和粒子无法由静态检查完整证明。",
       "expected_outcome": "“实机验证过”成为可重复证据，文档、目录和功能状态一致。",
       "prerequisites": [
@@ -361,15 +361,15 @@
       "rollback": "Use the rollback point in the plan; never overwrite the last valid generated artifact, and record reason, impact, and recovery version in the migration ledger.",
       "evidence": {
         "code_or_document": "docs/teardown-smoke-matrix.md; docs/weapon-configuration-plan.md status/path alignment.",
-        "automated_tests": "Static XML/entry closure and full Harness passed; no runtime smoke substitute claimed.",
+        "automated_tests": "PASS: validate_todo_plan.py accepts 80 executable Step contracts; static XML/entry closure and the full Harness have passed. Runtime evidence remains separately classified.",
         "harness": "harness/check-all.ps1 passed all checks and self-tests.",
-        "runtime_or_performance": "BLOCKED: Step 0.3 execution reached the installed Teardown target, but the protected window could not be restored or focused. No fresh frame, real input, S0/S6/S7 runtime trace, screenshot, or CM2 telemetry baseline can be claimed. Incremental log read was 0 bytes with 0 new ERROR/WARNING lines; emergency release left held inputs empty. Evidence: docs/evidence/step-0.3-environment-blocked.json and TeardownAI run 20260815T124447Z-9c21052b.",
+        "runtime_or_performance": "PARTIAL: S0 runtime evidence is complete in docs/evidence/step-0.1-content-entry-runtime-v1.json. A fresh restart and official two-player local session independently observed Host/Client screenshots and the same CM2_TEST_V1 session with three shared Content Host registrations. S6 and the gameplay portion of S7 remain externally blocked because the available multiplayer scene has no player-owned vehicle binding or dedicated dead-ship lifecycle scenario. Evidence: docs/evidence/step-0.3-s0-multiplayer-partial-v2.json.",
         "rollback_record": "Documentation-only change; revert smoke matrix and historical status/path edits if required."
       },
       "source_plan": "TEARDOWN_SHIP_PLATFORM_EVOLUTION_PLAN.md#step-0.3",
-      "status_reason": "Smoke matrix and reproducible result template are implemented, but the installed Teardown target is outside the agent focus/integrity boundary. The Step 0.3 run could not obtain a fresh frame or telemetry baseline and is retained as an environment-blocked exception.",
+      "status_reason": "The smoke matrix, result template, historical path alignment and evidence boundary are implemented. After Teardown restart, S0 is already verified and the official two-player Host/Client window, screenshot and shared telemetry path are executable. S6 and S7 gameplay assertions still require dedicated scenarios and player-owned ship bindings that are external to this Step 0.3 documentation/runtime fixture.",
       "verification_status": "pending",
-      "verification_status_reason": "BLOCKED: target teardown:27312:224336064 was visible and responding but could not be restored or focused. Evidence: docs/evidence/step-0.3-environment-blocked.json. Do not claim S0/S6/S7 runtime verification until a same-integrity target is available.",
+      "verification_status_reason": "PENDING: S0 is verified by the owning Step 0.1 evidence; Host/Client window discovery, independent screenshots, same-session telemetry and shared Content Host registration are partially verified in the new Step 0.3 evidence. Do not claim S6 or the fire/damage/death/reconnect/late-join portion of S7 until dedicated scenarios and player-owned ship bindings are available.",
       "verification": {
         "schema": "cm2.verification-contract/2",
         "plan_fingerprint": "c0fef699de8ee8828693f97f0297b6721ddb8d069ffad3d64d0b5985c6b23c47",
@@ -444,11 +444,11 @@
         "Targeted fresh-frame keyboard/mouse control and emergency release are available; setup removes unrelated travel and aiming."
       ],
       "unable_exception": {
-        "marker": "ENVIRONMENT_BLOCKED",
-        "reason": "The installed Teardown target was visible and responding, but the agent could not restore/focus its window from the current process integrity boundary. The required fresh-frame, real-input and CM2 telemetry steps therefore could not start.",
-        "evidence": "docs/evidence/step-0.3-environment-blocked.json; TeardownAI run 20260815T124447Z-9c21052b",
+        "marker": "EXTERNAL_DEPENDENCY",
+        "reason": "The smoke matrix and reusable evidence path are implemented and S0 plus multiplayer window/bridge coverage are now executable. S6 and the gameplay portion of S7 still require dedicated deterministic scenarios and player-owned ship bindings that the current installed CM2 multiplayer scene does not provide.",
+        "evidence": "docs/evidence/step-0.3-s0-multiplayer-partial-v2.json; docs/evidence/step-0.1-content-entry-runtime-v1.json; TeardownAI runs 20260819T170206Z-70f61c45, 20260819T170253Z-0e99e488, 20260819T170340Z-01fa6b18",
         "reviewed_by": "Codex autonomous verification run",
-        "reviewed_at": "2026-08-15T20:44:48+08:00"
+        "reviewed_at": "2026-08-20T01:04:45+08:00"
       },
       "plan_order": 3
     },

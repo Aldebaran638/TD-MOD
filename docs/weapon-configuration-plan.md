@@ -85,7 +85,7 @@
 
 ## 第二阶段：整理文件夹结构
 
-状态：代码改造已完成；Teardown 实机证据需要按 `docs/teardown-smoke-matrix.md` 重新执行。当前验证环境未发现可调用的 Teardown 可执行文件。
+状态：代码改造已完成；入口和配置 UI 的 S0 实机证据已由 `docs/evidence/step-0.1-content-entry-runtime-v1.json` 固化。S6/S7 仍按 `docs/teardown-smoke-matrix.md` 的专用场景和玩家绑定条件待补证。
 
 当前核心结构：
 
@@ -119,6 +119,7 @@ Content Mod 2/script/
 - 所有 `#include` 路径已经更新。
 - 根入口 `script/shipMain.lua` 保持不变。
 - 未修改现有武器行为和状态机。
+- 历史 `script/weapon/client/config_ui/` 入口已 superseded；当前权威路径为 `script/weapon/client/interaction/config/`，依据 ML-008 和 Step 0.1 实机证据。
 
 ## 第三阶段：拆分 M/G 武器组开火架构
 
