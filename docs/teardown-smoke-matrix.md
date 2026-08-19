@@ -96,3 +96,16 @@ Screenshot/log/replay directory:
 阻断原因：当前游戏窗口可聚焦但不响应 SendInput 的扫描码或虚拟键码；跨完整性级别的 `WM_KEY*`/鼠标消息也被拒绝。按验证计划，继续证明需要 USB/虚拟 HID 或以与游戏相同完整性级别运行的输入桥接，不能用桌面消息模拟替代。
 
 恢复条件：在同一会话提供可被 Teardown 观察的 USB/虚拟 HID 输入（或重新加载已修改的关卡脚本），再补做 W/LMB 边沿、位置/速度/相机变化和完整 S0；S6/S7 仍需另行实机执行。
+
+## 2026-08-20 当前续跑记录
+
+状态：`partial / external-dependency`
+
+- 重启后的正式 `teardown.exe` 为 PID `188928`，目标 `teardown:188928:853349070`；Mod Manager 客户区 `1280x720`，窗口可聚焦并得到有效新鲜截图。
+- Content Mod 2 已从本地文件路径确认并进入官方双人启动流程。Host 为 PID `204660`，Client1 为 PID `199436`；原始 Mod Manager 进程仍为 PID `188928`。
+- `CM2_TEST_V1` 在 Host 与 Client 都可独立读取，同一 session 为 `0-902d205a`；Host/Client player id 分别为 `1/2`，两边 `world_host.ready=true`、`generation=1`、`active_instances=3`、`register_count=3`、`rejected_count=0`、`fallback_count=0`，三项 identity 一致。
+- Host 截图为有效游戏视口并显示 `Host` HUD；Client1 截图已捕获并显示 `Client1` HUD，但主体视口接近黑色，不能用作视觉通过证据。
+- 两边 `vehicle_id=0` 且 scenario `ready=false`，因此本次只证明窗口枚举、目标绑定、截图和共享 telemetry 桥接；不证明 host/remote 配置、锁定、开火、命中、伤害、死亡、重连或 late join。
+- S6 没有可执行的专用死船场景，未运行；S7 的完整行为链依赖当前场景未提供的玩家舰船绑定，标记为 `EXTERNAL_DEPENDENCY`。
+- 本轮退出 Host 后 `teardown_modtest.exe` 子进程为 `0`，主 `teardown.exe` 保留在 Mod Manager；紧急释放结果为 `keys=[]`、`buttons=[]`。
+- 权威证据：`docs/evidence/step-0.3-s0-multiplayer-partial-v2.json`；历史阻断证据 `docs/evidence/step-0.3-environment-blocked.json` 保留不变。运行证据在 `%LOCALAPPDATA%/TeardownAI/runs/20260819T170206Z-70f61c45/`、`20260819T170253Z-0e99e488/` 和 `20260819T170340Z-01fa6b18/`。

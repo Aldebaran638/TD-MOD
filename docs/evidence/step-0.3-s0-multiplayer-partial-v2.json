@@ -1,0 +1,124 @@
+{
+  "schema": "cm2.verification-evidence/1",
+  "task": "Step 0.3",
+  "result": "partial",
+  "verified_at": "2026-08-20T01:04:45+08:00",
+  "verification_contract_fingerprint": "c0fef699de8ee8828693f97f0297b6721ddb8d069ffad3d64d0b5985c6b23c47",
+  "profiles": ["STATIC", "SCENE", "REAL_INPUT", "TELEMETRY", "VISUAL", "LOG", "MULTIPLAYER"],
+  "eyes": ["EYE_TELEMETRY", "EYE_SCREENSHOT", "EYE_LOG"],
+  "hands": ["HAND_REAL_INPUT", "HAND_TEST_SETUP"],
+  "behavior_under_test": "A repeatable S0/S6/S7 Teardown smoke record with aligned documentation, paths, and feature status.",
+  "implementation": {
+    "smoke_matrix": "docs/teardown-smoke-matrix.md defines S0, S6, S7 setup, observations, evidence and cleanup fields.",
+    "result_template": "This evidence record is the versioned partial-run template for Step 0.3.",
+    "historical_path_alignment": "The historical config_ui include path is retained only as superseded history; the authoritative path is script/weapon/client/interaction/config/.",
+    "historical_block_record": "docs/evidence/step-0.3-environment-blocked.json is preserved and is not overwritten."
+  },
+  "static": {
+    "contract_validation": "PASS: validate_todo_plan.py accepted 80 executable Step contracts.",
+    "full_harness": "PENDING: rerun after this documentation update before commit.",
+    "source_preserved": true
+  },
+  "runtime": {
+    "restart": {
+      "target_id": "teardown:188928:853349070",
+      "pid": 188928,
+      "observe_run": "20260819T165645Z-5c174dbf",
+      "fresh_frame": "frame_f000001-d70c720d_pid-188928.png",
+      "client_size": "1280x720",
+      "observe": "PASS: the restarted Teardown window was visible, focused and non-constant.",
+      "initial_telemetry_probe": "BLOCKED on Mod Manager page; no gameplay claim was made."
+    },
+    "s0": {
+      "result": "PASS",
+      "evidence": "docs/evidence/step-0.1-content-entry-runtime-v1.json",
+      "runs": [
+        "20260819T162918Z-892bc753",
+        "20260819T162944Z-b9bd3f39",
+        "20260819T163411Z-9f61cf2d",
+        "20260819T163444Z-1bef871a",
+        "20260819T163549Z-73ecfc14"
+      ],
+      "scope": "CM2 entry, UI open/close, real W/LMB input edges, telemetry and cleanup are already recorded by the owning Step 0.1 evidence."
+    },
+    "multiplayer_window_and_bridge": {
+      "result": "PARTIAL PASS",
+      "startup_run": "20260819T170206Z-70f61c45",
+      "host": {
+        "target_id": "teardown:204660:485365124",
+        "pid": 204660,
+        "role": "TD - Host",
+        "screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260819T170253Z-0e99e488/frame_f000001-721bfe60_pid-204660.png",
+        "telemetry": {
+          "run": "20260819T170253Z-0e99e488",
+          "session": "0-902d205a",
+          "player_id": 1,
+          "vehicle_id": 0,
+          "latest_seq": 4,
+          "truncated": false
+        }
+      },
+      "client": {
+        "target_id": "teardown:199436:491524774",
+        "pid": 199436,
+        "role": "TD - Client1",
+        "screenshot": "C:/Users/XKWL/AppData/Local/TeardownAI/runs/20260819T170253Z-0e99e488/frame_f000002-ce11987a_pid-199436.png",
+        "telemetry": {
+          "run": "20260819T170253Z-0e99e488",
+          "session": "0-902d205a",
+          "player_id": 2,
+          "vehicle_id": 0,
+          "latest_seq": 4,
+          "truncated": false
+        }
+      },
+      "shared_world_host": {
+        "ready": true,
+        "mode": "content-host",
+        "generation": 1,
+        "active_instances": 3,
+        "register_count": 3,
+        "unregister_count": 0,
+        "rejected_count": 0,
+        "fallback_count": 0,
+        "identities": ["ship:titan:48", "ship:enigmaticCruiser:20", "escort:55"]
+      },
+      "boundary": "Host and Client observation/telemetry correlation passed. Both players have vehicle_id=0 and the scenario is not ready, so no player-owned ship command, fire, damage, death, reconnect or late-join assertion is claimed."
+    },
+    "s6": {
+      "result": "NOT RUN",
+      "reason": "No dedicated deterministic dead-ship scenario proving projectile, guided, craft, effect, voice and callback cancellation is available in this run."
+    },
+    "s7": {
+      "result": "BLOCKED",
+      "reason": "The official two-player windows and shared Content Host are available, but the current scene does not bind player vehicles or expose the required host/remote fire, damage, death, reconnect and late-join flow."
+    }
+  },
+  "visual": {
+    "host": "PASS for a visible Host gameplay viewport and HUD; see the Host screenshot above.",
+    "client": "PARTIAL: Client1 screenshot is non-constant but near-black except for the viewport edge and Client1 HUD; visual presentation remains unresolved.",
+    "authority": "Screenshots are used only for viewport/HUD facts, not gameplay state."
+  },
+  "log": {
+    "baseline_cursor": 101262,
+    "new_errors": 0,
+    "new_warnings": 0,
+    "attribution": "The observed incremental slice contained no new CM2 errors or warnings; historical external TABS Workshop noise is not charged to CM2."
+  },
+  "cleanup": {
+    "run": "20260819T170340Z-01fa6b18",
+    "emergency_release": true,
+    "held_inputs": {"keys": [], "buttons": []},
+    "test_children_remaining": 0,
+    "remaining_instances": ["teardown:188928:853349070"],
+    "formal_source_preserved": true
+  },
+  "unable_exception": {
+    "marker": "EXTERNAL_DEPENDENCY",
+    "reason": "The smoke matrix and reusable evidence path are implemented and S0 plus multiplayer window/bridge coverage are now executable. S6 and the gameplay portion of S7 still require dedicated deterministic scenarios and player-owned ship bindings that the current installed CM2 multiplayer scene does not provide.",
+    "evidence": "docs/evidence/step-0.3-s0-multiplayer-partial-v2.json; docs/evidence/step-0.1-content-entry-runtime-v1.json; TeardownAI runs 20260819T170206Z-70f61c45, 20260819T170253Z-0e99e488, 20260819T170340Z-01fa6b18",
+    "reviewed_by": "Codex autonomous verification run",
+    "reviewed_at": "2026-08-20T01:04:45+08:00"
+  },
+  "scope_boundary": "This is an implementation finish with pending verification and an approved external-dependency exception. It is not a complete S0/S6/S7 pass."
+}
